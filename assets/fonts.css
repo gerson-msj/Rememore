@@ -1,0 +1,85 @@
+/* Os arquivos só são baixados quando a família é usada. Preferir WOFF2 em novas inclusões. */
+@font-face {
+    font-family: "Chewy";
+    src: url("/webfonts/Chewy/Chewy-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Damion";
+    src: url("/webfonts/Damion/Damion-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Dekko";
+    src: url("/webfonts/Dekko/Dekko-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Dongle";
+    src: url("/webfonts/Dongle/Dongle-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Dongle";
+    src: url("/webfonts/Dongle/Dongle-Light.ttf") format("truetype");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Dongle";
+    src: url("/webfonts/Dongle/Dongle-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Faculty Glyphic";
+    src: url("/webfonts/Faculty_Glyphic/FacultyGlyphic-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Happy Monkey";
+    src: url("/webfonts/Happy_Monkey/HappyMonkey-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Iansui";
+    src: url("/webfonts/Iansui/Iansui-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Kalam";
+    src: url("/webfonts/Kalam/Kalam-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Kalam";
+    src: url("/webfonts/Kalam/Kalam-Light.ttf") format("truetype");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Kalam";
+    src: url("/webfonts/Kalam/Kalam-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}

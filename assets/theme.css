@@ -1,0 +1,26 @@
+/* Fundação visual aprovada em 07/09/2026. Cores em palettes.json/palettes.css. */
+:root,
+:root[data-theme] {
+    --rememore-font: "Faculty Glyphic";
+    --rememore-font-fallback: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --rememore-content-width: 72rem;
+    --rememore-reading-width: 42rem;
+    --rememore-gutter: clamp(1rem, 4vw, 3rem);
+    --rememore-section-gap: clamp(2rem, 5vw, 4rem);
+    --bulma-family-primary: var(--rememore-font), var(--rememore-font-fallback);
+    --bulma-family-secondary: var(--bulma-family-primary);
+}
+/* Mesma aplicação de cores independentes usada na prévia do laboratório. */
+.title {
+    --bulma-title-color: var(--bulma-text-title);
+}
+.content {
+    --bulma-content-heading-color: var(--bulma-text-title);
+}
+:is(.input, .textarea, .select select):not(:disabled) {
+    background-color: var(--bulma-scheme-main);
+    color: var(--bulma-text-strong);
+}
+:is(.input, .textarea, .select select):not(:disabled):not(:focus):not(:hover):not(.is-focused):not(.is-hovered):not(.is-active):not(.is-primary):not(.is-link):not(.is-info):not(.is-success):not(.is-warning):not(.is-danger) {
+    border-color: var(--bulma-border);
+}

@@ -1,0 +1,6 @@
+/* Uma única entrada preserva a cascata também nas páginas sem islands. */
+@import "./bulma.css";
+@import "./fonts.css";
+@import "./palettes.css";
+@import "./theme.css";
+@import "./styles.css";

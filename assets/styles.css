@@ -1,0 +1,166 @@
+html {
+    min-height: 100%;
+    scrollbar-gutter: stable;
+}
+* {
+    scrollbar-color: var(--bulma-border) var(--bulma-scheme-main-bis);
+    scrollbar-width: auto;
+}
+body {
+    min-height: 100vh;
+}
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+}
+:focus-visible {
+    outline: 3px solid var(--bulma-link);
+    outline-offset: 3px;
+}
+.rememore-container {
+    width: min(100% - 2 * var(--rememore-gutter), var(--rememore-content-width));
+    margin-inline: auto;
+    padding-block: var(--rememore-section-gap);
+}
+.rememore-reading {
+    max-width: var(--rememore-reading-width);
+}
+.lab-section + .lab-section {
+    margin-top: var(--rememore-section-gap);
+}
+.lab-controls,
+.lab-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: 1.5rem;
+}
+.lab-controls .field {
+    margin-bottom: 0;
+}
+.lab-controls select {
+    max-width: 100%;
+}
+.lab-grid > * {
+    min-width: 0;
+}
+.lab-swatch {
+    padding: 1rem;
+    border-radius: var(--bulma-radius);
+}
+.lab-scroll {
+    max-height: 13rem;
+    overflow: auto;
+    padding: 1rem;
+    border: 1px solid var(--bulma-border);
+    border-radius: var(--bulma-radius);
+    background: var(--bulma-scheme-main-bis);
+}
+.lab-surface {
+    padding: 1rem;
+    border: 1px solid var(--bulma-border);
+    border-radius: var(--bulma-radius);
+}
+.lab-surface-bis {
+    background: var(--bulma-scheme-main-bis);
+}
+.lab-surface-ter {
+    background: var(--bulma-scheme-main-ter);
+}
+.lab-sample-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+.lab-section {
+    scroll-margin-top: 1.5rem;
+}
+.lab-section pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.lab-palette {
+    border-top: 1px solid var(--bulma-border);
+    padding-top: 1.5rem;
+}
+.lab-palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: 1.25rem;
+}
+.lab-color-field {
+    min-width: 0;
+}
+.lab-color-inputs {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.lab-color-inputs input[type="color"] {
+    flex: 0 0 3rem;
+    width: 3rem;
+    height: 2.5rem;
+    padding: 0.15rem;
+    background: var(--bulma-scheme-main);
+    border: 1px solid var(--bulma-border);
+    border-radius: var(--bulma-radius);
+    cursor: pointer;
+}
+.lab-color-inputs input:disabled {
+    cursor: not-allowed;
+}
+.lab-color-inputs .input,
+.lab-palette-export {
+    font-family: monospace;
+}
+.lab-color-inputs .input {
+    min-width: 0;
+}
+
+.home {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+}
+.home-brand {
+    color: var(--bulma-text-title);
+    font-size: 1.25rem;
+    letter-spacing: -0.03em;
+}
+.home-content {
+    width: 100%;
+    max-width: 48rem;
+    margin-block: auto;
+    padding-block: clamp(3rem, 10vh, 7rem);
+}
+.home-title {
+    color: var(--bulma-text-title);
+    font-size: clamp(2rem, 4.5vw, 3.5rem);
+    font-weight: 400;
+    line-height: 1.3;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+    margin-bottom: 2rem;
+}
+.home-description {
+    max-width: 40rem;
+    font-size: clamp(1.125rem, 1.7vw, 1.3rem);
+    line-height: 1.85;
+    margin-bottom: 2rem;
+}
+.home-invitation {
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+}
+.home-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.home-actions .button {
+    min-width: 9rem;
+    font-weight: 400;
+}
