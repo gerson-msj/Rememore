@@ -16,12 +16,14 @@ interface MessagePopupProps {
     open: boolean
     message: string
     actions: keyof typeof popupActions
+    confirmLabel?: string
+    cancelLabel?: string
     icon?: string
     color?: PopupColor
     onResult: (result: PopupResult) => void
 }
 
-export default function MessagePopup({ open, message, actions, icon, color, onResult }: MessagePopupProps) {
+export default function MessagePopup({ open, message, actions, confirmLabel, cancelLabel, icon, color, onResult }: MessagePopupProps) {
     const dialog = useRef<HTMLDialogElement>(null)
     const messageId = useId()
     const [visible, setVisible] = useState(false)
@@ -78,7 +80,7 @@ export default function MessagePopup({ open, message, actions, icon, color, onRe
                             disabled={!open}
                             onClick={() => onResult(label === "Sim" || label === "OK" ? "confirm" : "cancel")}
                         >
-                            {label}
+                            {label === "Sim" || label === "OK" ? confirmLabel ?? label : cancelLabel ?? label}
                         </button>
                     ))}
                 </div>

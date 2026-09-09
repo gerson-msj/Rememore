@@ -185,6 +185,32 @@ textarea {
 .login-error {
     margin-top: 1rem;
 }
+.registration-notices {
+    margin-top: 2rem;
+    line-height: 1.8;
+}
+.key-confirmation {
+    max-width: 36rem;
+    margin-inline: auto;
+    line-height: 1.8;
+}
+.key-confirmation > .field {
+    margin-top: 2rem;
+}
+.key-copy-field {
+    display: flex;
+    gap: 0.5rem;
+}
+.key-copy-field .input {
+    min-width: 0;
+    font-family: monospace;
+}
+.key-copy-feedback {
+    min-height: 3.6em;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--bulma-success-text);
+}
 .password-field {
     position: relative;
 }

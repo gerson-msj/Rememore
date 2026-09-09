@@ -6,9 +6,12 @@ interface PasswordFieldProps {
     value: string
     onValueChange: (value: string) => void
     describedBy?: string
+    autoComplete?: "current-password" | "new-password"
 }
 
-export default function PasswordField({ id, name, value, onValueChange, describedBy }: PasswordFieldProps) {
+export default function PasswordField(
+    { id, name, value, onValueChange, describedBy, autoComplete = "current-password" }: PasswordFieldProps
+) {
     const [visible, setVisible] = useState(false)
     return (
         <div class="password-field">
@@ -18,7 +21,7 @@ export default function PasswordField({ id, name, value, onValueChange, describe
                 name={name}
                 type={visible ? "text" : "password"}
                 value={value}
-                autoComplete="current-password"
+                autoComplete={autoComplete}
                 aria-describedby={describedBy}
                 onInput={(event) => onValueChange(event.currentTarget.value)}
             />

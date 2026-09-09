@@ -3,7 +3,9 @@ import { session } from "../app/services/auth.ts"
 
 export default define.middleware(async (ctx) => {
     const path = ctx.url.pathname.replace(/\/$/, "") || "/"
-    const openArea = path === "/" || path === "/entrar"
+    const openArea = ["/", "/entrar", "/cadastro", "/cadastro/confirmacao", "/redefinir-senha", "/redefinir-senha/confirmacao"].includes(
+        path
+    )
     if (!openArea && path !== "/principal") return await ctx.next()
 
     const authenticated = await session.isAuthenticated(ctx.req)
