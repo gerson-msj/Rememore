@@ -1,7 +1,7 @@
 // Após aprovar uma paleta, atualize assets/palettes.json e execute:
 // deno run --allow-read --allow-write scripts/generate-theme.ts
 import palettes from "../assets/palettes.json" with { type: "json" }
-import { paletteDeclarations } from "../utils/laboratorioPalette.ts"
+import { paletteDeclarations } from "../app/utils/laboratorioPalette.ts"
 
 const light = paletteDeclarations(palettes.light)
 const dark = paletteDeclarations(palettes.dark)

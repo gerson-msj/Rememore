@@ -10,7 +10,7 @@ import {
     paletteStyles,
     type PaletteTheme,
     parseDrafts
-} from "../utils/laboratorioPalette.ts"
+} from "../app/utils/laboratorioPalette.ts"
 
 function readDefaults(): Record<PaletteTheme, Palette> {
     const root = document.documentElement

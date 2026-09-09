@@ -1,6 +1,7 @@
 import { Head } from "fresh/runtime"
 import { define } from "../utils.ts"
 import LaboratorioControls from "../islands/LaboratorioControls.tsx"
+import LaboratorioComponents from "../islands/LaboratorioComponents.tsx"
 
 const colors = [
     ["primary", "Principal"],
@@ -27,6 +28,7 @@ export default define.page(function Laboratorio() {
                 </p>
                 <LaboratorioControls />
                 <nav class="lab-sample-row mt-5" aria-label="Seções do laboratório">
+                    <a href="#componentes">Cabeçalho e popup</a>
                     <a href="#tipografia">Tipografia</a>
                     <a href="#cores">Cores e estados</a>
                     <a href="#campos">Campos</a>
@@ -34,6 +36,8 @@ export default define.page(function Laboratorio() {
                     <a href="#layout">Layout e rolagem</a>
                 </nav>
             </header>
+
+            <LaboratorioComponents />
 
             <section class="lab-section" id="tipografia" aria-labelledby="titulo-tipografia">
                 <h2 class="title is-3" id="titulo-tipografia">Tipografia</h2>

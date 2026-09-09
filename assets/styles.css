@@ -125,11 +125,6 @@ textarea {
     display: flex;
     flex-direction: column;
 }
-.home-brand {
-    color: var(--bulma-text-title);
-    font-size: 1.25rem;
-    letter-spacing: -0.03em;
-}
 .home-content {
     width: 100%;
     max-width: 48rem;
@@ -163,4 +158,190 @@ textarea {
 .home-actions .button {
     min-width: 9rem;
     font-weight: 400;
+}
+
+.page-with-header {
+    padding-top: calc(4.5rem + var(--rememore-section-gap));
+}
+.login-form {
+    width: 100%;
+    max-width: 28rem;
+    margin-inline: auto;
+}
+.login-form .field + .field {
+    margin-top: 1.5rem;
+}
+.login-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+.login-actions .button {
+    min-width: 8rem;
+}
+.login-error {
+    margin-top: 1rem;
+}
+.password-field {
+    position: relative;
+}
+.password-field .input {
+    padding-right: 3rem;
+}
+.password-visibility {
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 2.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--bulma-radius);
+    background: transparent;
+    color: var(--bulma-text);
+    cursor: pointer;
+}
+.password-visibility:hover {
+    color: var(--bulma-link);
+}
+
+/* CMP-027: as colunas laterais mantêm o título estável em todos os modos. */
+.page-header {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr) 2.75rem;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 4.5rem;
+    padding: 0.5rem var(--rememore-gutter);
+    color: var(--bulma-text-title);
+    background: var(--bulma-scheme-main);
+    border-bottom: 1px solid var(--bulma-border);
+}
+.page-header-title.title {
+    margin: 0;
+    overflow-wrap: anywhere;
+    text-align: left;
+}
+.page-header-side,
+.page-header-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.page-header-action {
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--bulma-radius);
+    background: transparent;
+    color: inherit;
+    font-size: 1.4rem;
+}
+button.page-header-action {
+    cursor: pointer;
+}
+button.page-header-action:hover {
+    background: var(--bulma-scheme-main-bis);
+}
+#laboratorio {
+    padding-top: calc(4.5rem + var(--rememore-section-gap));
+}
+#laboratorio .lab-section {
+    scroll-margin-top: 6rem;
+}
+.lab-components .select,
+.lab-components select {
+    max-width: 100%;
+}
+
+/* CMP-028: o dialog mantém foco e modalidade durante as duas transições. */
+.message-popup {
+    position: fixed;
+    inset: 40% auto auto 50%;
+    transform: translate(-50%, -50%) translateY(0.75rem);
+    width: min(32rem, calc(100vw - 2rem));
+    max-width: none;
+    max-height: 70dvh;
+    overflow: auto;
+    margin: 0;
+    padding: clamp(1.25rem, 4vw, 2rem);
+    border: 1px solid var(--bulma-border);
+    border-radius: var(--bulma-radius-large);
+    background: var(--bulma-scheme-main);
+    color: var(--bulma-text);
+    box-shadow: 0 1rem 3rem #0003;
+    opacity: 0;
+    transition: opacity 180ms ease, transform 180ms ease;
+}
+.message-popup.is-visible {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+}
+.message-popup::backdrop {
+    background: #0007;
+    opacity: 0;
+    transition: opacity 180ms ease;
+}
+.message-popup.is-visible::backdrop {
+    opacity: 1;
+}
+.message-popup-content {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+.message-popup-content p {
+    min-width: 0;
+}
+.message-popup-icon {
+    flex: 0 0 auto;
+    font-size: 1.75rem;
+}
+.message-popup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+.message-popup-actions .button {
+    min-width: 5rem;
+}
+.message-popup.popup-primary {
+    background: var(--bulma-primary);
+    color: var(--bulma-primary-invert);
+}
+.message-popup.popup-link {
+    background: var(--bulma-link);
+    color: var(--bulma-link-invert);
+}
+.message-popup.popup-info {
+    background: var(--bulma-info);
+    color: var(--bulma-info-invert);
+}
+.message-popup.popup-success {
+    background: var(--bulma-success);
+    color: var(--bulma-success-invert);
+}
+.message-popup.popup-warning {
+    background: var(--bulma-warning);
+    color: var(--bulma-warning-invert);
+}
+.message-popup.popup-danger {
+    background: var(--bulma-danger);
+    color: var(--bulma-danger-invert);
+}
+@media (prefers-reduced-motion: reduce) {
+    .message-popup,
+    .message-popup::backdrop {
+        transition-duration: 0ms;
+    }
 }
