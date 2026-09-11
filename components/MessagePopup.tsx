@@ -14,6 +14,7 @@ export type PopupColor = "primary" | "link" | "info" | "success" | "warning" | "
 
 interface MessagePopupProps {
     open: boolean
+    title?: string
     message: string
     actions: keyof typeof popupActions
     confirmLabel?: string
@@ -23,10 +24,14 @@ interface MessagePopupProps {
     onResult: (result: PopupResult) => void
 }
 
-export default function MessagePopup({ open, message, actions, confirmLabel, cancelLabel, icon, color, onResult }: MessagePopupProps) {
+export default function MessagePopup(
+    { open, title, message, actions, confirmLabel, cancelLabel, icon, color, onResult }: MessagePopupProps
+) {
     const dialog = useRef<HTMLDialogElement>(null)
+    const titleId = useId()
     const messageId = useId()
     const [visible, setVisible] = useState(false)
+    const paragraphs = message.split(/\n\n+/)
 
     useEffect(() => {
         const element = dialog.current!
@@ -45,7 +50,8 @@ export default function MessagePopup({ open, message, actions, confirmLabel, can
         <dialog
             ref={dialog}
             class={`message-popup${visible ? " is-visible" : ""}${color ? ` popup-${color}` : ""}`}
-            aria-labelledby={messageId}
+            aria-labelledby={title ? titleId : messageId}
+            aria-describedby={title ? messageId : undefined}
             tabIndex={-1}
             onKeyDown={(event) => {
                 if (event.key !== "Escape") return
@@ -68,7 +74,12 @@ export default function MessagePopup({ open, message, actions, confirmLabel, can
         >
             <div class="message-popup-content">
                 {icon && <i class={`${icon} message-popup-icon`} aria-hidden="true" />}
-                <p id={messageId}>{message}</p>
+                <div class="message-popup-copy">
+                    {title && <h2 id={titleId} class="title is-4 message-popup-title">{title}</h2>}
+                    <div id={messageId} class="message-popup-message">
+                        {paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+                    </div>
+                </div>
             </div>
             {popupActions[actions].length > 0 && (
                 <div class="message-popup-actions">
