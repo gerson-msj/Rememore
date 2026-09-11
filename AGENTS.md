@@ -4,7 +4,7 @@ Estas instruções se aplicam somente a este projeto. Leia este arquivo no iníc
 
 Fonte: [Contexto do Desenvolvimento do Rememore](https://docs.google.com/document/d/1THCkMHH-NyKL8xqn_X5AcXtakD2Iu-OEgsehRbZy2tk/edit), no Google Drive, em Projetos → Rememore. Este arquivo foi preparado em 05/09/2026 e atualizado contra o documento integral em 08/09/2026.
 
-Este `AGENTS.md` cumpre o papel do arquivo `.agent` mencionado na fonte: é o contexto permanente do programador e deve conter as orientações necessárias para iniciar novas sessões sem reler normalmente o documento do Drive. A leitura da fonte serve para criar ou ajustar este arquivo; volte ao documento completo somente quando o operador solicitar ou quando for necessário reconstruir o contexto. Preserve aqui orientações curtas e operacionais, mantendo seu significado e seus detalhes relevantes, sem acrescentar convenções ainda não estabelecidas pelo projeto.
+Este `AGENTS.md` cumpre o papel do arquivo `.agent` mencionado na fonte: é o contexto permanente do programador e deve conter as orientações necessárias para iniciar novas sessões sem reler normalmente o documento do Drive. Consulte essa fonte somente quando solicitado pelo operador. Este arquivo incorpora também o fluxo local e a leitura seletiva aprovados pelo operador nesta sessão; essa atualização local não significa sincronização do documento do Drive. Preserve orientações curtas e operacionais, sem acrescentar convenções ainda não estabelecidas pelo projeto.
 
 ## Projeto e ambiente
 
@@ -18,10 +18,16 @@ Há um operador humano tecnicamente familiarizado com o projeto, que acompanha o
 
 1. Leia este `AGENTS.md`.
 2. Leia `.docs/README.md` e os documentos de memória técnica indicados ali para leitura inicial. Atualmente, leia também `.docs/memoria-tecnica.md`.
-3. Leia somente a Especificação indicada explicitamente pelo operador para iniciar ou continuar a sessão, no Google Drive ou em `.docs/especificacoes/`, conforme a indicação. Não consulte os documentos citados por ela como origem, salvo solicitação explícita do operador.
-4. Examine somente o código necessário para compreender e executar esse trabalho, aproveitando o conhecimento já preservado em `.docs/`.
-5. Antes de criar ou atualizar a cópia Markdown operacional da Especificação, faça uma rodada inicial de clarificação com o operador.
-6. Somente depois dessa clarificação, crie ou atualize a cópia Markdown operacional e transforme a Especificação em um plano mínimo de execução, organizando a ordem das etapas e os pontos de validação com o operador.
+3. Leia integralmente somente o Markdown da Especificação fornecido e indicado pelo operador em `.docs/especificacoes/`. Não consulte documentos de origem ou o Drive, salvo solicitação explícita. Se o arquivo estiver ausente, peça sua indicação ao operador.
+4. Termine a leitura inicial antes de abrir o fonte. Identifique pela Especificação e pela memória os recursos existentes, novos componentes e pontos de integração. Consulte apenas as referências técnicas pertinentes do índice.
+5. Abra o fonte seletivamente para esclarecer dúvidas concretas, conferir contratos envolvidos ou implementar os trechos necessários. Antes de modificar um recurso, confira sua implementação e os chamadores afetados. Amplie a leitura somente quando dependências ou incompatibilidades reais exigirem; não faça varredura ampla do projeto no bootstrap.
+6. Faça a clarificação funcional com o operador. Somente depois, acrescente ou atualize a seção Continuidade no mesmo arquivo, com um plano mínimo e seus pontos de validação. Preserve o corpo aprovado e as anotações existentes.
+
+Antes de editar, verifique o acesso e `git status --short`, informe alterações existentes e preserve o trabalho do operador. Prefira buscas pontuais e saídas delimitadas; evite catálogos completos de ferramentas, leituras duplicadas e respostas truncadas. Quando memória externa estiver disponível, pesquise somente assuntos pertinentes; as orientações atuais do repositório prevalecem sobre notas antigas.
+
+### Medição de contexto
+
+Registre na Continuidade, por sessão, os indicadores disponíveis em três marcos: antes das leituras; após AGENTS, índice, memória inicial e Especificação, antes do fonte; e ao final da unidade ou sessão. Inclua percentual e capacidade total quando informados, identificando se vieram da interface ou do operador. Não estime consumo por arquivos ou tamanho de respostas. Se não houver acesso ao indicador, registre como não disponível, sem bloquear o trabalho. Uma leitura já feita não permite reconstruir retroativamente o valor inicial.
 
 Cada Especificação é uma unidade delimitada: página, componente, comportamento, CSS, experimento de arte ou design, infraestrutura ou outro recorte definido como trabalho independente. A Especificação corrente determina o limite do trabalho.
 
@@ -33,7 +39,7 @@ Não liste, percorra ou consulte Especificações anteriores ou futuras por inic
 
 ## Clarificação funcional antes do plano
 
-A primeira interpretação da Especificação não deve ser transformada silenciosamente em plano ou código. Antes de escrever a cópia Markdown operacional, apresente ao operador seu entendimento do escopo e reúna as dúvidas funcionais encontradas na leitura da Especificação e do código necessário. Sempre que possível, consolide essas dúvidas em uma rodada inicial, evitando que lacunas previsíveis apareçam de forma fragmentada durante a implementação.
+A primeira interpretação da Especificação não deve ser transformada silenciosamente em plano ou código. Antes de complementar a Continuidade, apresente ao operador seu entendimento do escopo e reúna as dúvidas funcionais encontradas na Especificação, referências técnicas pertinentes e código necessário. Sempre que possível, consolide essas dúvidas em uma rodada inicial.
 
 Devem ser esclarecidas com o operador todas as lacunas cuja resolução exigiria inventar ou escolher regras, textos apresentados ao usuário, destinos de navegação, estados, respostas, comportamentos, limites funcionais ou qualquer outra decisão que altere o que o produto faz ou comunica. Se não houver dúvida funcional, informe isso explicitamente antes de seguir para o plano.
 
@@ -76,7 +82,9 @@ Deno, Fresh, Bulma, Font Awesome e as demais dependências evoluem ao longo do t
 
 ## Continuidade da Especificação
 
-Mantenha as cópias operacionais em `.docs/especificacoes/`. Ao receber a indicação de uma Especificação no Google Drive, leia somente esse documento e faça a clarificação funcional descrita acima antes de criar ou atualizar sua cópia Markdown. Depois da clarificação, salve a cópia com identificação e título no nome do arquivo, preservando o conteúdo e incluindo o link da fonte. Se a cópia já existir, preserve suas anotações de continuidade ao atualizá-la.
+O Google Doc aprovado continua sendo o registro canônico e histórico. O operador fornece seu espelho operacional integral em `.docs/especificacoes/`, com identificação e referência da fonte. Não resuma, reescreva ou produza uma versão otimizada para IA do corpo aprovado. A economia de contexto deve ocorrer nas leituras e ferramentas ao redor da Especificação.
+
+Use um único arquivo por unidade: corpo aprovado, seção Continuidade e seção Parecer final, claramente separados. O operador faz o transporte entre repositório, Drive e analista; não são necessárias cópias transitórias nem sincronização automática. Preserve o corpo fornecido; se houver divergência ou lacuna funcional, esclareça com o operador e registre a decisão na Continuidade.
 
 Na identificação local, retire o prefixo `05.`, que pertence à organização documental do Drive, e mantenha apenas a sequência numérica: `05.01` no Drive corresponde à Especificação `01` no projeto, `05.02` corresponde à `02`, e assim por diante. Use essa sequência no nome do arquivo, no título local e nas referências locais; por exemplo, `01-fundacao-visual-e-pagina-inicial.md`. Preserve a identificação original e o link na referência da fonte, sem renumerar os documentos do Drive nem alterar seu corpo aprovado.
 
@@ -105,6 +113,8 @@ Essa documentação pertence ao programador: pode ser criada e atualizada por el
 
 Quando uma decisão registrada deixar de ser válida devido à evolução do código ou a uma determinação posterior do operador, atualize ou remova a anotação correspondente.
 
+Organize a memória em dois níveis: `.docs/memoria-tecnica.md` curto e obrigatório, e referências por assunto consultadas sob demanda pelo índice. Registre contratos públicos, funções principais compartilhadas, comportamentos, limitações e caminhos do fonte suficientes para reutilizar recursos sem reler sistematicamente a implementação. Não catalogue todas as funções nem copie detalhes internos. Atualize as referências na mesma unidade que alterar o contrato. A memória representa o presente; substitua ou remova conteúdo superado. O histórico permanece no Git, Especificações e Pareceres.
+
 ## Validação com o operador
 
 Orientação complementar do operador: testes unitários servem às necessidades do programador durante o desenvolvimento, sem metas de cobertura. Use-os quando forem úteis e mantenha-os somente enquanto houver necessidade; podem ser removidos após o uso. Considere o retrabalho de testes ligados aos mocks quando o backend for implementado.
@@ -115,7 +125,7 @@ O operador executa a aplicação, navega, observa o comportamento e avalia resul
 
 O operador determina quando uma Especificação deve ser encerrada ou cancelada.
 
-Quando ele solicitar o encerramento, releia o corpo original da Especificação no Google Drive e acrescente somente um **Parecer final** breve. Nunca modifique o corpo aprovado. Registre, quando aplicável:
+Quando ele solicitar o encerramento, confira a implementação e o corpo aprovado no Markdown vigente e preencha a seção **Parecer final** no mesmo arquivo, preferencialmente ao final. Se houver seção reservada, use-a sem duplicar o título. Nunca modifique o corpo aprovado. O Parecer deve ser breve e autossuficiente: toda decisão ou consequência que possa exigir reconciliação documental precisa aparecer nele, sem obrigar o analista a ler a Continuidade ou a conversa. Registre, quando aplicável:
 
 - o que foi efetivamente produzido e os nomes concretos de páginas, rotas, componentes ou estruturas;
 - diferenças entre a Especificação e a implementação final;
@@ -124,4 +134,4 @@ Quando ele solicitar o encerramento, releia o corpo original da Especificação 
 
 Decisões puramente técnicas reutilizáveis permanecem na memória técnica de capital de tokens. Quando uma descoberta técnica também tiver consequência relevante para a compreensão funcional do projeto, inclua essa consequência resumida no Parecer.
 
-O Parecer pertence somente ao documento do Google Drive; não precisa ser reproduzido na cópia Markdown operacional. Não produza documentação extensa da implementação por padrão. A próxima unidade será definida pelo operador fora da sessão.
+O operador copia o Parecer final para o analista e o registro canônico no Drive. Registre localmente que o parecer foi entregue ao operador, sem afirmar atualização do Drive. Não produza documentação extensa da implementação por padrão. A próxima unidade será definida pelo operador fora da sessão.
