@@ -18,6 +18,7 @@ async function redirect(response: Response, target: string) {
 Deno.test("HTTP: cascas da Principal respeitam sessão e autorização administrativa do cenário", async () => {
     const shells = [
         ["/capturar", "Capturar"],
+        ["/capturar/2026-09-01", "Capturar"],
         ["/encontrar", "Encontrar Memórias"],
         ["/rever", "Rever um Dia"],
         ["/rememorar", "Rememorar"],
@@ -51,4 +52,11 @@ Deno.test("HTTP: cascas da Principal respeitam sessão e autorização administr
     const principal = await request("/principal", cookie)
     equal(principal.status, 200)
     equal((await principal.text()).includes("Minha Conta e Meus Dados"), true)
+    for (const date of ["2026-02-29", "2026-09", "invalida"]) {
+        await redirect(await request(`/capturar/${date}`, cookie), "/capturar?data-invalida")
+    }
+    const day = await request("/capturar/2026-09-01", cookie)
+    const html = await day.text()
+    equal(html.includes("Preparando captura"), true)
+    equal(html.includes(">Marcar como alterada</button>"), false)
 })

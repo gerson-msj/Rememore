@@ -5,7 +5,9 @@ import { principalCapabilities } from "../app/services/principal.ts"
 
 export const handler = define.handlers({
     async GET(ctx) {
-        return { data: await principalCapabilities.read(ctx.req) }
+        const accountId = await session.accountId(ctx.req)
+        if (!accountId) return new Response(null, { status: 303, headers: { Location: "/entrar" } })
+        return { data: { capabilities: await principalCapabilities.read(ctx.req), accountId } }
     },
     async POST(ctx) {
         const headers = new Headers({ Location: "/" })
@@ -15,5 +17,5 @@ export const handler = define.handlers({
 })
 
 export default define.page<typeof handler>(function PrincipalPage({ data }) {
-    return <Principal capabilities={data} />
+    return <Principal {...data} />
 })

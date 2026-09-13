@@ -7,7 +7,8 @@ export default define.middleware(async (ctx) => {
     const openArea = ["/", "/entrar", "/cadastro", "/cadastro/confirmacao", "/redefinir-senha", "/redefinir-senha/confirmacao"].includes(
         path
     )
-    const protectedArea = ["/principal", "/capturar", "/encontrar", "/rever", "/rememorar", "/conta", "/admin"].includes(path)
+    const protectedArea = path.startsWith("/capturar/") ||
+        ["/principal", "/capturar", "/encontrar", "/rever", "/rememorar", "/conta", "/admin"].includes(path)
     if (!openArea && !protectedArea) return await ctx.next()
 
     const authenticated = await session.isAuthenticated(ctx.req)

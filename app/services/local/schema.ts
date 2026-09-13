@@ -16,5 +16,12 @@ export const localMigrations: readonly LocalMigration[] = [
             const captures = database.createObjectStore(CAPTURES_STORE, { keyPath: ["accountId", "date"] })
             captures.createIndex(CAPTURES_ACCOUNT_INDEX, "accountId")
         }
+    },
+    {
+        version: 2,
+        upgrade(_database, transaction) {
+            // Pre-V1 experimental records have no workspace state or origin metadata.
+            transaction.objectStore(CAPTURES_STORE).clear()
+        }
     }
 ]

@@ -10,6 +10,13 @@ execução. Nesta máquina, o processo revelou a instalação WinGet em
 conseguia executar esse caminho; a execução aprovada fora do sandbox funcionou. Portanto, falha de descoberta no terminal não prova ausência
 de instalação. Revalidar o caminho em outra máquina ou após atualização.
 
+## Diagnósticos JSX no VS Code
+
+Se o painel Problems mostrar owner `typescript`/source `ts`, códigos 2875 (`react/jsx-runtime`) ou 7026 (`JSX.IntrinsicElements`),
+conferir primeiro `deno check` e se a extensão Deno reconheceu `deno.json`. Neste projeto o runtime JSX é Preact. Foi observado o serviço
+TypeScript nativo emitindo esses erros apesar de Deno ativo e checagem completa aprovada; recarregar a janela resolveu o relato do operador.
+Não instalar React nem acrescentar declarações JSX para contornar esse diagnóstico. Se persistir, investigar a integração do editor.
+
 ## Ordem de carregamento dos estilos
 
 Na Home sem islands, o HTML servido em desenvolvimento apresentou os imports CSS separados de `client.ts` em ordem invertida. O Bulma acabou

@@ -17,6 +17,9 @@ export const mockAuthentication: AuthenticationService = {
 }
 
 export const mockSession: SessionService = {
+    async accountId(request) {
+        return await mockSession.isAuthenticated(request) ? "01K4Z5J6M7N8P9Q0R1S2T3V4W5" : null
+    },
     isAuthenticated(request) {
         const cookies = (request.headers.get("cookie") ?? "").split(";")
         return Promise.resolve(cookies.some((cookie) => cookie.trim() === cookieName + "=" + cookieValue))

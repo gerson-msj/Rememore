@@ -1,10 +1,11 @@
-import { useRef, useState } from "preact/hooks"
+import { useEffect, useRef, useState } from "preact/hooks"
 import PageHeader from "../components/PageHeader.tsx"
 import MessagePopup, { type PopupResult } from "../components/MessagePopup.tsx"
 import type { PrincipalCapabilities } from "../app/services/principal/contracts.ts"
-import { mockHasPendingCaptures } from "../app/services/principal/localMock.ts"
+import { localCaptures } from "../app/services/local/captures.ts"
 
 interface PrincipalProps {
+    accountId: string
     capabilities: PrincipalCapabilities
 }
 
@@ -24,7 +25,34 @@ interface Explanation {
     icon: string
 }
 
-export default function Principal({ capabilities }: PrincipalProps) {
+export default function Principal({ capabilities, accountId }: PrincipalProps) {
+    const [pending, setPending] = useState<boolean | null>(null)
+    const [pendingError, setPendingError] = useState(false)
+    useEffect(() => {
+        let active = true
+        async function refresh() {
+            try {
+                const captures = await localCaptures.listPending(accountId)
+                if (active) {
+                    setPending(captures.length > 0)
+                    setPendingError(false)
+                }
+            } catch {
+                if (active) {
+                    setPending(null)
+                    setPendingError(true)
+                }
+            }
+        }
+        void refresh()
+        globalThis.addEventListener("pageshow", refresh)
+        globalThis.addEventListener("focus", refresh)
+        return () => {
+            active = false
+            globalThis.removeEventListener("pageshow", refresh)
+            globalThis.removeEventListener("focus", refresh)
+        }
+    }, [accountId])
     const [confirmLogout, setConfirmLogout] = useState(false)
     const [explanation, setExplanation] = useState<Explanation | null>(null)
     const form = useRef<HTMLFormElement>(null)
@@ -113,7 +141,7 @@ export default function Principal({ capabilities }: PrincipalProps) {
                 </section>
 
                 <nav class="principal-secondary" aria-label="Continuidade, conta e sistema">
-                    {mockHasPendingCaptures && (
+                    {pending && (
                         <a class="principal-secondary-item principal-pending" href="/capturar">
                             <i class="fas fa-triangle-exclamation" aria-hidden="true" />
                             <span>Capturas pendentes</span>
@@ -130,6 +158,9 @@ export default function Principal({ capabilities }: PrincipalProps) {
                         </a>
                     )}
                 </nav>
+                {pendingError && (
+                    <p class="notification is-warning" role="alert">Não foi possível verificar as capturas pendentes neste dispositivo.</p>
+                )}
             </main>
 
             <form ref={form} method="post" action="/principal" hidden />

@@ -10,6 +10,7 @@ export interface AuthenticationService {
 }
 
 export interface SessionService {
+    accountId(request: Request): Promise<string | null>
     isAuthenticated(request: Request): Promise<boolean>
     establish(request: Request, headers: Headers): Promise<void>
     end(request: Request, headers: Headers): Promise<void>

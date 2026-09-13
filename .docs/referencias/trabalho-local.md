@@ -9,15 +9,26 @@
   `listByAccount(accountId)`. `get` retorna `undefined` para ausência; a consulta retorna `[]` para conta sem registros. Escrita e remoção
   retornam `void` somente após commit; remover registro ausente é sucesso idempotente. Toda falha rejeita a Promise.
 - `LocalCapture`: `accountId: string`, `date: string` (data civil YYYY-MM-DD fornecida pelo consumidor), `memories: LocalMemory[]`.
+  Agora também exige `changed: boolean` (somente true é pendência) e `preservedOrigin: boolean` (origem com conteúdo preservado).
   `LocalMemory`: `id: string`, `content: string`, `order: number`. O fluxo futuro atribui um identificador uma única vez, por exemplo com
   `crypto.randomUUID()`, e o mantém ao editar/reordenar. O repositório persiste o agregado fornecido, sem gerar identidades, ordenar arrays,
   converter datas ou definir regras de edição. A ordem explícita é independente da posição no array.
 - Conta e data formam a chave composta; substituição afeta somente esse par. O índice `byAccount` restringe a consulta à conta informada.
-  Esse isolamento é de seleção dos dados, não uma fronteira de segurança contra scripts da mesma origem. A identidade da conta será
-  fornecida pelas próximas integrações; não usar uma constante de mock como identidade definitiva.
+  Esse isolamento é de seleção dos dados, não uma fronteira de segurança contra scripts da mesma origem. A identidade da conta vem de
+  `SessionService.accountId(request)` nos handlers; não fixar uma identidade nas páginas.
 
-Páginas devem consumir diagnóstico e repositório, sem abrir IndexedDB diretamente. A Principal continua usando seu mock; nenhuma página
-consome esta fundação ainda. Leitura não cria captura. O nascimento funcional da pendência continua para unidades posteriores.
+Páginas devem consumir diagnóstico e repositório, sem abrir IndexedDB diretamente. A Seleção em `/capturar` já consulta pendências e remove
+workspaces após confirmação; a Principal consulta pendências reais ao montar e nos eventos pageshow/focus. Falhas mostram mensagem explícita.
+
+`listPending(accountId)` filtra `changed` e ordena por data crescente. `markChanged(accountId, date)` lê e atualiza na mesma transação;
+ausência aborta e rejeita, repetição é idempotente. Ambos preservam isolamento por conta e confirmação após commit.
+
+`app/services/capture.ts`: `prepareCapture` pressupõe data validada e diagnóstico operacional. Retoma workspace alterado sem consultar
+remoto; reconstrói workspace intacto usando `PreservedCapturesService.read(accountId, date)` com resultados found/absent/failed. Falhas
+rejeitam; apenas found/absent permitem gravar workspace intacto. A composição usa mock sem conteúdo preservado inicialmente.
+`islands/CaptureDay.tsx` valida data pelo calendário local do navegador antes de diagnosticar ou preparar; só mostra a casca operacional
+depois da confirmação local. O botão temporário marca alteração, sem editar memórias. Falha de abertura oferece retorno à Principal.
+Não há limpeza automática: workspaces intactos são substituídos na próxima abertura, alterados são retomados sem consulta remota.
 
 ## Falhas e transações
 
@@ -39,7 +50,8 @@ Referência técnica consultada para commit, bloqueio e rollback: [Indexed Datab
 
 ## Schema e diagnóstico
 
-Banco `rememore-local`, versão 1. `app/services/local/schema.ts` concentra migrações consecutivas a partir de 1. Para evoluir, acrescentar
+Banco `rememore-local`, versão 2. A migração 2 limpa os registros experimentais de capturas sem estado/origem, conforme autorizado antes da V1.
+`app/services/local/schema.ts` concentra migrações consecutivas a partir de 1. Para evoluir, acrescentar
 uma migração com a próxima versão; ela recebe banco e transação de upgrade, permitindo criar stores/índices ou transformar registros com
 requisições IndexedDB. O mecanismo aplica somente versões posteriores à armazenada, dentro da transação nativa de upgrade. Não aumentar
 versão sem migração nem alterar retroativamente a migração já aplicada. Não existe recriação silenciosa para contornar falhas.

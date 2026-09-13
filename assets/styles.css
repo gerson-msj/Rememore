@@ -1,3 +1,55 @@
+.capture-page {
+    max-width: 42rem;
+}
+.capture-guidance {
+    margin-bottom: 2rem;
+    line-height: 1.7;
+}
+.capture-selection-form {
+    max-width: 24rem;
+    margin-bottom: 2rem;
+}
+.capture-date-control {
+    position: relative;
+}
+.capture-date-control .input {
+    min-width: 0;
+}
+.capture-date-control .input:invalid,
+.capture-date-control .input.is-placeholder {
+    color: var(--bulma-input-placeholder-color);
+}
+.capture-date-control.has-custom-picker .input {
+    padding-right: 2.75em;
+}
+.capture-date-control.has-custom-picker input::-webkit-calendar-picker-indicator {
+    display: none;
+}
+.capture-date-picker {
+    position: absolute;
+    inset-block: 0;
+    right: 0;
+    width: 2.75em;
+    border: 0;
+    background: transparent;
+    color: var(--bulma-text);
+    cursor: pointer;
+    font-size: inherit;
+    border-radius: var(--bulma-radius);
+}
+.capture-pending {
+    margin-top: 2.5rem;
+}
+.capture-pending li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--bulma-border);
+    padding-block: 0.5rem;
+}
+.capture-pending li a {
+    padding-block: 0.5rem;
+}
 html {
     min-height: 100%;
     scrollbar-gutter: stable;

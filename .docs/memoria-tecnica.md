@@ -11,8 +11,8 @@ Leitura obrigatória curta. As referências do índice são consultadas somente 
 - `/laboratorio` permanece disponível para calibração. Seus rascunhos não modificam o tema da Home nem os valores definitivos.
 - Capacidades da Principal chegam resolvidas; pendências de captura pertencem ao front. Para contratos concretos, consulte a referência
   pertinente.
-- A fundação IndexedDB real existe em `app/services/local/`, ainda sem integração às páginas. Capturas são agregados por conta/data;
-  operações rejeitam falhas explicitamente. Consulte a referência antes de integrar ou evoluir o schema.
+- O IndexedDB real em `app/services/local/` sustenta Seleção, Captura do dia e pendências da Principal. Capturas são agregados por conta/data;
+  somente `changed: true` é pendência. Operações rejeitam falhas explicitamente. Consulte a referência antes de integrar ou evoluir o schema.
 
 ## Referências sob demanda
 
