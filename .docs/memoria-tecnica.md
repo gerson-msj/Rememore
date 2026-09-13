@@ -9,11 +9,16 @@ Leitura obrigatória curta. As referências do índice são consultadas somente 
 - `client.ts` importa somente `assets/app.css`; a ordem centralizada é Bulma, fontes, paletas, tema e estilos.
 - `assets/palettes.json` contém as cores aprovadas; `assets/palettes.css` é gerado. Não alterar o resultado isoladamente.
 - `/laboratorio` permanece disponível para calibração. Seus rascunhos não modificam o tema da Home nem os valores definitivos.
-- Capacidades da Principal chegam resolvidas; pendências de captura pertencem ao front. Para contratos concretos, consulte a referência pertinente.
+- Capacidades da Principal chegam resolvidas; pendências de captura pertencem ao front. Para contratos concretos, consulte a referência
+  pertinente.
+- A fundação IndexedDB real existe em `app/services/local/`, ainda sem integração às páginas. Capturas são agregados por conta/data;
+  operações rejeitam falhas explicitamente. Consulte a referência antes de integrar ou evoluir o schema.
 
 ## Referências sob demanda
 
-- [Componentes e capacidades](referencias/componentes-e-capacidades.md): PageHeader, MessagePopup, ProtectedShell, capacidades e fronteira autenticada.
+- [Componentes e capacidades](referencias/componentes-e-capacidades.md): PageHeader, MessagePopup, ProtectedShell, capacidades e fronteira
+  autenticada.
 - [Ambiente e fundação visual](referencias/ambiente-e-fundacao-visual.md): Deno no Windows, cascata CSS, paletas e laboratório.
+- [Trabalho local](referencias/trabalho-local.md): contratos de diagnóstico, persistência de capturas e migrações.
 
 Estas notas representam o presente. Atualize ou remova conhecimento superado; mantenha detalhes por assunto fora da leitura obrigatória.
