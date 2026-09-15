@@ -1,25 +1,25 @@
-import { define } from "../../utils.ts"
-import Registration from "../../islands/Registration.tsx"
-import { registration } from "../../app/services/auth.ts"
-import { normalizeUsername } from "../../app/utils/login.ts"
+import { definir } from "../../utilitarios.ts"
+import Cadastro from "../../islands/Cadastro.tsx"
+import { cadastro } from "../../app/servicos/autenticacao.ts"
+import { normalizarNomeUsuario } from "../../app/utilitarios/entrada.ts"
 
-export const handler = define.handlers({
-    GET(ctx) {
-        return { data: { invitation: ctx.url.searchParams.get("convite") ?? "", readonly: ctx.url.searchParams.has("convite") } }
+export const handler = definir.handlers({
+    GET(contexto) {
+        return { data: { invitation: contexto.url.searchParams.get("convite") ?? "", readonly: contexto.url.searchParams.has("convite") } }
     },
-    async POST(ctx) {
-        const form = await ctx.req.formData()
-        const value = (name: string) => typeof form.get(name) === "string" ? form.get(name) as string : ""
+    async POST(contexto) {
+        const formulario = await contexto.req.formData()
+        const valor = (nome: string) => typeof formulario.get(nome) === "string" ? formulario.get(nome) as string : ""
         return Response.json(
-            await registration.register({
-                invitation: ctx.url.searchParams.get("convite") ?? value("invitation"),
-                username: normalizeUsername(value("username")),
-                password: value("password")
+            await cadastro.register({
+                invitation: contexto.url.searchParams.get("convite") ?? valor("invitation"),
+                username: normalizarNomeUsuario(valor("username")),
+                password: valor("password")
             })
         )
     }
 })
 
-export default define.page<typeof handler>(function Cadastro({ data }) {
-    return <Registration invitation={data.invitation} readonly={data.readonly} />
+export default definir.page<typeof handler>(function PaginaCadastro({ data: dados }) {
+    return <Cadastro invitation={dados.invitation} readonly={dados.readonly} />
 })

@@ -1065,6 +1065,28 @@ A próxima unidade só deve ser escolhida depois do Parecer da 05.07. A direçã
 
 ## Continuidade
 
+### Intervenção PT-BR — 14/09/2026
+
+- Por orientação posterior do operador, a intervenção parte de `fd1672b` (develop, “Spec 07 - Parcial”), incluindo o código já
+  produzido nesta unidade. A branch `refactor/convencao-pt-br` aguarda inspeção e teste antes de qualquer reintegração.
+- O operador informou que a entrega parcial contém trabalho testado e validado. A intervenção não executa os marcos C/D nem altera
+  os critérios funcionais pendentes. A próxima sessão retoma o estado existente com os novos nomes.
+- Referências nominais desta Continuidade e da memória técnica atualizadas. Corpo aprovado acima preservado integralmente.
+- Principais entradas: `islands/CapturaDia.tsx`, `components/EstruturaCaptura.tsx`, `components/PainelCaptura.tsx`,
+  `app/servicos/captura.ts`, `app/servicos/captura/bloqueio.ts`, `app/servicos/captura/sessaoAberta.ts` e
+  `app/servicos/local/`. Métodos locais: `gravar`, `obter`, `remover`, `listarPendentes`, `marcarAlterada`;
+  posse: `executar`/`liberar`; sessão aberta: `retomar`/`iniciar`/`encerrar`.
+- Schema 3, campos persistidos, chaves de armazenamento e comandos `rememoreCaptureMock` preservados nesta intervenção.
+  O operador solicitou analisar depois a nacionalização do IndexedDB, dispensando a preservação dos dados atuais; análise ainda pendente.
+- Indicadores de contexto antes das leituras e após a leitura inicial: indisponíveis; sem estimativa retroativa.
+- Entrega técnica da intervenção: tipos, lint, build e 31 testes aprovados; formatação dos fontes autorais aprovada. A tarefa global
+  `check` para na formatação de documentos/configurações/terceiros preservados. Auditoria confirmou o corpo aprovado e os contratos
+  protegidos intactos. Diff entregue ao operador sem reintegração. Indicador final de contexto indisponível.
+- Retorno posterior: operador fez alguns testes da nacionalização e informou que ficou tudo certo, sem detalhar os cenários.
+  Informou sessão em 77% de contexto, capacidade total não informada, e pediu passagem para outra sessão. Pendentes na intervenção:
+  pastas antigas vazias, análise da nacionalização do IndexedDB (dados atuais dispensáveis) e conclusão das operações de Git.
+  A 07 permanece no mesmo marco funcional; consultar a Continuidade de `.docs/intervencao-tecnica.md` para retomar a intervenção.
+
 ### Sessão de 14/09/2026 — clarificação concluída
 
 - Operador informou 85% de uso semanal restante antes das leituras. Capacidade total não informada. Indicador de ocupação da janela de
@@ -1161,7 +1183,7 @@ workspace anterior mantido. Os testes automatizados já cobrem esse caso.
 
 ### Entrega do marco B — 14/09/2026
 
-- `CaptureLayout` em modo day e novo `CaptureFrame` compõem header, data por extenso/ações e três abas, com rolagem normal do documento.
+- `EstruturaCaptura` em modo dia e novo `PainelCaptura` compõem header, data por extenso/ações e três abas, com rolagem normal do documento.
   A altura real do header determina o deslocamento sticky, inclusive quando muda com largura/tipografia.
 - As abas funcionam por clique e teclado (setas/Home/End). Categorizar e Tom e Revisar e Preservar continuam vazias.
 - Abertura estrutural de Memória oculta abas e mantém data/ações. Retorno reapresenta Registrar e organizar. Nesta entrega, nova memória

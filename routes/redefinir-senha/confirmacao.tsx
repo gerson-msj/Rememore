@@ -1,33 +1,33 @@
-import { define } from "../../utils.ts"
-import { pendingKey, session } from "../../app/services/auth.ts"
-import KeyConfirmation from "../../islands/KeyConfirmation.tsx"
-import { passwordResetPendingStorage } from "../../app/utils/pendingKey.ts"
+import { definir } from "../../utilitarios.ts"
+import { chavePendente, sessao } from "../../app/servicos/autenticacao.ts"
+import ConfirmacaoChave from "../../islands/ConfirmacaoChave.tsx"
+import { chaveArmazenamentoRedefinicaoPendente } from "../../app/utilitarios/chavePendente.ts"
 
-const home = () => new Response(null, { status: 303, headers: { Location: "/" } })
+const inicio = () => new Response(null, { status: 303, headers: { Location: "/" } })
 
-export const handler = define.handlers({
-    async POST(ctx) {
-        const form = await ctx.req.formData()
-        const pendingId = form.get("pendingId")
-        if (typeof pendingId !== "string") return home()
-        if (form.get("intent") === "read") {
-            const key = await pendingKey.read(pendingId, "passwordReset")
-            return key ? Response.json({ key }) : home()
+export const handler = definir.handlers({
+    async POST(contexto) {
+        const formulario = await contexto.req.formData()
+        const idPendente = formulario.get("pendingId")
+        if (typeof idPendente !== "string") return inicio()
+        if (formulario.get("intent") === "read") {
+            const chave = await chavePendente.read(idPendente, "passwordReset")
+            return chave ? Response.json({ key: chave }) : inicio()
         }
-        if (form.get("intent") !== "confirm" || !await pendingKey.consume(pendingId, "passwordReset")) return home()
-        const headers = new Headers()
-        await session.establish(ctx.req, headers)
-        return new Response(null, { status: 204, headers })
+        if (formulario.get("intent") !== "confirm" || !await chavePendente.consume(idPendente, "passwordReset")) return inicio()
+        const cabecalhos = new Headers()
+        await sessao.establish(contexto.req, cabecalhos)
+        return new Response(null, { status: 204, headers: cabecalhos })
     }
 })
 
-export default define.page(function ConfirmacaoRedefinicao() {
+export default definir.page(function ConfirmacaoRedefinicao() {
     return (
-        <KeyConfirmation
-            title="Senha redefinida"
-            endpoint="/redefinir-senha/confirmacao"
-            storageKey={passwordResetPendingStorage}
-            message="Sua senha foi redefinida. Guarde esta nova chave: ela será necessária caso você precise redefinir sua senha novamente no futuro."
+        <ConfirmacaoChave
+            titulo="Senha redefinida"
+            endereco="/redefinir-senha/confirmacao"
+            chaveArmazenamento={chaveArmazenamentoRedefinicaoPendente}
+            mensagem="Sua senha foi redefinida. Guarde esta nova chave: ela será necessária caso você precise redefinir sua senha novamente no futuro."
         />
     )
 })

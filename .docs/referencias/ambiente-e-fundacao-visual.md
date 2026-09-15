@@ -12,16 +12,16 @@ de instalação. Revalidar o caminho em outra máquina ou após atualização.
 
 ## Diagnósticos JSX no VS Code
 
-Se o painel Problems mostrar owner `typescript`/source `ts`, códigos 2875 (`react/jsx-runtime`) ou 7026 (`JSX.IntrinsicElements`),
-conferir primeiro `deno check` e se a extensão Deno reconheceu `deno.json`. Neste projeto o runtime JSX é Preact. Foi observado o serviço
-TypeScript nativo emitindo esses erros apesar de Deno ativo e checagem completa aprovada; recarregar a janela resolveu o relato do operador.
-Não instalar React nem acrescentar declarações JSX para contornar esse diagnóstico. Se persistir, investigar a integração do editor.
+Se o painel Problems mostrar owner `typescript`/source `ts`, códigos 2875 (`react/jsx-runtime`) ou 7026 (`JSX.IntrinsicElements`), conferir
+primeiro `deno check` e se a extensão Deno reconheceu `deno.json`. Neste projeto o runtime JSX é Preact. Foi observado o serviço TypeScript
+nativo emitindo esses erros apesar de Deno ativo e checagem completa aprovada; recarregar a janela resolveu o relato do operador. Não
+instalar React nem acrescentar declarações JSX para contornar esse diagnóstico. Se persistir, investigar a integração do editor.
 
 ## Ordem de carregamento dos estilos
 
-Na Home sem islands, o HTML servido em desenvolvimento apresentou os imports CSS separados de `client.ts` em ordem invertida. O Bulma acabou
-sobrescrevendo a fonte global, embora a configuração da Faculty Glyphic e o arquivo da fonte estivessem corretos. O build e a verificação de
-tipos passavam, portanto esses checks não detectavam o problema da cascata no HTML servido.
+Na Página Inicial sem islands, o HTML servido em desenvolvimento apresentou os imports CSS separados de `client.ts` em ordem invertida. O
+Bulma acabou sobrescrevendo a fonte global, embora a configuração da Faculty Glyphic e o arquivo da fonte estivessem corretos. O build e a
+verificação de tipos passavam, portanto esses checks não detectavam o problema da cascata no HTML servido.
 
 A solução adotada é uma única entrada: `client.ts` importa `assets/app.css`, que reúne por CSS @import, nesta ordem: Bulma, fontes, paletas,
 tema e estilos. Preserve essa ordem. A correção foi verificada no HTML de desenvolvimento: um único bloco de estilos, com as definições do
@@ -32,14 +32,14 @@ comportamento observado pertence à integração presente no projeto; não é um
 
 ## Paletas definitivas e prévia devem coincidir
 
-`assets/palettes.json` guarda as 16 cores aprovadas de cada tema. `assets/palettes.css` é o resultado gerado e acompanha o repositório. Após
+`assets/paletas.json` guarda as 16 cores aprovadas de cada tema. `assets/palettes.css` é o resultado gerado e acompanha o repositório. Após
 uma nova aprovação:
 
-1. Atualizar os valores em `assets/palettes.json`.
-2. Executar `deno run --allow-read --allow-write scripts/generate-theme.ts`.
+1. Atualizar os valores em `assets/paletas.json`.
+2. Executar `deno run --allow-read --allow-write scripts/gerar-tema.ts`.
 3. Executar `deno fmt assets/palettes.css`.
 
-O gerador e a prévia do laboratório reutilizam `paletteDeclarations`, em `app/utils/laboratorioPalette.ts`. Essa escolha evita que uma
+O gerador e a prévia do laboratório reutilizam `declaracoesPaleta`, em `app/utilitarios/paletaLaboratorio.ts`. Essa escolha evita que uma
 paleta calibrada no laboratório receba derivações diferentes ao ser aplicada definitivamente. Não editar apenas o CSS gerado: a próxima
 geração apagaria a alteração.
 
@@ -50,21 +50,21 @@ apenas o fundo ou as variáveis globais pode, portanto, mudar outras cores ou n�
 ou borda.
 
 A solução define diretamente os dez neutros, mantém as variáveis necessárias aos componentes e deriva as escalas das seis cores semânticas.
-A aplicação aos títulos, campos e bordas também é ajustada em `assets/theme.css` e na prévia de `app/utils/laboratorioPalette.ts`. Ao mudar
-essa aplicação, manter os dois caminhos coerentes.
+A aplicação aos títulos, campos e bordas também é ajustada em `assets/tema.css` e na prévia de `app/utilitarios/paletaLaboratorio.ts`. Ao
+mudar essa aplicação, manter os dois caminhos coerentes.
 
 As derivações calculam texto de contraste sobre cores semânticas e variações legíveis sobre o fundo. Isso não equivale a uma garantia de
 contraste para todas as combinações possíveis escolhidas pelo operador; a avaliação continua no laboratório.
 
-## Laboratório e preferências da Home têm escopos diferentes
+## Laboratório e preferências da Página Inicial têm escopos diferentes
 
 `/laboratorio` é uma ferramenta permanente de calibração, preservada por decisão do operador. Ele lê as cores-base do CSS vigente, permite
 rascunhos separados para Claro e Escuro, restauração por tema e exportação das 16 cores. A comparação de fontes é temporária; a família
-definitiva fica em `assets/theme.css`, com carregamento local em `assets/fonts.css`.
+definitiva fica em `assets/tema.css`, com carregamento local em `assets/fontes.css`.
 
 As chaves locais são `rememore:lab:theme` e `rememore:lab:palettes:v1`. Os rascunhos pertencem ao navegador e à origem usados; não são
 sincronizados pelo Git nem alteram o CSS. A exportação permite transmiti-los ao programador para aprovação definitiva. Restaurar usa o CSS
 atual, não uma paleta antiga fixa no painel.
 
-O script `static/laboratorio-theme.js` é carregado somente no laboratório. A Home acompanha o tema do sistema e não deve receber a
+O script `static/laboratorio-theme.js` é carregado somente no laboratório. A Página Inicial acompanha o tema do sistema e não deve receber a
 preferência manual nem os rascunhos do laboratório. Preservar essa separação ao trabalhar no carregamento global.

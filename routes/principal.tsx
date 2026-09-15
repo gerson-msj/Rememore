@@ -1,21 +1,21 @@
-import { define } from "../utils.ts"
+import { definir } from "../utilitarios.ts"
 import Principal from "../islands/Principal.tsx"
-import { session } from "../app/services/auth.ts"
-import { principalCapabilities } from "../app/services/principal.ts"
+import { sessao } from "../app/servicos/autenticacao.ts"
+import { capacidadesPrincipal } from "../app/servicos/principal.ts"
 
-export const handler = define.handlers({
-    async GET(ctx) {
-        const accountId = await session.accountId(ctx.req)
-        if (!accountId) return new Response(null, { status: 303, headers: { Location: "/entrar" } })
-        return { data: { capabilities: await principalCapabilities.read(ctx.req), accountId } }
+export const handler = definir.handlers({
+    async GET(contexto) {
+        const idConta = await sessao.accountId(contexto.req)
+        if (!idConta) return new Response(null, { status: 303, headers: { Location: "/entrar" } })
+        return { data: { capabilities: await capacidadesPrincipal.read(contexto.req), accountId: idConta } }
     },
-    async POST(ctx) {
-        const headers = new Headers({ Location: "/" })
-        await session.end(ctx.req, headers)
-        return new Response(null, { status: 303, headers })
+    async POST(contexto) {
+        const cabecalhos = new Headers({ Location: "/" })
+        await sessao.end(contexto.req, cabecalhos)
+        return new Response(null, { status: 303, headers: cabecalhos })
     }
 })
 
-export default define.page<typeof handler>(function PrincipalPage({ data }) {
-    return <Principal {...data} />
+export default definir.page<typeof handler>(function PaginaPrincipal({ data: dados }) {
+    return <Principal {...dados} />
 })

@@ -1,6 +1,6 @@
-import { define } from "../utils.ts"
+import { definir } from "../utilitarios.ts"
 
-export default define.page(function App({ Component, url }) {
+export default definir.page(function Aplicacao({ Component, url }) {
     return (
         <html lang="pt-BR">
             <head>

@@ -1,182 +1,182 @@
 import { useEffect, useRef, useState } from "preact/hooks"
-import PageHeader from "../components/PageHeader.tsx"
-import MessagePopup, { type PopupResult } from "../components/MessagePopup.tsx"
-import type { PrincipalCapabilities } from "../app/services/principal/contracts.ts"
-import { localCaptures } from "../app/services/local/captures.ts"
+import CabecalhoPagina from "../components/CabecalhoPagina.tsx"
+import MensagemPopup, { type ResultadoPopup } from "../components/MensagemPopup.tsx"
+import type { CapacidadesPrincipal } from "../app/servicos/principal/contratos.ts"
+import { capturasLocais } from "../app/servicos/local/capturas.ts"
 
-interface PrincipalProps {
+interface PropriedadesPrincipal {
     accountId: string
-    capabilities: PrincipalCapabilities
+    capabilities: CapacidadesPrincipal
 }
 
-interface Journey {
-    title: string
-    description: string
-    unavailable?: string
-    explanation?: string
-    icon: string
+interface Jornada {
+    titulo: string
+    descricao: string
+    indisponivel?: string
+    explicacao?: string
+    icone: string
     href: string
-    available: boolean
+    disponivel: boolean
 }
 
-interface Explanation {
-    title: string
-    message: string
-    icon: string
+interface Explicacao {
+    titulo: string
+    mensagem: string
+    icone: string
 }
 
-export default function Principal({ capabilities, accountId }: PrincipalProps) {
-    const [pending, setPending] = useState<boolean | null>(null)
-    const [pendingError, setPendingError] = useState(false)
+export default function Principal({ capabilities: capacidades, accountId: idConta }: PropriedadesPrincipal) {
+    const [pendentes, definirPendentes] = useState<boolean | null>(null)
+    const [erroPendencias, definirErroPendencias] = useState(false)
     useEffect(() => {
-        let active = true
-        async function refresh() {
+        let ativo = true
+        async function atualizar() {
             try {
-                const captures = await localCaptures.listPending(accountId)
-                if (active) {
-                    setPending(captures.length > 0)
-                    setPendingError(false)
+                const capturas = await capturasLocais.listarPendentes(idConta)
+                if (ativo) {
+                    definirPendentes(capturas.length > 0)
+                    definirErroPendencias(false)
                 }
             } catch {
-                if (active) {
-                    setPending(null)
-                    setPendingError(true)
+                if (ativo) {
+                    definirPendentes(null)
+                    definirErroPendencias(true)
                 }
             }
         }
-        void refresh()
-        globalThis.addEventListener("pageshow", refresh)
-        globalThis.addEventListener("focus", refresh)
+        void atualizar()
+        globalThis.addEventListener("pageshow", atualizar)
+        globalThis.addEventListener("focus", atualizar)
         return () => {
-            active = false
-            globalThis.removeEventListener("pageshow", refresh)
-            globalThis.removeEventListener("focus", refresh)
+            ativo = false
+            globalThis.removeEventListener("pageshow", atualizar)
+            globalThis.removeEventListener("focus", atualizar)
         }
-    }, [accountId])
-    const [confirmLogout, setConfirmLogout] = useState(false)
-    const [explanation, setExplanation] = useState<Explanation | null>(null)
-    const form = useRef<HTMLFormElement>(null)
+    }, [idConta])
+    const [confirmarSaida, definirConfirmarSaida] = useState(false)
+    const [explicacao, definirExplicacao] = useState<Explicacao | null>(null)
+    const formulario = useRef<HTMLFormElement>(null)
 
-    const journeys: Journey[] = [
+    const jornadas: Jornada[] = [
         {
-            title: "Capturar",
-            description: "Preserve as memórias de um dia.",
-            icon: "fas fa-feather-pointed",
+            titulo: "Capturar",
+            descricao: "Preserve as memórias de um dia.",
+            icone: "fas fa-feather-pointed",
             href: "/capturar",
-            available: true
+            disponivel: true
         },
         {
-            title: "Encontrar Memórias",
-            description: "Localize memórias preservadas usando diferentes critérios.",
-            unavailable: "Disponível depois que você capturar seu primeiro dia.",
-            explanation:
+            titulo: "Encontrar Memórias",
+            descricao: "Localize memórias preservadas usando diferentes critérios.",
+            indisponivel: "Disponível depois que você capturar seu primeiro dia.",
+            explicacao:
                 "Encontre memórias já preservadas usando diferentes critérios de busca.\n\nPara começar a utilizar este recurso, primeiro capture e preserve as memórias de pelo menos um dia.",
-            icon: "fas fa-magnifying-glass",
+            icone: "fas fa-magnifying-glass",
             href: "/encontrar",
-            available: capabilities.canFindMemories
+            disponivel: capacidades.canFindMemories
         },
         {
-            title: "Rever um Dia",
-            description: "Volte às memórias preservadas de uma data específica.",
-            unavailable: "Disponível depois que você capturar seu primeiro dia.",
-            explanation:
+            titulo: "Rever um Dia",
+            descricao: "Volte às memórias preservadas de uma data específica.",
+            indisponivel: "Disponível depois que você capturar seu primeiro dia.",
+            explicacao:
                 "Reveja as memórias que você preservou em uma data específica.\n\nPara utilizar este recurso, primeiro capture e preserve as memórias de pelo menos um dia.",
-            icon: "fas fa-location-crosshairs",
+            icone: "fas fa-location-crosshairs",
             href: "/rever",
-            available: capabilities.canReviewDay
+            disponivel: capacidades.canReviewDay
         },
         {
-            title: "Rememorar",
-            description: "Explore suas memórias por categorias e períodos.",
-            unavailable: "Disponível quando houver mais memórias preservadas.",
-            explanation:
+            titulo: "Rememorar",
+            descricao: "Explore suas memórias por categorias e períodos.",
+            indisponivel: "Disponível quando houver mais memórias preservadas.",
+            explicacao:
                 "Rememorar permite explorar suas memórias por categorias e períodos, ajudando a perceber relações ao longo do tempo.\n\nPara que essa exploração faça sentido, é preciso ter memórias preservadas em pelo menos dois dias e distribuídas entre pelo menos duas categorias.\n\nContinue capturando suas memórias e o recurso ficará disponível conforme seu acervo crescer.",
-            icon: "fas fa-book-open",
+            icone: "fas fa-book-open",
             href: "/rememorar",
-            available: capabilities.canReminisce
+            disponivel: capacidades.canReminisce
         }
     ]
 
-    function receiveLogoutResult(result: PopupResult) {
-        setConfirmLogout(false)
-        if (result === "confirm") form.current!.requestSubmit()
+    function receberResultadoSaida(resultado: ResultadoPopup) {
+        definirConfirmarSaida(false)
+        if (resultado === "confirm") formulario.current!.requestSubmit()
     }
 
-    function openJourney(journey: Journey) {
-        if (!journey.explanation) return
-        setExplanation({ title: journey.title, message: journey.explanation, icon: journey.icon })
+    function abrirJornada(jornada: Jornada) {
+        if (!jornada.explicacao) return
+        definirExplicacao({ titulo: jornada.titulo, mensagem: jornada.explicacao, icone: jornada.icone })
     }
 
     return (
         <>
-            <PageHeader title="Rememore" onLogout={() => setConfirmLogout(true)} />
-            <main class="rememore-container page-with-header principal-page">
-                <section class="principal-journeys" aria-label="Jornadas">
-                    {journeys.map((journey) => {
-                        const content = (
+            <CabecalhoPagina titulo="Rememore" aoSair={() => definirConfirmarSaida(true)} />
+            <main class="rememore-conteiner pagina-com-cabecalho principal-pagina">
+                <section class="principal-jornadas" aria-label="Jornadas">
+                    {jornadas.map((jornada) => {
+                        const conteudo = (
                             <>
-                                <div class="principal-journey-visual">
-                                    <i class={journey.icon} aria-hidden="true" />
+                                <div class="principal-jornada-visual">
+                                    <i class={jornada.icone} aria-hidden="true" />
                                 </div>
-                                <div class="card-content principal-journey-content">
-                                    <h2 class="title is-3">{journey.title}</h2>
-                                    <p>{journey.description}</p>
-                                    {!journey.available && <p class="principal-availability">{journey.unavailable}</p>}
+                                <div class="card-content principal-jornada-conteudo">
+                                    <h2 class="title is-3">{jornada.titulo}</h2>
+                                    <p>{jornada.descricao}</p>
+                                    {!jornada.disponivel && <p class="principal-disponibilidade">{jornada.indisponivel}</p>}
                                 </div>
                             </>
                         )
 
-                        return journey.available
+                        return jornada.disponivel
                             ? (
-                                <a class="card principal-journey" href={journey.href}>
-                                    {content}
+                                <a class="card principal-jornada" href={jornada.href}>
+                                    {conteudo}
                                 </a>
                             )
                             : (
-                                <button type="button" class="card principal-journey" onClick={() => openJourney(journey)}>
-                                    {content}
+                                <button type="button" class="card principal-jornada" onClick={() => abrirJornada(jornada)}>
+                                    {conteudo}
                                 </button>
                             )
                     })}
                 </section>
 
-                <nav class="principal-secondary" aria-label="Continuidade, conta e sistema">
-                    {pending && (
-                        <a class="principal-secondary-item principal-pending" href="/capturar">
+                <nav class="principal-secundario" aria-label="Continuidade, conta e sistema">
+                    {pendentes && (
+                        <a class="principal-item-secundario principal-pendencias" href="/capturar">
                             <i class="fas fa-triangle-exclamation" aria-hidden="true" />
                             <span>Capturas pendentes</span>
                         </a>
                     )}
-                    <a class="principal-secondary-item" href="/conta">
+                    <a class="principal-item-secundario" href="/conta">
                         <i class="fas fa-user-gear" aria-hidden="true" />
                         <span>Minha Conta e Meus Dados</span>
                     </a>
-                    {capabilities.canAdminister && (
-                        <a class="principal-secondary-item" href="/admin">
+                    {capacidades.canAdminister && (
+                        <a class="principal-item-secundario" href="/admin">
                             <i class="fas fa-wrench" aria-hidden="true" />
                             <span>Administração</span>
                         </a>
                     )}
                 </nav>
-                {pendingError && (
+                {erroPendencias && (
                     <p class="notification is-warning" role="alert">Não foi possível verificar as capturas pendentes neste dispositivo.</p>
                 )}
             </main>
 
-            <form ref={form} method="post" action="/principal" hidden />
-            <MessagePopup
-                open={confirmLogout}
-                message="Deseja realmente sair?"
-                actions="yesNo"
-                onResult={receiveLogoutResult}
+            <form ref={formulario} method="post" action="/principal" hidden />
+            <MensagemPopup
+                aberto={confirmarSaida}
+                mensagem="Deseja realmente sair?"
+                acoes="yesNo"
+                aoResponder={receberResultadoSaida}
             />
-            <MessagePopup
-                open={explanation !== null}
-                title={explanation?.title}
-                message={explanation?.message ?? ""}
-                icon={explanation?.icon}
-                actions="ok"
-                onResult={() => setExplanation(null)}
+            <MensagemPopup
+                aberto={explicacao !== null}
+                titulo={explicacao?.titulo}
+                mensagem={explicacao?.mensagem ?? ""}
+                icone={explicacao?.icone}
+                acoes="ok"
+                aoResponder={() => definirExplicacao(null)}
             />
         </>
     )

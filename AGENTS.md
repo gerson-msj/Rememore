@@ -67,6 +67,19 @@ Os contratos devem expressar somente aquilo que o front efetivamente necessita e
 
 Até que a etapa de front seja concluída, não implemente backend real, persistência remota ou regras de servidor definitivas, salvo determinação explícita de uma Especificação posterior. Os mocks devem ser mínimos e orientados aos cenários necessários à unidade corrente, evitando antecipar cenários de páginas futuras apenas por conveniência.
 
+## Convenção de idioma do código-fonte
+
+- O idioma autoral do Rememore é português do Brasil. Todo código novo segue esta convenção: classes, tipos, interfaces, enums, funções,
+  métodos, variáveis, constantes, componentes, Islands, módulos, arquivos, classes CSS próprias e descrições de testes usam
+  preferencialmente português quando seus nomes são controlados pelo projeto.
+- Identificadores usam ASCII, sem acentos ou cedilha, preservando `camelCase`, `PascalCase`, `UPPER_SNAKE_CASE` e o vocabulário do domínio:
+  memoria, captura, complemento, preservacao, rememoracao, categoria e Tom. Evite nomes híbridos quando o conceito for inteiramente autoral.
+- Palavras-chave, APIs, propriedades e eventos HTML/JSX, CSS e nomes definidos por TypeScript/JavaScript, Deno, Fresh, Preact, Bulma, Font
+  Awesome, libSQL/SQLite, Web APIs e outras dependências mantêm a grafia da tecnologia, inclusive arquivos especiais da stack.
+- Comentários autorais usam português natural com acentos e explicam razões ou restrições relevantes, sem repetir o código.
+- Contratos, campos persistidos/serializados, chaves de armazenamento, cookies, rotas e outros endereços estáveis não são renomeados
+  automaticamente por tradução. Preserve a compatibilidade; em dúvida, mantenha o nome e informe o operador. Não crie migração nominal.
+
 ## Implementação e decisões
 
 - Reutilize estruturas, padrões, componentes e recursos existentes quando forem adequados.

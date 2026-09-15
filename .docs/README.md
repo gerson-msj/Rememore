@@ -25,7 +25,7 @@ o analista e o Drive. Não é necessário criar outro arquivo nem uma versão re
 
 ## Consultas sob demanda
 
-- [Componentes e capacidades](referencias/componentes-e-capacidades.md): contratos de PageHeader, MessagePopup, cascas e navegação
+- [Componentes e capacidades](referencias/componentes-e-capacidades.md): contratos de CabecalhoPagina, MensagemPopup, cascas e navegação
   autenticada.
 - [Ambiente e fundação visual](referencias/ambiente-e-fundacao-visual.md): execução do Deno, estilos, paletas e laboratório.
 - [Trabalho local](referencias/trabalho-local.md): IndexedDB, disponibilidade, capturas por conta/data, transações e evolução de schema.

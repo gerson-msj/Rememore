@@ -1,15 +1,15 @@
-import { define } from "../utils.ts"
-import CaptureSelection from "../islands/CaptureSelection.tsx"
-import { session } from "../app/services/auth.ts"
+import { definir } from "../utilitarios.ts"
+import SelecaoCaptura from "../islands/SelecaoCaptura.tsx"
+import { sessao } from "../app/servicos/autenticacao.ts"
 
-export const handler = define.handlers({
-    async GET(ctx) {
-        const accountId = await session.accountId(ctx.req)
-        if (!accountId) return new Response(null, { status: 303, headers: { Location: "/entrar" } })
-        return { data: { accountId } }
+export const handler = definir.handlers({
+    async GET(contexto) {
+        const idConta = await sessao.accountId(contexto.req)
+        if (!idConta) return new Response(null, { status: 303, headers: { Location: "/entrar" } })
+        return { data: { accountId: idConta } }
     }
 })
 
-export default define.page<typeof handler>(function CapturarPage({ data }) {
-    return <CaptureSelection accountId={data.accountId} />
+export default definir.page<typeof handler>(function PaginaCapturar({ data: dados }) {
+    return <SelecaoCaptura accountId={dados.accountId} />
 })

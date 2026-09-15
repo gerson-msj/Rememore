@@ -1,33 +1,33 @@
-import { define } from "../../utils.ts"
-import { pendingKey, session } from "../../app/services/auth.ts"
-import KeyConfirmation from "../../islands/KeyConfirmation.tsx"
-import { registrationPendingStorage } from "../../app/utils/pendingKey.ts"
+import { definir } from "../../utilitarios.ts"
+import { chavePendente, sessao } from "../../app/servicos/autenticacao.ts"
+import ConfirmacaoChave from "../../islands/ConfirmacaoChave.tsx"
+import { chaveArmazenamentoCadastroPendente } from "../../app/utilitarios/chavePendente.ts"
 
-const home = () => new Response(null, { status: 303, headers: { Location: "/" } })
+const inicio = () => new Response(null, { status: 303, headers: { Location: "/" } })
 
-export const handler = define.handlers({
-    async POST(ctx) {
-        const form = await ctx.req.formData()
-        const pendingId = form.get("pendingId")
-        if (typeof pendingId !== "string") return home()
-        if (form.get("intent") === "read") {
-            const key = await pendingKey.read(pendingId, "registration")
-            return key ? Response.json({ key }) : home()
+export const handler = definir.handlers({
+    async POST(contexto) {
+        const formulario = await contexto.req.formData()
+        const idPendente = formulario.get("pendingId")
+        if (typeof idPendente !== "string") return inicio()
+        if (formulario.get("intent") === "read") {
+            const chave = await chavePendente.read(idPendente, "registration")
+            return chave ? Response.json({ key: chave }) : inicio()
         }
-        if (form.get("intent") !== "confirm" || !await pendingKey.consume(pendingId, "registration")) return home()
-        const headers = new Headers()
-        await session.establish(ctx.req, headers)
-        return new Response(null, { status: 204, headers })
+        if (formulario.get("intent") !== "confirm" || !await chavePendente.consume(idPendente, "registration")) return inicio()
+        const cabecalhos = new Headers()
+        await sessao.establish(contexto.req, cabecalhos)
+        return new Response(null, { status: 204, headers: cabecalhos })
     }
 })
 
-export default define.page(function ConfirmacaoCadastro() {
+export default definir.page(function ConfirmacaoCadastro() {
     return (
-        <KeyConfirmation
-            title="Conta criada"
-            endpoint="/cadastro/confirmacao"
-            storageKey={registrationPendingStorage}
-            message="Sua conta foi criada. Guarde esta chave: ela será necessária caso você precise redefinir sua senha no futuro."
+        <ConfirmacaoChave
+            titulo="Conta criada"
+            endereco="/cadastro/confirmacao"
+            chaveArmazenamento={chaveArmazenamentoCadastroPendente}
+            mensagem="Sua conta foi criada. Guarde esta chave: ela será necessária caso você precise redefinir sua senha no futuro."
         />
     )
 })

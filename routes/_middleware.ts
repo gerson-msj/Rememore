@@ -1,29 +1,29 @@
-import { define } from "../utils.ts"
-import { session } from "../app/services/auth.ts"
-import { principalCapabilities } from "../app/services/principal.ts"
+import { definir } from "../utilitarios.ts"
+import { sessao } from "../app/servicos/autenticacao.ts"
+import { capacidadesPrincipal } from "../app/servicos/principal.ts"
 
-export default define.middleware(async (ctx) => {
-    const path = ctx.url.pathname.replace(/\/$/, "") || "/"
-    const openArea = ["/", "/entrar", "/cadastro", "/cadastro/confirmacao", "/redefinir-senha", "/redefinir-senha/confirmacao"].includes(
-        path
+export default definir.middleware(async (contexto) => {
+    const caminho = contexto.url.pathname.replace(/\/$/, "") || "/"
+    const areaAberta = ["/", "/entrar", "/cadastro", "/cadastro/confirmacao", "/redefinir-senha", "/redefinir-senha/confirmacao"].includes(
+        caminho
     )
-    const protectedArea = path.startsWith("/capturar/") ||
-        ["/principal", "/capturar", "/encontrar", "/rever", "/rememorar", "/conta", "/admin"].includes(path)
-    if (!openArea && !protectedArea) return await ctx.next()
+    const areaProtegida = caminho.startsWith("/capturar/") ||
+        ["/principal", "/capturar", "/encontrar", "/rever", "/rememorar", "/conta", "/admin"].includes(caminho)
+    if (!areaAberta && !areaProtegida) return await contexto.next()
 
-    const authenticated = await session.isAuthenticated(ctx.req)
-    if ((openArea && authenticated) || (protectedArea && !authenticated)) {
+    const autenticado = await sessao.isAuthenticated(contexto.req)
+    if ((areaAberta && autenticado) || (areaProtegida && !autenticado)) {
         return new Response(null, {
             status: 303,
-            headers: { Location: authenticated ? "/principal" : "/entrar", "Cache-Control": "no-store" }
+            headers: { Location: autenticado ? "/principal" : "/entrar", "Cache-Control": "no-store" }
         })
     }
 
-    if (path === "/admin" && !(await principalCapabilities.read(ctx.req)).canAdminister) {
+    if (caminho === "/admin" && !(await capacidadesPrincipal.read(contexto.req)).canAdminister) {
         return new Response(null, { status: 303, headers: { Location: "/principal", "Cache-Control": "no-store" } })
     }
 
-    const response = await ctx.next()
-    response.headers.set("Cache-Control", "no-store")
-    return response
+    const resposta = await contexto.next()
+    resposta.headers.set("Cache-Control", "no-store")
+    return resposta
 })

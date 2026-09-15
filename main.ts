@@ -1,30 +1,30 @@
-import { App, staticFiles } from "fresh";
-import { define, type State } from "./utils.ts";
+import { App, staticFiles } from "fresh"
+import { definir, type Estado } from "./utilitarios.ts"
 
-export const app = new App<State>();
+export const app = new App<Estado>()
 
-app.use(staticFiles());
+app.use(staticFiles())
 
-// Pass a shared value from a middleware
-app.use(async (ctx) => {
-  ctx.state.shared = "hello";
-  return await ctx.next();
-});
+// Estado compartilhado entre os intermediários de requisição e as rotas.
+app.use(async (contexto) => {
+    contexto.state.compartilhado = "hello"
+    return await contexto.next()
+})
 
-// this is the same as the /api/:name route defined via a file. feel free to delete this!
-app.get("/api2/:name", (ctx) => {
-  const name = ctx.params.name;
-  return new Response(
-    `Hello, ${name.charAt(0).toUpperCase() + name.slice(1)}!`,
-  );
-});
+// Mantém a rota de exemplo equivalente à rota definida em arquivo.
+app.get("/api2/:name", (contexto) => {
+    const nome = contexto.params.name
+    return new Response(
+        `Hello, ${nome.charAt(0).toUpperCase() + nome.slice(1)}!`
+    )
+})
 
-// this can also be defined via a file. feel free to delete this!
-const exampleLoggerMiddleware = define.middleware((ctx) => {
-  console.log(`${ctx.req.method} ${ctx.req.url}`);
-  return ctx.next();
-});
-app.use(exampleLoggerMiddleware);
+// O registro das requisições também cobre as rotas declaradas em arquivo.
+const registrarRequisicao = definir.middleware((contexto) => {
+    console.log(`${contexto.req.method} ${contexto.req.url}`)
+    return contexto.next()
+})
+app.use(registrarRequisicao)
 
-// Include file-system based routes here
-app.fsRoutes();
+// As rotas em arquivo compartilham os intermediários registrados acima.
+app.fsRoutes()

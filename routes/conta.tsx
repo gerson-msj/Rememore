@@ -1,6 +1,6 @@
-import { define } from "../utils.ts"
-import ProtectedShell from "../islands/ProtectedShell.tsx"
+import { definir } from "../utilitarios.ts"
+import EstruturaProtegida from "../islands/EstruturaProtegida.tsx"
 
-export default define.page(function ContaPage() {
-    return <ProtectedShell title="Minha Conta e Meus Dados" />
+export default definir.page(function PaginaConta() {
+    return <EstruturaProtegida titulo="Minha Conta e Meus Dados" />
 })

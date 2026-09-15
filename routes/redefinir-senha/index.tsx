@@ -1,28 +1,28 @@
-import { define } from "../../utils.ts"
-import ResetPassword from "../../islands/ResetPassword.tsx"
-import { passwordReset } from "../../app/services/auth.ts"
-import { normalizeUsername } from "../../app/utils/login.ts"
+import { definir } from "../../utilitarios.ts"
+import RedefinicaoSenha from "../../islands/RedefinicaoSenha.tsx"
+import { redefinicaoSenha } from "../../app/servicos/autenticacao.ts"
+import { normalizarNomeUsuario } from "../../app/utilitarios/entrada.ts"
 
-export const handler = define.handlers({
-    GET(ctx) {
-        return { data: { resetKey: ctx.url.searchParams.get("chave") ?? "" } }
+export const handler = definir.handlers({
+    GET(contexto) {
+        return { data: { resetKey: contexto.url.searchParams.get("chave") ?? "" } }
     },
-    async POST(ctx) {
-        const form = await ctx.req.formData()
-        const value = (name: string) => typeof form.get(name) === "string" ? form.get(name) as string : ""
-        const password = value("password")
+    async POST(contexto) {
+        const formulario = await contexto.req.formData()
+        const valor = (nome: string) => typeof formulario.get(nome) === "string" ? formulario.get(nome) as string : ""
+        const senha = valor("password")
         // A mesma validação protege requisições diretas sem chamar o mock.
-        if (password.length < 6) return Response.json({ status: "invalidPassword" })
+        if (senha.length < 6) return Response.json({ status: "invalidPassword" })
         return Response.json(
-            await passwordReset.reset({
-                username: normalizeUsername(value("username")),
-                key: value("key"),
-                password
+            await redefinicaoSenha.reset({
+                username: normalizarNomeUsuario(valor("username")),
+                key: valor("key"),
+                password: senha
             })
         )
     }
 })
 
-export default define.page<typeof handler>(function RedefinirSenha({ data }) {
-    return <ResetPassword resetKey={data.resetKey} />
+export default definir.page<typeof handler>(function RedefinirSenha({ data: dados }) {
+    return <RedefinicaoSenha resetKey={dados.resetKey} />
 })

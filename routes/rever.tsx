@@ -1,6 +1,6 @@
-import { define } from "../utils.ts"
-import ProtectedShell from "../islands/ProtectedShell.tsx"
+import { definir } from "../utilitarios.ts"
+import EstruturaProtegida from "../islands/EstruturaProtegida.tsx"
 
-export default define.page(function ReverPage() {
-    return <ProtectedShell title="Rever um Dia" />
+export default definir.page(function PaginaRever() {
+    return <EstruturaProtegida titulo="Rever um Dia" />
 })

@@ -1,25 +1,25 @@
-import { define } from "../utils.ts"
-import Login from "../islands/Login.tsx"
-import { authentication, session } from "../app/services/auth.ts"
-import { normalizeUsername } from "../app/utils/login.ts"
+import { definir } from "../utilitarios.ts"
+import Entrada from "../islands/Entrada.tsx"
+import { autenticacao, sessao } from "../app/servicos/autenticacao.ts"
+import { normalizarNomeUsuario } from "../app/utilitarios/entrada.ts"
 
-export const handler = define.handlers({
+export const handler = definir.handlers({
     GET() {
         return { data: { username: "", password: "", failed: false } }
     },
-    async POST(ctx) {
-        const form = await ctx.req.formData()
-        const username = typeof form.get("username") === "string" ? form.get("username") as string : ""
-        const password = typeof form.get("password") === "string" ? form.get("password") as string : ""
-        const result = await authentication.authenticate({ username: normalizeUsername(username), password })
-        if (result === "invalid") return { data: { username, password, failed: true } }
+    async POST(contexto) {
+        const formulario = await contexto.req.formData()
+        const nomeUsuario = typeof formulario.get("username") === "string" ? formulario.get("username") as string : ""
+        const senha = typeof formulario.get("password") === "string" ? formulario.get("password") as string : ""
+        const resultado = await autenticacao.authenticate({ username: normalizarNomeUsuario(nomeUsuario), password: senha })
+        if (resultado === "invalid") return { data: { username: nomeUsuario, password: senha, failed: true } }
 
-        const headers = new Headers({ Location: "/principal" })
-        await session.establish(ctx.req, headers)
-        return new Response(null, { status: 303, headers })
+        const cabecalhos = new Headers({ Location: "/principal" })
+        await sessao.establish(contexto.req, cabecalhos)
+        return new Response(null, { status: 303, headers: cabecalhos })
     }
 })
 
-export default define.page<typeof handler>(function Entrar({ data }) {
-    return <Login {...data} />
+export default definir.page<typeof handler>(function Entrar({ data: dados }) {
+    return <Entrada {...dados} />
 })

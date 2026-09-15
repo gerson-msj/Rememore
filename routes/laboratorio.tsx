@@ -1,9 +1,9 @@
 import { Head } from "fresh/runtime"
-import { define } from "../utils.ts"
-import LaboratorioControls from "../islands/LaboratorioControls.tsx"
-import LaboratorioComponents from "../islands/LaboratorioComponents.tsx"
+import { definir } from "../utilitarios.ts"
+import ControlesLaboratorio from "../islands/ControlesLaboratorio.tsx"
+import ComponentesLaboratorio from "../islands/ComponentesLaboratorio.tsx"
 
-const colors = [
+const cores = [
     ["primary", "Principal"],
     ["link", "Link"],
     ["info", "Informação"],
@@ -12,22 +12,22 @@ const colors = [
     ["danger", "Perigo"]
 ] as const
 
-export default define.page(function Laboratorio() {
+export default definir.page(function Laboratorio() {
     return (
-        <main class="rememore-container" id="laboratorio">
+        <main class="rememore-conteiner" id="laboratorio">
             <Head>
                 <title>Laboratório visual — Rememore</title>
                 <meta name="robots" content="noindex, nofollow" />
             </Head>
-            <header class="lab-section">
+            <header class="lab-secao">
                 <p class="is-size-7 has-text-weight-semibold mb-3">REMEMORE · DESENVOLVIMENTO</p>
                 <h1 class="title is-2">Laboratório visual</h1>
-                <p class="rememore-reading mb-5">
+                <p class="rememore-leitura mb-5">
                     Um espaço para comparar fontes, temas e elementos básicos antes de construir as páginas. Redimensione a janela e
                     percorra as amostras também com o teclado.
                 </p>
-                <LaboratorioControls />
-                <nav class="lab-sample-row mt-5" aria-label="Seções do laboratório">
+                <ControlesLaboratorio />
+                <nav class="lab-linha-amostras mt-5" aria-label="Seções do laboratório">
                     <a href="#componentes">Cabeçalho e popup</a>
                     <a href="#tipografia">Tipografia</a>
                     <a href="#cores">Cores e estados</a>
@@ -37,11 +37,11 @@ export default define.page(function Laboratorio() {
                 </nav>
             </header>
 
-            <LaboratorioComponents />
+            <ComponentesLaboratorio />
 
-            <section class="lab-section" id="tipografia" aria-labelledby="titulo-tipografia">
+            <section class="lab-secao" id="tipografia" aria-labelledby="titulo-tipografia">
                 <h2 class="title is-3" id="titulo-tipografia">Tipografia</h2>
-                <div class="lab-grid">
+                <div class="lab-grade">
                     <div class="content">
                         <h1>Título de primeiro nível</h1>
                         <h2>Título de segundo nível</h2>
@@ -50,7 +50,7 @@ export default define.page(function Laboratorio() {
                         <h5>Título de quinto nível</h5>
                         <h6>Título de sexto nível</h6>
                     </div>
-                    <div class="content rememore-reading">
+                    <div class="content rememore-leitura">
                         <p class="is-size-4">Nem todos os dias são iguais. Às vezes, é a memória que os torna parecidos.</p>
                         <p>Uma lembrança pode começar com um detalhe: o cheiro do café, uma conversa ou a luz entrando pela janela.</p>
                         <p>
@@ -75,53 +75,53 @@ export default define.page(function Laboratorio() {
                 </div>
             </section>
 
-            <section class="lab-section" id="cores" aria-labelledby="titulo-cores">
+            <section class="lab-secao" id="cores" aria-labelledby="titulo-cores">
                 <h2 class="title is-3" id="titulo-cores">Cores e estados</h2>
                 <p class="mb-5">Compare fundos, texto e bordas. Passe o mouse e use Tab para observar o foco real.</p>
-                <div class="lab-grid">
-                    {colors.map(([color, label]) => (
-                        <article key={color}>
-                            <h3 class="title is-5">{label}</h3>
-                            <div class={"lab-swatch has-background-" + color + " has-text-" + color + "-invert mb-3"}>
-                                {label} sobre a cor base
+                <div class="lab-grade">
+                    {cores.map(([cor, rotulo]) => (
+                        <article key={cor}>
+                            <h3 class="title is-5">{rotulo}</h3>
+                            <div class={"lab-amostra-cor has-background-" + cor + " has-text-" + cor + "-invert mb-3"}>
+                                {rotulo} sobre a cor base
                             </div>
                             <div class="buttons">
-                                <button type="button" class={"button is-" + color}>Normal</button>
-                                <button type="button" class={"button is-" + color + " is-light"}>Suave</button>
-                                <button type="button" class={"button is-" + color + " is-outlined"}>Contorno</button>
-                                <button type="button" class={"button is-" + color + " is-hovered"}>Hover</button>
-                                <button type="button" class={"button is-" + color + " is-focused"}>Foco</button>
-                                <button type="button" class={"button is-" + color + " is-active"}>Ativo</button>
-                                <button type="button" class={"button is-" + color} disabled>Desabilitado</button>
+                                <button type="button" class={"button is-" + cor}>Normal</button>
+                                <button type="button" class={"button is-" + cor + " is-light"}>Suave</button>
+                                <button type="button" class={"button is-" + cor + " is-outlined"}>Contorno</button>
+                                <button type="button" class={"button is-" + cor + " is-hovered"}>Hover</button>
+                                <button type="button" class={"button is-" + cor + " is-focused"}>Foco</button>
+                                <button type="button" class={"button is-" + cor + " is-active"}>Ativo</button>
+                                <button type="button" class={"button is-" + cor} disabled>Desabilitado</button>
                                 <button
                                     type="button"
-                                    class={"button is-" + color + " is-loading"}
+                                    class={"button is-" + cor + " is-loading"}
                                     disabled
-                                    aria-label={label + ": carregando"}
+                                    aria-label={rotulo + ": carregando"}
                                 >
                                     Carregando
                                 </button>
                             </div>
-                            <div class={"notification is-" + color + " is-light"}>Notificação de exemplo: {label.toLowerCase()}.</div>
-                            <article class={"message is-" + color}>
+                            <div class={"notification is-" + cor + " is-light"}>Notificação de exemplo: {rotulo.toLowerCase()}.</div>
+                            <article class={"message is-" + cor}>
                                 <div class="message-header">
-                                    <p>{label}</p>
+                                    <p>{rotulo}</p>
                                 </div>
                                 <div class="message-body">Mensagem para observar texto, fundo e borda.</div>
                             </article>
                             <div class="tags">
-                                <span class={"tag is-" + color}>{label}</span>
-                                <span class={"tag is-" + color + " is-light"}>Variação suave</span>
+                                <span class={"tag is-" + cor}>{rotulo}</span>
+                                <span class={"tag is-" + cor + " is-light"}>Variação suave</span>
                             </div>
-                            <progress class={"progress is-" + color} value="60" max="100" aria-label={label + ": 60%"}>60%</progress>
+                            <progress class={"progress is-" + cor} value="60" max="100" aria-label={rotulo + ": 60%"}>60%</progress>
                         </article>
                     ))}
                 </div>
             </section>
 
-            <section class="lab-section" id="campos" aria-labelledby="titulo-campos">
+            <section class="lab-secao" id="campos" aria-labelledby="titulo-campos">
                 <h2 class="title is-3" id="titulo-campos">Campos e controles</h2>
-                <div class="lab-grid">
+                <div class="lab-grade">
                     <div>
                         <div class="field">
                             <label class="label" for="sample-normal">Texto</label>
@@ -213,9 +213,9 @@ export default define.page(function Laboratorio() {
                 </div>
             </section>
 
-            <section class="lab-section" id="superficies" aria-labelledby="titulo-superficies">
+            <section class="lab-secao" id="superficies" aria-labelledby="titulo-superficies">
                 <h2 class="title is-3" id="titulo-superficies">Superfícies e elementos</h2>
-                <div class="lab-grid">
+                <div class="lab-grade">
                     <div class="box">
                         <h3 class="title is-5">Caixa com sombra</h3>
                         <p>
@@ -233,11 +233,11 @@ export default define.page(function Laboratorio() {
                             <a class="card-footer-item" href="#tipografia">Ver tipografia</a>
                         </footer>
                     </article>
-                    <div class="lab-surface lab-surface-bis">
+                    <div class="lab-superficie lab-superficie-secundaria">
                         <h3 class="title is-5">Superfície secundária</h3>
                         <p>Fundo bis com borda.</p>
                     </div>
-                    <div class="lab-surface lab-surface-ter">
+                    <div class="lab-superficie lab-superficie-terciaria">
                         <h3 class="title is-5">Superfície terciária</h3>
                         <p>Fundo ter com borda.</p>
                     </div>
@@ -287,24 +287,24 @@ export default define.page(function Laboratorio() {
                 </details>
             </section>
 
-            <section class="lab-section" id="layout" aria-labelledby="titulo-layout">
+            <section class="lab-secao" id="layout" aria-labelledby="titulo-layout">
                 <h2 class="title is-3" id="titulo-layout">Layout e rolagem</h2>
-                <p class="rememore-reading mb-5">
+                <p class="rememore-leitura mb-5">
                     A largura útil, as margens e os espaçamentos são globais. As colunas abaixo usam a responsividade do Bulma e se empilham
                     em telas pequenas.
                 </p>
                 <div class="columns">
-                    {[1, 2, 3].map((number) => (
-                        <div class="column" key={number}>
-                            <div class="lab-surface">Coluna {number}</div>
+                    {[1, 2, 3].map((numero) => (
+                        <div class="column" key={numero}>
+                            <div class="lab-superficie">Coluna {numero}</div>
                         </div>
                     ))}
                 </div>
-                <div class="lab-scroll content" tabIndex={0} role="region" aria-label="Amostra de rolagem vertical">
+                <div class="lab-rolagem content" tabIndex={0} role="region" aria-label="Amostra de rolagem vertical">
                     {Array.from(
                         { length: 10 },
-                        (_, index) => (
-                            <p key={index}>Linha {index + 1}. Role esta área para avaliar a barra, o fundo e a leitura no tema atual.</p>
+                        (_, indice) => (
+                            <p key={indice}>Linha {indice + 1}. Role esta área para avaliar a barra, o fundo e a leitura no tema atual.</p>
                         )
                     )}
                 </div>
