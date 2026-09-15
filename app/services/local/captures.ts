@@ -1,11 +1,21 @@
 import { LocalDatabase, localDatabase } from "./database.ts"
 import { CAPTURES_ACCOUNT_INDEX, CAPTURES_STORE } from "./schema.ts"
 
+export interface LocalComplement {
+    id: string
+    content: string
+    /** ISO instant of the first remote preservation; null means never preserved. */
+    firstPreservedAt: string | null
+}
+
 export interface LocalMemory {
-    /** Assigned once by the future creation flow (e.g. crypto.randomUUID()). */
+    /** Assigned once and retained independently of content and physical order. */
     id: string
     content: string
     order: number
+    firstPreservedAt: string | null
+    /** Oldest to newest; each complement retains its own first preservation. */
+    complements: LocalComplement[]
 }
 
 export interface LocalCapture {
@@ -15,6 +25,11 @@ export interface LocalCapture {
     memories: LocalMemory[]
     changed: boolean
     preservedOrigin: boolean
+    /** Opaque remote baseline; null only when absence was confirmed. */
+    originRevision: string | null
+    /** Identifies this materialization, so an old session cannot resume a replacement. */
+    workspaceId: string
+    editWindowDays: number
 }
 
 /** Persistence only: does not decide when pending work begins or how memories are edited. */

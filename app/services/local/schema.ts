@@ -23,5 +23,12 @@ export const localMigrations: readonly LocalMigration[] = [
             // Pre-V1 experimental records have no workspace state or origin metadata.
             transaction.objectStore(CAPTURES_STORE).clear()
         }
+    },
+    {
+        version: 3,
+        upgrade(_database, transaction) {
+            // Operator authorized replacing all pre-07 experimental captures (14/09/2026).
+            transaction.objectStore(CAPTURES_STORE).clear()
+        }
     }
 ]

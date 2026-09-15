@@ -15,3 +15,14 @@ export function isCaptureDate(value: string, current = today()): boolean {
 export function formatCaptureDate(value: string): string {
     return value.split("-").reverse().join("/")
 }
+
+/** Format a civil date without letting the browser timezone move it to another calendar day. */
+export function formatCaptureDateLong(value: string): string {
+    return new Intl.DateTimeFormat("pt-BR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC"
+    }).format(new Date(`${value}T12:00:00Z`))
+}

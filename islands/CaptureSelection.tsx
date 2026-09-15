@@ -5,6 +5,7 @@ import MessagePopup from "../components/MessagePopup.tsx"
 import { guidance } from "../app/services/guidance.ts"
 import { type LocalCapture, localCaptures } from "../app/services/local/captures.ts"
 import { formatCaptureDate, isCaptureDate, today } from "../app/utils/captureDate.ts"
+import { acquireCaptureLock, type CaptureLease } from "../app/services/capture/lock.ts"
 
 export default function CaptureSelection({ accountId }: { accountId: string }) {
     const [date, setDate] = useState("")
@@ -45,12 +46,19 @@ export default function CaptureSelection({ accountId }: { accountId: string }) {
     async function remove(capture: LocalCapture) {
         setBusy(true)
         setError("")
+        let lease: CaptureLease | null = null
         try {
-            await localCaptures.remove(accountId, capture.date)
+            lease = await acquireCaptureLock(accountId, capture.date)
+            if (!lease) {
+                setError("Esta captura está aberta em outra aba ou janela. Feche-a antes de apagar suas alterações.")
+                return
+            }
+            await lease.run(() => localCaptures.remove(accountId, capture.date))
             setPending((items) => items.filter((item) => item.date !== capture.date))
         } catch {
             setError("Não foi possível apagar as alterações. Tente novamente.")
         } finally {
+            await lease?.release()
             setBusy(false)
         }
     }
