@@ -3,12 +3,16 @@ import { useEffect, useRef, useState } from "preact/hooks"
 import CabecalhoPagina from "./CabecalhoPagina.tsx"
 import MensagemPopup from "./MensagemPopup.tsx"
 
-export default function EstruturaCaptura({ children: conteudoFilho, retorno = "/principal", aoDeixar, dia = false }: {
-    children: ComponentChildren
-    retorno?: string
-    aoDeixar?: () => void
-    dia?: boolean
-}) {
+export default function EstruturaCaptura(
+    { children: conteudoFilho, retorno = "/principal", aoVoltar, aoDeixar, antesDeSair, dia = false }: {
+        children: ComponentChildren
+        retorno?: string
+        aoVoltar?: () => void
+        aoDeixar?: () => void
+        antesDeSair?: (continuar: () => void) => void
+        dia?: boolean
+    }
+) {
     const [saida, definirSaida] = useState(false)
     const formulario = useRef<HTMLFormElement>(null)
     const estrutura = useRef<HTMLDivElement>(null)
@@ -28,8 +32,16 @@ export default function EstruturaCaptura({ children: conteudoFilho, retorno = "/
                 <CabecalhoPagina
                     titulo="Capturar"
                     aoVoltar={() => {
-                        aoDeixar?.()
-                        location.assign(retorno)
+                        if (aoVoltar) {
+                            aoVoltar()
+                            return
+                        }
+                        const continuar = () => {
+                            aoDeixar?.()
+                            location.assign(retorno)
+                        }
+                        if (antesDeSair) antesDeSair(continuar)
+                        else continuar()
                     }}
                     aoSair={() => definirSaida(true)}
                 />
@@ -43,8 +55,12 @@ export default function EstruturaCaptura({ children: conteudoFilho, retorno = "/
                 aoResponder={(resultado) => {
                     definirSaida(false)
                     if (resultado === "confirm") {
-                        aoDeixar?.()
-                        formulario.current!.requestSubmit()
+                        const continuar = () => {
+                            aoDeixar?.()
+                            formulario.current!.requestSubmit()
+                        }
+                        if (antesDeSair) antesDeSair(continuar)
+                        else continuar()
                     }
                 }}
             />

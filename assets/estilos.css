@@ -22,8 +22,17 @@
     position: sticky;
     top: var(--captura-altura-cabecalho);
     z-index: 20;
+    isolation: isolate;
     background: var(--bulma-scheme-main);
     border-bottom: 1px solid var(--bulma-border);
+}
+.captura-dia-controles::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline: -0.75rem;
+    z-index: -1;
+    background: var(--bulma-scheme-main);
 }
 .captura-dia-barra {
     display: flex;
@@ -90,22 +99,16 @@
 .captura-previa-memoria {
     display: block;
     width: 100%;
-    padding: 1rem;
-    border: 1px solid var(--bulma-border);
-    border-radius: var(--bulma-radius);
-    background: var(--bulma-scheme-main);
+    padding: 0.25rem;
+    border: 0;
+    background: transparent;
     color: var(--bulma-text);
     font-size: 1rem;
     text-align: left;
     cursor: pointer;
 }
-.captura-previa-memoria:hover {
-    border-color: var(--bulma-link);
-}
 .captura-previa-memoria span {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
+    display: block;
     overflow: hidden;
     overflow-wrap: anywhere;
     white-space: pre-wrap;
@@ -120,11 +123,50 @@
 .captura-campo-memoria.textarea {
     min-height: 9.5em;
     line-height: 1.7;
+    resize: none;
 }
-.captura-andaime-desenvolvimento {
-    margin-top: 3rem;
-    padding-block: 1rem;
-    border-top: 1px solid var(--bulma-border);
+.captura-campo-complemento.textarea {
+    min-height: 7.8em;
+}
+.captura-item-memoria.box {
+    display: flex;
+    gap: 0.5rem;
+    align-items: stretch;
+    padding: 0.5rem;
+    margin: 0;
+    border: 1px solid var(--bulma-border);
+}
+.captura-item-memoria:hover {
+    border-color: var(--bulma-link);
+}
+.captura-item-memoria .captura-previa-memoria {
+    min-width: 0;
+    flex: 1;
+}
+.captura-ordem-memoria.buttons {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    align-self: center;
+    margin: 0;
+}
+.captura-ordem-memoria.buttons.has-addons > .button {
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: none;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+}
+.captura-ordem-memoria.buttons.has-addons > .button:first-child {
+    border-radius: var(--bulma-radius) var(--bulma-radius) 0 0;
+}
+.captura-ordem-memoria.buttons.has-addons > .button:last-child {
+    border-radius: 0 0 var(--bulma-radius) var(--bulma-radius);
+}
+.captura-ordem-memoria.buttons.has-addons > .button + .button {
+    margin-top: -1px;
+    margin-left: 0;
 }
 .captura-orientacao {
     margin-bottom: 2rem;

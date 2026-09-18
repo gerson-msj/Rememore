@@ -10,7 +10,9 @@ o controle nativo. Data incompleta ou inválida usa a cor de placeholder, inclui
 `app/utilitarios/dataCaptura.ts`: hoje usa calendário local; ehDataCaptura valida YYYY-MM-DD completo, calendário e limite atual;
 formatarDataCaptura apresenta DD/MM/AAAA. O campo nativo mantém a apresentação própria do navegador.
 
-`app/servicos/orientacao.ts` (CMP-005): orientar("captureSelection") retorna texto ou null e resolve internamente nivelSimulado. Alterar
+`app/servicos/orientacao.ts` (CMP-005): orientar("captureSelection") retorna texto ou null e resolve internamente nivelSimulado.
+`orientar("inicioCaptura")` fornece os três textos de início da Captura do dia; o consumidor exibe apenas na lista vazia, limpa e sem
+origem preservada. Confirmação torna a captura alterada, impedindo reapresentação após exclusões. Alterar
 nivelSimulado no fonte para validar beginner/intermediate/advanced; nenhuma configuração ou persistência de nível.
 
 `ServicoSessao.accountId(request)` retorna identidade opaca da conta autenticada ou null. O mock fornece ULID fixo; páginas não devem fixar
@@ -49,7 +51,9 @@ existente em `/principal`.
 
 Capturar usa `components/EstruturaCaptura.tsx`: Seleção volta à Principal; Captura do dia volta à Seleção. Sair mantém confirmação e POST em
 `/principal`. Callback opcional `aoDeixar` encerra a sessão aberta antes do Voltar ou logout confirmado; Seleção não precisa fornecê-lo. A
-rota dinâmica rejeita calendário inválido no servidor; o limite de hoje é validado no navegador antes do IndexedDB, evitando depender do
+propriedade opcional `antesDeSair(continuar)` permite à Captura do dia confirmar abandono antes de executar logout; `aoVoltar` permite que
+a tela de Memória use o Voltar do header para retornar à lista e que a lista volte à Seleção. Sem callbacks, a navegação usa `retorno`.
+A rota dinâmica rejeita calendário inválido no servidor; o limite de hoje é validado no navegador antes do IndexedDB, evitando depender do
 fuso do servidor. Datas inválidas retornam a `/capturar?data-invalida`.
 
 O modo `dia` de EstruturaCaptura usa header sticky no fluxo do documento e mede sua altura por ResizeObserver, expondo

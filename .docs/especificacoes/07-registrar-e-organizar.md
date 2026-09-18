@@ -1065,6 +1065,48 @@ A próxima unidade só deve ser escolhida depois do Parecer da 05.07. A direçã
 
 ## Continuidade
 
+### Estado final — encerrada pelo operador em 18/09/2026
+
+- Operador determinou: “Pode seguir ao parecer final, está tudo ok.” Registrado aceite global e encerramento da unidade;
+  os estados pendentes nas anotações anteriores representam os marcos históricos, não trabalho funcional ainda aberto.
+- Conferidos corpo aprovado, critérios de aceite e implementação vigente. Verificações finais: `deno check`, lint e formatação dos
+  fontes/CSS alterados, `deno task build` e `deno test -A tests app`: **48 testes aprovados**. A tarefa global `deno task check`
+  não foi declarada aprovada; a verificação de formatação foi restrita aos fontes/estilos alterados, preservando os demais documentos.
+- Aceite global não foi convertido retroativamente em relatos individuais de cada checklist. Preservados os limites dos testes simulados
+  e os retornos manuais efetivamente registrados. Nível simulado restaurado para `beginner`; mensagens não reescritas.
+- Parecer final preenchido abaixo e entregue ao operador para transporte ao analista/registro canônico. Google Drive não atualizado.
+- Base final: `develop`, HEAD `8e01b7f`; todo o trabalho permanece sem commit, sem push e sem troca de branch. Indicador final de contexto:
+  não disponível; indicadores anteriores preservados sem estimativa retroativa.
+
+### Retomada C/D — 15/09/2026
+
+- Base conferida: develop, `8e01b7f`. Preservadas as alterações anteriores neste documento e o adendo não rastreado.
+- B e botões aprovados. Única clarificação nova: mensagens de falha abaixo, aprovadas pelo operador.
+- Plano: inclusão/ordem e edição com rascunho; verificar contratos e build; apresentar checklist C/D antes de E/F.
+- Etapa corrente: C/D implementados e tecnicamente verificados; aguardando validação manual abaixo. Complementos e exclusão permanecem E/F.
+- Falhas aprovadas: “Não foi possível confirmar a memória. Seu texto continua nesta tela. Tente novamente.” e
+  “Não foi possível alterar a ordem das memórias. A ordem anterior foi mantida. Tente novamente.”
+- Indicadores de contexto antes das leituras e após leitura inicial, antes do fonte: não disponíveis; sem estimativa retroativa.
+
+### Passagem para nova sessão — 15/09/2026
+
+- Próximo trabalho: **marcos C/D**, com lista/inclusão/reordenação, edição e confirmação local, proteção do rascunho e retorno à lista.
+  Nenhuma implementação de C/D foi iniciada nesta retomada. Preservar a cadência e os checklists já aprovados; não reiniciar a clarificação.
+- Marco B e ajuste dos botões aprovados pelo operador: somente ícones, `title`, nome acessível e grupo Bulma `buttons has-addons`.
+- Base atual conferida: `develop`, commit `8e01b7f`, intervenção PT-BR integrada sobre `fd1672b`. Usar essa base diretamente.
+- Ler `.docs/adendo-operacional-spec-07.md` junto ao contexto obrigatório. O adendo, AGENTS e referências atuais foram lidos nesta sessão;
+  não surgiram dúvidas. As anotações antigas abaixo sobre intervenção pendente, branch separada e schema 3 são históricas e estão superadas.
+- Estado técnico vigente: schema 4, stores `capturas` e `_diagnostico`, campos locais PT-BR; contratos remotos em inglês com conversão em
+  `prepararCaptura`. Preservar chaves de sessão, campo serializado `workspaceId`, comandos `rememoreCaptureMock`, cookies, rotas e locks.
+- Código novo segue a convenção PT-BR do AGENTS. Entradas atuais: `CapturaDia`, `EstruturaCaptura`, `PainelCaptura`, `SessaoCapturaAberta`,
+  `PosseCaptura`, `RepositorioCapturasLocais`; caminhos e contratos detalhados no adendo e na referência de trabalho local.
+- Mantidas as decisões funcionais: pendência conserva o prazo recebido; reload da sessão aberta mantém base e autorização sem remoto;
+  nova entrada pela Seleção revalida apenas o limpo; digitação não cria pendência; saída deliberada descarta rascunho após confirmação.
+- Validação da intervenção: o adendo informa 34 testes e validação do operador. Esses testes não foram reexecutados nesta passagem.
+- Git antes desta anotação: somente `.docs/adendo-operacional-spec-07.md` não rastreado. Nenhum fonte alterado nesta retomada.
+- Indicador final informado pelo operador: **68% da capacidade de contexto, 175k de 258k tokens**. É ocupação de contexto, não uso semanal.
+  Indicadores anteriores permanecem conforme seus registros, sem reconstrução retroativa. Recomendada nova sessão antes de iniciar C/D.
+
 ### Intervenção PT-BR — 14/09/2026
 
 - Por orientação posterior do operador, a intervenção parte de `fd1672b` (develop, “Spec 07 - Parcial”), incluindo o código já
@@ -1110,10 +1152,11 @@ A próxima unidade só deve ser escolhida depois do Parecer da 05.07. A direçã
 
 1. **Marco A — implementado e tecnicamente verificado; aguardando validação manual:** modelo local, revisão/cache, prazo recebido,
    continuidade da sessão aberta e fundação de concorrência. Validar abertura/cache com o operador antes da interface completa.
-2. **Marco B — implementado e verificado; aguardando avaliação do operador:** estrutura fixa e abas. Operador autorizou
-   avanço após a entrega A, sem informar resultados dos testes manuais; esses resultados continuam pendentes.
-3. **Marcos C/D — pendentes:** lista, inclusão/ordem, tela editável, rascunho e retorno; validar incrementalmente os respectivos checklists.
-4. **Marcos E/F — pendentes:** historicidade/complementos e exclusão regressiva, com cenários de relógio e falha.
+2. **Marco B — aprovado pelo operador, incluindo ajuste dos botões:** estrutura fixa e abas. Os resultados individuais do roteiro A
+   não foram detalhados; preservar o histórico e os lembretes para a integração final.
+3. **Marcos C/D — passagem manual restante aprovada em 17/09/2026:** lista, inclusão/ordem, tela editável, rascunho e retorno. Itens de exclusão do checklist D serão conferidos em F.
+4. **Marcos E/F — implementados:** E teve aceite do cenário histórico e autorização de avanço; demais resultados individuais não detalhados.
+   F aguarda validação manual da exclusão regressiva, incluindo edição suja e falha de gravação.
 5. **Marcos G/H — pendentes:** validação completa de concorrência e CMP-005, passagem integrada e verificações finais.
 
 Os checklists do corpo aprovado permanecem vigentes. Encerramento e Parecer dependem do operador.
@@ -1215,8 +1258,503 @@ Na aplicação em desenvolvimento, abrir **08/09/2026 pela Seleção** e conferi
 e agrupamento Bulma em um único bloco. Implementado com `buttons has-addons`, mantendo os nomes acessíveis em `aria-label` e os rótulos
 funcionais como descrição dos ícones. Essa orientação também vale para as ações que serão acrescentadas nos próximos marcos.
 
-**Etapa corrente:** ajuste visual B entregue; próxima construção C/D. Resultados manuais A não foram declarados como aprovados.
+**Etapa corrente:** C/D implementados na develop integrada; aguardando validação manual do roteiro de 15/09/2026 abaixo.
+
+### Entrega C/D e roteiro manual — 15/09/2026
+
+- Inclusão válida entra ao final com ID estável; edição idêntica não grava nem cria pendência. Alterações e ordem são publicadas somente
+  após commit, sob a posse existente. Removido o botão `Marcar como alterada` e sua apresentação temporária.
+- Prévia conserva o fallback aprovado de três linhas, sem degradê nem rolagem interna. Controles laterais movem uma posição, com extremos
+  desabilitados e ajuste mínimo de rolagem, procurando incluir uma caixa na direção do movimento. Retorno procura manter a memória visível.
+- Campo principal de cinco linhas, Confirmar Memória com bookmark verde e barra de ícones aprovada. Memórias fora do prazo ficam em leitura;
+  complemento e exclusão não foram antecipados. Itens do checklist D referentes à lixeira permanecem para integração E/F.
+- Rascunho independente em sessionStorage, debounce de 200 ms, proteção também ao descarregar; restaura texto e autorização da mesma edição
+  no reload. Nova navegação não restaura edição anterior. Compatibilidade de base evita duplicação se houver commit antes de um reload.
+- Voltar à captura, Voltar do header e logout confirmado respeitam abandono da edição suja. Aviso nativo em beforeunload; falha de proteção
+  avisa sem impedir confirmação local. Não há garantia absoluta contra interrupção ou indisponibilidade do armazenamento pelo navegador.
+- Verificação: `deno check`, lint dos arquivos alterados, formatação dos fontes/CSS, build e `deno test -A tests app`: **41 testes passaram**,
+  incluindo sete novos casos de inclusão/ordem, falha, prazo, isolamento e rascunho. IndexedDB em memória e Storage simulado não substituem
+  validação visual, rolagem/toque, aviso nativo, quota ou duas abas reais. Não foi feita validação manual de C/D pelo operador nesta entrega.
+- Indicador de contexto no final desta entrega: não disponível. Sem commit, push ou encerramento da Especificação.
+
+Na aplicação em desenvolvimento, começar por uma data vazia e usar **08/09/2026** para lista longa:
+
+- [ ] Adicionar memória: campo editável; vazio/espaços impedem confirmação; texto válido entra ao final. Conferir pendência na Seleção/Principal.
+- [ ] Acrescentar duas memórias, elevar/rebaixar uma posição e conferir extremos. Recarregar: texto e ordem confirmados permanecem.
+- [ ] Na lista longa, conferir três linhas sem rolagem interna, abertura pelo texto, retorno à região anterior e acompanhamento da memória
+  movida com caixa vizinha quando couber. Repetir em largura móvel, inclusive barra de ícones e respiro final.
+- [ ] Abrir uma memória criada localmente, editar e pressionar F5/Ctrl+R: aceitar o aviso nativo quando oferecido e conferir texto restaurado.
+  Antes de confirmar, conferir no IndexedDB que o texto confirmado continua anterior.
+- [ ] Voltar à captura com edição suja: Continuar editando conserva; Descartar edição retorna. Reabrir e F5 não devem ressuscitar o descarte.
+  Repetir com Voltar do header e saída/logout, cancelando quando desejar conservar a sessão.
+- [ ] Confirmar edição retorna à região da memória; reabrir carrega texto confirmado. Confirmar sem mudar conteúdo não deve criar pendência
+  numa captura limpa. Para esse caso, configurar data limpa com memória editável pelo cenário abaixo.
+- [ ] Simular falha de gravação pelo procedimento abaixo: texto/rascunho ou ordem anterior permanecem; restaurar gravação e tentar de novo.
+- [ ] Antes de encerrar a 07, lembrar também a validação CMP-005 nos três níveis, concorrência real e checklists E–H ainda pendentes.
+
+Cenário editável limpo: em uma Captura do dia, no console, configurar uma data sem pendência local e abri-la pela Seleção:
+
+```js
+rememoreCaptureMock.configure("2026-09-09", {
+  status: "found", revision: "edicao-CD", editWindowDays: 3,
+  memories: [{ id: "memoria-CD", content: "Memória editável de teste", order: 0,
+    firstPreservedAt: new Date().toISOString(), complements: [] }]
+})
+```
+
+Digitar nesse cenário não cria pendência; confirmar texto idêntico mantém a captura limpa. Para provar o prazo sem esperar, os testes
+automatizados cobrem abertura um milissegundo antes do limite e nova abertura no limite; o roteiro completo de relógio continua no marco E.
+
+Falha temporária, somente no desenvolvimento, pelo console da Captura do dia:
+
+```js
+var repositorioCD = (await import("/app/servicos/local/capturas.ts")).capturasLocais
+var gravarCD = repositorioCD.gravar
+repositorioCD.gravar = async () => { throw new Error("Falha simulada de gravação C/D") }
+```
+
+Tentar confirmar e conferir texto intacto; ou, sem edição aberta, tentar mover e conferir ordem intacta. Restaurar antes da nova tentativa:
+
+```js
+repositorioCD.gravar = gravarCD
+```
+
+Esse procedimento injeta rejeição na fronteira da gravação e não simula uma quota real. Não recarregar entre a injeção e a tentativa;
+um reload também restaura o módulo original. A avaliação manual desses procedimentos ainda está pendente.
+
+### Ajustes após navegação do operador — 15/09/2026
+
+- Retorno parcial de C/D: operador confirmou que espaços impedem confirmação e apontou ajustes de apresentação, rolagem e abandono.
+  Não equivale ao aceite integral dos checklists. Não há nova dúvida funcional; alterações abaixo solicitadas explicitamente.
+- Lista: um único box Bulma engloba texto sem borda e botões agrupados em `buttons has-addons`, com menor preenchimento interno.
+  Hover destaca a borda externa inclusive sobre os botões; botões mantêm seu hover próprio. Prévia recorta após três linhas sem reticências
+  acrescentadas pelo CSS, sem alterar o texto original.
+- Reordenação: após commit, compensa a diferença vertical do botão acionado para mantê-lo sob o mouse; a rolagem disponível limita a
+  compensação nos extremos. Esta decisão atualiza a prioridade anterior de apenas manter a caixa e uma vizinha visíveis ao mover.
+- Edição: campo não redimensionável. Nova memória vazia ou só com espaços sai sem aviso de perda, inclusive no aviso nativo; memória
+  existente modificada para vazio continua exigindo confirmação de abandono. A composição adicional da tela foi adiada pelo operador.
+- Etapa corrente: conferir visual da caixa inteira, cliques sucessivos de ordem e abandono de nova memória branca versus existente apagada.
+  C/D continuam em validação; E/F não iniciados. Indicadores de contexto desta rodada: não disponíveis.
+- Verificação desta rodada: formatação de TSX/CSS, tipos do componente, lint, build e diff sem erros passaram. Avaliação de hover,
+  rolagem sob o mouse e abandono pela interface permanece com o operador; os 41 testes da entrega anterior não foram reexecutados.
+
+### Segunda rodada de ajustes C/D — 15/09/2026
+
+- Operador aprovou a rolagem que acompanha a memória movida.
+- Controles de elevar/rebaixar permanecem agrupados, agora empilhados verticalmente.
+- A prévia reserva sempre a altura de três linhas, inclusive quando a largura permitir que o conteúdo ocupe apenas uma ou duas linhas;
+  o texto continua recortado nessa altura, sem reticências acrescentadas.
+- Criação, edição autorizada e edição restaurada após reload iniciam com foco no campo de memória. A rolagem aprovada foi preservada.
+- C/D continuam em validação progressiva; conferir altura estável das caixas em larguras acima e abaixo de 900 px, agrupamento vertical e
+  foco inicial. Indicadores de contexto desta rodada: não disponíveis.
+
+### Correção visual da segunda rodada — 15/09/2026
+
+- A captura do operador mostrou que reservar a altura não fazia o conteúdo ocupar três linhas em telas largas. A largura útil do texto da
+  prévia foi limitada, mantendo o box externo fluido, para conservar três linhas do cenário longo também no limite largo da Captura do dia.
+- O agrupamento vertical passou a neutralizar explicitamente margens horizontais do `has-addons`, igualar largura/altura dos dois botões e
+  aplicar arredondamento apenas nos cantos externos superior e inferior. Conferir novamente alinhamento e três linhas no cenário 08/09.
+- Conferência no Chrome, viewport de 1051 px, cenário 08/09: prévia com 544 px de largura útil e 81,6 px de altura (três linhas de 27,2 px);
+  botões com 40 × 40 px, mesmo eixo horizontal, junção de -1 px e raios externos de 6 px. Resultado visual corrigido; retorno do operador
+  sobre esta versão ainda pendente.
+
+### Terceira rodada de ajustes C/D — 15/09/2026
+
+- Operador esclareceu que a prévia deve carregar o texto integral da memória, ocupar toda a largura útil e apenas ocultar o conteúdo que
+  exceder três linhas, sem rolagem. Removidas a largura limitada e a altura mínima introduzidas nas rodadas anteriores; permanece somente
+  a altura máxima de três linhas. Assim, textos que couberem em uma ou duas linhas não deixam espaço reservado artificialmente.
+- A tela de Memória passa a usar exclusivamente o Voltar do header. Nela, esse controle retorna a Registrar e organizar, preserva a posição
+  aproximada da lista e aplica a confirmação de abandono quando houver trabalho não confirmado. Na lista, o mesmo controle continua voltando
+  à Seleção e encerrando a sessão. Removido o Voltar duplicado da barra da memória; a barra mantém apenas Confirmar Memória quando aplicável.
+- C/D continuam em validação progressiva. Conferir texto em larguras variadas, retorno limpo/sujo pelo header e ausência do botão duplicado.
+  Indicadores de contexto desta rodada: não disponíveis.
+
+### Ajuste de contexto na reordenação — 15/09/2026
+
+- Revisão confirmou que a correção do texto contínuo alterou somente o conteúdo do cenário visual: `\n\n` foi substituído por espaço.
+  Não restaram largura máxima nem altura mínima criadas para compensar a linha vazia; a prévia conserva apenas o recorte necessário de até
+  três linhas, com o texto integral no DOM.
+- Ao reordenar, a prioridade passa a ser manter visíveis a memória movida, sua antecessora e sua sucessora imediatas, quando existirem e
+  couberem juntas na área útil. Manter o botão sob o mouse é uma preferência secundária: a compensação só ocorre se não atingir topo/base da
+  rolagem e se as três caixas permanecerem integralmente visíveis depois dela.
+- Quando a compensação do mouse não for possível, a página faz apenas o deslocamento mínimo necessário para mostrar o trio. Se o trio não
+  couber na viewport, mantém ao menos a memória movida visível. A rotina de retorno à lista foi simplificada separadamente, sem parâmetro de
+  vizinho que não era mais utilizado; também foi removido o `focus()` redundante dos botões de ordem.
+- Validação no Chrome: ao rebaixar a primeira memória no topo, rolagem permaneceu em zero e antecessora, movida e sucessora ficaram visíveis.
+  Em caso intermediário onde o trio cabia após compensação, o botão permaneceu praticamente na mesma coordenada vertical (variação menor
+  que 1 px) e as três caixas permaneceram visíveis. As ordens usadas na conferência foram restauradas em seguida.
+
+### Máscara lateral do bloco sticky — 15/09/2026
+
+- Operador aprovou a rolagem contextual e identificou que a sombra Bulma dos boxes ultrapassava lateralmente a largura compartilhada com o
+  bloco sticky, aparecendo junto à sua borda enquanto as memórias passavam por trás.
+- O fundo opaco do bloco de data/abas foi prolongado apenas 0,75 rem para cada lateral por um pseudo-elemento isolado no mesmo contexto de
+  empilhamento. A máscara cobre a projeção lateral durante a passagem sem cortar a sombra normal entre memórias e sem ampliar visualmente a
+  linha inferior do bloco. Validação visual desta correção permanece com o operador.
+
+### Passagem para nova sessão — 15/09/2026, após C/D
+
+- Operador informou **78% da capacidade de contexto, 200k de 258k tokens**, e solicitou migração antes de travamento. Indicadores anteriores
+  desta sessão estavam indisponíveis; este é o indicador final informado pela interface/operador.
+- Base canônica: `develop`, HEAD `8e01b7f`. Trabalho de C/D permanece **sem commit**. Não descartar, resetar, trocar de base nem recompor a
+  partir de branch antiga. Estado antes desta passagem:
+  - modificados: `.docs/especificacoes/07-registrar-e-organizar.md`, `.docs/referencias/componentes-e-capacidades.md`,
+    `.docs/referencias/trabalho-local.md`, `app/servicos/captura/simulado.ts`, `assets/estilos.css`,
+    `components/EstruturaCaptura.tsx`, `islands/CapturaDia.tsx`;
+  - novos não rastreados: `.docs/adendo-operacional-spec-07.md`, `app/servicos/captura/edicao.ts`,
+    `tests/edicao_memoria_test.ts`.
+- C/D implementados: inclusão e edição confirmadas somente após commit local; inclusão ao final; confirmação idêntica sem pendência;
+  reordenação de uma posição; rascunho isolado em sessionStorage com debounce, reload e autorização preservada; abandono deliberado;
+  aviso nativo; foco inicial; retorno aproximado à lista; remoção do andaime `Marcar como alterada`.
+- Decisões consolidadas de UI:
+  - barra de ações usa somente ícones, `title`, `aria-label` e `buttons has-addons`;
+  - cada memória é um box único com hover externo, texto integral no DOM limitado visualmente a no máximo três linhas, sem rolagem e sem
+    reticências artificiais; controles de ordem ficam agrupados e empilhados;
+  - a tela de Memória usa somente o Voltar do header: retorna à lista com regras de abandono; da lista, Voltar segue para a Seleção;
+  - campo de edição não é redimensionável e recebe foco ao criar, editar ou restaurar; nova memória vazia/só com espaços sai sem aviso,
+    enquanto edição existente apagada continua protegida;
+  - cenário visual 08/09 usa texto contínuo; a única alteração no mock foi trocar `\n\n` por espaço. Cache já materializado pode exigir
+    recriação local para receber o texto novo, pois a revisão `layout-B` não foi alterada;
+  - rolagem ao mover prioriza antecessora + movida + sucessora visíveis. Manter o botão sob o mouse é secundário e só ocorre quando o trio
+    permanece visível e a rolagem não está no topo/base; caso contrário, usa o menor deslocamento que preserve o contexto;
+  - máscara lateral de 0,75 rem no fundo do sticky cobre a sombra dos boxes ao passarem por trás.
+- Retornos explícitos do operador: marco B e botões aprovados; agrupamento/alinhamento dos botões de ordem aprovado; rolagem contextual ao
+  reordenar aprovada; máscara da sombra aprovada (“ficou muito bom”). O restante de C/D teve validação exploratória parcial, sem aceite
+  integral dos checklists. Não promover automaticamente C/D a aprovado.
+- Evidência técnica acumulada:
+  - entrega inicial C/D: formatação, `deno check`, lint, build e `deno test -A tests app`, **41 testes aprovados**, incluindo sete novos;
+  - após ajustes visuais/navegação/rolagem: tipos e lint pertinentes e builds repetidos passaram; último build após a máscara passou;
+    `git diff --check` passou, com apenas avisos conhecidos de LF/CRLF;
+  - Chrome confirmou texto integral recortado após três linhas, foco inicial, único Voltar do header, retorno à lista, botões 40 × 40 px,
+    reordenação no topo sem perder vizinhas, compensação intermediária com variação menor que 1 px e máscara da sombra. Ordens usadas nos
+    testes foram restauradas. O IndexedDB de desenvolvimento pode continuar pendente/alterado por navegações manuais do operador.
+- Limites da validação: os 41 testes não foram reexecutados após ajustes exclusivamente de UI/texto; IndexedDB automatizado permanece em
+  memória. Ainda faltam os itens manuais de C/D não reportados, especialmente persistência/reload completo, abandono sujo nos diferentes
+  caminhos, aviso nativo, falha simulada de gravação e reflexo de pendência na Seleção/Principal.
+- Próxima ação: retomar pela validação curta restante de C/D e registrar o retorno. Só depois avançar progressivamente a **E — historicidade
+  e complementos** e **F — exclusão regressiva**. G/H continuam pendentes, inclusive concorrência real, CMP-005 nos três níveis e passagem
+  integrada. Não implementar E/F antes de ler seus checklists no corpo aprovado e conferir se surge alguma lacuna funcional nova.
+- Documentos obrigatórios na retomada: `AGENTS.md`, `.docs/README.md`, `.docs/memoria-tecnica.md`,
+  `.docs/referencias/trabalho-local.md`, esta Especificação 07 integral e `.docs/adendo-operacional-spec-07.md`. Não consultar Drive nem
+  outras Especificações.
+
+### Retomada da validação C/D — 17/09/2026
+
+- Acesso e Git conferidos: `develop`, HEAD `8e01b7f`, com os mesmos sete arquivos modificados e três novos da passagem após C/D.
+  Trabalho sem commit preservado integralmente; nenhuma troca de base ou recomposição de outra branch.
+- Lidos AGENTS, índice, memória técnica, referência de trabalho local, adendo operacional e esta Especificação integral.
+  A passagem após C/D prevalece sobre os estados anteriores registrados no adendo e nesta Continuidade.
+- Operador reiterou os aceites de B/barra de ícones, botões de ordem empilhados/alinhados, rolagem contextual e máscara lateral do sticky.
+  Reiterou também que a exploração de C/D não representa aceite integral dos checklists.
+- Não há nova dúvida funcional para a validação pendente. Plano: receber retorno da passagem manual curta de C/D, corrigir eventuais
+  falhas e registrar resultados; depois desenvolver E progressivamente e validar antes de F. G/H não serão antecipados.
+- Etapa corrente: aguardando retorno manual de persistência de conteúdo/ordem após reload, rascunho sem alteração do confirmado,
+  abandono sujo e não restauração após descarte, aviso nativo, falha simulada de confirmação/reordenação e pendências na Seleção/Principal.
+  O procedimento de falha existente foi conferido contra os chamadores atuais de `capturasLocais.gravar`; ainda requer execução no navegador.
+- Nenhum fonte alterado nesta retomada; testes anteriores não reexecutados. Itens de exclusão do checklist D continuam reservados a E/F.
+- Indicadores de contexto antes das leituras, após leitura inicial antes do fonte e nesta entrega: não disponíveis; sem estimativa.
+
+### Aceite da passagem curta C/D e início de E — 17/09/2026
+
+- Retorno do operador: “Testes realizados e tudo ocorreu conforme descrito.” Aceitos os cinco grupos apresentados nesta retomada:
+  persistência de conteúdo/ordem, rascunho e reload, abandono deliberado, falha simulada com nova tentativa e reflexo das pendências.
+  O retorno inclui o aviso nativo e os caminhos de abandono do roteiro. Não estende o aceite a G/H ou aos itens de exclusão ainda não implementados.
+- Etapa corrente: E — historicidade e complementos. Implementar leitura histórica integrada e edição do último complemento,
+  estender confirmação/rascunho com identidade do alvo e conservar autorização no reload; verificar e apresentar roteiro E antes de F.
+- Nova mensagem de falha de complemento submetida ao operador; implementação desse texto aguarda resposta. Demais regras funcionais
+  de E estão descritas no corpo aprovado e na clarificação anterior, inclusive datas no calendário local e prazo em horas exatas.
+
+### Entrega E — historicidade e complementos — 17/09/2026
+
+- Mensagem aprovada pelo operador: “Não foi possível confirmar o complemento. Seu texto continua nesta tela. Tente novamente.”
+- Memória histórica integra complementos em sequência, com data local da primeira preservação. Último complemento dentro do prazo ou
+  nunca preservado abre em campo próprio de quatro linhas; enquanto houver edição autorizada, não oferece outro complemento.
+- Adicionar complemento cria somente rascunho. Confirmação válida publica o resultado após commit, mantém IDs/primeira preservação/revisão
+  e retorna à lista; confirmação idêntica não grava. Prazo compartilhado é decidido na abertura, sem recálculo na confirmação.
+- Rascunho distingue memória/complemento e conserva autorização no reload. Mantidos abandono, aviso nativo, foco, barra somente de ícones
+  e retorno ao contexto da memória. Inclusão já confirmada ou cadeia de complementos incompatível não restaura rascunho obsoleto.
+- Verificação: formatação dos fontes/CSS alterados, `deno check`, lint pertinente, build e `deno test -A tests app` passaram: **45 testes**,
+  incluindo quatro novos casos de complementos. Testes de armazenamento usam memória; leitura, foco e comportamento visual aguardam operador.
+- Etapa corrente: E implementado e tecnicamente verificado, aguardando validação manual abaixo antes de F. F/G/H não implementados nesta rodada.
+  Os itens de exclusão de D continuam pendentes de F. Indicadores de contexto desta entrega: não disponíveis.
+
+#### Roteiro manual E
+
+Em desenvolvimento, no console de uma Captura do dia, configurar uma data sem pendência local. O exemplo usa 11/09/2026;
+se já houver trabalho alterado nessa data, trocar a data do comando, sem apagar esse trabalho. Depois abrir a data pela Seleção.
+
+```js
+var agoraE = Date.now()
+var horasE = (horas) => new Date(agoraE - horas * 3600000).toISOString()
+rememoreCaptureMock.configure("2026-09-11", {
+  status: "found", revision: "historicidade-E-1", editWindowDays: 3,
+  memories: [
+    { id: "E-local", content: "Nunca preservada: deve permitir editar.", order: 0,
+      firstPreservedAt: null, complements: [] },
+    { id: "E-recente", content: "Preservada há 24 horas: deve permitir editar.", order: 1,
+      firstPreservedAt: horasE(24), complements: [] },
+    { id: "E-historica", content: "Memória histórica: texto principal somente leitura.", order: 2,
+      firstPreservedAt: horasE(240), complements: [
+        { id: "E-c1", content: "Primeira percepção histórica.", firstPreservedAt: horasE(168) },
+        { id: "E-c2", content: "Segunda percepção histórica.", firstPreservedAt: horasE(96) }
+      ] },
+    { id: "E-complemento", content: "Memória histórica com complemento recente.", order: 3,
+      firstPreservedAt: horasE(240), complements: [
+        { id: "E-c3", content: "Percepção histórica anterior.", firstPreservedAt: horasE(96) },
+        { id: "E-c4", content: "Complemento editável, preservado há 24 horas.", firstPreservedAt: horasE(24) }
+      ] }
+  ]
+})
+```
+
+- [ ] As duas primeiras memórias são editáveis, sem Adicionar complemento. A terceira apresenta texto principal e dois complementos
+  somente leitura, em sequência, com datas locais corretas; a quarta mantém principal/primeiro complemento em leitura e só o último editável.
+- [ ] Na terceira, Adicionar complemento abre campo de quatro linhas e Confirmar Complemento; vazio/espaços não confirmam.
+  Digitar não muda o IndexedDB. F5 restaura texto; Voltar permite conservar ou descartar sem ressuscitar o descarte.
+- [ ] Confirmar complemento válido retorna à região da memória na lista. Reabrir oferece edição daquele complemento nunca preservado,
+  sem data histórica inventada e sem Adicionar complemento. Conteúdo persiste após reload; principal e anteriores permanecem intactos.
+- [ ] Na quarta, editar/confirmar conserva primeira preservação do complemento. Confirmação idêntica não altera a captura limpa;
+  conferir esse caso antes de confirmar qualquer alteração na data. Reordenar memórias históricas continua possível.
+- [ ] Repetir a injeção de falha C/D na confirmação do complemento: mensagem aprovada, texto e rascunho mantidos, nenhum falso sucesso;
+  restaurar `gravar` e confirmar novamente. Conferir a leitura/campo/barra também em largura móvel.
+
+Para atravessar o prazo sem esperar 72 horas, usar outra data sem pendência (exemplo 12/09/2026). Executar o comando abaixo e abrir
+imediatamente a primeira memória; o limite chega dois minutos após executar. A segunda memória testa a mesma fronteira no complemento.
+
+```js
+var limiteE = Date.now() + 120000
+var primeiraE = new Date(limiteE - 72 * 3600000).toISOString()
+rememoreCaptureMock.configure("2026-09-12", {
+  status: "found", revision: "limite-E-" + limiteE, editWindowDays: 3,
+  memories: [
+    { id: "E-limite-m", content: "Abrir antes do limite e manter a edição.", order: 0,
+      firstPreservedAt: primeiraE, complements: [] },
+    { id: "E-limite-c", content: "Principal histórica para testar o limite do complemento.", order: 1,
+      firstPreservedAt: new Date(limiteE - 240 * 3600000).toISOString(), complements: [
+        { id: "E-limite-ultimo", content: "Complemento no limite.", firstPreservedAt: primeiraE }
+      ] }
+  ]
+})
+console.info("Limite do cenário:", new Date(limiteE).toLocaleTimeString())
+```
+
+- [ ] Abrir antes do limite, digitar e manter aberta até depois do horário: continua confirmável. F5 depois do limite conserva texto e
+  autorização. Confirmar e reabrir: texto confirmado em leitura, primeira preservação inalterada; Adicionar complemento disponível.
+- [ ] Repetir para a segunda memória com novo cenário/data limpa e novo limite. Somente o complemento permanece autorizado durante a
+  sessão; após confirmar/sair e reabrir fora do prazo, ele integra a leitura histórica. Não mudar timestamps de um workspace alterado
+  pelo mock: a prioridade do trabalho local impede essa substituição. A variável de três dias é a mesma nos dois testes.
+
+Os testes técnicos exercitam também nunca preservado após longa permanência, limite exato em milissegundos e mudança do prazo compartilhado.
+Não há preservação real nesta unidade: conservação do timestamp em confirmação local não equivale a teste de backend.
+
+### Cenário direto de complementos históricos — 17/09/2026
+
+- A pedido do operador, acrescentado cenário padrão exclusivo de desenvolvimento para **13/09/2026**, revisão
+  `complementos-historicos-E-1`: uma memória preservada em 13/09 às 12h UTC, com dois complementos preservados em 13/09 às 13h UTC
+  e 14/09 às 03h UTC, ambos há mais de 72 horas nesta sessão. Datas exibidas seguem o calendário local do navegador.
+- Abrir 13/09 pela Seleção e clicar na memória para conferir texto principal e dois complementos somente leitura, com datas e sequência.
+  Não precisa configurar o console. Configuração manual anterior do mock e trabalho local alterado continuam tendo prioridade;
+  nenhum workspace existente foi apagado ou sobrescrito. Esta preparação não representa aceite do item 4 de E.
+
+### Retorno de E e início de F — 17/09/2026
+
+- Operador informou “Ok, testato, informe a próxima parte e pode executar.” após o cenário direto de dois complementos históricos.
+  Registrado aceite desse cenário de leitura e autorização explícita para avançar a F. Os demais itens de E não receberam resultados
+  individuais nesta resposta; preservar essa distinção, sem declarar automaticamente aceite integral do checklist.
+- Etapa corrente: F — exclusão regressiva. Implementar lixeira contextual e confirmações do corpo aprovado; remover somente o último
+  complemento ou, na ausência de complementos, a memória. Bloquear criação/edição suja, aguardar commit e retornar à lista com contexto.
+- Verificar cadeia regressiva, preservação dos elementos anteriores, falha de gravação e bloqueio de edição suja; depois apresentar
+  checklist F ao operador. G/H permanecem fora desta rodada. Nova mensagem de falha de exclusão submetida ao operador.
+- Git conferido e trabalho sem commit preservado na develop. Indicadores de contexto nesta rodada: não disponíveis.
+
+### Integração da lixeira F — 17/09/2026
+
+- Operador observou ausência da lixeira durante o início de F. Esclarecido que a versão de E ainda não a incluía.
+  Agora integrada à barra de ícones com `danger`, `title` e nome acessível conforme alvo; criação ou edição suja a mantém desabilitada.
+- Serviço `excluirUltimoElemento` remove um complemento por vez; só remove a memória quando não houver complementos. Confirmações usam
+  os textos exatos do corpo aprovado. Após commit, retorna à lista próximo da memória ou de uma vizinha quando a memória foi removida.
+- Tipos, lint, formatação, build e 14 testes de edição/exclusão passaram. Não houve validação visual do operador desta versão.
+- F permanece em andamento: falta integrar a mensagem de falha, ainda aguardando resposta à proposta
+  “Não foi possível excluir. O conteúdo da captura foi mantido. Tente novamente.” A cadeia de falha do serviço conserva o agregado;
+  o tratamento visual dessa rejeição ainda não está concluído. Não considerar F entregue nem executar seu checklist de falha ainda.
+- G/H não iniciados; trabalho permanece sem commit. Indicadores de contexto: não disponíveis.
+
+### Entrega F — exclusão regressiva — 17/09/2026
+
+- Operador aprovou a mensagem: “Não foi possível excluir. O conteúdo da captura foi mantido. Tente novamente.”
+  Integrado o tratamento visual: falha mantém tela, conteúdo confirmado e rascunho, informa o erro e permite nova tentativa.
+  Esta entrega supera a pendência de tratamento de falha da anotação anterior.
+- Exclusão só publica o novo agregado após commit sob a posse existente. Não há remoção remota, exclusão em cascata ou lixeira na lista.
+  Edição suja continua bloqueando exclusão mesmo se o texto for manualmente devolvido ao original; confirmar ou abandonar encerra a edição.
+- Verificações acumuladas de F: tipos, lint, formatação, build e 48 testes passaram antes da integração final da mensagem;
+  tipos, lint, formatação e build do tratamento final também passaram. Os 48 testes não foram repetidos por essa alteração de mensagem;
+  os testes de armazenamento são em memória. Avaliação manual segue abaixo.
+- Etapa corrente: validação F pelo operador. G/H permanecem pendentes e não foram antecipados. Sem commit ou encerramento da 07;
+  indicadores de contexto desta entrega não disponíveis.
+
+#### Roteiro manual F
+
+Usar a memória de **13/09/2026** já testada, com dois complementos históricos (e C3, caso tenha sido confirmado).
+
+- [ ] Com edição limpa, a lixeira mostra `Excluir último complemento`; abrir a confirmação e cancelar mantém todos os elementos.
+- [ ] Confirmar exclui somente o último complemento e mantém a tela da memória: principal e anteriores permanecem; repetir até não
+  restarem complementos. Recarregar confirma a persistência da remoção e a captura continua pendente na Seleção/Principal.
+- [ ] Sem complementos, a lixeira muda para `Excluir Memória`, com a confirmação específica. Cancelar conserva; confirmar remove apenas
+  essa memória e retorna à região anterior da lista. O acervo remoto simulado permanece intacto.
+- [ ] Memória/complemento existente sem edição permite exclusão; digitar desabilita a lixeira. Confirmar ou abandonar e reabrir restabelece
+  a ação adequada. Nova memória e novo complemento ainda não confirmados deixam a lixeira desabilitada, inclusive quando vazios.
+- [ ] Antes de consumir a cadeia inteira, simular falha com os comandos abaixo. A confirmação de exclusão deve apresentar a mensagem
+  aprovada, conservar o elemento e permitir nova tentativa após restaurar a gravação. Repetir para memória sem complementos.
+- [ ] Na lista longa, excluir uma memória de teste no meio e conferir retorno próximo de uma vizinha, sem perder todo o contexto.
+
+No console da Captura do dia, somente em desenvolvimento:
+
+```js
+var repositorioF = (await import("/app/servicos/local/capturas.ts")).capturasLocais
+var gravarF = repositorioF.gravar
+repositorioF.gravar = async () => { throw new Error("Falha simulada de gravação F") }
+```
+
+Não recarregar entre injeção e tentativa. Depois do teste, restaurar antes de tentar novamente:
+
+```js
+repositorioF.gravar = gravarF
+```
+
+Este procedimento simula rejeição na fronteira de gravação, não quota real. Os testes e aceites anteriores continuam registrados;
+o presente roteiro não declara aprovação integral de E, F, G ou H.
+
+### Permanência na memória após excluir complemento — 17/09/2026
+
+- Alteração funcional solicitada pelo operador: excluir complemento mantém a tela da memória aberta, atualizando conteúdo e ação
+  destrutiva. Somente excluir a memória retorna à lista. Esta decisão substitui o retorno à lista após exclusão de complemento
+  previsto no corpo aprovado e nas entregas anteriores; corpo aprovado preservado.
+- Após commit, o rascunho acompanha o estado restante. A edição principal mantida conserva sua autorização; se o complemento em edição
+  foi removido, a abertura do alvo restante decide sua autorização. Falha continua mantendo conteúdo/tela com a mensagem aprovada.
+- Validar: excluir complementos sucessivamente sem sair da tela; sem complementos, a lixeira muda para Excluir Memória;
+  excluir a memória retorna à lista. Conferir também reload após remover complemento. G/H permanecem pendentes.
+- Indicadores de contexto: não disponíveis. Trabalho sem commit preservado.
+
+### Aceite do retorno de exclusão e orientação inicial — 17/09/2026
+
+- Operador aprovou o funcionamento após a alteração de navegação da exclusão e informou ausência das mensagens por nível na captura vazia.
+  Aceite registrado para esse funcionamento; não presume resultados de todos os testes de falha de F.
+- Conferido que CMP-005 existia somente na Seleção. Por esta solicitação, integrada a parte de Orientação Progressiva de G na Captura
+  do dia: os três textos exatos da seção 5, com nível ainda simulado em `app/servicos/orientacao.ts` (atualmente `beginner`).
+- Exibir somente em Registrar e organizar, sem memória aberta, com composição vazia, limpa e origem remota ausente.
+  Captura vazia após exclusões continua alterada e não reapresenta orientação. Não há nova regra funcional nem cálculo real de nível.
+- Validar numa data nova sem pendência/conteúdo remoto: mensagem iniciante; confirmar primeira memória remove a mensagem; excluir a
+  memória não a traz de volta. Para os outros níveis, alterar `nivelSimulado` para `intermediate` e `advanced` e abrir data genuinamente nova.
+  Os três níveis e os demais cenários do checklist CMP-005 ainda precisam de retorno manual. Concorrência de G e integração H não antecipadas.
+- Verificação desta integração: formatação dos fontes, tipos dos consumidores, lint, build e diff sem erros passaram.
+- Trabalho sem commit preservado. Indicadores de contexto: não disponíveis.
+
+### Retorno da orientação e pendência para o analista — 17/09/2026
+
+- Operador confirmou que a orientação funcionou. Este retorno valida o cenário observado, sem declarar teste dos três níveis.
+- Determinação expressa: as mensagens de orientação precisarão ser revisadas pelo analista; não revisar seus textos nesta unidade agora.
+  Ao redigir o Parecer final no encerramento, incluir explicitamente essa pendência, de forma autossuficiente para o analista.
+- Próxima etapa: concluir a validação de G, especialmente concorrência real entre abas e cenários/níveis ainda não reportados do CMP-005.
+  Depois, H — passagem integrada e verificações finais, retomando eventuais itens de E/F ainda não detalhados. Encerramento depende do operador.
+  Nenhuma dessas validações foi executada ou aprovada por esta anotação.
+
+### Validação G autorizada — 17/09/2026
+
+- Operador autorizou prosseguir com G. Conferidos os contratos atuais de bloqueio/sessão e os cenários do CMP-005.
+  Os cinco testes de `tests/sessao_captura_test.ts` passaram nesta rodada; usam gerenciador/Storage simulados e não substituem duas abas reais.
+- Cadência: primeiro concorrência real no mesmo navegador/conta; depois condições da orientação e níveis intermediário/avançado,
+  alternados pelo programador no mock existente. Sem novos controles no produto e sem revisão das mensagens.
+- Roteiro de concorrência para o operador:
+  1. Na aba A, abrir uma captura de teste com memória confirmada e permanecer nela.
+  2. Na aba B, usando a mesma conta e origem da aplicação, abrir a mesma data: deve informar que está aberta em outra aba/janela,
+     sem permitir editar ou gravar. Não usar janela anônima ou outro perfil, pois não compartilham o mesmo ambiente local.
+  3. Recarregar A: deve retomar normalmente. Recarregar B: deve continuar bloqueada enquanto A estiver aberta.
+  4. Na aba B, abrir outra data pela Seleção: deve funcionar, mantendo A disponível na data original.
+  5. Voltar B à data original: bloqueio. Fechar A sem edição suja; recarregar B: deve abrir e conservar a memória confirmada.
+- Depois, validar orientação: data nova apresenta mensagem; primeira confirmação a remove; apagar a última memória não a reapresenta;
+  data preservada também não mostra orientação de começo. Nível atual permanece iniciante até a próxima rodada.
+- Etapa corrente: aguardando resultados manuais de concorrência. A aprovação da orientação já observada permanece registrada;
+  níveis intermediário/avançado e demais condições ainda não detalhados. H só depois da passagem necessária de G.
+- Indicadores de contexto: não disponíveis. Nenhum fonte alterado nesta preparação; trabalho sem commit preservado.
+
+### Aceite da concorrência e validação do nível intermediário — 17/09/2026
+
+- Operador confirmou “Funcionamento ok, pode seguir.” para os cinco passos de concorrência real apresentados: bloqueio da mesma
+  conta/data em B, reload de A sem falsa concorrência, B ainda bloqueada, datas diferentes permitidas e recuperação após fechar A.
+- Alterado somente `nivelSimulado` para `intermediate` no mock existente do CMP-005. Textos preservados, conforme pedido de revisão
+  futura pelo analista. Conferir Seleção e início de uma captura genuinamente nova; não usar data alterada que ficou vazia por exclusões.
+- Esperado na Captura do dia: “Registre uma lembrança por vez. Memórias mais focadas ajudam a reencontrar melhor cada contexto depois.”
+  Na Seleção: “Você pode voltar a qualquer data passada quando quiser registrar algo que ainda lembra.”
+- Etapa corrente: aguardando validação do nível intermediário; depois alternar para avançado e restaurar o nível inicial após os testes.
+  H permanece pendente. Trabalho sem commit preservado; indicadores de contexto não disponíveis.
+
+### Retomada do nível intermediário — 18/09/2026
+
+- Conferidos develop, HEAD `8e01b7f`, trabalho sem commit preservado e mock em `intermediate`.
+- A checagem anterior havia sido impedida pelo limite de uso da ferramenta após aplicar a alteração. Retomada agora:
+  `deno check app/servicos/orientacao.ts` passou. Nenhuma mudança adicional de fonte nesta retomada.
+- Aguardando retorno manual das mensagens intermediárias na Seleção e numa captura genuinamente nova; depois testar avançado.
+  Pendência de revisão editorial das mensagens pelo analista permanece para o Parecer final. Indicadores de contexto não disponíveis.
+
+### Posição da orientação na Seleção — 18/09/2026
+
+- Por solicitação do operador, a mensagem CMP-005 na Seleção de Captura passa a aparecer abaixo do botão Capturar, após o formulário.
+  Texto e regra por nível preservados; nível intermediário continua ativo para validação.
+- Retorno posterior do operador: preferiu a posição anterior. Mensagem restaurada acima do formulário; a mudança de posição foi revertida
+  e não constitui diferença final a reportar no Parecer.
+- Trabalho sem commit preservado; indicadores de contexto não disponíveis.
+
+### Validação do nível avançado — 18/09/2026
+
+- Operador aprovou a posição restaurada da orientação acima do formulário e autorizou avançar para o próximo nível.
+  Não foram detalhados separadamente os resultados das duas mensagens intermediárias.
+- Mock CMP-005 alterado de `intermediate` para `advanced`, sem mudar textos. Esperado: nenhuma orientação na Seleção;
+  numa captura genuinamente nova, “Observe detalhes que normalmente passariam despercebidos: uma conversa, uma sensação, uma pequena mudança.”
+- Etapa corrente: aguardar retorno do nível avançado, depois restaurar `beginner` e conduzir H. A revisão editorial das mensagens
+  continua reservada ao analista no Parecer final. Trabalho sem commit preservado; indicadores de contexto não disponíveis.
+
+### Aceite do nível avançado e preparação de H — 18/09/2026
+
+- Operador confirmou “Tudo certo” para ausência de orientação na Seleção e mensagem avançada na captura nova/vazia.
+  Restaurado `nivelSimulado` para `beginner`, conforme a cadência combinada; textos preservados.
+- Próxima etapa: H — passagem integrada do roteiro do corpo aprovado, incluindo criação, ordem, edição, reload, complementos,
+  exclusão regressiva com permanência na memória, pendências, falhas e cascas futuras. Reconciliar os itens manuais ainda sem relato
+  individual, especialmente prazo/reload de E e falha de exclusão de F, sem presumir cobertura pelo aceite dos níveis.
+- Após retorno manual, concluir verificações técnicas finais e aguardar determinação do operador para encerramento e Parecer final.
+  O Parecer deverá mencionar a revisão das mensagens pelo analista e a mudança de navegação após exclusão de complemento.
+- H ainda não validado; nenhum encerramento ou commit realizado. Indicadores de contexto não disponíveis.
 
 ## Parecer final
 
-A ser acrescentado somente no encerramento desta Especificação, sem modificar o corpo aprovado acima.
+Especificação 07 encerrada em **18/09/2026**, por determinação e aceite global do operador.
+
+Foi materializado Registrar e organizar em `/capturar/{data}`, com `CapturaDia`, `EstruturaCaptura` e `PainelCaptura`: estrutura sticky,
+três abas, lista com prévia de até três linhas, inclusão, edição, ordem física, leitura histórica, complementos e exclusão regressiva.
+As operações reais confirmadas no IndexedDB geram pendências na Seleção e Principal; o controle temporário Marcar como alterada foi removido.
+
+A abertura reutiliza cache limpo por existência/revisão e prioriza trabalho local alterado. Reload mantém a mesma sessão, sem consulta remota;
+nova entrada revalida o limpo. Memória e complemento compartilham o prazo de três dias (72 horas desde a primeira preservação), com autorização
+decidida ao abrir e conservada no reload da edição. `sessionStorage` protege somente rascunhos, sem criar pendência; abandono deliberado
+descarta a edição transitória. Bloqueio por conta/data impede edição simultânea no mesmo ambiente. Falhas locais mantêm o estado confirmado.
+
+Decisões finais relevantes para reconciliação documental:
+
+- **Excluir complemento mantém a tela da memória aberta**, atualizando leitura e ações. Somente excluir a memória retorna à lista.
+  Esta alteração foi solicitada e aprovada pelo operador, substituindo o retorno à lista após exclusão de complemento previsto no corpo.
+- Ações superiores usam somente ícones, agrupados, com descrição e nome acessível. A tela de Memória usa exclusivamente o Voltar do header.
+  Nova criação vazia/só com espaços dispensa aviso de abandono; conteúdo existente apagado continua protegido.
+- Prévia usa o fallback de até três linhas, sem degradê, rolagem interna ou reticências artificiais. Botões de ordem ficam empilhados;
+  rolagem prioriza a memória movida e suas vizinhas, mantendo o botão sob o mouse somente quando esse contexto não for perdido.
+- CMP-005 aparece apenas na captura genuinamente nova, vazia, limpa e remotamente ausente; não reaparece após exclusões.
+  **As mensagens de orientação precisarão ser revisadas pelo analista.** Por determinação do operador, essa revisão não foi feita aqui.
+  Os textos atuais foram mantidos, com nível ainda simulado e restaurado para iniciante. Na Seleção, a orientação permanece acima do formulário.
+
+Verificação final: tipos, lint, formatação dos fontes/estilos alterados, build e **48 testes aprovados**, além dos retornos manuais progressivos
+e aceite global do operador. Os testes automatizados de armazenamento/locks usam simulações e não comprovam quota real ou proteção absoluta
+contra encerramentos abruptos. O aceite global não constitui registro individual de execução de todos os itens dos checklists.
+
+Categorizar e Tom e Revisar e Preservar permanecem abas estruturais. Backend, preservação remota, conflitos, cálculo real do nível,
+sincronização e política de limpeza/TTL não foram implementados. O schema local vigente é 4, com campos PT-BR e contratos remotos preservados;
+a revisão de origem permanece disponível para a futura preservação. A próxima unidade será definida pelo operador.
+
+Parecer entregue localmente ao operador; não houve atualização do Google Drive. Trabalho mantido sem commit na `develop`, HEAD `8e01b7f`.

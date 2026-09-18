@@ -39,6 +39,30 @@ export function criarCapturaSimulada(
 }
 
 const inicial: CenarioCapturaSimulada = { status: "absent", revision: "X", editWindowDays: 3, memories: [] }
+// Cenário direto para validar a leitura contínua de dois complementos históricos.
+const cenarioComplementosHistoricos: CenarioCapturaSimulada = {
+    status: "found",
+    revision: "complementos-historicos-E-1",
+    editWindowDays: 3,
+    memories: [{
+        id: "historica-E-memoria",
+        content: "Uma caminhada no fim da tarde me fez recordar as conversas que tínhamos no caminho de casa.",
+        order: 0,
+        firstPreservedAt: "2026-09-13T12:00:00.000Z",
+        complements: [
+            {
+                id: "historica-E-complemento-1",
+                content: "Depois percebi que o que mais ficou daquela caminhada foi a tranquilidade de poder conversar sem pressa.",
+                firstPreservedAt: "2026-09-13T13:00:00.000Z"
+            },
+            {
+                id: "historica-E-complemento-2",
+                content: "Ao lembrar novamente, reconheci também o quanto aquele encontro me ajudou a olhar a semana com mais serenidade.",
+                firstPreservedAt: "2026-09-14T03:00:00.000Z"
+            }
+        ]
+    }]
+}
 // Composição longa para o operador validar a estrutura em computador e celular.
 const cenarioVisual: CenarioCapturaSimulada = {
     status: "found",
@@ -48,7 +72,7 @@ const cenarioVisual: CenarioCapturaSimulada = {
         id: `layout-memory-${ordem + 1}`,
         content: `Lembrança ${ordem + 1}. ` + (
             "Uma conversa ao fim da tarde trouxe de volta detalhes de um dia especial. " +
-            "Lembrei da luz entrando pela janela, do café na mesa e das histórias que contamos sem pressa.\n\n"
+            "Lembrei da luz entrando pela janela, do café na mesa e das histórias que contamos sem pressa. "
         ).repeat(ordem === 0 ? 18 : 2),
         order: ordem,
         firstPreservedAt: "2026-09-01T12:00:00.000Z",
@@ -94,6 +118,8 @@ export const capturasPreservadasSimuladas = criarCapturaSimulada(
             ? JSON.parse(configurado) as CenarioCapturaSimulada
             : desenvolvimento && dataCaptura === "2026-09-08"
             ? cenarioVisual
+            : desenvolvimento && dataCaptura === "2026-09-13"
+            ? cenarioComplementosHistoricos
             : inicial
     },
     (operacao, _idConta, dataCaptura) => {

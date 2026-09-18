@@ -44,7 +44,7 @@ Os campos remotos continuam `memories`, `content`, `order`, `firstPreservedAt`, 
 `app/servicos/captura/sessaoAberta.ts`: `SessaoCapturaAberta` usa sessionStorage por conta/data. `retomar(tipoNavegacao)` só retorna
 identidade para reload; navigate/back_forward encerram a sessão anterior. `iniciar(idAreaTrabalho)` ocorre após preparação confirmada.
 `encerrar()` na saída controlada. Falhas propagam para o chamador avisar sobre proteção indisponível. Esse marcador não é rascunho nem
-pendência. Rascunhos de texto/autorização ainda serão integrados no marco D da 07.
+pendência. Rascunhos de texto/autorização são mantidos separadamente por RascunhoMemoria.
 
 A chave `rememore:capture:open:v1:` por conta/data e o campo serializado `workspaceId` permanecem no sessionStorage; `iniciar` recebe o
 `idAreaTrabalho` local. Após descarte no upgrade 4, um marcador antigo não encontra sua materialização: a preparação consulta o remoto e
@@ -57,10 +57,40 @@ as atuais antes de liberar. Seleção adquire o mesmo lock antes de remover pend
 `pagehide` libera a lease; retorno por BFCache refaz a entrada antes de aceitar ações. O navegador libera locks ao terminar o contexto, sem
 heartbeat/TTL próprios. Referência consultada: [Web Locks API](https://www.w3.org/TR/web-locks/).
 
-`islands/CapturaDia.tsx` valida calendário local antes do diagnóstico/preparação; mostra o workspace somente após confirmação local. No
-marco B da 07, a estrutura visual e a leitura do mock já aparecem, mas edição/confirmação e rascunho ainda aguardam C/D. O botão temporário
-permanece ao final da lista para validar a fundação. Não há política automática de limpeza/TTL. O mock inicial continua remotamente ausente,
-exceto o cenário visual de 08/09/2026 somente em desenvolvimento; controles pelo console estão na Continuidade da 07.
+`app/servicos/captura/edicao.ts`: `abrirEdicao` decide autorização pelo timestamp da primeira preservação e pelo prazo recebido,
+no instante de abertura; nunca preservada permanece editável. Para memória histórica, abre edição do último complemento quando ainda
+editável; caso contrário, abre leitura. `abrirComplemento` inicia rascunho novo somente quando não há conteúdo autorizado para edição.
+`confirmarMemoria`, `confirmarComplemento` e `moverMemoria` recebem a captura confirmada e uma
+função de gravação substituível. Retornam a nova captura somente após gravação; falhas rejeitam sem mutar a base. Confirmação idêntica
+não grava nem cria pendência. IDs, primeira preservação e revisão de origem são conservados; inclusão recebe a última ordem física.
+O chamador deve manter `PosseCaptura.executar` durante a operação e publicar o retorno somente após resolução.
+
+`excluirUltimoElemento(captura, edicao, gravar)` exige edição limpa, existente e compatível; remove somente o último complemento
+confirmado ou, se não houver complementos, a memória. Aguarda commit e não muta a captura fornecida. Mantém as demais memórias,
+ordens, IDs e revisão de origem. O chamador usa a mesma posse. Ao excluir complemento, mantém a tela da memória e atualiza o rascunho
+para o estado restante; ao excluir a memória, retorna à lista próximo de uma vizinha. A autorização da edição principal mantida não é
+recalculada; se o complemento em edição foi excluído, a abertura do alvo restante decide sua autorização.
+
+`RascunhoMemoria` usa chave própria de sessionStorage por conta/data, separada do marcador de sessão aberta. Guarda alvo da memória,
+identidade da materialização, texto original/transitório, autorização, estado sujo e rolagem da lista. Complementos acrescentam
+`idComplemento` e `idsComplementosBase`, preservando a chave e a leitura dos rascunhos anteriores de memória; somente o último complemento
+compatível pode ser restaurado. Só restaura na mesma sessão
+retomada por reload e com base compatível. Inclusão já confirmada e edição cuja base mudou não restauram rascunho obsoleto.
+`limpar` encerra a edição após confirmação ou abandono. Erros de armazenamento propagam e a tela avisa sobre proteção indisponível.
+
+`islands/CapturaDia.tsx` valida calendário local antes do diagnóstico/preparação e mantém a posse durante o trabalho. C/D oferecem
+inclusão, edição da memória autorizada e ordem física, com publicação após commit. Rascunho usa debounce de 200 ms e escrita imediata
+na abertura, antes de descarregar e em pagehide; beforeunload alerta quando há edição suja ou gravação em curso. Saídas controladas
+passam pela confirmação de abandono aprovada; criação vazia/só com espaços dispensa aviso, enquanto edição existente apagada continua
+protegida. O botão temporário foi removido. E integra memória histórica, complementos em sequência com data local da primeira preservação
+e campo próprio do último complemento editável; confirmação, abandono e reload usam a mesma proteção. F acrescenta lixeira contextual
+somente na tela de Memória, inativa na criação/edição suja, com confirmação específica para último complemento ou memória sem complementos.
+Não há limpeza automática/TTL. O cenário visual de 08/09/2026 permanece exclusivo do desenvolvimento, com comandos na Continuidade.
+
+Na lista, reordenar prioriza manter visíveis a memória movida e suas vizinhas imediatas. A compensação que mantém o botão sob o mouse só
+ocorre fora dos extremos quando não expulsa nenhuma dessas caixas da área útil; nos demais casos, a rolagem mínima preserva o contexto.
+O Voltar do header retorna da Memória à lista com abandono/contexto e, já na lista, encerra a sessão e volta à Seleção. O bloco sticky usa
+uma máscara de fundo lateral de 0,75 rem para cobrir a projeção da sombra Bulma enquanto os boxes passam por trás, sem cortar suas sombras.
 
 ## Falhas e transações
 
