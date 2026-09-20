@@ -5,11 +5,13 @@ type Tema = "system" | "light" | "dark"
 const chaveTema = "rememore:lab:theme"
 const fontes = ["Chewy", "Damion", "Dekko", "Dongle", "Faculty Glyphic", "Happy Monkey", "Iansui", "Kalam"]
 
-export default function ControlesLaboratorio() {
+export default function ControlesLaboratorio({ aoAlterarTema }: { aoAlterarTema: (tema: Tema) => void }) {
     const [tema, definirTema] = useState<Tema>("system")
     const [fonte, definirFonte] = useState("")
     const [pronto, definirPronto] = useState(false)
     const [avisoArmazenamento, definirAvisoArmazenamento] = useState(false)
+
+    useEffect(() => aoAlterarTema(tema), [tema, aoAlterarTema])
 
     useEffect(() => {
         const atual = document.documentElement.dataset.theme

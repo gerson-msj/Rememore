@@ -68,3 +68,13 @@ atual, não uma paleta antiga fixa no painel.
 
 O script `static/laboratorio-theme.js` é carregado somente no laboratório. A Página Inicial acompanha o tema do sistema e não deve receber a
 preferência manual nem os rascunhos do laboratório. Preservar essa separação ao trabalhar no carregamento global.
+
+`islands/Laboratorio.tsx` compõe os blocos de controles, visualização e experimentação de memória. O tema escolhido em
+`ControlesLaboratorio` informa o tema efetivo das amostras; as paletas continuam aplicadas pelo CSS compartilhado. Recolher um bloco apenas
+oculta seu conteúdo, sem desmontá-lo: desmontar o bloco de paleta removeria seu estilo e perderia a calibração nas outras amostras.
+Os estados de expansão usam `rememore:lab:bloco:{tema|visualizacao|memoria}:v1`, com valores `aberto`/`fechado` e padrão aberto.
+`components/ExperimentoMemoria.tsx` e `assets/laboratorio-memoria.css` contêm amostras comparativas de Tom. O quarto bloco,
+`components/MemoriaLaboratorio.tsx`, usa o componente real `Memoria` e persiste expansão em `rememore:lab:bloco:memoria-real:v1`.
+Os extremos por tema são compartilhados entre experimento e componente real pela raiz do laboratório; alterações experimentais duram
+somente enquanto a página está aberta. Os valores iniciais correspondem aos extremos de `assets/tom.css`; ao aprovar novos extremos,
+atualizar também a inicialização de `coresTom` em `islands/Laboratorio.tsx`.

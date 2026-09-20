@@ -1,0 +1,120 @@
+/* Instrumentos e amostras provisórias exclusivos do laboratório. */
+#laboratorio .lab-bloco {
+    margin-block: 1.5rem;
+    padding-block: 1rem;
+    border-top: 1px solid var(--bulma-border);
+}
+.lab-bloco-titulo {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    text-align: left;
+    cursor: pointer;
+    padding: 0.25rem;
+}
+.lab-bloco-titulo:focus-visible {
+    outline: 2px solid var(--bulma-link);
+    outline-offset: 3px;
+}
+.lab-experimento-memoria input[type="range"] {
+    width: 100%;
+}
+.lab-experimento-memoria input[type="color"] {
+    display: block;
+    width: 5rem;
+    height: 2.5rem;
+    margin-block: 0.4rem;
+}
+.lab-modelos-tom {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--lab-amostra-largura)), 1fr));
+    gap: 1.75rem;
+}
+.lab-modelos-tom > section {
+    min-width: 0;
+}
+.lab-memoria-fake {
+    --lab-fundo: var(--bulma-scheme-main);
+    --lab-borda: var(--bulma-border);
+    --lab-categoria: var(--bulma-text-strong);
+    --lab-sombra: color-mix(in srgb, var(--bulma-text) 12%, transparent);
+    --lab-cor-tom: color-mix(in oklab, var(--lab-tom-extremo) var(--lab-tom-peso), var(--bulma-text-weak));
+    position: relative;
+    isolation: isolate;
+    max-width: var(--lab-amostra-largura);
+    margin-top: 1.3rem;
+    padding: 0.95rem 0.85rem 0.65rem 1rem;
+    border: 1px solid var(--lab-borda);
+    border-radius: 0.6rem;
+    background: var(--lab-fundo);
+    color: var(--bulma-text);
+    box-shadow: 0 3px 9px var(--lab-sombra);
+}
+.lab-memoria-fake:hover {
+    outline: 1px solid var(--lab-borda);
+    box-shadow: 0 4px 12px var(--lab-sombra);
+}
+.lab-memoria-legenda {
+    position: absolute;
+    top: 0;
+    left: 1rem;
+    max-width: calc(100% - 2rem);
+    transform: translateY(-50%);
+    padding: 0.1rem 0.6rem;
+    border-radius: 0.65rem;
+    background: var(--lab-fundo);
+    color: var(--lab-categoria);
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+.lab-memoria-legenda span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.lab-memoria-previa {
+    position: relative;
+    height: 4.5em;
+    line-height: 1.5;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+.lab-memoria-previa > div {
+    max-height: 100%;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.lab-memoria-previa::after {
+    content: "";
+    position: absolute;
+    inset: 55% 0 0;
+    background: linear-gradient(transparent, var(--lab-fundo));
+    pointer-events: none;
+}
+.lab-com-tom:not(.lab-tom-borda)::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0.35rem;
+    border-radius: 0.55rem 0 0 0.55rem;
+    background: var(--lab-cor-tom);
+}
+.lab-com-tom:is(.lab-tom-ampla, .lab-tom-faixa-borda-sombra, .lab-tom-faixa-borda, .lab-tom-borda) {
+    --lab-borda: color-mix(in oklab, var(--lab-cor-tom) 70%, var(--bulma-border));
+}
+.lab-com-tom:is(.lab-tom-ampla, .lab-tom-faixa-borda-sombra, .lab-tom-faixa-sombra) {
+    --lab-sombra: color-mix(in srgb, var(--lab-cor-tom) 32%, transparent);
+}
+.lab-com-tom:is(.lab-tom-ampla, .lab-tom-faixa-categoria) {
+    --lab-categoria: color-mix(in oklab, var(--lab-cor-tom) 72%, var(--bulma-text-strong));
+}
+.lab-com-tom.lab-tom-ampla {
+    --lab-fundo: color-mix(in oklab, var(--lab-cor-tom) 13%, var(--bulma-scheme-main));
+}
+.lab-lista-memorias {
+    display: grid;
+    gap: 1rem;
+}

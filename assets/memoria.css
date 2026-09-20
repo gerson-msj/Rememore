@@ -1,0 +1,132 @@
+.memoria {
+    position: relative;
+    min-width: 0;
+    color: var(--tom-texto);
+}
+.memoria-moldura {
+    position: relative;
+    min-width: 0;
+    margin: 0;
+    padding: 0.6rem 0.8rem 0.6rem 1rem;
+    border: 1px solid var(--tom-borda);
+    border-radius: 0.6rem;
+    background: var(--tom-fundo);
+    box-shadow: 0 3px 9px var(--tom-sombra);
+}
+.memoria-moldura::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0.35rem;
+    border-radius: 0.55rem 0 0 0.55rem;
+    background: var(--tom-faixa);
+    pointer-events: none;
+}
+.memoria-moldura:has(.memoria-acionamento:hover) {
+    box-shadow: 0 4px 12px var(--tom-sombra);
+    border-color: var(--tom-categoria);
+}
+.memoria-categoria {
+    max-width: calc(100% - 0.75rem);
+    padding: 0.1rem 0.55rem;
+    color: var(--tom-categoria);
+    font-size: 1.05em;
+    font-weight: 600;
+    border: 1px solid var(--tom-borda);
+    border-radius: 0.65rem;
+    background: var(--tom-fundo);
+}
+.memoria-compacta .memoria-categoria {
+    display: flex;
+    gap: 0.35em;
+}
+.memoria-categoria-nome {
+    overflow-wrap: anywhere;
+}
+.memoria-compacta .memoria-categoria-nome {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+.memoria-categoria-excedente {
+    flex-shrink: 0;
+}
+.memoria-sem-categoria {
+    font-weight: 400;
+}
+.memoria-sem-categoria .memoria-categoria-nome {
+    opacity: 0.6;
+}
+.memoria-acionamento {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 0.6rem;
+    background: transparent;
+    cursor: pointer;
+    z-index: 1;
+}
+.memoria-acionamento:focus-visible {
+    outline: 2px solid var(--bulma-link);
+    outline-offset: 3px;
+}
+.memoria-conteudo {
+    display: flex;
+    align-items: stretch;
+    gap: 0.65rem;
+}
+.memoria-texto {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.memoria-compacta .memoria-texto {
+    height: 4.5em;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+.memoria-compacta .memoria-texto > div {
+    max-height: 100%;
+}
+.memoria-compacta .memoria-texto::after {
+    content: "";
+    position: absolute;
+    inset: 55% 0 0;
+    background: linear-gradient(transparent, var(--tom-fundo));
+    pointer-events: none;
+}
+.memoria-ordenacao {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 2rem;
+    position: relative;
+    z-index: 2;
+}
+.memoria-ordenacao button {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    color: var(--tom-seta);
+    cursor: pointer;
+    border-radius: 0.3rem;
+    padding: 0.25rem;
+}
+.memoria-ordenacao button:hover:not(:disabled) {
+    color: var(--tom-seta-realce);
+    background: color-mix(in srgb, var(--tom-seta) 12%, transparent);
+}
+.memoria-ordenacao button:focus-visible {
+    outline: 2px solid var(--bulma-link);
+}
+.memoria-ordenacao button:disabled {
+    color: var(--tom-seta-inativa);
+    opacity: 0.35;
+    cursor: default;
+}
