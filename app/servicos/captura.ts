@@ -57,6 +57,7 @@ export async function prepararCaptura(
             conteudo: memoria.content,
             ordem: memoria.order,
             primeiraPreservacaoEm: memoria.firstPreservedAt,
+            ...(memoria.categories ? { categorias: memoria.categories.map((item) => ({ idCategoria: item.id, nome: item.name })) } : {}),
             complementos: memoria.complements.map((complemento) => ({
                 id: complemento.id,
                 conteudo: complemento.content,

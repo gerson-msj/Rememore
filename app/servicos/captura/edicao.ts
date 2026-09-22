@@ -41,7 +41,7 @@ export function abrirEdicao(captura: CapturaLocal, id: string | null, rolagem: n
     return edicao
 }
 
-function permiteEdicao(primeiraPreservacaoEm: string | null, prazoDias: number, agora: number) {
+export function permiteEdicao(primeiraPreservacaoEm: string | null, prazoDias: number, agora: number) {
     return primeiraPreservacaoEm === null || agora < Date.parse(primeiraPreservacaoEm) + prazoDias * 86400000
 }
 

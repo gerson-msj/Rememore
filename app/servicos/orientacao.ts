@@ -1,9 +1,14 @@
-export type ContextoOrientacao = "captureSelection" | "inicioCaptura"
+export type ContextoOrientacao = "captureSelection" | "inicioCaptura" | "categorizacao"
 export type NivelOrientacao = "beginner" | "intermediate" | "advanced"
 
 // Nível simulado temporariamente; alterar aqui para validação do operador.
 const nivelSimulado: NivelOrientacao = "beginner"
 const mensagens: Record<ContextoOrientacao, Record<NivelOrientacao, string | null>> = {
+    categorizacao: {
+        beginner: "Escolha uma categoria que represente esta memória. Se ela ainda não existir, basta escrever o nome.",
+        intermediate: "Escolha a categoria que melhor representa o contexto desta memória.",
+        advanced: "Categorias consistentes tornam mais perceptíveis os temas que atravessam suas memórias."
+    },
     captureSelection: {
         beginner: "Você pode capturar qualquer dia até hoje. Escolha uma data para começar.",
         intermediate: "Você pode voltar a qualquer data passada quando quiser registrar algo que ainda lembra.",

@@ -11,6 +11,7 @@ export interface MemoriaPreservada {
     order: number
     firstPreservedAt: string | null
     complements: ComplementoPreservado[]
+    categories?: { id: string; name: string }[]
 }
 
 export type ResultadoMetadadosCaptura =

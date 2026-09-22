@@ -4,13 +4,14 @@ import CabecalhoPagina from "./CabecalhoPagina.tsx"
 import MensagemPopup from "./MensagemPopup.tsx"
 
 export default function EstruturaCaptura(
-    { children: conteudoFilho, retorno = "/principal", aoVoltar, aoDeixar, antesDeSair, dia = false }: {
+    { children: conteudoFilho, retorno = "/principal", aoVoltar, aoDeixar, antesDeSair, dia = false, titulo = "Capturar" }: {
         children: ComponentChildren
         retorno?: string
         aoVoltar?: () => void
         aoDeixar?: () => void
         antesDeSair?: (continuar: () => void) => void
         dia?: boolean
+        titulo?: string
     }
 ) {
     const [saida, definirSaida] = useState(false)
@@ -30,7 +31,7 @@ export default function EstruturaCaptura(
         <div ref={estrutura} class={dia ? "captura-dia-estrutura" : undefined}>
             <div ref={cabecalho} class={dia ? "captura-dia-cabecalho" : undefined}>
                 <CabecalhoPagina
-                    titulo="Capturar"
+                    titulo={titulo}
                     aoVoltar={() => {
                         if (aoVoltar) {
                             aoVoltar()

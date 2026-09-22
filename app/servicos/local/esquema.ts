@@ -1,6 +1,7 @@
 export const STORE_CAPTURAS = "capturas"
 export const INDICE_CAPTURAS_POR_CONTA = "porConta"
 export const STORE_DIAGNOSTICO = "_diagnostico"
+export const STORE_CATALOGOS_CATEGORIAS = "catalogosCategorias"
 
 export interface MigracaoLocal {
     versao: number
@@ -40,6 +41,13 @@ export const migracoesLocais: readonly MigracaoLocal[] = [
             banco.createObjectStore(STORE_DIAGNOSTICO)
             const capturas = banco.createObjectStore(STORE_CAPTURAS, { keyPath: ["idConta", "dataCaptura"] })
             capturas.createIndex(INDICE_CAPTURAS_POR_CONTA, "idConta")
+        }
+    },
+    {
+        versao: 5,
+        migrar(banco) {
+            // O catálogo é independente da composição; as capturas existentes permanecem intactas.
+            banco.createObjectStore(STORE_CATALOGOS_CATEGORIAS, { keyPath: "idConta" })
         }
     }
 ]

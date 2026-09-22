@@ -12,7 +12,8 @@ Leitura obrigatória curta. As referências do índice são consultadas somente 
 - Capacidades da Principal chegam resolvidas; pendências de captura pertencem ao front. Para contratos concretos, consulte a referência
   pertinente.
 - O IndexedDB real em `app/servicos/local/` sustenta Seleção, Captura do dia e pendências da Principal. Capturas são agregados por
-  conta/data; somente `alterada: true` é pendência. Schema 4 usa campos locais em PT-BR; payloads remotos mantêm seu contrato e são
+  conta/data; somente `alterada: true` é pendência. Schema 5 mantém os campos locais em PT-BR e acrescenta catálogo de categorias por conta;
+  categorias exclusivamente locais são derivadas apenas da captura aberta. Payloads remotos mantêm seu contrato e são
   convertidos na preparação. Operações rejeitam falhas explicitamente. Consulte a referência antes de integrar ou evoluir o schema.
 
 ## Referências sob demanda

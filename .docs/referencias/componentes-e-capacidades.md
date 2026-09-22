@@ -14,6 +14,7 @@ formatarDataCaptura apresenta DD/MM/AAAA. O campo nativo mantém a apresentaçã
 `orientar("inicioCaptura")` fornece os três textos de início da Captura do dia; o consumidor exibe apenas na lista vazia, limpa e sem
 origem preservada. Confirmação torna a captura alterada, impedindo reapresentação após exclusões. Alterar
 nivelSimulado no fonte para validar beginner/intermediate/advanced; nenhuma configuração ou persistência de nível.
+`orientar("categorizacao")` fornece os três textos da tela Categorização, apenas no modo editável; a orientação sobre múltiplas categorias é separada.
 
 `ServicoSessao.accountId(request)` retorna identidade opaca da conta autenticada ou null. O mock fornece ULID fixo; páginas não devem fixar
 identidade por conta própria. A Seleção já recebe esse identificador pelo handler autenticado.
@@ -49,7 +50,8 @@ autenticada em `routes/_middleware.ts`. `/admin` acrescenta a capacidade adminis
 encerrar a sessão. As cascas de destino compartilham `islands/EstruturaProtegida.tsx`, com Voltar para a Principal e Sair pelo POST já
 existente em `/principal`.
 
-Capturar usa `components/EstruturaCaptura.tsx`: Seleção volta à Principal; Captura do dia volta à Seleção. Sair mantém confirmação e POST em
+Capturar usa `components/EstruturaCaptura.tsx`: Seleção volta à Principal; Captura do dia volta à Seleção. O título opcional (`titulo`) tem
+padrão Capturar e permite Categorização sem alterar os demais consumidores. Sair mantém confirmação e POST em
 `/principal`. Callback opcional `aoDeixar` encerra a sessão aberta antes do Voltar ou logout confirmado; Seleção não precisa fornecê-lo. A
 propriedade opcional `antesDeSair(continuar)` permite à Captura do dia confirmar abandono antes de executar logout; `aoVoltar` permite que
 a tela de Memória use o Voltar do header para retornar à lista e que a lista volte à Seleção. Sem callbacks, a navegação usa `retorno`.
@@ -67,7 +69,7 @@ ao diálogo por `aria-describedby`; preserve essa associação ao evoluir a estr
 
 ## Componente de memória e linguagem de Tom
 
-`components/Memoria.tsx` é uma peça de apresentação, atualmente consumida apenas pelo laboratório. Recebe `conteudo`, `categorias`,
+`components/Memoria.tsx` é uma peça de apresentação, consumida pelo laboratório e pela lista real de Categorizar e Tom. Recebe `conteudo`, `categorias`,
 `tom` (`number` entre -100 e +100 ou `null`), `contexto` (`registrar`, `categorizar`, `revisar`) e `aoAcionar`. No contexto `registrar`,
 recebe também `primeira`, `ultima`, `aoElevar` e `aoRebaixar`. Não contém persistência nem navegação. Seu CSS é `assets/memoria.css`.
 Categorias compactas usam primeiro nome e excedentes; revisão usa todos os nomes. Texto integral fica no DOM e a prévia é limitada por CSS.
@@ -76,3 +78,18 @@ Categorias compactas usam primeiro nome e excedentes; revisão usa todos os nome
 sombra, fundo, faixa e setas. `assets/tom.css` define extremos por tema e variáveis de saída por região. Outro consumidor pode usar essa
 aparência sem depender de Memoria. Desligar uma região restaura o tema; a faixa começa desligada por decisão do operador na Spec 08.
 Tom ausente não recebe tonalização; zero recebe as misturas neutras. O gradiente sempre usa o fundo efetivo.
+
+## Categorização
+
+`components/Categorizacao.tsx` apresenta memória e complementos em uma caixa rolável de cinco linhas, selecionadas em duas linhas fixas,
+orientação e modo histórico. `components/SeletorCategoria.tsx` recebe consulta, resultados, selecionadas, opção de criação e callbacks;
+não acessa persistência. Botões dos resultados usam `aria-pressed`; selecionadas permanecem visíveis nos resultados.
+
+`components/EdicaoCategorizacao.tsx` integra essas peças ao estado transitório da captura, com debounce de 180 ms. `CapturaDia` fornece a
+edição, o catálogo e a confirmação após commit. O título Categorização usa a mesma estrutura da captura; as abas ficam ocultas durante a
+edição. O laboratório `/laboratorio-categorizacao` permanece uma demonstração sem persistência, com layout aprovado na Especificação 09.
+
+`app/utilitarios/pesquisaTexto.ts` exporta `normalizarPesquisa` e `correspondeAproximadamente`. A política de fallback fica em
+`pesquisarCategorias`: somente zero resultados simples habilita aproximações e criação. A comparação ignora acentos, caixa e espaços
+externos; a apresentação preserva a grafia. Distância inicial de edição limitada a dois caracteres, proporcional ao comprimento; não
+constitui decisão definitiva para outros consumidores.

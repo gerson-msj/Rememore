@@ -12,6 +12,7 @@
     border-radius: 0.6rem;
     background: var(--tom-fundo);
     box-shadow: 0 3px 9px var(--tom-sombra);
+    transition: border-color 180ms ease, box-shadow 180ms ease;
 }
 .memoria-moldura::before {
     content: "";
@@ -22,9 +23,14 @@
     background: var(--tom-faixa);
     pointer-events: none;
 }
-.memoria-moldura:has(.memoria-acionamento:hover) {
+.memoria:hover .memoria-moldura {
     box-shadow: 0 4px 12px var(--tom-sombra);
     border-color: var(--tom-categoria);
+}
+@media (prefers-reduced-motion: reduce) {
+    .memoria-moldura {
+        transition: none;
+    }
 }
 .memoria-categoria {
     max-width: calc(100% - 0.75rem);

@@ -8,6 +8,11 @@ export interface ComplementoLocal {
     primeiraPreservacaoEm: string | null
 }
 
+export interface AssociacaoCategoria {
+    idCategoria: string | null
+    nome: string
+}
+
 export interface MemoriaLocal {
     /** Atribuído uma única vez, independentemente do conteúdo e da ordem física. */
     id: string
@@ -16,6 +21,8 @@ export interface MemoriaLocal {
     primeiraPreservacaoEm: string | null
     /** Do mais antigo ao mais recente; cada complemento conserva sua primeira preservação. */
     complementos: ComplementoLocal[]
+    /** Ausência em capturas anteriores à categorização equivale a nenhuma associação. */
+    categorias?: AssociacaoCategoria[]
 }
 
 export interface CapturaLocal {

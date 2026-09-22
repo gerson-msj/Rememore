@@ -19,6 +19,18 @@ import { prepararCaptura } from "../app/servicos/captura.ts"
 import { ehDataCaptura } from "../app/utilitarios/dataCaptura.ts"
 import { adquirirBloqueioCaptura, type PosseCaptura } from "../app/servicos/captura/bloqueio.ts"
 import { SessaoCapturaAberta } from "../app/servicos/captura/sessaoAberta.ts"
+import Memoria from "../components/Memoria.tsx"
+import EdicaoCategorizacao from "../components/EdicaoCategorizacao.tsx"
+import {
+    abrirCategorizacao,
+    apresentarCategoria,
+    type EdicaoCategorias,
+    mesmasCategorias,
+    salvarCategorias,
+    SessaoCategorizacao
+} from "../app/servicos/captura/categorizacao.ts"
+import { prepararCatalogo } from "../app/servicos/categorias.ts"
+import type { CatalogoCategorias } from "../app/servicos/local/catalogoCategorias.ts"
 
 export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { accountId: string; date: string }) {
     const [areaTrabalho, definirAreaTrabalho] = useState<CapturaLocal | null>(null)
@@ -33,6 +45,11 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     const [edicao, definirEdicao] = useState<EdicaoMemoria | null>(null)
     const edicaoAtual = useRef<EdicaoMemoria | null>(null)
     const rascunho = useRef<RascunhoMemoria | null>(null)
+    const [categorizacao, definirCategorizacao] = useState<EdicaoCategorias | null>(null)
+    const categorizacaoAtual = useRef<EdicaoCategorias | null>(null)
+    const sessaoCategorizacao = useRef<SessaoCategorizacao | null>(null)
+    const [catalogo, definirCatalogo] = useState<CatalogoCategorias | undefined>(undefined)
+    const [avisoCatalogo, definirAvisoCatalogo] = useState(false)
     const temporizador = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
     const [abandono, definirAbandono] = useState(false)
     const [exclusao, definirExclusao] = useState(false)
@@ -62,6 +79,64 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     function atualizarEdicao(proxima: EdicaoMemoria | null) {
         edicaoAtual.current = proxima
         definirEdicao(proxima)
+    }
+
+    function atualizarCategorizacao(proxima: EdicaoCategorias | null) {
+        categorizacaoAtual.current = proxima
+        definirCategorizacao(proxima)
+    }
+
+    function limparCategorizacao() {
+        try {
+            sessaoCategorizacao.current?.limpar()
+        } catch {
+            definirAvisoSessao(true)
+        }
+        atualizarCategorizacao(null)
+        definirErroAlteracao("")
+    }
+
+    function categorizar(idMemoria: string) {
+        if (!areaTrabalho || alterando.current) return
+        const proxima = abrirCategorizacao(areaTrabalho, idMemoria, scrollY)
+        atualizarCategorizacao(proxima)
+        try {
+            sessaoCategorizacao.current?.gravar(proxima)
+        } catch {
+            definirAvisoSessao(true)
+        }
+        definirErroAlteracao("")
+        scrollTo(0, 0)
+    }
+
+    function retornarCategorizacao() {
+        const atual = categorizacaoAtual.current
+        limparCategorizacao()
+        definirAba("Categorizar e Tom")
+        requestAnimationFrame(() => {
+            scrollTo(0, atual?.rolagem ?? 0)
+            if (atual) acompanharRetorno(atual.idMemoria)
+        })
+    }
+
+    async function confirmarCategorias() {
+        const atual = categorizacaoAtual.current
+        if (!areaTrabalho || !atual || alterando.current || !posse.current) return
+        alterando.current = true
+        definirOcupado(true)
+        definirErroAlteracao("")
+        try {
+            const proxima = await posse.current.executar(() =>
+                salvarCategorias(areaTrabalho, atual, (captura) => capturasLocais.gravar(captura))
+            )
+            definirAreaTrabalho(proxima)
+            retornarCategorizacao()
+        } catch {
+            definirErroAlteracao("Não foi possível salvar as categorias. Suas alterações continuam nesta tela. Tente novamente.")
+        } finally {
+            alterando.current = false
+            definirOcupado(false)
+        }
     }
 
     function limparEdicao() {
@@ -162,6 +237,10 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     }
 
     function voltarCabecalho() {
+        if (categorizacaoAtual.current) {
+            solicitarSaida(retornarCategorizacao)
+            return
+        }
         const atual = edicaoAtual.current
         if (atual) {
             solicitarSaida(() => retornarLista(atual.nova && !atual.idComplemento ? undefined : atual.idMemoria))
@@ -172,6 +251,8 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     }
 
     function temTrabalhoNaoConfirmado() {
+        const categorias = categorizacaoAtual.current
+        if (categorias && !mesmasCategorias(categorias.originais, categorias.selecionadas)) return true
         const atual = edicaoAtual.current
         return atual !== null && atual.suja && (!atual.nova || atual.texto.trim().length > 0)
     }
@@ -195,6 +276,7 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     }, [])
     function encerrarSessao() {
         limparEdicao()
+        limparCategorizacao()
         try {
             sessaoAberta.current?.encerrar()
         } catch {
@@ -278,6 +360,21 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
                         atualizarEdicao(rascunho.current.retomar(captura, idAreaTrabalhoRetomada === captura.idAreaTrabalho))
                     } catch {
                         definirAvisoSessao(true)
+                    }
+                    try {
+                        sessaoCategorizacao.current = new SessaoCategorizacao(idConta, dataCaptura, sessionStorage)
+                        const retomada = sessaoCategorizacao.current.retomar(captura, idAreaTrabalhoRetomada === captura.idAreaTrabalho)
+                        if (retomada && !edicaoAtual.current) {
+                            atualizarCategorizacao(retomada)
+                            definirAba("Categorizar e Tom")
+                        }
+                    } catch {
+                        definirAvisoSessao(true)
+                    }
+                    const resultadoCatalogo = await prepararCatalogo(idConta)
+                    if (ativo) {
+                        definirCatalogo(resultadoCatalogo.catalogo)
+                        definirAvisoCatalogo(resultadoCatalogo.falhou)
                     }
                 }
             } catch {
@@ -370,6 +467,7 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     }
     return (
         <EstruturaCaptura
+            titulo={categorizacao ? "Categorização" : "Capturar"}
             retorno="/capturar"
             aoVoltar={voltarCabecalho}
             aoDeixar={encerrarSessao}
@@ -398,8 +496,23 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
                             definirAba(proximo)
                             globalThis.scrollTo(0, 0)
                         }}
-                        memoriaAberta={edicao !== null}
-                        acoes={edicao !== null
+                        memoriaAberta={edicao !== null || categorizacao !== null}
+                        acoes={categorizacao
+                            ? categorizacao.autorizada && (
+                                <button
+                                    type="button"
+                                    class="button is-primary"
+                                    title="Salvar"
+                                    aria-label="Salvar"
+                                    disabled={ocupado}
+                                    onClick={confirmarCategorias}
+                                >
+                                    <span class="icon">
+                                        <i class="fas fa-check" aria-hidden="true" />
+                                    </span>
+                                </button>
+                            )
+                            : edicao !== null
                             ? (
                                 <>
                                     {edicao.autorizada
@@ -463,6 +576,45 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
                             : null}
                     >
                         {erroAlteracao && <p class="notification is-warning" role="alert">{erroAlteracao}</p>}
+                        {avisoCatalogo && aba === "Categorizar e Tom" && (
+                            <p class="notification is-warning" role="status">
+                                Não foi possível atualizar o catálogo de categorias. Você pode continuar com as categorias disponíveis nesta
+                                captura.
+                            </p>
+                        )}
+                        {categorizacao && (
+                            <EdicaoCategorizacao
+                                key={categorizacao.idMemoria}
+                                captura={areaTrabalho}
+                                edicao={categorizacao}
+                                catalogo={catalogo}
+                                ocupado={ocupado}
+                                aoSelecionar={(selecionadas) => atualizarCategorizacao({ ...categorizacao, selecionadas })}
+                            />
+                        )}
+                        {!categorizacao && aba === "Categorizar e Tom" && (
+                            <ul class="captura-lista-memorias">
+                                {[...areaTrabalho.memorias].sort((a, b) => a.ordem - b.ordem).map((item) => (
+                                    <li
+                                        key={item.id}
+                                        ref={(elemento) => {
+                                            if (elemento) caixas.current.set(item.id, elemento)
+                                            else caixas.current.delete(item.id)
+                                        }}
+                                    >
+                                        <Memoria
+                                            conteudo={item.conteudo}
+                                            categorias={(item.categorias ?? []).map((categoria) =>
+                                                apresentarCategoria(categoria, catalogo).nome
+                                            )}
+                                            contexto="categorizar"
+                                            tom={null}
+                                            aoAcionar={() => categorizar(item.id)}
+                                        />
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                         {!edicao && aba === "Registrar e organizar" && !areaTrabalho.origemPreservada &&
                             !areaTrabalho.alterada && areaTrabalho.memorias.length === 0 && (
                             <p class="captura-orientacao">{orientar("inicioCaptura")}</p>
