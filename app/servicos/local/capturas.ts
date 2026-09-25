@@ -31,6 +31,12 @@ export interface CapturaLocal {
     dataCaptura: string
     memorias: MemoriaLocal[]
     alterada: boolean
+    /** Pendência de texto, composição ou ordem, independente das associações de categoria. */
+    alteracoesOutras: boolean
+    /** Associações do snapshot remoto usado para materializar o workspace. */
+    categoriasOrigem: Record<string, AssociacaoCategoria[]>
+    /** Aprendizagem da inclusão: permanece verdadeiro mesmo após excluir todas as memórias. */
+    primeiraMemoriaConfirmada: boolean
     origemPreservada: boolean
     /** Revisão remota opaca de origem; null somente quando a ausência foi confirmada. */
     revisaoOrigem: string | null
@@ -91,7 +97,7 @@ export class RepositorioCapturasLocais {
             const requisicao = store.get([idConta, dataCaptura]) as IDBRequest<CapturaLocal | undefined>
             requisicao.onsuccess = () => {
                 if (!requisicao.result) transacao.abort()
-                else store.put({ ...requisicao.result, alterada: true })
+                else store.put({ ...requisicao.result, alterada: true, alteracoesOutras: true })
             }
             return requisicao
         })

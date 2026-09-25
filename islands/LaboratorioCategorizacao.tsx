@@ -1,5 +1,6 @@
 import { useEffect, useState } from "preact/hooks"
 import Categorizacao from "../components/Categorizacao.tsx"
+import PesquisaCategoriaPopup from "../components/PesquisaCategoriaPopup.tsx"
 import EstruturaCaptura from "../components/EstruturaCaptura.tsx"
 import PainelCaptura from "../components/PainelCaptura.tsx"
 import Memoria from "../components/Memoria.tsx"
@@ -46,11 +47,12 @@ const amostras = [
     }
 ]
 
-/** Cenários do marco visual. Salvar altera somente estas amostras em memória, sem acesso ao workspace. */
+/** Cenários visuais: associações imediatas somente nas amostras em memória, sem acesso ao workspace. */
 export default function LaboratorioCategorizacao() {
     const [memorias, definirMemorias] = useState(amostras)
     const [indice, definirIndice] = useState<number | null>(1)
     const [selecionadas, definirSelecionadas] = useState<OpcaoCategoria[]>(amostras[1].categorias)
+    const [pesquisaAberta, definirPesquisaAberta] = useState(false)
     const [consulta, definirConsulta] = useState("")
     const [pesquisa, definirPesquisa] = useState("")
     const [historica, definirHistorica] = useState(false)
@@ -71,14 +73,17 @@ export default function LaboratorioCategorizacao() {
     const aproximados = normalizada.length > 0 && simples.length === 0
     const resultados = aproximados ? disponiveis.filter((item) => correspondeAproximadamente(pesquisa, item.nome)) : simples
 
-    function alternar(categoria: OpcaoCategoria) {
-        definirSelecionadas((atuais) =>
-            atuais.some((item) => item.chave === categoria.chave)
-                ? atuais.filter((item) => item.chave !== categoria.chave)
-                : [...atuais, categoria]
-        )
+    function associar(proximas: OpcaoCategoria[]) {
+        definirSelecionadas(proximas)
+        definirMemorias((atuais) => atuais.map((item, posicao) => posicao === indice ? { ...item, categorias: proximas } : item))
+    }
+    function incluir(categoria: OpcaoCategoria) {
+        if (historica || selecionadas.some((item) => item.chave === categoria.chave)) return
+        definirPesquisaAberta(false)
+        associar([...selecionadas, categoria])
     }
     function abrir(posicao: number) {
+        definirPesquisaAberta(false)
         definirIndice(posicao)
         definirSelecionadas(memorias[posicao].categorias)
         definirConsulta("")
@@ -90,10 +95,6 @@ export default function LaboratorioCategorizacao() {
         definirIndice(null)
         globalThis.scrollTo(0, 0)
     }
-    function salvarAmostra() {
-        definirMemorias((atuais) => atuais.map((item, posicao) => posicao === indice ? { ...item, categorias: selecionadas } : item))
-        voltar()
-    }
     const memoria = indice === null ? null : memorias[indice]
     return (
         <EstruturaCaptura
@@ -103,38 +104,65 @@ export default function LaboratorioCategorizacao() {
         >
             <PainelCaptura
                 dataCaptura="2026-09-22"
-                aba="Categorizar e Tom"
+                aba="Categorizar"
                 aoMudarAba={() => {}}
                 memoriaAberta={memoria !== null}
-                acoes={memoria && !historica && (
-                    <button type="button" class="button is-primary" title="Salvar" aria-label="Salvar" onClick={salvarAmostra}>
-                        <span class="icon">
-                            <i class="fas fa-check" aria-hidden="true" />
-                        </span>
-                    </button>
-                )}
+                acoes={null}
             >
                 {memoria
                     ? (
-                        <Categorizacao
-                            conteudo={curta ? amostras[0].conteudo : memoria.conteudo}
-                            complementos={curta || indice !== 1 ? [] : complementos}
-                            selecionadas={selecionadas}
-                            editavel={!historica}
-                            orientacao={orientar("categorizacao")}
-                            aoRemover={alternar}
-                        >
-                            <SeletorCategoria
-                                consulta={consulta}
-                                resultados={resultados}
+                        <>
+                            <Categorizacao
+                                conteudo={curta ? amostras[0].conteudo : memoria.conteudo}
+                                complementos={curta || indice !== 1 ? [] : complementos}
                                 selecionadas={selecionadas}
-                                aproximados={aproximados}
-                                novaCategoria={aproximados ? pesquisa.trim() : undefined}
-                                aoPesquisar={definirConsulta}
-                                aoAlternar={alternar}
-                                aoCriar={(nome) => alternar({ chave: nome, nome })}
+                                editavel={!historica}
+                                orientacao={orientar("categorizacao")}
+                                aoRemover={(opcao) => associar(selecionadas.filter((item) => item.chave !== opcao.chave))}
+                                aoPesquisar={() => {
+                                    definirConsulta("")
+                                    definirPesquisa("")
+                                    definirPesquisaAberta(true)
+                                }}
                             />
-                        </Categorizacao>
+                            <PesquisaCategoriaPopup aberto={pesquisaAberta && !historica} aoFechar={() => definirPesquisaAberta(false)}>
+                                <SeletorCategoria
+                                    consulta={consulta}
+                                    resultados={resultados}
+                                    selecionadas={selecionadas}
+                                    aproximados={aproximados}
+                                    novaCategoria={aproximados ? pesquisa.trim() : undefined}
+                                    aoPesquisar={definirConsulta}
+                                    pesquisando={consulta !== pesquisa}
+                                    aoAlternar={incluir}
+                                    aoCriar={(nome) => incluir({ chave: nome, nome })}
+                                />
+                            </PesquisaCategoriaPopup>
+                            <nav class="categorizacao-navegacao buttons has-addons" aria-label="Navegação entre memórias">
+                                <button
+                                    class="button"
+                                    type="button"
+                                    aria-label="Memória anterior"
+                                    disabled={indice === 0}
+                                    onClick={() => {
+                                        if (indice !== null && indice > 0) abrir(indice - 1)
+                                    }}
+                                >
+                                    Anterior
+                                </button>
+                                <button
+                                    class="button"
+                                    type="button"
+                                    aria-label="Próxima memória"
+                                    disabled={indice === memorias.length - 1}
+                                    onClick={() => {
+                                        if (indice !== null && indice < memorias.length - 1) abrir(indice + 1)
+                                    }}
+                                >
+                                    Próxima
+                                </button>
+                            </nav>
+                        </>
                     )
                     : (
                         <ul class="captura-lista-memorias">
@@ -154,8 +182,8 @@ export default function LaboratorioCategorizacao() {
                 <aside class="laboratorio-categorizacao-controles" aria-label="Controles do laboratório">
                     <p class="has-text-weight-semibold">Laboratório · Categorização</p>
                     <p class="is-size-7 mt-2">
-                        Amostras para validação visual. Salvar atualiza apenas esta demonstração até recarregar a página. As abas e a data
-                        representam a estrutura da captura; a navegação real e a proteção de abandono serão integradas após o batimento.
+                        Amostras para validação visual. Cada associação atualiza apenas esta demonstração até recarregar a página, sem
+                        gravar no workspace. As abas e a data representam a estrutura da captura.
                     </p>
                     {memoria && (
                         <>
@@ -174,14 +202,14 @@ export default function LaboratorioCategorizacao() {
                                 >
                                     Primeiro uso
                                 </button>
-                                <button type="button" class="button is-small" onClick={() => definirSelecionadas([])}>Nenhuma</button>
-                                <button type="button" class="button is-small" onClick={() => definirSelecionadas([catalogo[9]])}>
+                                <button type="button" class="button is-small" onClick={() => associar([])}>Nenhuma</button>
+                                <button type="button" class="button is-small" onClick={() => associar([catalogo[9]])}>
                                     Uma
                                 </button>
-                                <button type="button" class="button is-small" onClick={() => definirSelecionadas(catalogo.slice(0, 9))}>
+                                <button type="button" class="button is-small" onClick={() => associar(catalogo.slice(0, 9))}>
                                     Duas linhas ou mais
                                 </button>
-                                <button type="button" class="button is-small" onClick={() => definirSelecionadas(catalogo)}>Muitas</button>
+                                <button type="button" class="button is-small" onClick={() => associar(catalogo)}>Muitas</button>
                             </div>
                             <div class="buttons">
                                 <button type="button" class="button is-small" aria-pressed={curta} onClick={() => definirCurta(!curta)}>
@@ -191,7 +219,10 @@ export default function LaboratorioCategorizacao() {
                                     type="button"
                                     class="button is-small"
                                     aria-pressed={historica}
-                                    onClick={() => definirHistorica(!historica)}
+                                    onClick={() => {
+                                        definirPesquisaAberta(false)
+                                        definirHistorica(!historica)
+                                    }}
                                 >
                                     {historica ? "Modo editável" : "Modo histórico"}
                                 </button>

@@ -79,6 +79,38 @@ const cenarioVisual: CenarioCapturaSimulada = {
         complements: []
     }))
 }
+// Spec 10: composição histórica para testar rolagem e inclusão de complementos em 10/09/2026.
+const cenarioRolagemComplementos: CenarioCapturaSimulada = {
+    status: "found",
+    revision: "spec10-rolagem-complementos-1",
+    editWindowDays: 3,
+    memories: [
+        "Abri a janela cedo e fiquei alguns minutos observando a rua acordar. O café ainda estava quente quando ouvi os primeiros pássaros.",
+        "No caminho da padaria, encontrei uma vizinha que não via havia semanas. Conversamos sobre as pequenas mudanças do bairro.",
+        "Separei algumas fotografias antigas. Uma delas trouxe de volta o cheiro da casa onde passávamos as férias e as conversas ao redor da mesa.",
+        "Consegui terminar uma tarefa que vinha adiando. A sensação de alívio foi maior do que eu esperava.",
+        "Recebi uma mensagem de um amigo distante. Bastaram poucas palavras para lembrar como nossas conversas sempre foram fáceis.",
+        "Preparei o almoço sem pressa. Experimentei um tempero diferente e anotei mentalmente o que gostaria de repetir na próxima vez.",
+        "Uma música no rádio me fez parar por alguns instantes. Lembrei de uma viagem e de como cantávamos juntos, mesmo errando a letra.",
+        "Passei parte da tarde organizando livros. Encontrei uma anotação esquecida entre as páginas e reli o trecho que a acompanhava.",
+        "Fiz uma caminhada pelo parque. Observei a luz entre as árvores, o movimento das pessoas e o barulho dos passos no caminho de pedras.",
+        "Durante uma conversa, percebi que tinha entendido uma situação de maneira diferente. Ouvir com calma mudou minha impressão inicial.",
+        "Reservei um tempo para cuidar das plantas. Uma muda pequena já tinha folhas novas, quase imperceptíveis na semana anterior.",
+        "Lembrei de uma receita da família e procurei os ingredientes. Quero registrar depois os detalhes que ainda preciso perguntar.",
+        "O céu mudou de cor no fim da tarde. Fiquei olhando pela janela até as primeiras luzes das casas se acenderem.",
+        "Conversei com minha família sobre os planos para o fim de semana. Surgiram ideias simples que deixaram todos animados.",
+        "Voltei a um projeto pessoal por alguns minutos. Não avancei muito, mas retomar o contato com ele já fez diferença.",
+        "Na hora do jantar, uma história antiga apareceu na conversa. Cada pessoa lembrava de um detalhe diferente do mesmo acontecimento.",
+        "Antes de dormir, deixei o telefone de lado e li algumas páginas. Foi bom terminar o dia com menos pressa.",
+        "Ao recordar o dia, percebi quantos pequenos encontros fizeram parte dele. Quero acrescentar outras lembranças quando elas voltarem."
+    ].map((conteudo, ordem) => ({
+        id: `spec10-historica-20260910-${ordem + 1}`,
+        content: `Memória ${ordem + 1}. ${conteudo}`,
+        order: ordem,
+        firstPreservedAt: "2026-09-10T23:00:00.000Z",
+        complements: []
+    }))
+}
 const desenvolvimento = import.meta.env?.DEV && typeof window !== "undefined"
 const chaveSimulacao = (dataCaptura: string) => `rememore:dev:capture:${dataCaptura}`
 
@@ -118,6 +150,8 @@ export const capturasPreservadasSimuladas = criarCapturaSimulada(
             ? JSON.parse(configurado) as CenarioCapturaSimulada
             : desenvolvimento && dataCaptura === "2026-09-08"
             ? cenarioVisual
+            : desenvolvimento && dataCaptura === "2026-09-10"
+            ? cenarioRolagemComplementos
             : desenvolvimento && dataCaptura === "2026-09-13"
             ? cenarioComplementosHistoricos
             : inicial

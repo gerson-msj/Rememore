@@ -32,6 +32,9 @@ function captura(): CapturaLocal {
         idAreaTrabalho: "base",
         prazoEdicaoDias: 3,
         alterada: false,
+        alteracoesOutras: false,
+        categoriasOrigem: {},
+        primeiraMemoriaConfirmada: true,
         origemPreservada: true,
         revisaoOrigem: "X",
         memorias: [
@@ -316,4 +319,37 @@ Deno.test("rascunho: commit anterior ao reload não duplica inclusão nem repõe
         const proxima = await confirmarMemoria(inicial, edicao, () => Promise.resolve())
         igual(rascunho.retomar(proxima, true), null)
     }
+})
+
+Deno.test("inclusão: primeiro commit marca aprendizagem; falha e rascunho vazio não marcam", async () => {
+    const base = { ...captura(), memorias: [], primeiraMemoriaConfirmada: false }
+    const rascunho = new RascunhoMemoria(base.idConta, base.dataCaptura, armazenamento())
+    const inclusao = abrirEdicao(base, null, 120)
+    rascunho.gravar(inclusao)
+    igual(rascunho.retomar(base, true), inclusao)
+    igual(base.primeiraMemoriaConfirmada, false)
+    inclusao.texto = "Primeira memória"
+    inclusao.suja = true
+    rascunho.gravar(inclusao)
+    await rejeita(() => confirmarMemoria(base, inclusao, () => Promise.reject(new Error("Disco indisponível"))))
+    igual(base.primeiraMemoriaConfirmada, false)
+    igual(rascunho.retomar(base, true)?.texto, "Primeira memória")
+    let liberar!: () => void
+    let terminou = false
+    const pendente = confirmarMemoria(base, inclusao, () => new Promise<void>((resolver) => liberar = resolver))
+        .then((proxima) => {
+            terminou = true
+            return proxima
+        })
+    await Promise.resolve()
+    igual(terminou, false)
+    igual(base.memorias, [])
+    liberar()
+    const confirmada = await pendente
+    igual(confirmada.primeiraMemoriaConfirmada, true)
+    igual(confirmada.alteracoesOutras, true)
+    igual(rascunho.retomar(confirmada, true), null)
+    const excluida = await excluirUltimoElemento(confirmada, abrirEdicao(confirmada, inclusao.idMemoria, 0), () => Promise.resolve())
+    igual(excluida.memorias, [])
+    igual(excluida.primeiraMemoriaConfirmada, true)
 })

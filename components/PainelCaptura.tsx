@@ -2,7 +2,7 @@ import type { ComponentChildren } from "preact"
 import { useRef } from "preact/hooks"
 import { formatarDataCapturaPorExtenso } from "../app/utilitarios/dataCaptura.ts"
 
-export const abasCaptura = ["Registrar e organizar", "Categorizar e Tom", "Revisar e Preservar"] as const
+export const abasCaptura = ["Memorar", "Categorizar", "Revisar"] as const
 export type AbaCaptura = typeof abasCaptura[number]
 
 interface PropriedadesPainelCaptura {
@@ -10,13 +10,14 @@ interface PropriedadesPainelCaptura {
     aba: AbaCaptura
     aoMudarAba: (aba: AbaCaptura) => void
     memoriaAberta: boolean
+    abasInativas?: boolean
     acoes: ComponentChildren
     children: ComponentChildren
 }
 
 /** A barra e as abas permanecem no topo enquanto o conteúdo abaixo acompanha a rolagem do documento. */
 export default function PainelCaptura(
-    { dataCaptura, aba, aoMudarAba, memoriaAberta, acoes, children: conteudoFilho }: PropriedadesPainelCaptura
+    { dataCaptura, aba, aoMudarAba, memoriaAberta, abasInativas = false, acoes, children: conteudoFilho }: PropriedadesPainelCaptura
 ) {
     const botoes = useRef<(HTMLButtonElement | null)[]>([])
     const indice = abasCaptura.indexOf(aba)
@@ -41,8 +42,12 @@ export default function PainelCaptura(
                                 aria-selected={aba === rotulo}
                                 aria-controls={`capture-panel-${posicao}`}
                                 tabIndex={aba === rotulo ? 0 : -1}
-                                onClick={() => aoMudarAba(rotulo)}
+                                disabled={abasInativas}
+                                onClick={() => {
+                                    if (!abasInativas) aoMudarAba(rotulo)
+                                }}
                                 onKeyDown={(evento) => {
+                                    if (abasInativas) return
                                     let proximo = posicao
                                     if (evento.key === "ArrowRight") proximo = (posicao + 1) % abasCaptura.length
                                     else if (evento.key === "ArrowLeft") proximo = (posicao + abasCaptura.length - 1) % abasCaptura.length

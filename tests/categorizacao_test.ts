@@ -41,6 +41,9 @@ function captura(): CapturaLocal {
         origemPreservada: false,
         revisaoOrigem: null,
         alterada: false,
+        alteracoesOutras: false,
+        categoriasOrigem: {},
+        primeiraMemoriaConfirmada: true,
         memorias: [{ id: "m", conteudo: "Memória", ordem: 0, primeiraPreservacaoEm: null, complementos: [], categorias: [] }]
     }
 }
@@ -152,19 +155,20 @@ Deno.test("categorias: prazo considera memória original, autoriza até fechar e
     await rejeita(() => salvarCategorias(base, historica, () => Promise.resolve()))
 })
 
-Deno.test("categorias: reload conserva autorização, descarta seleções e rejeita outra materialização", () => {
+Deno.test("categorias: reload conserva autorização e associações já confirmadas", async () => {
     const base = captura()
     const sessao = new SessaoCategorizacao("a", base.dataCaptura, armazenamento())
     const edicao = abrirCategorizacao(base, "m", 410)
     edicao.selecionadas = [local]
+    const confirmada = await salvarCategorias(base, edicao, () => Promise.resolve())
     sessao.gravar(edicao)
-    const retomada = sessao.retomar(base, true)!
+    const retomada = sessao.retomar(confirmada, true)!
     igual(retomada.autorizada, true)
     igual(retomada.rolagem, 410)
-    igual(retomada.selecionadas, [])
-    igual(sessao.retomar({ ...base, idAreaTrabalho: "outra" }, true), null)
+    igual(retomada.selecionadas, [local])
+    igual(sessao.retomar({ ...confirmada, idAreaTrabalho: "outra" }, true), null)
     sessao.gravar(edicao)
-    igual(sessao.retomar(base, false), null)
+    igual(sessao.retomar(confirmada, false), null)
 })
 
 Deno.test("catálogo: delta mantém demais categorias e ignora versão individual antiga", () => {
@@ -222,7 +226,7 @@ Deno.test("schema 5: conserva captura v4 e isola catálogo por conta", async () 
     const base = captura()
     delete base.memorias[0].categorias
     await anterior.gravar(base)
-    const banco = new BancoLocal({ fabrica: () => fabrica })
+    const banco = new BancoLocal({ fabrica: () => fabrica, migracoes: migracoesLocais.slice(0, 5) })
     const capturas = new RepositorioCapturasLocais(banco)
     const catalogos = new RepositorioCatalogoCategorias(banco)
     igual(await capturas.obter("a", base.dataCaptura), base)
@@ -254,4 +258,60 @@ Deno.test("categorias: converte associações remotas preservando identidade sem
     const repositorio = new RepositorioCapturasLocais(new BancoLocal({ fabrica: () => fabrica }))
     const preparada = await prepararCaptura("a", "2026-09-22", repositorio, remoto)
     igual(preparada.memorias[0].categorias, [familia] satisfies AssociacaoCategoria[])
+})
+
+Deno.test("categorias: reversão após reabrir o workspace remove somente a pendência de categorias", async () => {
+    const fabrica = new IDBFactory()
+    const repositorio = new RepositorioCapturasLocais(new BancoLocal({ fabrica: () => fabrica }))
+    const base = captura()
+    base.memorias[0].categorias = [familia]
+    base.categoriasOrigem = { m: [familia] }
+    const edicao = abrirCategorizacao(base, "m", 0)
+    edicao.selecionadas = [local]
+    await salvarCategorias(base, edicao, (valor) => repositorio.gravar(valor))
+    const retomada = (await repositorio.obter(base.idConta, base.dataCaptura))!
+    igual(retomada.alterada, true)
+    const reversao = abrirCategorizacao(retomada, "m", 0)
+    reversao.selecionadas = [familia]
+    const revertida = await salvarCategorias(retomada, reversao, (valor) => repositorio.gravar(valor))
+    igual(revertida.alterada, false)
+    igual(await repositorio.listarPendentes(base.idConta), [])
+    const comTextoAlterado = { ...retomada, alteracoesOutras: true }
+    const mantida = await salvarCategorias(comTextoAlterado, reversao, (valor) => repositorio.gravar(valor))
+    igual(mantida.alterada, true)
+    igual(mantida.alteracoesOutras, true)
+    igual(mantida.categoriasOrigem, { m: [familia] })
+    const duplicada = abrirCategorizacao(base, "m", 0)
+    duplicada.selecionadas = [familia, { idCategoria: null, nome: " família " }]
+    await rejeita(() => salvarCategorias(base, duplicada, () => Promise.resolve()))
+})
+
+Deno.test("categorias: reversão em uma memória não apaga a pendência de outra", async () => {
+    const base = captura()
+    base.memorias.push({ ...base.memorias[0], id: "n", categorias: [] })
+    const gravar = () => Promise.resolve()
+    const primeira = abrirCategorizacao(base, "m", 0)
+    primeira.selecionadas = [familia]
+    const uma = await salvarCategorias(base, primeira, gravar)
+    const segunda = abrirCategorizacao(uma, "n", 0)
+    segunda.selecionadas = [local]
+    const duas = await salvarCategorias(uma, segunda, gravar)
+    const reversao = abrirCategorizacao(duas, "m", 0)
+    reversao.selecionadas = []
+    igual((await salvarCategorias(duas, reversao, gravar)).alterada, true)
+})
+
+Deno.test("schema 6: descarta somente workspaces antigos uma vez e conserva catálogo", async () => {
+    const fabrica = new IDBFactory()
+    const bancoAntigo = new BancoLocal({ fabrica: () => fabrica, migracoes: migracoesLocais.slice(0, 5) })
+    const base = captura()
+    await new RepositorioCapturasLocais(bancoAntigo).gravar(base)
+    await new RepositorioCatalogoCategorias(bancoAntigo).gravar(catalogo())
+    const banco = new BancoLocal({ fabrica: () => fabrica })
+    const repositorio = new RepositorioCapturasLocais(banco)
+    igual(await repositorio.obter(base.idConta, base.dataCaptura), undefined)
+    igual(await new RepositorioCatalogoCategorias(banco).obter("a"), catalogo())
+    await repositorio.gravar(base)
+    igual(await repositorio.obter(base.idConta, base.dataCaptura), base)
+    igual(await repositorio.obter(base.idConta, base.dataCaptura), base)
 })

@@ -9,15 +9,18 @@
   `listarPorConta(idConta)`. `obter` retorna `undefined` para ausência; a consulta retorna `[]` para conta sem registros. Escrita e remoção
   retornam `void` somente após commit; remover registro ausente é sucesso idempotente. Toda falha rejeita a Promise.
 - `CapturaLocal`: `idConta: string`, `dataCaptura: string` (data civil YYYY-MM-DD fornecida pelo consumidor), `memorias: MemoriaLocal[]`.
-  Exige `alterada: boolean` (somente true é pendência), `origemPreservada: boolean`, `revisaoOrigem: string | null` (revisão opaca, null
-  para ausência remota), `idAreaTrabalho: string` (identidade desta materialização) e `prazoEdicaoDias: number` (prazo recebido na
-  preparação). `MemoriaLocal`: `id: string`, `conteudo: string`, `ordem: number`, `primeiraPreservacaoEm: string | null`,
-  `complementos: ComplementoLocal[]`, `categorias?: AssociacaoCategoria[]` (`idCategoria: string | null`, `nome: string`). Ausência de
-  categorias em registros anteriores equivale a conjunto vazio. Complementos estão em ordem histórica, com `id`, `conteudo` e `primeiraPreservacaoEm` próprios. null
-  significa nunca preservado; timestamp ISO representa a primeira preservação e não deve ser reiniciado em futuras edições/preservações. O
-  fluxo atribui um identificador uma única vez, por exemplo com `crypto.randomUUID()`, e o mantém ao editar/reordenar. O repositório
-  persiste o agregado fornecido, sem gerar identidades, ordenar arrays, converter datas ou definir regras de edição. A ordem explícita é
-  independente da posição no array.
+  Exige `alterada: boolean` (somente true é pendência), `alteracoesOutras: boolean` (alterações de texto/composição/ordem),
+  `categoriasOrigem: Record<string, AssociacaoCategoria[]>` (associações por ID de memória do snapshot da origem) e
+  `primeiraMemoriaConfirmada: boolean` (não volta a false ao excluir memórias). Os três campos são metadados exclusivamente locais. Mantém
+  também `origemPreservada: boolean`, `revisaoOrigem: string | null` (revisão opaca, null para ausência remota), `idAreaTrabalho: string`
+  (identidade desta materialização) e `prazoEdicaoDias: number` (prazo recebido na preparação). `MemoriaLocal`: `id: string`,
+  `conteudo: string`, `ordem: number`, `primeiraPreservacaoEm: string | null`, `complementos: ComplementoLocal[]`,
+  `categorias?: AssociacaoCategoria[]` (`idCategoria: string | null`, `nome: string`). Ausência de categorias em registros anteriores
+  equivale a conjunto vazio. Complementos estão em ordem histórica, com `id`, `conteudo` e `primeiraPreservacaoEm` próprios. null significa
+  nunca preservado; timestamp ISO representa a primeira preservação e não deve ser reiniciado em futuras edições/preservações. O fluxo
+  atribui um identificador uma única vez, por exemplo com `crypto.randomUUID()`, e o mantém ao editar/reordenar. O repositório persiste o
+  agregado fornecido, sem gerar identidades, ordenar arrays, converter datas ou definir regras de edição. A ordem explícita é independente
+  da posição no array.
 - Conta e data formam a chave composta; substituição afeta somente esse par. O índice `porConta` restringe a consulta à conta informada.
   Esse isolamento é de seleção dos dados, não uma fronteira de segurança contra scripts da mesma origem. A identidade da conta vem de
   `ServicoSessao.accountId(request)` nos handlers; não fixar uma identidade nas páginas.
@@ -27,7 +30,8 @@ workspaces após confirmação; a Principal consulta pendências reais ao montar
 explícita.
 
 `listarPendentes(idConta)` filtra `alterada` e ordena por data crescente. `marcarAlterada(idConta, dataCaptura)` lê e atualiza na mesma
-transação; ausência aborta e rejeita, repetição é idempotente. Ambos preservam isolamento por conta e confirmação após commit.
+transação; ausência aborta e rejeita, repetição é idempotente. Marcar manualmente também define `alteracoesOutras: true`. Ambos preservam
+isolamento por conta e confirmação após commit.
 
 `app/servicos/captura.ts`: `prepararCaptura(idConta, dataCaptura, repositorio?, remoto?, idAreaTrabalhoRetomada?)` pressupõe data validada,
 diagnóstico operacional e posse do bloqueio. Retoma workspace alterado, ou a mesma materialização numa sessão restaurada por reload, sem
@@ -38,11 +42,10 @@ configuração inválida rejeita sem substituir o estado anterior. A revisão de
 preservação.
 
 `app/servicos/captura/contratos.ts` define `MemoriaPreservada` e `ComplementoPreservado` para o payload remoto, separados dos tipos locais.
-Os campos remotos continuam `memories`, `content`, `order`, `firstPreservedAt`, `complements`, `revision` e `editWindowDays`.
-Memórias também aceitam `categories` opcional, com `id` e `name`, convertido explicitamente para associações locais; cenários anteriores sem
-esse campo continuam válidos.
-`prepararCaptura` converte explicitamente para o agregado local, conservando valores, IDs, ordem dos arrays e historicidade.
-`rememoreCaptureMock.set/configure/reset`, seus cenários serializados e chaves de localStorage permanecem compatíveis.
+Os campos remotos continuam `memories`, `content`, `order`, `firstPreservedAt`, `complements`, `revision` e `editWindowDays`. Memórias
+também aceitam `categories` opcional, com `id` e `name`, convertido explicitamente para associações locais; cenários anteriores sem esse
+campo continuam válidos. `prepararCaptura` converte explicitamente para o agregado local, conservando valores, IDs, ordem dos arrays e
+historicidade. `rememoreCaptureMock.set/configure/reset`, seus cenários serializados e chaves de localStorage permanecem compatíveis.
 
 `app/servicos/captura/sessaoAberta.ts`: `SessaoCapturaAberta` usa sessionStorage por conta/data. `retomar(tipoNavegacao)` só retorna
 identidade para reload; navigate/back_forward encerram a sessão anterior. `iniciar(idAreaTrabalho)` ocorre após preparação confirmada.
@@ -60,40 +63,41 @@ as atuais antes de liberar. Seleção adquire o mesmo lock antes de remover pend
 `pagehide` libera a lease; retorno por BFCache refaz a entrada antes de aceitar ações. O navegador libera locks ao terminar o contexto, sem
 heartbeat/TTL próprios. Referência consultada: [Web Locks API](https://www.w3.org/TR/web-locks/).
 
-`app/servicos/captura/edicao.ts`: `abrirEdicao` decide autorização pelo timestamp da primeira preservação e pelo prazo recebido,
-no instante de abertura; nunca preservada permanece editável. Para memória histórica, abre edição do último complemento quando ainda
-editável; caso contrário, abre leitura. `abrirComplemento` inicia rascunho novo somente quando não há conteúdo autorizado para edição.
-`confirmarMemoria`, `confirmarComplemento` e `moverMemoria` recebem a captura confirmada e uma
-função de gravação substituível. Retornam a nova captura somente após gravação; falhas rejeitam sem mutar a base. Confirmação idêntica
-não grava nem cria pendência. IDs, primeira preservação e revisão de origem são conservados; inclusão recebe a última ordem física.
-O chamador deve manter `PosseCaptura.executar` durante a operação e publicar o retorno somente após resolução.
+`app/servicos/captura/edicao.ts`: `abrirEdicao` decide autorização pelo timestamp da primeira preservação e pelo prazo recebido, no instante
+de abertura; nunca preservada permanece editável. Para memória histórica, abre edição do último complemento quando ainda editável; caso
+contrário, abre leitura. `abrirComplemento` inicia rascunho novo somente quando não há conteúdo autorizado para edição. `confirmarMemoria`,
+`confirmarComplemento` e `moverMemoria` recebem a captura confirmada e uma função de gravação substituível. Retornam a nova captura somente
+após gravação; falhas rejeitam sem mutar a base. Confirmação idêntica não grava nem cria pendência. IDs, primeira preservação e revisão de
+origem são conservados; inclusão recebe a última ordem física. O chamador deve manter `PosseCaptura.executar` durante a operação e publicar
+o retorno somente após resolução.
 
-`excluirUltimoElemento(captura, edicao, gravar)` exige edição limpa, existente e compatível; remove somente o último complemento
-confirmado ou, se não houver complementos, a memória. Aguarda commit e não muta a captura fornecida. Mantém as demais memórias,
-ordens, IDs e revisão de origem. O chamador usa a mesma posse. Ao excluir complemento, mantém a tela da memória e atualiza o rascunho
-para o estado restante; ao excluir a memória, retorna à lista próximo de uma vizinha. A autorização da edição principal mantida não é
-recalculada; se o complemento em edição foi excluído, a abertura do alvo restante decide sua autorização.
+`excluirUltimoElemento(captura, edicao, gravar)` exige edição limpa, existente e compatível; remove somente o último complemento confirmado
+ou, se não houver complementos, a memória. Aguarda commit e não muta a captura fornecida. Mantém as demais memórias, ordens, IDs e revisão
+de origem. O chamador usa a mesma posse. Ao excluir complemento, mantém a tela da memória e atualiza o rascunho para o estado restante; ao
+excluir a memória, retorna à lista próximo de uma vizinha. A autorização da edição principal mantida não é recalculada; se o complemento em
+edição foi excluído, a abertura do alvo restante decide sua autorização.
 
 `RascunhoMemoria` usa chave própria de sessionStorage por conta/data, separada do marcador de sessão aberta. Guarda alvo da memória,
 identidade da materialização, texto original/transitório, autorização, estado sujo e rolagem da lista. Complementos acrescentam
 `idComplemento` e `idsComplementosBase`, preservando a chave e a leitura dos rascunhos anteriores de memória; somente o último complemento
-compatível pode ser restaurado. Só restaura na mesma sessão
-retomada por reload e com base compatível. Inclusão já confirmada e edição cuja base mudou não restauram rascunho obsoleto.
-`limpar` encerra a edição após confirmação ou abandono. Erros de armazenamento propagam e a tela avisa sobre proteção indisponível.
+compatível pode ser restaurado. Só restaura na mesma sessão retomada por reload e com base compatível. Inclusão já confirmada e edição cuja
+base mudou não restauram rascunho obsoleto. `limpar` encerra a edição após confirmação ou abandono. Erros de armazenamento propagam e a tela
+avisa sobre proteção indisponível.
 
-`islands/CapturaDia.tsx` valida calendário local antes do diagnóstico/preparação e mantém a posse durante o trabalho. C/D oferecem
-inclusão, edição da memória autorizada e ordem física, com publicação após commit. Rascunho usa debounce de 200 ms e escrita imediata
-na abertura, antes de descarregar e em pagehide; beforeunload alerta quando há edição suja ou gravação em curso. Saídas controladas
-passam pela confirmação de abandono aprovada; criação vazia/só com espaços dispensa aviso, enquanto edição existente apagada continua
-protegida. O botão temporário foi removido. E integra memória histórica, complementos em sequência com data local da primeira preservação
-e campo próprio do último complemento editável; confirmação, abandono e reload usam a mesma proteção. F acrescenta lixeira contextual
-somente na tela de Memória, inativa na criação/edição suja, com confirmação específica para último complemento ou memória sem complementos.
-Não há limpeza automática/TTL. O cenário visual de 08/09/2026 permanece exclusivo do desenvolvimento, com comandos na Continuidade.
+`islands/CapturaDia.tsx` valida calendário local antes do diagnóstico/preparação e mantém a posse durante o trabalho. C/D oferecem inclusão,
+edição da memória autorizada e ordem física, com publicação após commit. Rascunho usa debounce de 200 ms e escrita imediata na abertura,
+antes de descarregar e em pagehide; beforeunload alerta quando há edição suja ou gravação em curso. Saídas controladas passam pela
+confirmação de abandono aprovada; inclusão nova sempre solicita confirmação de abandono, mesmo vazia; complementos novos vazios dispensam
+aviso e edição existente apagada continua protegida. O botão temporário foi removido. E integra memória histórica, complementos em sequência
+com data local da primeira preservação e campo próprio do último complemento editável; confirmação, abandono e reload usam a mesma proteção.
+F acrescenta lixeira contextual somente na tela de Memória, inativa na criação/edição suja, com confirmação específica para último
+complemento ou memória sem complementos. Não há limpeza automática/TTL. O cenário visual de 08/09/2026 permanece exclusivo do
+desenvolvimento, com comandos na Continuidade.
 
 Na lista, reordenar prioriza manter visíveis a memória movida e suas vizinhas imediatas. A compensação que mantém o botão sob o mouse só
-ocorre fora dos extremos quando não expulsa nenhuma dessas caixas da área útil; nos demais casos, a rolagem mínima preserva o contexto.
-O Voltar do header retorna da Memória à lista com abandono/contexto e, já na lista, encerra a sessão e volta à Seleção. O bloco sticky usa
-uma máscara de fundo lateral de 0,75 rem para cobrir a projeção da sombra Bulma enquanto os boxes passam por trás, sem cortar suas sombras.
+ocorre fora dos extremos quando não expulsa nenhuma dessas caixas da área útil; nos demais casos, a rolagem mínima preserva o contexto. O
+Voltar do header retorna da Memória à lista com abandono/contexto e, já na lista, encerra a sessão e volta à Seleção. O bloco sticky usa uma
+máscara de fundo lateral de 0,75 rem para cobrir a projeção da sombra Bulma enquanto os boxes passam por trás, sem cortar suas sombras.
 
 ## Falhas e transações
 
@@ -115,22 +119,21 @@ Referência técnica consultada para commit, bloqueio e rollback: [Indexed Datab
 
 ## Schema e diagnóstico
 
-Banco `rememore-local`, versão 5. A migração 2 limpa registros experimentais sem estado/origem. A migração 3 limpa capturas experimentais
+Banco `rememore-local`, versão 6. A migração 2 limpa registros experimentais sem estado/origem. A migração 3 limpa capturas experimentais
 anteriores à 07 sem revisão/historicidade, conforme dispensa explícita do operador em 14/09/2026. A migração 4 substitui
 `captures`/`_health` pelos stores em PT-BR e descarta os dados anteriores, conforme aprovação do operador em 15/09/2026. Migrações 1–3
 mantêm seus nomes históricos e comportamento, independentemente das constantes do schema atual. Cada limpeza ocorre somente no upgrade
 correspondente, sem limpar capturas nas aberturas posteriores. A migração 5 adiciona `catalogosCategorias` sem modificar ou apagar capturas.
-`app/servicos/local/esquema.ts` concentra migrações consecutivas a partir
-de 1. Para evoluir, acrescentar uma migração com a próxima versão; ela recebe banco e transação de upgrade, permitindo criar stores/índices
-ou transformar registros com requisições IndexedDB. O mecanismo aplica somente versões posteriores à armazenada, dentro da transação nativa
-de upgrade. Não aumentar versão sem migração nem alterar retroativamente a migração já aplicada. Não existe recriação silenciosa para
-contornar falhas.
+A migração 6 descarta apenas os workspaces em `capturas`, uma única vez, para introduzir os metadados locais da Spec 10; descarte autorizado
+em 23/09/2026. Preserva o catálogo. `app/servicos/local/esquema.ts` concentra migrações consecutivas a partir de 1. Para evoluir,
+acrescentar uma migração com a próxima versão; ela recebe banco e transação de upgrade, permitindo criar stores/índices ou transformar
+registros com requisições IndexedDB. O mecanismo aplica somente versões posteriores à armazenada, dentro da transação nativa de upgrade. Não
+aumentar versão sem migração nem alterar retroativamente a migração já aplicada. Não existe recriação silenciosa para contornar falhas.
 
-Stores atuais: `capturas`, chave `[idConta, dataCaptura]`, índice `porConta`; `catalogosCategorias`, chave `idConta`; `_diagnostico`, técnico,
-sem dados funcionais. O diagnóstico
-prepara/abre o banco, grava um token na chave `sonda`, lê e remove esse token em uma transação de escrita. Compara a leitura e aguarda
-commit. Sucesso não garante operações futuras nem diagnostica exaustivamente corrupção, capacidade disponível ou a política de retenção do
-navegador.
+Stores atuais: `capturas`, chave `[idConta, dataCaptura]`, índice `porConta`; `catalogosCategorias`, chave `idConta`; `_diagnostico`,
+técnico, sem dados funcionais. O diagnóstico prepara/abre o banco, grava um token na chave `sonda`, lê e remove esse token em uma transação
+de escrita. Compara a leitura e aguarda commit. Sucesso não garante operações futuras nem diagnostica exaustivamente corrupção, capacidade
+disponível ou a política de retenção do navegador.
 
 Os construtores `BancoLocal({nome, fabrica, migracoes})` e `RepositorioCapturasLocais(banco)` permitem validação técnica isolada. Não há
 dependência externa de runtime. Cenários de desenvolvimento usaram `fake-indexeddb` em memória; não equivalem a teste de persistência em
@@ -140,19 +143,25 @@ disco, quota ou permissões reais de cada navegador.
 
 `app/servicos/captura/categorizacao.ts` concentra abertura, comparação de conjuntos, salvamento, disponibilidade e pesquisa.
 `abrirCategorizacao` usa a primeira preservação da memória original; complementos recentes não renovam o prazo. A autorização pertence à
-abertura e não é recalculada durante a edição. `salvarCategorias` exige base compatível, conserva ordem de seleção e demais campos,
-aguarda commit e não grava conjuntos idênticos. Nesse último caso, desmarcar e remarcar os mesmos itens não altera a ordem confirmada.
-O chamador mantém `PosseCaptura.executar` e só publica a nova captura após sucesso. Adicionar/remover opções isoladamente não grava.
+abertura e não é recalculada durante a edição. `salvarCategorias` exige base compatível, conserva ordem de seleção e demais campos, aguarda
+commit e não grava conjuntos idênticos. Nesse último caso, desmarcar e remarcar os mesmos itens não altera a ordem confirmada. O chamador
+mantém `PosseCaptura.executar` e só publica a nova captura após sucesso. O serviço compara todos os conjuntos atuais com `categoriasOrigem`;
+a reversão remove a pendência de categorias, inclusive após reload, mas preserva `alteracoesOutras` e diferenças nas demais memórias. Texto,
+complemento, exclusão e ordem marcam `alteracoesOutras`; o serviço de preparação inicia essa marca em false junto com o snapshot de
+categorias. Na Spec 10, a interface aplica cada inclusão/remoção logo após o commit e publica somente o estado confirmado. Falha mantém as
+associações anteriores; o popup pode ser reaberto para tentar outra vez. Categorias originais ficam no próprio workspace, enquanto o
+marcador de sessão guarda somente alvo, autorização, materialização e rolagem; um reload recupera as associações já confirmadas do
+IndexedDB.
 
 Categorias sem `idCategoria` servidor existem somente pelas associações das memórias desta captura. `categoriasDisponiveis` combina essas
-associações com categorias ativas do catálogo da conta; não consulta outras datas nem `listarPorConta`. Categorias servidoras inativas
-ainda associadas à captura pendente continuam disponíveis nela. Remover o último uso local as retira desse conjunto, salvo se ativas no
-catálogo. Nomes de categorias preservadas usam a versão conhecida do catálogo, sem reescrever o workspace apenas por sincronização.
+associações com categorias ativas do catálogo da conta; não consulta outras datas nem `listarPorConta`. Categorias servidoras inativas ainda
+associadas à captura pendente continuam disponíveis nela. Remover o último uso local as retira desse conjunto, salvo se ativas no catálogo.
+Nomes de categorias preservadas usam a versão conhecida do catálogo, sem reescrever o workspace apenas por sincronização.
 
-`SessaoCategorizacao` usa `rememore:categorizacao:v1:` por conta/data. Guarda alvo, materialização, associações de origem, autorização e
-rolagem, sem guardar seleções transitórias. Restaura somente em reload da mesma sessão e base compatível. Salvar/abandonar limpa o
-marcador. Navegação controlada usa o popup de abandono vigente; `beforeunload` inclui alterações de categoria e gravações em curso.
-
+`SessaoCategorizacao` usa `rememore:categorizacao:v1:` por conta/data. Guarda somente alvo, identidade da materialização, autorização e
+rolagem; associações são reconstruídas do workspace confirmado em reload da mesma sessão. Navegar entre memórias troca diretamente o alvo e
+fecha a pesquisa. Voltar limpa o marcador e retorna à lista com a memória trabalhada posicionada no topo quando houver geometria suficiente.
+Como as categorias são gravadas imediatamente, não há seleção não confirmada a proteger no abandono ou em `beforeunload`.
 `app/servicos/local/catalogoCategorias.ts` persiste `{idConta, revisao, categorias: [{id, nome, versao, ativa}]}` atomicamente. A revisão
 global é opaca; versões individuais são inteiros crescentes. `app/servicos/categorias.ts` consulta por revisão e aplica somente alterações;
 revisão inalterada não grava novamente. `prepararCatalogo` serializa sincronizações da conta com um Web Lock separado do lock por data,
@@ -163,3 +172,30 @@ pendência da composição. Falha mantém o catálogo anterior quando legível e
 Somente em desenvolvimento, `rememoreCategoriasMock.alterar(idConta, id, nome, ativa)` acrescenta um evento e incrementa a versão;
 `falhar(idConta, boolean)` controla indisponibilidade. Reabrir uma captura ou recarregar consulta a revisão. O mock não implementa
 preservação nem decisão automática de inativação/reconciliação. IDs locais sem servidor não são reconciliados antecipadamente.
+
+## Memorar e inclusão na lista
+
+`InclusaoMemoria.tsx` oferece campo de cinco linhas, ações com ícone e texto e atalhos Enter/Shift+Enter/Ctrl+Enter/Esc. `CapturaDia`
+reutiliza `EdicaoMemoria` com `nova: true` e sem `idComplemento` para inclusão na lista, mantendo as memórias visíveis e inativas e as abas
+indisponíveis. O rascunho existente protege inclusive a inclusão vazia e é retomado somente no reload compatível. Ctrl+Enter aguarda
+`confirmarMemoria` e só então abre novo rascunho com novo ID; falha conserva texto e alvo, permitindo nova tentativa. A confirmação marca
+`primeiraMemoriaConfirmada` no mesmo commit; o indicador continua true após excluir todas as memórias. Memórias recebidas da origem também
+marcam o indicador. A dica `orientar("inclusaoMemoria")` aparece somente antes da primeira confirmação e apenas no nível beginner, resolvido
+no próprio serviço.
+
+Ao abrir/continuar/restaurar inclusão, a última memória é alinhada ao topo útil abaixo da barra sticky, limitada à rolagem possível. Sem
+memórias, a orientação aplicável é a referência; na ausência dela, o campo. Confirmar normalmente ou cancelar retorna à lista. Cancelar e
+Esc sempre pedem confirmação, mesmo com campo vazio; Voltar na inclusão pede confirmação e retorna à Seleção. Logout usa a mesma proteção
+antes de abandonar. Recarregamento usa aviso nativo e rascunho, sem tratar reload como abandono. Editar Memória permanece separado, sem abas
+e com os contratos anteriores de historicidade, complementos e exclusão regressiva. As ações de Editar Memória ficam abaixo do campo ativo
+(memória ou complemento); em leitura histórica, após o conteúdo. Usam o mesmo agrupamento e alinhamento à direita da inclusão, sem ações de
+edição ao lado da data.
+
+Confirmar em Editar Memória mantém a superfície aberta: atualiza `original`, `nova: false`, `suja: false` e a cadeia de complementos base
+após commit, conservando autorização, alvo e rolagem. O contexto limpo é protegido para reload. A confirmação de uma nova memória na lista
+mantém seu fluxo próprio. Na tela de edição, somente excluir a própria memória retorna automaticamente à lista; excluir complemento
+permanece.
+
+Operações efetivas em Editar Memória apresentam `MensagemPopup` de sucesso com uma ação OK após commit: alteração de memória,
+inclusão/alteração de complemento e exclusões. Ao excluir a memória, o aviso é apresentado na lista; nos demais casos, na edição.
+Confirmação idêntica e falha não anunciam alteração. O fluxo de inclusão na lista não usa esse aviso.

@@ -1,9 +1,14 @@
-export type ContextoOrientacao = "captureSelection" | "inicioCaptura" | "categorizacao"
+export type ContextoOrientacao = "captureSelection" | "inicioCaptura" | "categorizacao" | "inclusaoMemoria"
 export type NivelOrientacao = "beginner" | "intermediate" | "advanced"
 
 // Nível simulado temporariamente; alterar aqui para validação do operador.
 const nivelSimulado: NivelOrientacao = "beginner"
 const mensagens: Record<ContextoOrientacao, Record<NivelOrientacao, string | null>> = {
+    inclusaoMemoria: {
+        beginner: "Enter cria uma nova linha. Shift+Enter inclui a memória. Ctrl+Enter inclui e permite registrar outra. Esc cancela.",
+        intermediate: null,
+        advanced: null
+    },
     categorizacao: {
         beginner: "Escolha uma categoria que represente esta memória. Se ela ainda não existir, basta escrever o nome.",
         intermediate: "Escolha a categoria que melhor representa o contexto desta memória.",

@@ -45,6 +45,9 @@ export async function prepararCaptura(
         origemPreservada: metadados.status === "found",
         revisaoOrigem,
         alterada: false,
+        alteracoesOutras: false,
+        categoriasOrigem: {},
+        primeiraMemoriaConfirmada: existente?.primeiraMemoriaConfirmada ?? false,
         idAreaTrabalho: crypto.randomUUID(),
         prazoEdicaoDias
     }
@@ -67,6 +70,8 @@ export async function prepararCaptura(
         captura.revisaoOrigem = revisao(resultado.revision)
         captura.prazoEdicaoDias = validarPrazoEdicao(resultado.editWindowDays)
     }
+    captura.categoriasOrigem = Object.fromEntries(captura.memorias.map((item) => [item.id, structuredClone(item.categorias ?? [])]))
+    captura.primeiraMemoriaConfirmada ||= captura.memorias.length > 0
     await repositorio.gravar(captura)
     return captura
 }

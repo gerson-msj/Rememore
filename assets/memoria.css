@@ -110,13 +110,18 @@
 }
 .memoria-ordenacao {
     display: flex;
-    flex-direction: column;
-    flex: 0 0 2rem;
+    flex-direction: row;
+    align-self: center;
+    align-items: center;
+    gap: 0.25rem;
+    flex: 0 0 auto;
     position: relative;
     z-index: 2;
 }
 .memoria-ordenacao button {
-    flex: 1;
+    flex: 0 0 2rem;
+    width: 2rem;
+    height: 2rem;
     border: 0;
     background: transparent;
     color: var(--tom-seta);
@@ -134,5 +139,12 @@
 .memoria-ordenacao button:disabled {
     color: var(--tom-seta-inativa);
     opacity: 0.35;
+    cursor: default;
+}
+
+.memoria-inativa {
+    opacity: 0.5;
+}
+.memoria-inativa .memoria-acionamento {
     cursor: default;
 }

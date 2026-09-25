@@ -46,9 +46,9 @@ export default function MemoriaLaboratorio() {
                                 value={contexto}
                                 onChange={(e) => definirContexto(e.currentTarget.value as ContextoMemoria)}
                             >
-                                <option value="registrar">Registrar e organizar</option>
-                                <option value="categorizar">Categorizar e Tom</option>
-                                <option value="revisar">Revisar e Preservar</option>
+                                <option value="registrar">Memorar</option>
+                                <option value="categorizar">Categorizar</option>
+                                <option value="revisar">Revisar</option>
                             </select>
                         </div>
                     </div>

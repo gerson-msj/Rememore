@@ -123,7 +123,7 @@ Deno.test("pendência: trabalho local e prazo original prevalecem sem consulta r
     cenario.status = "failed"
     cenario.editWindowDays = 8
     const retomado = await abrir("2026-09-02")
-    verificarIgualdade(retomado, { ...primeiro, alterada: true })
+    verificarIgualdade(retomado, { ...primeiro, alterada: true, alteracoesOutras: true })
     verificarIgualdade(chamadas.length, antes)
     await verificarRejeicao(() => abrir("2026-09-02", undefined, "b"))
     await repositorio.remover("a", "2026-09-01")
@@ -196,7 +196,7 @@ Deno.test("falhas locais: gravações rejeitadas preservam conteúdo confirmado,
     banco.transacao = transacao
     verificarIgualdade(await repositorio.obter("a", primeiro.dataCaptura), primeiro)
     await repositorio.marcarAlterada("a", primeiro.dataCaptura)
-    verificarIgualdade(await repositorio.obter("a", primeiro.dataCaptura), { ...primeiro, alterada: true })
+    verificarIgualdade(await repositorio.obter("a", primeiro.dataCaptura), { ...primeiro, alterada: true, alteracoesOutras: true })
     const gravar = repositorio.gravar.bind(repositorio)
     repositorio.gravar = () => Promise.reject(new Error("Falha de gravação simulada"))
     await verificarRejeicao(() => abrir("2026-09-02"))
@@ -299,13 +299,16 @@ Deno.test("conversão local: preserva payload remoto, identidades, ordem e histo
     }, { id: "segunda", conteudo: "Outra memória", ordem: 2, primeiraPreservacaoEm: null, complementos: [] }])
     verificarIgualdade(cenario, original)
     verificarIgualdade(Object.keys(captura).sort(), [
+        "alteracoesOutras",
         "alterada",
+        "categoriasOrigem",
         "dataCaptura",
         "idAreaTrabalho",
         "idConta",
         "memorias",
         "origemPreservada",
         "prazoEdicaoDias",
+        "primeiraMemoriaConfirmada",
         "revisaoOrigem"
     ])
     verificarIgualdade(await repositorio.obter("a", captura.dataCaptura), captura)

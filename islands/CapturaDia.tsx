@@ -14,18 +14,18 @@ import { useEffect, useRef, useState } from "preact/hooks"
 import EstruturaCaptura from "../components/EstruturaCaptura.tsx"
 import PainelCaptura, { type AbaCaptura } from "../components/PainelCaptura.tsx"
 import { bancoLocal } from "../app/servicos/local/banco.ts"
-import { type CapturaLocal, capturasLocais } from "../app/servicos/local/capturas.ts"
+import { type AssociacaoCategoria, type CapturaLocal, capturasLocais } from "../app/servicos/local/capturas.ts"
 import { prepararCaptura } from "../app/servicos/captura.ts"
 import { ehDataCaptura } from "../app/utilitarios/dataCaptura.ts"
 import { adquirirBloqueioCaptura, type PosseCaptura } from "../app/servicos/captura/bloqueio.ts"
 import { SessaoCapturaAberta } from "../app/servicos/captura/sessaoAberta.ts"
 import Memoria from "../components/Memoria.tsx"
+import InclusaoMemoria from "../components/InclusaoMemoria.tsx"
 import EdicaoCategorizacao from "../components/EdicaoCategorizacao.tsx"
 import {
     abrirCategorizacao,
     apresentarCategoria,
     type EdicaoCategorias,
-    mesmasCategorias,
     salvarCategorias,
     SessaoCategorizacao
 } from "../app/servicos/captura/categorizacao.ts"
@@ -41,7 +41,7 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     const posse = useRef<PosseCaptura | null>(null)
     const sessaoAberta = useRef<SessaoCapturaAberta | null>(null)
     const [avisoSessao, definirAvisoSessao] = useState(false)
-    const [aba, definirAba] = useState<AbaCaptura>("Registrar e organizar")
+    const [aba, definirAba] = useState<AbaCaptura>("Memorar")
     const [edicao, definirEdicao] = useState<EdicaoMemoria | null>(null)
     const edicaoAtual = useRef<EdicaoMemoria | null>(null)
     const rascunho = useRef<RascunhoMemoria | null>(null)
@@ -53,10 +53,12 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     const temporizador = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
     const [abandono, definirAbandono] = useState(false)
     const [exclusao, definirExclusao] = useState(false)
+    const [resultadoOperacao, definirResultadoOperacao] = useState("")
     const continuarSaida = useRef<(() => void) | null>(null)
     const caixas = useRef(new Map<string, HTMLLIElement>())
     const campoMemoria = useRef<HTMLTextAreaElement>(null)
     const memoria = areaTrabalho?.memorias.find((item) => item.id === edicao?.idMemoria)
+    const incluindo = Boolean(edicao?.nova && !edicao.idComplemento)
     const editandoComplemento = edicao?.idComplemento !== undefined
     const rotuloConfirmacao = editandoComplemento ? "Confirmar Complemento" : "Confirmar Memória"
     const excluirComplemento = Boolean(memoria?.complementos.length)
@@ -66,6 +68,30 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     useEffect(() => {
         if (edicao?.autorizada) campoMemoria.current?.focus()
     }, [edicao?.idMemoria, edicao?.idComplemento, edicao?.autorizada])
+
+    useEffect(() => {
+        if (!incluindo || !areaTrabalho) return
+        const quadro = requestAnimationFrame(() => {
+            const ultima = [...areaTrabalho.memorias].sort((a, b) => a.ordem - b.ordem).at(-1)
+            const alvo = ultima ? caixas.current.get(ultima.id) : document.querySelector(".captura-orientacao, .captura-inclusao")
+            if (!alvo) return
+            const topo = (document.querySelector(".captura-dia-controles")?.getBoundingClientRect().bottom ?? 0) + 12
+            scrollBy({ top: alvo.getBoundingClientRect().top - topo, behavior: "instant" })
+        })
+        return () => cancelAnimationFrame(quadro)
+    }, [incluindo, edicao?.idMemoria, areaTrabalho?.idAreaTrabalho])
+
+    function escrever(texto: string) {
+        const atual = edicaoAtual.current
+        if (!atual || alterando.current) return
+        atualizarEdicao({ ...atual, texto, suja: true })
+        clearTimeout(temporizador.current)
+        temporizador.current = setTimeout(protegerEdicao, 200)
+    }
+
+    function cancelarInclusao() {
+        solicitarSaida(() => retornarLista())
+    }
 
     function protegerEdicao() {
         clearTimeout(temporizador.current)
@@ -112,14 +138,14 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     function retornarCategorizacao() {
         const atual = categorizacaoAtual.current
         limparCategorizacao()
-        definirAba("Categorizar e Tom")
+        definirAba("Categorizar")
         requestAnimationFrame(() => {
             scrollTo(0, atual?.rolagem ?? 0)
-            if (atual) acompanharRetorno(atual.idMemoria)
+            if (atual) acompanharRetorno(atual.idMemoria, true)
         })
     }
 
-    async function confirmarCategorias() {
+    async function confirmarCategorias(selecionadas: AssociacaoCategoria[]) {
         const atual = categorizacaoAtual.current
         if (!areaTrabalho || !atual || alterando.current || !posse.current) return
         alterando.current = true
@@ -127,12 +153,13 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
         definirErroAlteracao("")
         try {
             const proxima = await posse.current.executar(() =>
-                salvarCategorias(areaTrabalho, atual, (captura) => capturasLocais.gravar(captura))
+                salvarCategorias(areaTrabalho, { ...atual, selecionadas }, (captura) => capturasLocais.gravar(captura))
             )
             definirAreaTrabalho(proxima)
-            retornarCategorizacao()
+            const confirmadas = proxima.memorias.find((item) => item.id === atual.idMemoria)!.categorias ?? []
+            atualizarCategorizacao({ ...atual, originais: structuredClone(confirmadas), selecionadas: structuredClone(confirmadas) })
         } catch {
-            definirErroAlteracao("Não foi possível salvar as categorias. Suas alterações continuam nesta tela. Tente novamente.")
+            definirErroAlteracao("Não foi possível atualizar as categorias. As associações anteriores foram mantidas. Tente novamente.")
         } finally {
             alterando.current = false
             definirOcupado(false)
@@ -150,13 +177,13 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
         definirErroAlteracao("")
     }
 
-    function acompanharRetorno(id: string) {
+    function acompanharRetorno(id: string, alinharTopo = false) {
         requestAnimationFrame(() => {
             const elemento = caixas.current.get(id)
             if (!elemento) return
             const barra = document.querySelector(".captura-dia-controles")?.getBoundingClientRect().bottom ?? 0
             const alvo = elemento.getBoundingClientRect()
-            if (alvo.top < barra + 12) scrollBy(0, alvo.top - barra - 12)
+            if (alinharTopo || alvo.top < barra + 12) scrollBy(0, alvo.top - barra - 12)
             else if (alvo.bottom > innerHeight - 12) scrollBy(0, alvo.bottom - innerHeight + 12)
         })
     }
@@ -204,17 +231,17 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     }
 
     function abrirMemoria(id: string | null) {
-        if (!areaTrabalho || alterando.current) return
+        if (!areaTrabalho || alterando.current || edicaoAtual.current) return
         atualizarEdicao(abrirEdicao(areaTrabalho, id, scrollY))
         protegerEdicao()
         definirErroAlteracao("")
-        scrollTo(0, 0)
+        if (id !== null) scrollTo(0, 0)
     }
 
     function retornarLista(id?: string) {
         const rolagem = edicaoAtual.current?.rolagem ?? 0
         limparEdicao()
-        definirAba("Registrar e organizar")
+        definirAba("Memorar")
         requestAnimationFrame(() => {
             scrollTo(0, rolagem)
             if (id) acompanharRetorno(id)
@@ -238,10 +265,17 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
 
     function voltarCabecalho() {
         if (categorizacaoAtual.current) {
-            solicitarSaida(retornarCategorizacao)
+            if (!alterando.current) retornarCategorizacao()
             return
         }
         const atual = edicaoAtual.current
+        if (atual?.nova && !atual.idComplemento) {
+            solicitarSaida(() => {
+                encerrarSessao()
+                location.assign("/capturar")
+            })
+            return
+        }
         if (atual) {
             solicitarSaida(() => retornarLista(atual.nova && !atual.idComplemento ? undefined : atual.idMemoria))
             return
@@ -251,10 +285,8 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     }
 
     function temTrabalhoNaoConfirmado() {
-        const categorias = categorizacaoAtual.current
-        if (categorias && !mesmasCategorias(categorias.originais, categorias.selecionadas)) return true
         const atual = edicaoAtual.current
-        return atual !== null && atual.suja && (!atual.nova || atual.texto.trim().length > 0)
+        return atual !== null && ((atual.nova && !atual.idComplemento) || (atual.suja && (!atual.nova || atual.texto.trim().length > 0)))
     }
 
     useEffect(() => {
@@ -366,7 +398,7 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
                         const retomada = sessaoCategorizacao.current.retomar(captura, idAreaTrabalhoRetomada === captura.idAreaTrabalho)
                         if (retomada && !edicaoAtual.current) {
                             atualizarCategorizacao(retomada)
-                            definirAba("Categorizar e Tom")
+                            definirAba("Categorizar")
                         }
                     } catch {
                         definirAvisoSessao(true)
@@ -391,8 +423,8 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
         }
     }, [idConta, dataCaptura])
 
-    async function confirmar() {
-        if (!areaTrabalho || !edicao || alterando.current || !posse.current) return
+    async function confirmar(continuar = false) {
+        if (!areaTrabalho || !edicao || !edicao.texto.trim() || alterando.current || !posse.current) return
         alterando.current = true
         definirOcupado(true)
         definirErroAlteracao("")
@@ -406,7 +438,33 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
                 )
             )
             definirAreaTrabalho(proxima)
-            retornarLista(edicao.idMemoria)
+            if (incluindo && continuar) {
+                limparEdicao()
+                atualizarEdicao(abrirEdicao(proxima, null, scrollY))
+                protegerEdicao()
+            } else if (incluindo) retornarLista(edicao.idMemoria)
+            else {
+                // Mantém a autorização da edição aberta e passa a usar o conteúdo confirmado como base limpa.
+                atualizarEdicao({
+                    ...edicao,
+                    nova: false,
+                    original: edicao.texto,
+                    suja: false,
+                    ...(edicao.idComplemento
+                        ? {
+                            idsComplementosBase: proxima.memorias.find((item) => item.id === edicao.idMemoria)!.complementos.map((item) =>
+                                item.id
+                            )
+                        }
+                        : {})
+                })
+                protegerEdicao()
+                if (proxima !== areaTrabalho) {
+                    definirResultadoOperacao(
+                        edicao.idComplemento ? edicao.nova ? "Complemento incluído." : "Complemento alterado." : "Memória alterada."
+                    )
+                }
+            }
         } catch {
             definirErroAlteracao(
                 edicao.idComplemento
@@ -420,7 +478,7 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     }
 
     async function mover(id: string, direcao: -1 | 1, botao: HTMLButtonElement) {
-        if (!areaTrabalho || alterando.current || !posse.current) return
+        if (!areaTrabalho || edicaoAtual.current || alterando.current || !posse.current) return
         const topoAnterior = botao.getBoundingClientRect().top
         alterando.current = true
         definirOcupado(true)
@@ -458,6 +516,7 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
                 atualizarEdicao(edicao.idComplemento ? abrirEdicao(proxima, edicao.idMemoria, edicao.rolagem) : edicao)
                 protegerEdicao()
             } else retornarLista(idRetorno)
+            definirResultadoOperacao(excluirComplemento ? "Último complemento excluído." : "Memória excluída.")
         } catch {
             definirErroAlteracao("Não foi possível excluir. O conteúdo da captura foi mantido. Tente novamente.")
         } finally {
@@ -467,7 +526,7 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     }
     return (
         <EstruturaCaptura
-            titulo={categorizacao ? "Categorização" : "Capturar"}
+            titulo={categorizacao ? "Categorização" : edicao && !incluindo ? "Editar Memória" : "Capturar"}
             retorno="/capturar"
             aoVoltar={voltarCabecalho}
             aoDeixar={encerrarSessao}
@@ -493,90 +552,16 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
                         dataCaptura={dataCaptura}
                         aba={aba}
                         aoMudarAba={(proximo) => {
+                            if (incluindo || alterando.current) return
                             definirAba(proximo)
                             globalThis.scrollTo(0, 0)
                         }}
-                        memoriaAberta={edicao !== null || categorizacao !== null}
-                        acoes={categorizacao
-                            ? categorizacao.autorizada && (
-                                <button
-                                    type="button"
-                                    class="button is-primary"
-                                    title="Salvar"
-                                    aria-label="Salvar"
-                                    disabled={ocupado}
-                                    onClick={confirmarCategorias}
-                                >
-                                    <span class="icon">
-                                        <i class="fas fa-check" aria-hidden="true" />
-                                    </span>
-                                </button>
-                            )
-                            : edicao !== null
-                            ? (
-                                <>
-                                    {edicao.autorizada
-                                        ? (
-                                            <button
-                                                type="button"
-                                                class="button is-success"
-                                                title={rotuloConfirmacao}
-                                                aria-label={rotuloConfirmacao}
-                                                disabled={ocupado || !edicao.texto.trim()}
-                                                onClick={confirmar}
-                                            >
-                                                <span class="icon">
-                                                    <i class="fas fa-bookmark" aria-hidden="true" />
-                                                </span>
-                                            </button>
-                                        )
-                                        : (
-                                            <button
-                                                type="button"
-                                                class="button is-primary"
-                                                title="Adicionar complemento"
-                                                aria-label="Adicionar complemento"
-                                                disabled={ocupado}
-                                                onClick={adicionarComplemento}
-                                            >
-                                                <span class="icon">
-                                                    <i class="fas fa-plus" aria-hidden="true" />
-                                                </span>
-                                            </button>
-                                        )}
-                                    <button
-                                        type="button"
-                                        class="button is-danger"
-                                        title={rotuloExclusao}
-                                        aria-label={rotuloExclusao}
-                                        disabled={!podeExcluir}
-                                        onClick={() => definirExclusao(true)}
-                                    >
-                                        <span class="icon">
-                                            <i class="fas fa-trash" aria-hidden="true" />
-                                        </span>
-                                    </button>
-                                </>
-                            )
-                            : aba === "Registrar e organizar"
-                            ? (
-                                <button
-                                    type="button"
-                                    class="button is-primary"
-                                    title="Adicionar memória"
-                                    aria-label="Adicionar memória"
-                                    disabled={ocupado}
-                                    onClick={() => abrirMemoria(null)}
-                                >
-                                    <span class="icon">
-                                        <i class="fas fa-plus" aria-hidden="true" />
-                                    </span>
-                                </button>
-                            )
-                            : null}
+                        memoriaAberta={(edicao !== null && !incluindo) || categorizacao !== null}
+                        abasInativas={incluindo || ocupado}
+                        acoes={null}
                     >
                         {erroAlteracao && <p class="notification is-warning" role="alert">{erroAlteracao}</p>}
-                        {avisoCatalogo && aba === "Categorizar e Tom" && (
+                        {avisoCatalogo && aba === "Categorizar" && (
                             <p class="notification is-warning" role="status">
                                 Não foi possível atualizar o catálogo de categorias. Você pode continuar com as categorias disponíveis nesta
                                 captura.
@@ -589,10 +574,11 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
                                 edicao={categorizacao}
                                 catalogo={catalogo}
                                 ocupado={ocupado}
-                                aoSelecionar={(selecionadas) => atualizarCategorizacao({ ...categorizacao, selecionadas })}
+                                aoSelecionar={confirmarCategorias}
+                                aoNavegar={categorizar}
                             />
                         )}
-                        {!categorizacao && aba === "Categorizar e Tom" && (
+                        {!categorizacao && aba === "Categorizar" && (
                             <ul class="captura-lista-memorias">
                                 {[...areaTrabalho.memorias].sort((a, b) => a.ordem - b.ordem).map((item) => (
                                     <li
@@ -615,11 +601,11 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
                                 ))}
                             </ul>
                         )}
-                        {!edicao && aba === "Registrar e organizar" && !areaTrabalho.origemPreservada &&
+                        {(!edicao || incluindo) && aba === "Memorar" && !areaTrabalho.origemPreservada &&
                             !areaTrabalho.alterada && areaTrabalho.memorias.length === 0 && (
                             <p class="captura-orientacao">{orientar("inicioCaptura")}</p>
                         )}
-                        {edicao
+                        {edicao && !incluindo
                             ? (
                                 <>
                                     {(!edicao.autorizada || editandoComplemento) && (
@@ -657,64 +643,124 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
                                             }}
                                         />
                                     )}
+                                    <div class="buttons has-addons captura-acoes-texto mt-3" role="group" aria-label="Ações da edição">
+                                        {edicao.autorizada
+                                            ? (
+                                                <button
+                                                    type="button"
+                                                    class="button is-success"
+                                                    title={rotuloConfirmacao}
+                                                    aria-label={rotuloConfirmacao}
+                                                    disabled={ocupado || !edicao.texto.trim()}
+                                                    onClick={() => confirmar()}
+                                                >
+                                                    <span class="icon">
+                                                        <i class="fas fa-bookmark" aria-hidden="true" />
+                                                    </span>
+                                                    <span>{rotuloConfirmacao}</span>
+                                                </button>
+                                            )
+                                            : (
+                                                <button
+                                                    type="button"
+                                                    class="button is-primary"
+                                                    title="Adicionar complemento"
+                                                    aria-label="Adicionar complemento"
+                                                    disabled={ocupado}
+                                                    onClick={adicionarComplemento}
+                                                >
+                                                    <span class="icon">
+                                                        <i class="fas fa-plus" aria-hidden="true" />
+                                                    </span>
+                                                    <span>Adicionar complemento</span>
+                                                </button>
+                                            )}
+                                        <button
+                                            type="button"
+                                            class="button is-danger"
+                                            title={rotuloExclusao}
+                                            aria-label={rotuloExclusao}
+                                            disabled={!podeExcluir}
+                                            onClick={() => definirExclusao(true)}
+                                        >
+                                            <span class="icon">
+                                                <i class="fas fa-trash" aria-hidden="true" />
+                                            </span>
+                                            <span>{rotuloExclusao}</span>
+                                        </button>
+                                    </div>
                                 </>
                             )
-                            : aba === "Registrar e organizar" && (
-                                <ul class="captura-lista-memorias">
-                                    {[...areaTrabalho.memorias].sort((a, b) => a.ordem - b.ordem).map((item, indice, lista) => (
-                                        <li
-                                            key={item.id}
-                                            class="box captura-item-memoria"
-                                            ref={(elemento) => {
-                                                if (elemento) caixas.current.set(item.id, elemento)
-                                                else caixas.current.delete(item.id)
-                                            }}
-                                        >
-                                            <button
-                                                type="button"
-                                                class="captura-previa-memoria"
-                                                disabled={ocupado}
-                                                onClick={() => abrirMemoria(item.id)}
+                            : aba === "Memorar" && (
+                                <>
+                                    <ul class="captura-lista-memorias">
+                                        {[...areaTrabalho.memorias].sort((a, b) => a.ordem - b.ordem).map((item, indice, lista) => (
+                                            <li
+                                                key={item.id}
+                                                ref={(elemento) => {
+                                                    if (elemento) caixas.current.set(item.id, elemento)
+                                                    else caixas.current.delete(item.id)
+                                                }}
                                             >
-                                                <span>{item.conteudo}</span>
-                                            </button>
-                                            <div
-                                                class="buttons has-addons captura-ordem-memoria"
-                                                role="group"
-                                                aria-label="Ordem da memória"
-                                            >
-                                                <button
-                                                    type="button"
-                                                    class="button"
-                                                    title="Elevar memória"
-                                                    aria-label="Elevar memória"
-                                                    disabled={ocupado || indice === 0}
-                                                    onClick={(evento) => mover(item.id, -1, evento.currentTarget)}
-                                                >
-                                                    <span class="icon">
-                                                        <i class="fas fa-chevron-up" aria-hidden="true" />
-                                                    </span>
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    class="button"
-                                                    title="Rebaixar memória"
-                                                    aria-label="Rebaixar memória"
-                                                    disabled={ocupado || indice === lista.length - 1}
-                                                    onClick={(evento) => mover(item.id, 1, evento.currentTarget)}
-                                                >
-                                                    <span class="icon">
-                                                        <i class="fas fa-chevron-down" aria-hidden="true" />
-                                                    </span>
-                                                </button>
-                                            </div>
+                                                <Memoria
+                                                    conteudo={item.conteudo}
+                                                    categorias={(item.categorias ?? []).map((categoria) =>
+                                                        apresentarCategoria(categoria, catalogo).nome
+                                                    )}
+                                                    tom={null}
+                                                    contexto="registrar"
+                                                    primeira={indice === 0}
+                                                    ultima={indice === lista.length - 1}
+                                                    inativa={incluindo || ocupado}
+                                                    aoAcionar={() => abrirMemoria(item.id)}
+                                                    aoElevar={(botao) => mover(item.id, -1, botao)}
+                                                    aoRebaixar={(botao) => mover(item.id, 1, botao)}
+                                                />
+                                            </li>
+                                        ))}
+                                        <li>
+                                            {incluindo && edicao
+                                                ? (
+                                                    <InclusaoMemoria
+                                                        id={edicao.idMemoria}
+                                                        texto={edicao.texto}
+                                                        ocupado={ocupado}
+                                                        dica={!areaTrabalho.primeiraMemoriaConfirmada ? orientar("inclusaoMemoria") : null}
+                                                        aoEscrever={escrever}
+                                                        aoConfirmar={confirmar}
+                                                        aoCancelar={cancelarInclusao}
+                                                    />
+                                                )
+                                                : (
+                                                    <button
+                                                        type="button"
+                                                        class="button is-primary"
+                                                        title="Incluir memória"
+                                                        aria-label="Incluir memória"
+                                                        disabled={ocupado}
+                                                        onClick={() => abrirMemoria(null)}
+                                                    >
+                                                        <span class="icon">
+                                                            <i class="fas fa-plus" aria-hidden="true" />
+                                                        </span>
+                                                        <span>Incluir memória</span>
+                                                    </button>
+                                                )}
                                         </li>
-                                    ))}
-                                </ul>
+                                    </ul>
+                                </>
                             )}
                     </PainelCaptura>
                 )
                 : <p role="status">Preparando captura…</p>}
+            <MensagemPopup
+                aberto={Boolean(resultadoOperacao)}
+                mensagem={resultadoOperacao}
+                acoes="ok"
+                cor="success"
+                icone="fas fa-circle-check"
+                aoResponder={() => definirResultadoOperacao("")}
+            />
             <MensagemPopup
                 aberto={exclusao}
                 titulo={excluirComplemento ? "Excluir o último complemento?" : "Excluir esta memória?"}
@@ -733,11 +779,13 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
             />
             <MensagemPopup
                 aberto={abandono}
-                titulo="Descartar a edição não confirmada?"
-                mensagem="As alterações desta edição serão descartadas. O conteúdo já confirmado da captura será mantido."
+                titulo={incluindo ? "Cancelar a inclusão?" : "Descartar a edição não confirmada?"}
+                mensagem={incluindo
+                    ? "A inclusão em andamento será cancelada e o texto ainda não incluído será perdido. O conteúdo já confirmado da captura será mantido."
+                    : "As alterações desta edição serão descartadas. O conteúdo já confirmado da captura será mantido."}
                 acoes="okCancel"
-                rotuloConfirmacao="Descartar edição"
-                rotuloCancelamento="Continuar editando"
+                rotuloConfirmacao={incluindo ? "Cancelar inclusão" : "Descartar edição"}
+                rotuloCancelamento={incluindo ? "Continuar escrevendo" : "Continuar editando"}
                 aoResponder={(resultado) => {
                     definirAbandono(false)
                     if (resultado === "confirm") continuarSaida.current?.()

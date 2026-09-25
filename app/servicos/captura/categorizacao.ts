@@ -87,26 +87,32 @@ export async function salvarCategorias(
     if (!edicao.autorizada || !compativel(captura, edicao)) throw new Error("Categorização indisponível")
     if (mesmasCategorias(edicao.originais, edicao.selecionadas)) return captura
     const categorias = edicao.selecionadas.map(({ idCategoria, nome }) => ({ idCategoria, nome: nome.trim() }))
-    if (categorias.some((item) => !item.nome) || new Set(categorias.map(chaveCategoria)).size !== categorias.length) {
+    const nomesNormalizados = categorias.map((item) => normalizarPesquisa(item.nome))
+    if (
+        categorias.some((item, indice) => !item.nome || !nomesNormalizados[indice]) ||
+        new Set(categorias.map(chaveCategoria)).size !== categorias.length ||
+        new Set(nomesNormalizados).size !== nomesNormalizados.length
+    ) {
         throw new Error("Associações inválidas")
     }
     const proxima = {
         ...captura,
-        alterada: true,
         memorias: captura.memorias.map((item) => item.id === edicao.idMemoria ? { ...item, categorias } : item)
     }
+    proxima.alterada = captura.alteracoesOutras ||
+        proxima.memorias.some((item) => !mesmasCategorias(item.categorias ?? [], captura.categoriasOrigem[item.id] ?? []))
     await gravar(proxima)
     return proxima
 }
 
-/** Guarda somente o contexto autorizado. Um reload descarta seleções transitórias, conforme a unidade. */
+/** Guarda apenas alvo, autorização e rolagem; as associações são sempre reconstruídas do workspace confirmado. */
 export class SessaoCategorizacao {
     private readonly chave: string
     constructor(idConta: string, data: string, private readonly armazenamento: Storage) {
         this.chave = `rememore:categorizacao:v1:${JSON.stringify([idConta, data])}`
     }
-    gravar({ selecionadas: _selecionadas, ...contexto }: EdicaoCategorias) {
-        this.armazenamento.setItem(this.chave, JSON.stringify(contexto))
+    gravar({ idAreaTrabalho, idMemoria, autorizada, rolagem }: EdicaoCategorias) {
+        this.armazenamento.setItem(this.chave, JSON.stringify({ idAreaTrabalho, idMemoria, autorizada, rolagem }))
     }
     limpar() {
         this.armazenamento.removeItem(this.chave)
@@ -116,14 +122,11 @@ export class SessaoCategorizacao {
         if (bruto && mesmaSessao) {
             const contexto = JSON.parse(bruto)
             if (
-                typeof contexto.idMemoria === "string" && typeof contexto.autorizada === "boolean" &&
-                Number.isFinite(contexto.rolagem) && Array.isArray(contexto.originais) &&
-                contexto.originais.every((item: AssociacaoCategoria) =>
-                    item && typeof item.nome === "string" && (item.idCategoria === null || typeof item.idCategoria === "string")
-                )
+                contexto.idAreaTrabalho === captura.idAreaTrabalho && typeof contexto.idMemoria === "string" &&
+                typeof contexto.autorizada === "boolean" && Number.isFinite(contexto.rolagem) &&
+                captura.memorias.some((item) => item.id === contexto.idMemoria)
             ) {
-                const edicao = { ...contexto, selecionadas: structuredClone(contexto.originais) }
-                if (compativel(captura, edicao)) return edicao
+                return { ...abrirCategorizacao(captura, contexto.idMemoria, contexto.rolagem), autorizada: contexto.autorizada }
             }
         }
         this.limpar()

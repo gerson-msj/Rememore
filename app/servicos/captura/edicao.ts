@@ -74,7 +74,7 @@ export async function confirmarMemoria(captura: CapturaLocal, edicao: EdicaoMemo
             complementos: []
         }]
         : captura.memorias.map((item) => item.id === edicao.idMemoria ? { ...item, conteudo: edicao.texto } : item)
-    const proxima = { ...captura, memorias, alterada: true }
+    const proxima = { ...captura, memorias, alterada: true, alteracoesOutras: true, primeiraMemoriaConfirmada: true }
     await gravar(proxima)
     return proxima
 }
@@ -93,7 +93,7 @@ export async function confirmarComplemento(captura: CapturaLocal, edicao: Edicao
                 : memoria.complementos.map((item) => item.id === idComplemento ? { ...item, conteudo: edicao.texto } : item)
         }
     )
-    const proxima = { ...captura, memorias, alterada: true }
+    const proxima = { ...captura, memorias, alterada: true, alteracoesOutras: true }
     await gravar(proxima)
     return proxima
 }
@@ -112,7 +112,7 @@ export async function excluirUltimoElemento(
     const memorias = memoria.complementos.length
         ? captura.memorias.map((item) => item.id === memoria.id ? { ...item, complementos: item.complementos.slice(0, -1) } : item)
         : captura.memorias.filter((item) => item.id !== memoria.id)
-    const proxima = { ...captura, memorias, alterada: true }
+    const proxima = { ...captura, memorias, alterada: true, alteracoesOutras: true }
     await gravar(proxima)
     return proxima
 }
@@ -123,7 +123,7 @@ export async function moverMemoria(captura: CapturaLocal, id: string, direcao: -
     const destino = indice + direcao
     if (indice < 0 || destino < 0 || destino >= memorias.length) return captura
     ;[memorias[indice], memorias[destino]] = [memorias[destino], memorias[indice]]
-    const proxima = { ...captura, alterada: true, memorias: memorias.map((item, ordem) => ({ ...item, ordem })) }
+    const proxima = { ...captura, alterada: true, alteracoesOutras: true, memorias: memorias.map((item, ordem) => ({ ...item, ordem })) }
     await gravar(proxima)
     return proxima
 }

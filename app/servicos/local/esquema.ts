@@ -49,5 +49,12 @@ export const migracoesLocais: readonly MigracaoLocal[] = [
             // O catálogo é independente da composição; as capturas existentes permanecem intactas.
             banco.createObjectStore(STORE_CATALOGOS_CATEGORIAS, { keyPath: "idConta" })
         }
+    },
+    {
+        versao: 6,
+        migrar(_banco, transacao) {
+            // Spec 10: descarte dos workspaces experimentais autorizado pelo operador em 23/09/2026.
+            transacao.objectStore(STORE_CAPTURAS).clear()
+        }
     }
 ]
