@@ -62,6 +62,16 @@
     padding: 0;
     font-size: 1rem;
 }
+.revisao-acoes .button {
+    white-space: nowrap;
+}
+.revisao-acoes {
+    justify-content: center;
+}
+.revisao-perspectivas {
+    justify-content: center;
+    margin-bottom: 1.25rem;
+}
 .captura-dia-abas {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

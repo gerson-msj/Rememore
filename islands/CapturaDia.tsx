@@ -1,5 +1,5 @@
 import MensagemPopup from "../components/MensagemPopup.tsx"
-import { orientar } from "../app/servicos/orientacao.ts"
+import { nivelDaExperiencia, orientar } from "../app/servicos/orientacao.ts"
 import {
     abrirComplemento,
     abrirEdicao,
@@ -53,6 +53,10 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
     const sessaoAberta = useRef<SessaoCapturaAberta | null>(null)
     const [avisoSessao, definirAvisoSessao] = useState(false)
     const [aba, definirAba] = useState<AbaCaptura>("Memorar")
+    const [revisao, definirRevisao] = useState(false)
+    const [memoriasSemCategoriaNaTentativa, definirMemoriasSemCategoriaNaTentativa] = useState<string[]>([])
+    const [avisoCategoriasRevisao, definirAvisoCategoriasRevisao] = useState(false)
+    const [voltarTopo, definirVoltarTopo] = useState(false)
     const [edicao, definirEdicao] = useState<EdicaoMemoria | null>(null)
     const edicaoAtual = useRef<EdicaoMemoria | null>(null)
     const rascunho = useRef<RascunhoMemoria | null>(null)
@@ -164,7 +168,7 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
 
     function categorizar(idMemoria: string) {
         if (!areaTrabalho || alterando.current) return
-        const proxima = abrirCategorizacao(areaTrabalho, idMemoria, scrollY)
+        const proxima = abrirCategorizacao(areaTrabalho, idMemoria, revisao ? edicaoAtual.current?.rolagem ?? scrollY : scrollY)
         atualizarCategorizacao(proxima)
         try {
             sessaoCategorizacao.current?.gravar(proxima)
@@ -178,6 +182,13 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
     function retornarCategorizacao() {
         const atual = categorizacaoAtual.current
         limparCategorizacao()
+        if (revisao) {
+            requestAnimationFrame(() => {
+                scrollTo(0, atual?.rolagem ?? 0)
+                if (atual) acompanharRetorno(atual.idMemoria)
+            })
+            return
+        }
         definirAba("Categorizar")
         requestAnimationFrame(() => {
             scrollTo(0, atual?.rolagem ?? 0)
@@ -340,16 +351,39 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
         atualizarEdicao(abrirEdicao(areaTrabalho, id, scrollY))
         protegerEdicao()
         definirErroAlteracao("")
+        const selecionada = areaTrabalho.memorias.find((item) => item.id === id)
+        if (revisao && id && memoriasSemCategoriaNaTentativa.includes(id) && !selecionada?.categorias?.length) {
+            categorizar(id)
+        }
         if (id !== null) scrollTo(0, 0)
     }
 
     function retornarLista(id?: string) {
         const rolagem = edicaoAtual.current?.rolagem ?? 0
+        if (revisao && categorizacaoAtual.current) limparCategorizacao()
         limparEdicao()
+        if (revisao) {
+            definirAba("Revisar")
+            definirRevisao(true)
+            requestAnimationFrame(() => {
+                scrollTo(0, rolagem)
+                if (id) acompanharRetorno(id)
+            })
+            return
+        }
         definirAba("Memorar")
         requestAnimationFrame(() => {
             scrollTo(0, rolagem)
             if (id) acompanharRetorno(id)
+        })
+    }
+
+    function retornarMemoriaRevisao() {
+        const atual = categorizacaoAtual.current
+        limparCategorizacao()
+        requestAnimationFrame(() => {
+            scrollTo(0, atual?.rolagem ?? edicaoAtual.current?.rolagem ?? 0)
+            if (atual) acompanharRetorno(atual.idMemoria)
         })
     }
 
@@ -374,7 +408,7 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
 
     function voltarCabecalho() {
         if (categorizacaoAtual.current) {
-            solicitarSaida(() => retornarCategorizacao())
+            solicitarSaida(() => revisao ? retornarLista(categorizacaoAtual.current?.idMemoria) : retornarCategorizacao())
             return
         }
         const atual = edicaoAtual.current
@@ -392,6 +426,43 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
         encerrarSessao()
         location.assign("/capturar")
     }
+
+    function preservarLocalmente() {
+        if (!areaTrabalho || alterando.current) return
+        const invalidas = [...areaTrabalho.memorias].sort((a, b) => a.ordem - b.ordem)
+            .filter((item) => !(item.categorias?.length)).map((item) => item.id)
+        definirRevisao(true)
+        definirAba("Revisar")
+        if (invalidas.length) {
+            definirMemoriasSemCategoriaNaTentativa(invalidas)
+            definirErroAlteracao("")
+            const elemento = caixas.current.get(invalidas[0])
+            if (elemento) {
+                const limiteSuperior = (document.querySelector(".captura-dia-controles")?.getBoundingClientRect().bottom ?? 0) + 12
+                scrollBy(0, elemento.getBoundingClientRect().top - limiteSuperior)
+            }
+            definirAvisoCategoriasRevisao(true)
+        } else {
+            definirMemoriasSemCategoriaNaTentativa([])
+            definirErroAlteracao("")
+        }
+    }
+
+    useEffect(() => {
+        if (!revisao || edicao || categorizacao) return
+        const atualizar = () => definirVoltarTopo(document.documentElement.scrollHeight > innerHeight + 1)
+        atualizar()
+        addEventListener("scroll", atualizar, { passive: true })
+        addEventListener("resize", atualizar)
+        const observador = new ResizeObserver(atualizar)
+        const conteudo = document.querySelector(".captura-dia-conteudo")
+        if (conteudo) observador.observe(conteudo)
+        return () => {
+            removeEventListener("scroll", atualizar)
+            removeEventListener("resize", atualizar)
+            observador.disconnect()
+        }
+    }, [revisao, edicao, categorizacao, areaTrabalho, erroAlteracao])
 
     function temTrabalhoNaoConfirmado() {
         const atual = edicaoAtual.current
@@ -649,7 +720,13 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
     }
     return (
         <EstruturaCaptura
-            titulo={categorizacao ? "Categorização" : edicao && !incluindo ? "Editar Memória" : "Capturar"}
+            titulo={revisao && edicao && !incluindo
+                ? "Revisar"
+                : categorizacao
+                ? "Categorização"
+                : edicao && !incluindo
+                ? "Editar Memória"
+                : "Capturar"}
             retorno="/capturar"
             aoVoltar={voltarCabecalho}
             aoDeixar={encerrarSessao}
@@ -677,13 +754,14 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
                         aoMudarAba={(proximo) => {
                             if (incluindo || alterando.current) return
                             definirAba(proximo)
+                            definirRevisao(proximo === "Revisar")
                             globalThis.scrollTo(0, 0)
                         }}
                         memoriaAberta={(edicao !== null && !incluindo) || categorizacao !== null}
                         abasInativas={incluindo || ocupado}
                         acoes={null}
                     >
-                        {erroAlteracao && <p class="notification is-warning" role="alert">{erroAlteracao}</p>}
+                        {erroAlteracao && aba !== "Revisar" && <p class="notification is-warning" role="alert">{erroAlteracao}</p>}
                         {avisoCatalogo && aba === "Categorizar" && (
                             <p class="notification is-warning" role="status">
                                 Não foi possível atualizar o catálogo de categorias. Você pode continuar com as categorias disponíveis nesta
@@ -691,23 +769,38 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
                             </p>
                         )}
                         {categorizacao && (
-                            <EdicaoCategorizacao
-                                key={categorizacao.idMemoria}
-                                captura={areaTrabalho}
-                                edicao={categorizacao}
-                                catalogo={catalogo}
-                                ocupado={ocupado}
-                                diasPreservadosDistintos={diasPreservadosDistintos}
-                                aoSelecionar={confirmarCategorias}
-                                aoAlterarTom={confirmarTom}
-                                aoNavegar={categorizar}
-                                rascunhoBalanco={balancoRetomado}
-                                erroBalanco={erroBalanco}
-                                aoRascunharBalanco={atualizarRascunhoBalanco}
-                                aoSalvarBalanco={confirmarBalanco}
-                                aoExcluirBalanco={excluirBalanco}
-                                aoRegistrarProtecaoSaida={registrarProtecaoBalanco}
-                            />
+                            <>
+                                {revisao && (
+                                    <nav class="revisao-perspectivas buttons has-addons" aria-label="Perspectiva da memória">
+                                        <button
+                                            type="button"
+                                            class="button"
+                                            onClick={() => solicitarSaida(retornarMemoriaRevisao)}
+                                        >
+                                            Memorar
+                                        </button>
+                                        <button type="button" class="button is-link" aria-current="page">Categorizar</button>
+                                    </nav>
+                                )}
+                                <EdicaoCategorizacao
+                                    key={categorizacao.idMemoria}
+                                    captura={areaTrabalho}
+                                    edicao={categorizacao}
+                                    catalogo={catalogo}
+                                    ocupado={ocupado}
+                                    diasPreservadosDistintos={diasPreservadosDistintos}
+                                    aoSelecionar={confirmarCategorias}
+                                    aoAlterarTom={confirmarTom}
+                                    aoNavegar={categorizar}
+                                    rascunhoBalanco={balancoRetomado}
+                                    erroBalanco={erroBalanco}
+                                    aoRascunharBalanco={atualizarRascunhoBalanco}
+                                    aoSalvarBalanco={confirmarBalanco}
+                                    aoExcluirBalanco={excluirBalanco}
+                                    aoRegistrarProtecaoSaida={registrarProtecaoBalanco}
+                                    contextoRevisao={revisao}
+                                />
+                            </>
                         )}
                         {!categorizacao && aba === "Categorizar" && (
                             <ul class="captura-lista-memorias">
@@ -732,13 +825,91 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
                                 ))}
                             </ul>
                         )}
+                        {!edicao && !categorizacao && aba === "Revisar" && (
+                            <>
+                                <div class="buttons has-addons revisao-acoes" role="group" aria-label="Ações da revisão">
+                                    <button
+                                        type="button"
+                                        class="button is-primary"
+                                        onClick={preservarLocalmente}
+                                        disabled={ocupado || (areaTrabalho.memorias.length === 0 && !areaTrabalho.origemPreservada &&
+                                            !areaTrabalho.primeiraMemoriaConfirmada)}
+                                    >
+                                        <span class="icon">
+                                            <i class="fas fa-book-open" aria-hidden="true" />
+                                        </span>
+                                        <span>Preservar</span>
+                                    </button>
+                                    <button type="button" class="button" disabled>
+                                        <span class="icon">
+                                            <i class="fas fa-trash" aria-hidden="true" />
+                                        </span>
+                                        <span>Descartar alterações</span>
+                                    </button>
+                                </div>
+                                <p class="captura-orientacao">
+                                    {orientar("revisao", nivelDaExperiencia(diasPreservadosDistintos, areaTrabalho.origemPreservada)) ??
+                                        "Revise suas memórias antes de preservar. Confira o texto, as categorias e os demais detalhes. Se precisar, você ainda pode ajustar qualquer memória."}
+                                </p>
+                                <ul class="captura-lista-memorias">
+                                    {[...areaTrabalho.memorias].sort((a, b) => a.ordem - b.ordem).map((item) => {
+                                        const semCategoria = !(item.categorias?.length)
+                                        return (
+                                            <li
+                                                key={item.id}
+                                                ref={(elemento) => {
+                                                    if (elemento) caixas.current.set(item.id, elemento)
+                                                    else caixas.current.delete(item.id)
+                                                }}
+                                            >
+                                                <Memoria
+                                                    conteudo={[
+                                                        item.conteudo,
+                                                        ...item.complementos.map((complemento) => complemento.conteudo)
+                                                    ].join("\n\n")}
+                                                    categorias={(item.categorias ?? []).map((categoria) =>
+                                                        apresentarCategoria(categoria, catalogo).nome
+                                                    )}
+                                                    contexto="revisar"
+                                                    tom={item.tom ?? null}
+                                                    categoriaEmAtencao={semCategoria}
+                                                    inativa={false}
+                                                    aoAcionar={() => abrirMemoria(item.id)}
+                                                />
+                                            </li>
+                                        )
+                                    })}
+                                </ul>
+                                {voltarTopo && (
+                                    <button
+                                        type="button"
+                                        class="button is-text revisao-voltar-topo"
+                                        onClick={() => scrollTo({ top: 0, behavior: "smooth" })}
+                                    >
+                                        Voltar ao topo
+                                    </button>
+                                )}
+                            </>
+                        )}
                         {(!edicao || incluindo) && aba === "Memorar" && !areaTrabalho.origemPreservada &&
                             !areaTrabalho.alterada && areaTrabalho.memorias.length === 0 && (
                             <p class="captura-orientacao">{orientar("inicioCaptura")}</p>
                         )}
-                        {edicao && !incluindo
+                        {edicao && !incluindo && !categorizacao
                             ? (
                                 <>
+                                    {revisao && (
+                                        <nav class="revisao-perspectivas buttons has-addons" aria-label="Perspectiva da memória">
+                                            <button type="button" class="button is-link" aria-current="page">Memorar</button>
+                                            <button
+                                                type="button"
+                                                class="button"
+                                                onClick={() => categorizar(edicao.idMemoria)}
+                                            >
+                                                Categorizar
+                                            </button>
+                                        </nav>
+                                    )}
                                     {(!edicao.autorizada || editandoComplemento) && (
                                         <div class="captura-texto-memoria">
                                             <p>{memoria?.conteudo}</p>
@@ -891,6 +1062,14 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
                 cor="success"
                 icone="fas fa-circle-check"
                 aoResponder={() => definirResultadoOperacao("")}
+            />
+            <MensagemPopup
+                aberto={avisoCategoriasRevisao}
+                mensagem="Há memórias sem categoria. Adicione pelo menos uma categoria a cada memória antes de preservar."
+                acoes="ok"
+                cor="warning"
+                icone="fas fa-exclamation-triangle"
+                aoResponder={() => definirAvisoCategoriasRevisao(false)}
             />
             <MensagemPopup
                 aberto={exclusao}

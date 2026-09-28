@@ -32,7 +32,8 @@ export default function EdicaoCategorizacao({
     aoRascunharBalanco,
     aoSalvarBalanco,
     aoExcluirBalanco,
-    aoRegistrarProtecaoSaida
+    aoRegistrarProtecaoSaida,
+    contextoRevisao = false
 }: {
     captura: CapturaLocal
     edicao: EdicaoCategorias
@@ -48,6 +49,7 @@ export default function EdicaoCategorizacao({
     aoSalvarBalanco: (texto: string) => Promise<boolean>
     aoExcluirBalanco: () => Promise<boolean>
     aoRegistrarProtecaoSaida: (proteger: ((continuar: () => void) => void) | null) => void
+    contextoRevisao?: boolean
 }) {
     const memoria = captura.memorias.find((item) => item.id === edicao.idMemoria)!
     const tomInicial = memoria.tom ?? 0
@@ -208,38 +210,40 @@ export default function EdicaoCategorizacao({
                     aoRegistrarProtecaoSaida={registrarProtecaoBalanco}
                 />
             )}
-            <nav class="categorizacao-navegacao buttons has-addons" aria-label="Navegação entre memórias">
-                <button
-                    type="button"
-                    class="button"
-                    aria-label="Memória anterior"
-                    title="Memória anterior"
-                    disabled={ocupado || !anterior}
-                    onClick={() => {
-                        if (anterior && !ocupado) navegar(anterior.id)
-                    }}
-                >
-                    <span class="icon">
-                        <i class="fas fa-chevron-left" aria-hidden="true" />
-                    </span>
-                    <span>Anterior</span>
-                </button>
-                <button
-                    type="button"
-                    class="button"
-                    aria-label="Próxima memória"
-                    title="Próxima memória"
-                    disabled={ocupado || !proxima}
-                    onClick={() => {
-                        if (proxima && !ocupado) navegar(proxima.id)
-                    }}
-                >
-                    <span>Próxima</span>
-                    <span class="icon">
-                        <i class="fas fa-chevron-right" aria-hidden="true" />
-                    </span>
-                </button>
-            </nav>
+            {!contextoRevisao && (
+                <nav class="categorizacao-navegacao buttons has-addons" aria-label="Navegação entre memórias">
+                    <button
+                        type="button"
+                        class="button"
+                        aria-label="Memória anterior"
+                        title="Memória anterior"
+                        disabled={ocupado || !anterior}
+                        onClick={() => {
+                            if (anterior && !ocupado) navegar(anterior.id)
+                        }}
+                    >
+                        <span class="icon">
+                            <i class="fas fa-chevron-left" aria-hidden="true" />
+                        </span>
+                        <span>Anterior</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="button"
+                        aria-label="Próxima memória"
+                        title="Próxima memória"
+                        disabled={ocupado || !proxima}
+                        onClick={() => {
+                            if (proxima && !ocupado) navegar(proxima.id)
+                        }}
+                    >
+                        <span>Próxima</span>
+                        <span class="icon">
+                            <i class="fas fa-chevron-right" aria-hidden="true" />
+                        </span>
+                    </button>
+                </nav>
+            )}
             <PesquisaCategoriaPopup aberto={aberto && edicao.autorizada} aoFechar={() => definirAberto(false)}>
                 <SeletorCategoria
                     consulta={consulta}

@@ -8,6 +8,7 @@ type PropriedadesMemoria =
         tom: number | null
         aoAcionar: () => void
         inativa?: boolean
+        categoriaEmAtencao?: boolean
     }
     & (
         | {
@@ -42,7 +43,11 @@ export default function Memoria(propriedades: PropriedadesMemoria) {
                 }}
             >
                 {mostrarCategoria && (
-                    <legend class={`memoria-categoria${categorias.length ? "" : " memoria-sem-categoria"}`}>
+                    <legend
+                        class={`memoria-categoria${categorias.length ? "" : " memoria-sem-categoria"}${
+                            propriedades.categoriaEmAtencao ? " memoria-categoria-atencao" : ""
+                        }`}
+                    >
                         <span class="memoria-categoria-nome" title={categoria}>{categoria}</span>
                         {!completa && categorias.length > 1 && <span class="memoria-categoria-excedente">e +{categorias.length - 1}</span>}
                     </legend>

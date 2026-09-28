@@ -1,6 +1,7 @@
 export type ContextoOrientacao =
     | "captureSelection"
     | "inicioCaptura"
+    | "revisao"
     | "categorizacao"
     | "inclusaoMemoria"
     | "tom"
@@ -41,6 +42,12 @@ const mensagens: Record<ContextoOrientacao, Record<NivelOrientacao, string | nul
         beginner: "Comece pelo que vier à memória. Pode ser uma frase curta, um detalhe ou algo que aconteceu hoje.",
         intermediate: "Registre uma lembrança por vez. Memórias mais focadas ajudam a reencontrar melhor cada contexto depois.",
         advanced: "Observe detalhes que normalmente passariam despercebidos: uma conversa, uma sensação, uma pequena mudança."
+    },
+    revisao: {
+        beginner:
+            "Revise suas memórias antes de preservar. Confira o texto, as categorias e os demais detalhes. Se precisar, você ainda pode ajustar qualquer memória.",
+        intermediate: "Confira se esta composição representa bem o seu dia. Você ainda pode ajustar qualquer memória antes de preservar.",
+        advanced: "Revise se esta composição representa bem o que você quer preservar deste dia."
     }
 }
 

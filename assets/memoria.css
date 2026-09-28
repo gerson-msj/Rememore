@@ -64,6 +64,12 @@
 .memoria-sem-categoria .memoria-categoria-nome {
     opacity: 0.6;
 }
+.memoria-categoria-atencao {
+    color: var(--bulma-danger);
+}
+.memoria-categoria-atencao .memoria-categoria-nome {
+    opacity: 1;
+}
 .memoria-acionamento {
     position: absolute;
     inset: 0;
