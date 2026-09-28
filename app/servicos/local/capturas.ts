@@ -23,6 +23,10 @@ export interface MemoriaLocal {
     complementos: ComplementoLocal[]
     /** Ausência em capturas anteriores à categorização equivale a nenhuma associação. */
     categorias?: AssociacaoCategoria[]
+    /** Ausência significa sem Tom; zero é um Tom neutro informado. */
+    tom?: number
+    /** Texto opcional dos sentimentos despertados por esta memória. */
+    balancoSentimental?: string
 }
 
 export interface CapturaLocal {
@@ -31,7 +35,7 @@ export interface CapturaLocal {
     dataCaptura: string
     memorias: MemoriaLocal[]
     alterada: boolean
-    /** Pendência de texto, composição ou ordem, independente das associações de categoria. */
+    /** Pendências não categóricas confirmadas (texto, composição, ordem, Tom ou balanço). */
     alteracoesOutras: boolean
     /** Associações do snapshot remoto usado para materializar o workspace. */
     categoriasOrigem: Record<string, AssociacaoCategoria[]>

@@ -20,6 +20,7 @@ export default function InclusaoMemoria({ id, texto, ocupado, dica, aoEscrever, 
                 class="textarea captura-campo-memoria"
                 rows={5}
                 aria-label="Texto da nova memória"
+                placeholder="Registre uma memória..."
                 aria-describedby={dica ? "captura-dica-inclusao" : undefined}
                 value={texto}
                 disabled={ocupado}

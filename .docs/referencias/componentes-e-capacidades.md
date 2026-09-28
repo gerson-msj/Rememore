@@ -10,11 +10,14 @@ o controle nativo. Data incompleta ou inválida usa a cor de placeholder, inclui
 `app/utilitarios/dataCaptura.ts`: hoje usa calendário local; ehDataCaptura valida YYYY-MM-DD completo, calendário e limite atual;
 formatarDataCaptura apresenta DD/MM/AAAA. O campo nativo mantém a apresentação própria do navegador.
 
-`app/servicos/orientacao.ts` (CMP-005): orientar("captureSelection") retorna texto ou null e resolve internamente nivelSimulado.
+`app/servicos/orientacao.ts` (CMP-005): orientar("captureSelection") retorna texto ou null; por padrão resolve internamente nivelSimulado.
 `orientar("inicioCaptura")` fornece os três textos de início da Captura do dia; o consumidor exibe apenas na lista vazia, limpa e sem origem
 preservada. Confirmação torna a captura alterada, impedindo reapresentação após exclusões. Alterar nivelSimulado no fonte para validar
-beginner/intermediate/advanced; nenhuma configuração ou persistência de nível. `orientar("categorizacao")` fornece os três textos da tela
-Categorização, apenas no modo editável; a orientação sobre múltiplas categorias é separada.
+beginner/intermediate/advanced; nenhuma configuração ou persistência de nível. `experienciaUsuario.read(request)` retorna
+`diasPreservadosDistintos` por contrato substituível, simulado atualmente com dois dias para apresentar o nível intermediário em uma data
+nova. `nivelDaExperiencia` desconta a data atual quando já preservada e resolve beginner/intermediate/advanced nos limites 2/4.
+`orientar("categorizacao", nivel)` fornece os textos da Categorização; `orientar("tom", nivel)` fornece a orientação de Tom nos níveis
+intermediário/avançado. A orientação sobre múltiplas categorias é separada.
 
 `ServicoSessao.accountId(request)` retorna identidade opaca da conta autenticada ou null. O mock fornece ULID fixo; páginas não devem fixar
 identidade por conta própria. A Seleção já recebe esse identificador pelo handler autenticado.
@@ -83,14 +86,24 @@ recebe tonalização; zero recebe as misturas neutras. O gradiente sempre usa o 
 
 ## Categorização
 
-`components/Categorizacao.tsx` apresenta memória e complementos em uma caixa rolável de cinco linhas, selecionadas em duas linhas fixas,
-orientação e modo histórico. `components/SeletorCategoria.tsx` recebe consulta, resultados, selecionadas, opção de criação e callbacks; não
+`components/Categorizacao.tsx` apresenta memória e complementos em uma caixa rolável de cinco linhas, categorias selecionadas, Tom,
+orientação e modo histórico. Contexto e caixa de categorias usam `aparenciaTom` compartilhada; os cartões individuais e o popup de pesquisa
+permanecem neutros. `components/SeletorCategoria.tsx` recebe consulta, resultados, selecionadas, opção de criação e callbacks; não
 acessa persistência. Botões dos resultados usam `aria-pressed`; selecionadas permanecem visíveis e desabilitadas com indicação “Já
 associada”. A pesquisa fica em `PesquisaCategoriaPopup.tsx`, fechável por controle, Escape ou clique fora.
 
 `components/EdicaoCategorizacao.tsx` integra essas peças ao estado transitório da captura, com debounce de 180 ms. `CapturaDia` fornece a
-edição, o catálogo e a confirmação após commit. O título Categorização usa a mesma estrutura da captura; as abas ficam ocultas durante a
+edição, o catálogo e a confirmação após commit. `salvarTom` persiste valor final -100..100 (ou remove o campo para ausência), valida
+historicidade e mantém a captura pendente; movimento transitório não grava. `routes/capturar/[data].tsx` entrega a contagem de datas distintas
+preservadas à ilha. O título Categorização usa a mesma estrutura da captura; as abas ficam ocultas durante a
 edição. O laboratório `/laboratorio-categorizacao` permanece uma demonstração sem persistência, com layout aprovado na Especificação 09.
+
+`components/BalancoSentimental.tsx` apresenta orientação progressiva, prévia neutra de três linhas e popup próprio na Categorização,
+somente a partir do nível intermediário. O mesmo popup trata inclusão/edição, confirmação interna de descarte/exclusão, gravação local e
+leitura integral de conteúdo extenso em modo histórico. `app/servicos/captura/balanco.ts` valida historicidade e texto não vazio,
+preserva o texto digitado e publica a captura somente depois do commit; `ProtecaoRascunhoBalanco` guarda o rascunho separado no
+sessionStorage, vinculado à captura, materialização e texto confirmado de origem. `islands/CapturaDia.tsx` retoma esse estado somente no
+reload da mesma sessão e exige resolução explícita antes da navegação controlada.
 
 `app/utilitarios/pesquisaTexto.ts` exporta `normalizarPesquisa` e `correspondeAproximadamente`. A política de fallback fica em
 `pesquisarCategorias`: somente zero resultados simples habilita aproximações e criação. A comparação ignora acentos, caixa e espaços

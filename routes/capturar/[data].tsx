@@ -2,6 +2,7 @@ import { definir } from "../../utilitarios.ts"
 import { sessao } from "../../app/servicos/autenticacao.ts"
 import { ehDataCaptura } from "../../app/utilitarios/dataCaptura.ts"
 import CapturaDia from "../../islands/CapturaDia.tsx"
+import { experienciaUsuario } from "../../app/servicos/experiencia.ts"
 
 export const handler = definir.handlers({
     async GET(contexto) {
@@ -12,7 +13,8 @@ export const handler = definir.handlers({
         if (!ehDataCaptura(dataCaptura, "9999-12-31")) {
             return new Response(null, { status: 303, headers: { Location: "/capturar?data-invalida" } })
         }
-        return { data: { accountId: idConta, date: dataCaptura } }
+        const experiencia = await experienciaUsuario.read(contexto.req)
+        return { data: { accountId: idConta, date: dataCaptura, diasPreservadosDistintos: experiencia.diasPreservadosDistintos } }
     }
 })
 

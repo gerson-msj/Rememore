@@ -9,14 +9,17 @@
   `listarPorConta(idConta)`. `obter` retorna `undefined` para ausência; a consulta retorna `[]` para conta sem registros. Escrita e remoção
   retornam `void` somente após commit; remover registro ausente é sucesso idempotente. Toda falha rejeita a Promise.
 - `CapturaLocal`: `idConta: string`, `dataCaptura: string` (data civil YYYY-MM-DD fornecida pelo consumidor), `memorias: MemoriaLocal[]`.
-  Exige `alterada: boolean` (somente true é pendência), `alteracoesOutras: boolean` (alterações de texto/composição/ordem),
+  Exige `alterada: boolean` (somente true é pendência), `alteracoesOutras: boolean` (alterações confirmadas de texto/composição/ordem/Tom/balanço),
   `categoriasOrigem: Record<string, AssociacaoCategoria[]>` (associações por ID de memória do snapshot da origem) e
   `primeiraMemoriaConfirmada: boolean` (não volta a false ao excluir memórias). Os três campos são metadados exclusivamente locais. Mantém
   também `origemPreservada: boolean`, `revisaoOrigem: string | null` (revisão opaca, null para ausência remota), `idAreaTrabalho: string`
   (identidade desta materialização) e `prazoEdicaoDias: number` (prazo recebido na preparação). `MemoriaLocal`: `id: string`,
   `conteudo: string`, `ordem: number`, `primeiraPreservacaoEm: string | null`, `complementos: ComplementoLocal[]`,
-  `categorias?: AssociacaoCategoria[]` (`idCategoria: string | null`, `nome: string`). Ausência de categorias em registros anteriores
-  equivale a conjunto vazio. Complementos estão em ordem histórica, com `id`, `conteudo` e `primeiraPreservacaoEm` próprios. null significa
+  `categorias?: AssociacaoCategoria[]` (`idCategoria: string | null`, `nome: string`), `tom?: number` (ausência distinta de 0) e
+  `balancoSentimental?: string` (texto opcional preservado como digitado, após rejeitar valor vazio/só espaços). Ausência de categorias em
+  registros anteriores equivale a conjunto vazio. Os dois campos novos permanecem no agregado IndexedDB `capturas`; não exigem mudança de
+  schema e não alteram o contrato/payload remoto nesta unidade. Complementos estão em ordem histórica, com `id`, `conteudo` e
+  `primeiraPreservacaoEm` próprios. null significa
   nunca preservado; timestamp ISO representa a primeira preservação e não deve ser reiniciado em futuras edições/preservações. O fluxo
   atribui um identificador uma única vez, por exemplo com `crypto.randomUUID()`, e o mantém ao editar/reordenar. O repositório persiste o
   agregado fornecido, sem gerar identidades, ordenar arrays, converter datas ou definir regras de edição. A ordem explícita é independente
@@ -162,6 +165,11 @@ Nomes de categorias preservadas usam a versão conhecida do catálogo, sem reesc
 rolagem; associações são reconstruídas do workspace confirmado em reload da mesma sessão. Navegar entre memórias troca diretamente o alvo e
 fecha a pesquisa. Voltar limpa o marcador e retorna à lista com a memória trabalhada posicionada no topo quando houver geometria suficiente.
 Como as categorias são gravadas imediatamente, não há seleção não confirmada a proteger no abandono ou em `beforeunload`.
+`app/servicos/captura/balanco.ts` salva ou remove `MemoriaLocal.balancoSentimental` com validação da historicidade, mantendo o texto
+original digitado. O agregado só é publicado após commit; sucesso marca `alterada` e `alteracoesOutras`. `ProtecaoRascunhoBalanco` usa
+`rememore:rascunho-balanco:v1:` em sessionStorage, separado da captura confirmada, e retoma apenas na mesma sessão, materialização,
+memória e versão confirmada do balanço. A interface protege o rascunho durante digitação, antes de `pagehide`/`beforeunload` e antes de
+navegação controlada; cancelamento e exclusão são confirmados no próprio popup.
 `app/servicos/local/catalogoCategorias.ts` persiste `{idConta, revisao, categorias: [{id, nome, versao, ativa}]}` atomicamente. A revisão
 global é opaca; versões individuais são inteiros crescentes. `app/servicos/categorias.ts` consulta por revisão e aplica somente alterações;
 revisão inalterada não grava novamente. `prepararCatalogo` serializa sincronizações da conta com um Web Lock separado do lock por data,

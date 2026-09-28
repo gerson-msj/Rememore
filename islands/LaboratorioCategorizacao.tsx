@@ -118,6 +118,7 @@ export default function LaboratorioCategorizacao() {
                                 selecionadas={selecionadas}
                                 editavel={!historica}
                                 orientacao={orientar("categorizacao")}
+                                tom={null}
                                 aoRemover={(opcao) => associar(selecionadas.filter((item) => item.chave !== opcao.chave))}
                                 aoPesquisar={() => {
                                     definirConsulta("")

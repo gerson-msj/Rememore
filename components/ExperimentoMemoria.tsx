@@ -1,4 +1,5 @@
 import { useState } from "preact/hooks"
+import SeletorTom from "./SeletorTom.tsx"
 
 type Tema = "light" | "dark"
 const modelos = [
@@ -89,42 +90,51 @@ export default function ExperimentoMemoria({ tema, cores, definirCores }: {
             <div class="lab-grade mb-5">
                 <div>
                     <div class="field">
-                        <label class="checkbox">
+                        <label class="seletor-tom-ativacao">
                             <input
                                 type="checkbox"
+                                role="switch"
                                 checked={habilitado}
                                 onChange={(evento) => definirHabilitado(evento.currentTarget.checked)}
-                            />{" "}
-                            Tom informado
+                            />
+                            <span class="seletor-tom-interruptor" aria-hidden="true" />
+                            Registrar Tom
                         </label>
                     </div>
                     <div class="field">
-                        <label class="label" for="lab-tom">Tom: {habilitado ? (tom > 0 ? `+${tom}` : tom) : "sem Tom"}</label>
-                        <input
+                        <label class="label" for="lab-tom">Escala do Tom</label>
+                        <SeletorTom
                             id="lab-tom"
-                            type="range"
-                            min={-100}
-                            max={100}
-                            step={1}
-                            value={tom}
-                            disabled={!habilitado}
-                            onInput={(evento) => definirTom(Number(evento.currentTarget.value))}
+                            valor={habilitado ? tom : 0}
+                            desabilitado={!habilitado}
+                            aoAlterar={definirTom}
                         />
+                        <p class="help">
+                            Estado atual: {habilitado ? (tom === 0 ? "Neutro" : tom < 0 ? "Negativo" : "Positivo") : "Sem Tom"}
+                        </p>
                         <div class="buttons mt-2">
-                            {[-100, -50, -1, 0, 1, 50, 100].map((valor) => (
+                            {[
+                                ["Extremo negativo", -100],
+                                ["Negativo moderado", -55],
+                                ["Negativo próximo do centro", -2],
+                                ["Neutro", 0],
+                                ["Positivo próximo do centro", 2],
+                                ["Positivo moderado", 55],
+                                ["Extremo positivo", 100]
+                            ].map(([rotulo, valor]) => (
                                 <button
                                     type="button"
                                     class="button is-small"
                                     disabled={!habilitado}
-                                    onClick={() => definirTom(valor)}
+                                    onClick={() => definirTom(Number(valor))}
                                     key={valor}
                                 >
-                                    {valor > 0 ? `+${valor}` : valor}
+                                    {rotulo}
                                 </button>
                             ))}
                         </div>
                         <p class="help">
-                            Tom informado em 0 mantém a faixa neutra nos modelos que usam faixa. Sem Tom remove toda a tonalização.
+                            Sem Tom mantém o seletor inativo e centralizado. Tom neutro é um estado informado, diferente de Sem Tom.
                         </p>
                     </div>
                     <fieldset class="field">

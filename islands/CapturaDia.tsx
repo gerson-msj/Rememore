@@ -10,7 +10,7 @@ import {
     moverMemoria,
     RascunhoMemoria
 } from "../app/servicos/captura/edicao.ts"
-import { useEffect, useRef, useState } from "preact/hooks"
+import { useCallback, useEffect, useRef, useState } from "preact/hooks"
 import EstruturaCaptura from "../components/EstruturaCaptura.tsx"
 import PainelCaptura, { type AbaCaptura } from "../components/PainelCaptura.tsx"
 import { bancoLocal } from "../app/servicos/local/banco.ts"
@@ -31,8 +31,19 @@ import {
 } from "../app/servicos/captura/categorizacao.ts"
 import { prepararCatalogo } from "../app/servicos/categorias.ts"
 import type { CatalogoCategorias } from "../app/servicos/local/catalogoCategorias.ts"
+import { salvarTom } from "../app/servicos/captura/tom.ts"
+import {
+    excluirBalancoSentimental,
+    ProtecaoRascunhoBalanco,
+    type RascunhoBalanco,
+    salvarBalancoSentimental
+} from "../app/servicos/captura/balanco.ts"
 
-export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { accountId: string; date: string }) {
+export default function CapturaDia({ accountId: idConta, date: dataCaptura, diasPreservadosDistintos }: {
+    accountId: string
+    date: string
+    diasPreservadosDistintos: number
+}) {
     const [areaTrabalho, definirAreaTrabalho] = useState<CapturaLocal | null>(null)
     const [falha, definirFalha] = useState("")
     const [erroAlteracao, definirErroAlteracao] = useState("")
@@ -48,13 +59,21 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     const [categorizacao, definirCategorizacao] = useState<EdicaoCategorias | null>(null)
     const categorizacaoAtual = useRef<EdicaoCategorias | null>(null)
     const sessaoCategorizacao = useRef<SessaoCategorizacao | null>(null)
+    const protecaoBalanco = useRef<ProtecaoRascunhoBalanco | null>(null)
+    const rascunhoBalanco = useRef<RascunhoBalanco | null>(null)
+    const protegerSaidaBalanco = useRef<((continuar: () => void) => void) | null>(null)
     const [catalogo, definirCatalogo] = useState<CatalogoCategorias | undefined>(undefined)
     const [avisoCatalogo, definirAvisoCatalogo] = useState(false)
+    const [balancoRetomado, definirBalancoRetomado] = useState<RascunhoBalanco | null>(null)
+    const [erroBalanco, definirErroBalanco] = useState("")
     const temporizador = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
     const [abandono, definirAbandono] = useState(false)
     const [exclusao, definirExclusao] = useState(false)
     const [resultadoOperacao, definirResultadoOperacao] = useState("")
     const continuarSaida = useRef<(() => void) | null>(null)
+    const registrarProtecaoBalanco = useCallback((proteger: ((continuar: () => void) => void) | null) => {
+        protegerSaidaBalanco.current = proteger
+    }, [])
     const caixas = useRef(new Map<string, HTMLLIElement>())
     const campoMemoria = useRef<HTMLTextAreaElement>(null)
     const memoria = areaTrabalho?.memorias.find((item) => item.id === edicao?.idMemoria)
@@ -102,6 +121,26 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
         }
     }
 
+    function protegerRascunhoBalanco() {
+        try {
+            if (rascunhoBalanco.current) protecaoBalanco.current?.gravar(rascunhoBalanco.current)
+        } catch {
+            definirAvisoSessao(true)
+        }
+    }
+
+    function atualizarRascunhoBalanco(proximo: RascunhoBalanco | null) {
+        rascunhoBalanco.current = proximo
+        definirBalancoRetomado(proximo)
+        definirErroBalanco("")
+        try {
+            if (proximo) protecaoBalanco.current?.gravar(proximo)
+            else protecaoBalanco.current?.limpar()
+        } catch {
+            definirAvisoSessao(true)
+        }
+    }
+
     function atualizarEdicao(proxima: EdicaoMemoria | null) {
         edicaoAtual.current = proxima
         definirEdicao(proxima)
@@ -113,6 +152,7 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     }
 
     function limparCategorizacao() {
+        atualizarRascunhoBalanco(null)
         try {
             sessaoCategorizacao.current?.limpar()
         } catch {
@@ -160,6 +200,71 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
             atualizarCategorizacao({ ...atual, originais: structuredClone(confirmadas), selecionadas: structuredClone(confirmadas) })
         } catch {
             definirErroAlteracao("Não foi possível atualizar as categorias. As associações anteriores foram mantidas. Tente novamente.")
+        } finally {
+            alterando.current = false
+            definirOcupado(false)
+        }
+    }
+
+    async function confirmarTom(tom: number | null): Promise<boolean> {
+        const atual = categorizacaoAtual.current
+        if (!areaTrabalho || !atual || alterando.current || !posse.current) return false
+        alterando.current = true
+        definirOcupado(true)
+        definirErroAlteracao("")
+        try {
+            const proxima = await posse.current.executar(() =>
+                salvarTom(areaTrabalho, atual.idMemoria, tom, (captura) => capturasLocais.gravar(captura))
+            )
+            definirAreaTrabalho(proxima)
+            return true
+        } catch {
+            definirErroAlteracao("Não foi possível atualizar o Tom. O valor confirmado anteriormente foi mantido. Tente novamente.")
+            return false
+        } finally {
+            alterando.current = false
+            definirOcupado(false)
+        }
+    }
+
+    async function confirmarBalanco(texto: string): Promise<boolean> {
+        const atual = categorizacaoAtual.current
+        if (!areaTrabalho || !atual || alterando.current || !posse.current) return false
+        alterando.current = true
+        definirOcupado(true)
+        definirErroBalanco("")
+        try {
+            const proxima = await posse.current.executar(() =>
+                salvarBalancoSentimental(areaTrabalho, atual.idMemoria, texto, (captura) => capturasLocais.gravar(captura))
+            )
+            definirAreaTrabalho(proxima)
+            atualizarRascunhoBalanco(null)
+            return true
+        } catch {
+            definirErroBalanco("Não foi possível salvar o balanço sentimental. Seu texto continua aqui. Tente novamente.")
+            return false
+        } finally {
+            alterando.current = false
+            definirOcupado(false)
+        }
+    }
+
+    async function excluirBalanco(): Promise<boolean> {
+        const atual = categorizacaoAtual.current
+        if (!areaTrabalho || !atual || alterando.current || !posse.current) return false
+        alterando.current = true
+        definirOcupado(true)
+        definirErroBalanco("")
+        try {
+            const proxima = await posse.current.executar(() =>
+                excluirBalancoSentimental(areaTrabalho, atual.idMemoria, (captura) => capturasLocais.gravar(captura))
+            )
+            definirAreaTrabalho(proxima)
+            atualizarRascunhoBalanco(null)
+            return true
+        } catch {
+            definirErroBalanco("Não foi possível excluir o balanço sentimental. Seu texto continua aqui. Tente novamente.")
+            return false
         } finally {
             alterando.current = false
             definirOcupado(false)
@@ -257,6 +362,10 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
 
     function solicitarSaida(continuar: () => void) {
         if (alterando.current) return
+        if (categorizacaoAtual.current && protegerSaidaBalanco.current) {
+            protegerSaidaBalanco.current(continuar)
+            return
+        }
         if (temTrabalhoNaoConfirmado()) {
             continuarSaida.current = continuar
             definirAbandono(true)
@@ -265,7 +374,7 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
 
     function voltarCabecalho() {
         if (categorizacaoAtual.current) {
-            if (!alterando.current) retornarCategorizacao()
+            solicitarSaida(() => retornarCategorizacao())
             return
         }
         const atual = edicaoAtual.current
@@ -292,12 +401,19 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
     useEffect(() => {
         const antesDeDescarregar = (evento: BeforeUnloadEvent) => {
             protegerEdicao()
-            if (temTrabalhoNaoConfirmado() || alterando.current) {
+            protegerRascunhoBalanco()
+            if (
+                temTrabalhoNaoConfirmado() || alterando.current ||
+                Boolean(rascunhoBalanco.current && rascunhoBalanco.current.texto !== rascunhoBalanco.current.original)
+            ) {
                 evento.preventDefault()
                 evento.returnValue = ""
             }
         }
-        const aoOcultar = () => protegerEdicao()
+        const aoOcultar = () => {
+            protegerEdicao()
+            protegerRascunhoBalanco()
+        }
         globalThis.addEventListener("beforeunload", antesDeDescarregar)
         globalThis.addEventListener("pagehide", aoOcultar)
         return () => {
@@ -395,11 +511,18 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
                     }
                     try {
                         sessaoCategorizacao.current = new SessaoCategorizacao(idConta, dataCaptura, sessionStorage)
-                        const retomada = sessaoCategorizacao.current.retomar(captura, idAreaTrabalhoRetomada === captura.idAreaTrabalho)
+                        const mesmaSessao = idAreaTrabalhoRetomada === captura.idAreaTrabalho
+                        const retomada = sessaoCategorizacao.current.retomar(captura, mesmaSessao)
                         if (retomada && !edicaoAtual.current) {
                             atualizarCategorizacao(retomada)
                             definirAba("Categorizar")
                         }
+                        protecaoBalanco.current = new ProtecaoRascunhoBalanco(idConta, dataCaptura, sessionStorage)
+                        const balancoRestaurado = protecaoBalanco.current.retomar(captura, mesmaSessao)
+                        if (retomada && balancoRestaurado?.idMemoria === retomada.idMemoria && !edicaoAtual.current) {
+                            rascunhoBalanco.current = balancoRestaurado
+                            definirBalancoRetomado(balancoRestaurado)
+                        } else if (balancoRestaurado) protecaoBalanco.current.limpar()
                     } catch {
                         definirAvisoSessao(true)
                     }
@@ -574,8 +697,16 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
                                 edicao={categorizacao}
                                 catalogo={catalogo}
                                 ocupado={ocupado}
+                                diasPreservadosDistintos={diasPreservadosDistintos}
                                 aoSelecionar={confirmarCategorias}
+                                aoAlterarTom={confirmarTom}
                                 aoNavegar={categorizar}
+                                rascunhoBalanco={balancoRetomado}
+                                erroBalanco={erroBalanco}
+                                aoRascunharBalanco={atualizarRascunhoBalanco}
+                                aoSalvarBalanco={confirmarBalanco}
+                                aoExcluirBalanco={excluirBalanco}
+                                aoRegistrarProtecaoSaida={registrarProtecaoBalanco}
                             />
                         )}
                         {!categorizacao && aba === "Categorizar" && (
@@ -594,7 +725,7 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
                                                 apresentarCategoria(categoria, catalogo).nome
                                             )}
                                             contexto="categorizar"
-                                            tom={null}
+                                            tom={item.tom ?? null}
                                             aoAcionar={() => categorizar(item.id)}
                                         />
                                     </li>
@@ -707,7 +838,7 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura }: { 
                                                     categorias={(item.categorias ?? []).map((categoria) =>
                                                         apresentarCategoria(categoria, catalogo).nome
                                                     )}
-                                                    tom={null}
+                                                    tom={item.tom ?? null}
                                                     contexto="registrar"
                                                     primeira={indice === 0}
                                                     ultima={indice === lista.length - 1}

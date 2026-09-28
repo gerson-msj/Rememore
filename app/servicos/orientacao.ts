@@ -1,4 +1,10 @@
-export type ContextoOrientacao = "captureSelection" | "inicioCaptura" | "categorizacao" | "inclusaoMemoria"
+export type ContextoOrientacao =
+    | "captureSelection"
+    | "inicioCaptura"
+    | "categorizacao"
+    | "inclusaoMemoria"
+    | "tom"
+    | "balancoSentimental"
 export type NivelOrientacao = "beginner" | "intermediate" | "advanced"
 
 // Nível simulado temporariamente; alterar aqui para validação do operador.
@@ -14,6 +20,18 @@ const mensagens: Record<ContextoOrientacao, Record<NivelOrientacao, string | nul
         intermediate: "Escolha a categoria que melhor representa o contexto desta memória.",
         advanced: "Categorias consistentes tornam mais perceptíveis os temas que atravessam suas memórias."
     },
+    tom: {
+        beginner: null,
+        intermediate:
+            "O Tom registra a impressão geral que esta memória deixa em você. Ative-o para indicar essa percepção entre negativo, neutro e positivo.",
+        advanced: "Use o Tom para registrar a impressão geral que esta memória deixa em você."
+    },
+    balancoSentimental: {
+        beginner: null,
+        intermediate:
+            "O balanço sentimental é uma extensão opcional da memória para registrar, em palavras, os sentimentos que ela despertou em você, positivos e negativos.",
+        advanced: "Use o balanço sentimental para registrar os sentimentos que esta memória despertou em você."
+    },
     captureSelection: {
         beginner: "Você pode capturar qualquer dia até hoje. Escolha uma data para começar.",
         intermediate: "Você pode voltar a qualquer data passada quando quiser registrar algo que ainda lembra.",
@@ -27,6 +45,14 @@ const mensagens: Record<ContextoOrientacao, Record<NivelOrientacao, string | nul
 }
 
 /** CMP-005: resolve o nível do usuário fora da página. */
-export function orientar(contexto: ContextoOrientacao): string | null {
-    return mensagens[contexto][nivelSimulado]
+export function nivelDaExperiencia(diasPreservadosDistintos: number, diaAtualPreservado = false): NivelOrientacao {
+    const quantidade = Number.isFinite(diasPreservadosDistintos) ? Math.max(0, Math.trunc(diasPreservadosDistintos)) : 0
+    const anteriores = Math.max(0, quantidade - Number(diaAtualPreservado))
+    if (anteriores < 2) return "beginner"
+    if (anteriores < 4) return "intermediate"
+    return "advanced"
+}
+
+export function orientar(contexto: ContextoOrientacao, nivel = nivelSimulado): string | null {
+    return mensagens[contexto][nivel]
 }
