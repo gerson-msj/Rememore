@@ -17,8 +17,8 @@
   `conteudo: string`, `ordem: number`, `primeiraPreservacaoEm: string | null`, `complementos: ComplementoLocal[]`,
   `categorias?: AssociacaoCategoria[]` (`idCategoria: string | null`, `nome: string`), `tom?: number` (ausência distinta de 0) e
   `balancoSentimental?: string` (texto opcional preservado como digitado, após rejeitar valor vazio/só espaços). Ausência de categorias em
-  registros anteriores equivale a conjunto vazio. Os dois campos novos permanecem no agregado IndexedDB `capturas`; não exigem mudança de
-  schema e não alteram o contrato/payload remoto nesta unidade. Complementos estão em ordem histórica, com `id`, `conteudo` e
+  registros anteriores equivale a conjunto vazio. Tom e balanço permanecem no agregado IndexedDB `capturas` sem mudança de schema e são
+  enviados como valores explícitos (ou `null` quando ausentes) no payload integral de preservação. Complementos estão em ordem histórica, com `id`, `conteudo` e
   `primeiraPreservacaoEm` próprios. null significa
   nunca preservado; timestamp ISO representa a primeira preservação e não deve ser reiniciado em futuras edições/preservações. O fluxo
   atribui um identificador uma única vez, por exemplo com `crypto.randomUUID()`, e o mantém ao editar/reordenar. O repositório persiste o
@@ -44,11 +44,14 @@ Mudança para found chama `read`, que entrega composição, revisão e prazo do 
 configuração inválida rejeita sem substituir o estado anterior. A revisão de origem permanece no workspace alterado para a futura
 preservação.
 
-`app/servicos/captura/contratos.ts` define `MemoriaPreservada` e `ComplementoPreservado` para o payload remoto, separados dos tipos locais.
-Os campos remotos continuam `memories`, `content`, `order`, `firstPreservedAt`, `complements`, `revision` e `editWindowDays`. Memórias
-também aceitam `categories` opcional, com `id` e `name`, convertido explicitamente para associações locais; cenários anteriores sem esse
-campo continuam válidos. `prepararCaptura` converte explicitamente para o agregado local, conservando valores, IDs, ordem dos arrays e
-historicidade. `rememoreCaptureMock.set/configure/reset`, seus cenários serializados e chaves de localStorage permanecem compatíveis.
+`app/servicos/captura/contratos.ts` define `MemoriaPreservada`, `ComplementoPreservado` e a fronteira `ServicoCapturasPreservadas`, separados
+dos tipos locais. `inspect` consulta estado/revisão, `read` transfere composição integral para abertura e `preserve` substitui a composição
+integral, devolvendo nova revisão e categorias criadas. Memórias incluem texto, ordem, primeira preservação, Tom, balanço sentimental,
+categorias e complementos; categoria local sem identidade remota é enviada com `id: null`. `prepararCaptura` converte os campos remotos para
+o agregado local, conservando valores, IDs, ordem e historicidade. O mock de desenvolvimento é stateful por conta. `rememoreCaptureMock.set/configure/reset`
+seleciona cenários da consulta; `configureRemoto` altera o estado/revisão remotos; `configurarCategoria` prepara categorias ativas/inativas;
+`resetarEstadoRemoto` limpa o estado mock da conta; `falharPreservacao`, `falharResolucaoCategoria` e `definirLatencia` controlam
+falhas e latência sem depender de condições acidentais.
 
 `app/servicos/captura/sessaoAberta.ts`: `SessaoCapturaAberta` usa sessionStorage por conta/data. `retomar(tipoNavegacao)` só retorna
 identidade para reload; navigate/back_forward encerram a sessão anterior. `iniciar(idAreaTrabalho)` ocorre após preparação confirmada.

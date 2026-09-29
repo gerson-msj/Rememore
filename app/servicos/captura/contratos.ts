@@ -11,7 +11,21 @@ export interface MemoriaPreservada {
     order: number
     firstPreservedAt: string | null
     complements: ComplementoPreservado[]
-    categories?: { id: string; name: string }[]
+    categories?: { id: string | null; name: string }[]
+    tom?: number | null
+    balancoSentimental?: string | null
+}
+
+export interface CategoriaCriadaNaPreservacao {
+    id: string
+    nome: string
+    versao: number
+}
+
+export interface ResultadoPreservacao {
+    status: "success"
+    revision: string
+    categoriasCriadas: CategoriaCriadaNaPreservacao[]
 }
 
 export type ResultadoMetadadosCaptura =
@@ -29,4 +43,6 @@ export interface ServicoCapturasPreservadas {
     inspect(idConta: string, dataCaptura: string): Promise<ResultadoMetadadosCaptura>
     /** Retorna uma composição consistente com a revisão e os parâmetros da mesma leitura. */
     read(idConta: string, dataCaptura: string): Promise<ResultadoCapturaPreservada>
+    /** Substitui integralmente o estado funcional da data, preservando metadados canônicos existentes. */
+    preserve(idConta: string, dataCaptura: string, memories: MemoriaPreservada[]): Promise<ResultadoPreservacao>
 }

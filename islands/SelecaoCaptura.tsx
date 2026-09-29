@@ -13,6 +13,7 @@ export default function SelecaoCaptura({ accountId: idConta }: { accountId: stri
     const [pendentes, definirPendentes] = useState<CapturaLocal[]>([])
     const [erro, definirErro] = useState("")
     const [invalido, definirInvalido] = useState(false)
+    const [resultadoPreservacao, definirResultadoPreservacao] = useState<"sucesso" | "falha-local" | null>(null)
     const [excluindo, definirExcluindo] = useState<CapturaLocal | null>(null)
     const [ocupado, definirOcupado] = useState(false)
     const mensagem = orientar("captureSelection")
@@ -33,6 +34,8 @@ export default function SelecaoCaptura({ accountId: idConta }: { accountId: stri
         }
         definirDataCaptura(hoje())
         definirInvalido(new URLSearchParams(location.search).has("data-invalida"))
+        const resultado = new URLSearchParams(location.search).get("preservacao")
+        if (resultado === "sucesso" || resultado === "falha-local") definirResultadoPreservacao(resultado)
         void atualizar()
         globalThis.addEventListener("pageshow", atualizar)
         globalThis.addEventListener("focus", atualizar)
@@ -105,6 +108,21 @@ export default function SelecaoCaptura({ accountId: idConta }: { accountId: stri
                     </ul>
                 </section>
             )}
+            <MensagemPopup
+                aberto={resultadoPreservacao !== null}
+                titulo="Memórias preservadas"
+                mensagem={resultadoPreservacao === "falha-local"
+                    ? "Suas memórias foram preservadas, mas não foi possível atualizar esta captura neste dispositivo. Ela poderá continuar aparecendo como pendente até que o armazenamento local volte a funcionar corretamente."
+                    : "As memórias deste dia foram preservadas com sucesso."}
+                acoes="ok"
+                cor={resultadoPreservacao === "falha-local" ? "warning" : "success"}
+                icone={resultadoPreservacao === "falha-local" ? "fas fa-triangle-exclamation" : "fas fa-circle-check"}
+                aoResponder={() => {
+                    definirResultadoPreservacao(null)
+                    history.replaceState(null, "", "/capturar")
+                    void capturasLocais.listarPendentes(idConta).then(definirPendentes).catch(() => {})
+                }}
+            />
             <MensagemPopup
                 aberto={excluindo !== null}
                 acoes="okCancel"

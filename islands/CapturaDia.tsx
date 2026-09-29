@@ -15,7 +15,9 @@ import EstruturaCaptura from "../components/EstruturaCaptura.tsx"
 import PainelCaptura, { type AbaCaptura } from "../components/PainelCaptura.tsx"
 import { bancoLocal } from "../app/servicos/local/banco.ts"
 import { type AssociacaoCategoria, type CapturaLocal, capturasLocais } from "../app/servicos/local/capturas.ts"
-import { prepararCaptura } from "../app/servicos/captura.ts"
+import { capturasPreservadas, prepararCaptura } from "../app/servicos/captura.ts"
+import type { MemoriaPreservada } from "../app/servicos/captura/contratos.ts"
+import { detectarConflitoPreservacao, finalizarPreservacao, podePreservarCaptura } from "../app/servicos/captura/preservacao.ts"
 import { ehDataCaptura } from "../app/utilitarios/dataCaptura.ts"
 import { adquirirBloqueioCaptura, type PosseCaptura } from "../app/servicos/captura/bloqueio.ts"
 import { SessaoCapturaAberta } from "../app/servicos/captura/sessaoAberta.ts"
@@ -49,6 +51,7 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
     const [erroAlteracao, definirErroAlteracao] = useState("")
     const [ocupado, definirOcupado] = useState(false)
     const alterando = useRef(false)
+    const preservacaoEmAndamento = useRef(false)
     const posse = useRef<PosseCaptura | null>(null)
     const sessaoAberta = useRef<SessaoCapturaAberta | null>(null)
     const [avisoSessao, definirAvisoSessao] = useState(false)
@@ -74,6 +77,14 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
     const [abandono, definirAbandono] = useState(false)
     const [exclusao, definirExclusao] = useState(false)
     const [resultadoOperacao, definirResultadoOperacao] = useState("")
+    const [confirmacaoExclusaoTotal, definirConfirmacaoExclusaoTotal] = useState(false)
+    const [confirmacaoPreservacao, definirConfirmacaoPreservacao] = useState(false)
+    const [conflitoPreservacao, definirConflitoPreservacao] = useState<"memorias" | "vazio" | null>(null)
+    const [informacaoPreservacao, definirInformacaoPreservacao] = useState(false)
+    const [confirmacaoDescarte, definirConfirmacaoDescarte] = useState(false)
+    const [resultadoPreservacao, definirResultadoPreservacao] = useState<"falha" | "descarte-falha" | null>(
+        null
+    )
     const continuarSaida = useRef<(() => void) | null>(null)
     const registrarProtecaoBalanco = useCallback((proteger: ((continuar: () => void) => void) | null) => {
         protegerSaidaBalanco.current = proteger
@@ -428,7 +439,9 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
     }
 
     function preservarLocalmente() {
-        if (!areaTrabalho || alterando.current) return
+        if (
+            !areaTrabalho || alterando.current || ocupado || preservacaoEmAndamento.current || !podePreservarCaptura(areaTrabalho)
+        ) return
         const invalidas = [...areaTrabalho.memorias].sort((a, b) => a.ordem - b.ordem)
             .filter((item) => !(item.categorias?.length)).map((item) => item.id)
         definirRevisao(true)
@@ -445,6 +458,79 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
         } else {
             definirMemoriasSemCategoriaNaTentativa([])
             definirErroAlteracao("")
+            if (areaTrabalho.memorias.length === 0 && areaTrabalho.origemPreservada) {
+                definirConfirmacaoExclusaoTotal(true)
+            } else void executarPreservacao()
+        }
+    }
+
+    function montarPayload(captura: CapturaLocal): MemoriaPreservada[] {
+        return [...captura.memorias].sort((a, b) => a.ordem - b.ordem).map((memoria) => ({
+            id: memoria.id,
+            content: memoria.conteudo,
+            order: memoria.ordem,
+            firstPreservedAt: memoria.primeiraPreservacaoEm,
+            tom: memoria.tom ?? null,
+            balancoSentimental: memoria.balancoSentimental ?? null,
+            categories: (memoria.categorias ?? []).map((categoria) => ({ id: categoria.idCategoria, name: categoria.nome })),
+            complements: memoria.complementos.map((complemento) => ({
+                id: complemento.id,
+                content: complemento.conteudo,
+                firstPreservedAt: complemento.primeiraPreservacaoEm
+            }))
+        }))
+    }
+
+    async function executarPreservacao(pularConferencia = false) {
+        if (!areaTrabalho || !posse.current || alterando.current || preservacaoEmAndamento.current) return
+        preservacaoEmAndamento.current = true
+        definirConfirmacaoExclusaoTotal(false)
+        definirConfirmacaoPreservacao(false)
+        definirOcupado(true)
+        let resultado: "success" | "local-failure"
+        try {
+            if (!pularConferencia) {
+                const atual = await posse.current.executar(() => capturasPreservadas.inspect(idConta, dataCaptura))
+                if (atual.status === "failed") throw new Error("Conferência indisponível")
+                const conflita = detectarConflitoPreservacao(areaTrabalho, atual)
+                if (conflita) {
+                    preservacaoEmAndamento.current = false
+                    definirOcupado(false)
+                    definirConflitoPreservacao(areaTrabalho.memorias.length ? "memorias" : "vazio")
+                    return
+                }
+                if (areaTrabalho.memorias.length > 0) {
+                    preservacaoEmAndamento.current = false
+                    definirOcupado(false)
+                    definirConfirmacaoPreservacao(true)
+                    return
+                }
+            }
+            resultado = await finalizarPreservacao(
+                () => posse.current!.executar(() => capturasPreservadas.preserve(idConta, dataCaptura, montarPayload(areaTrabalho))),
+                () => posse.current!.executar(() => capturasLocais.remover(idConta, dataCaptura))
+            )
+        } catch {
+            preservacaoEmAndamento.current = false
+            definirOcupado(false)
+            definirResultadoPreservacao("falha")
+            return
+        }
+        encerrarSessao()
+        location.assign(resultado === "success" ? "/capturar?preservacao=sucesso" : "/capturar?preservacao=falha-local")
+    }
+
+    async function descartarAlteracoes() {
+        if (!areaTrabalho || !posse.current) return
+        definirConfirmacaoDescarte(false)
+        definirOcupado(true)
+        try {
+            await posse.current.executar(() => capturasLocais.remover(idConta, dataCaptura))
+            encerrarSessao()
+            location.assign("/capturar")
+        } catch {
+            definirOcupado(false)
+            definirResultadoPreservacao("descarte-falha")
         }
     }
 
@@ -832,15 +918,19 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
                                         type="button"
                                         class="button is-primary"
                                         onClick={preservarLocalmente}
-                                        disabled={ocupado || (areaTrabalho.memorias.length === 0 && !areaTrabalho.origemPreservada &&
-                                            !areaTrabalho.primeiraMemoriaConfirmada)}
+                                        disabled={ocupado || !podePreservarCaptura(areaTrabalho)}
                                     >
                                         <span class="icon">
                                             <i class="fas fa-book-open" aria-hidden="true" />
                                         </span>
-                                        <span>Preservar</span>
+                                        <span>{ocupado ? "Preservando…" : "Preservar"}</span>
                                     </button>
-                                    <button type="button" class="button" disabled>
+                                    <button
+                                        type="button"
+                                        class="button"
+                                        disabled={ocupado}
+                                        onClick={() => definirConfirmacaoDescarte(true)}
+                                    >
                                         <span class="icon">
                                             <i class="fas fa-trash" aria-hidden="true" />
                                         </span>
@@ -873,7 +963,7 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
                                                     contexto="revisar"
                                                     tom={item.tom ?? null}
                                                     categoriaEmAtencao={semCategoria}
-                                                    inativa={false}
+                                                    inativa={ocupado}
                                                     aoAcionar={() => abrirMemoria(item.id)}
                                                 />
                                             </li>
@@ -1101,6 +1191,88 @@ export default function CapturaDia({ accountId: idConta, date: dataCaptura, dias
                     if (resultado === "confirm") continuarSaida.current?.()
                     continuarSaida.current = null
                 }}
+            />
+            <MensagemPopup
+                aberto={confirmacaoExclusaoTotal}
+                titulo="Confirmar a exclusão de todas as memórias?"
+                mensagem="Você removeu todas as memórias deste dia. Ao preservar, essa exclusão será confirmada e nenhuma memória ficará preservada para esta data."
+                acoes="okCancel"
+                rotuloConfirmacao="Confirmar exclusão"
+                rotuloCancelamento="Cancelar"
+                cor="warning"
+                aoResponder={(resposta) => {
+                    definirConfirmacaoExclusaoTotal(false)
+                    if (resposta === "confirm") void executarPreservacao()
+                }}
+            />
+            <MensagemPopup
+                aberto={confirmacaoPreservacao}
+                titulo="Confirmar preservação?"
+                mensagem="As memórias deste dia serão preservadas. Deseja continuar?"
+                acoes="okCancel"
+                rotuloConfirmacao="Preservar"
+                rotuloCancelamento="Voltar à revisão"
+                cor="primary"
+                aoResponder={(resposta) => {
+                    definirConfirmacaoPreservacao(false)
+                    if (resposta === "confirm") void executarPreservacao(true)
+                }}
+            />
+            <MensagemPopup
+                aberto={conflitoPreservacao !== null}
+                titulo={conflitoPreservacao === "vazio"
+                    ? "Este dia possui memórias mais recentes"
+                    : "Este dia possui alterações mais recentes"}
+                mensagem={conflitoPreservacao === "vazio"
+                    ? "As memórias preservadas deste dia mudaram desde que você começou esta captura. Se confirmar a exclusão, essas memórias mais recentes também serão apagadas."
+                    : "As memórias preservadas deste dia mudaram desde que você começou esta captura. Se continuar, suas alterações substituirão o que está preservado atualmente."}
+                acoes="yesNo"
+                rotuloConfirmacao={conflitoPreservacao === "vazio" ? "Excluir mesmo assim" : "Preservar minhas alterações"}
+                rotuloCancelamento={conflitoPreservacao === "vazio" ? "Não excluir" : "Não substituir"}
+                cor="warning"
+                aoResponder={(resposta) => {
+                    const conflito = conflitoPreservacao
+                    definirConflitoPreservacao(null)
+                    if (resposta === "confirm") void executarPreservacao(true)
+                    else {
+                        definirOcupado(false)
+                        definirInformacaoPreservacao(true)
+                    }
+                    if (!conflito) definirOcupado(false)
+                }}
+            />
+            <MensagemPopup
+                aberto={informacaoPreservacao}
+                titulo="Alterações mantidas"
+                mensagem="Nada foi substituído. Suas alterações continuam nesta captura. Se não quiser mais mantê-las, você pode usar Descartar alterações."
+                acoes="ok"
+                cor="info"
+                aoResponder={() => definirInformacaoPreservacao(false)}
+            />
+            <MensagemPopup
+                aberto={confirmacaoDescarte}
+                titulo={areaTrabalho?.origemPreservada ? "Descartar as alterações deste dia?" : "Descartar esta captura?"}
+                mensagem={areaTrabalho?.origemPreservada
+                    ? "Todas as alterações ainda não preservadas serão descartadas. As memórias já preservadas deste dia serão mantidas."
+                    : "Todas as memórias e alterações desta captura serão descartadas."}
+                acoes="okCancel"
+                rotuloConfirmacao={areaTrabalho?.origemPreservada ? "Descartar alterações" : "Descartar captura"}
+                rotuloCancelamento="Cancelar"
+                cor="danger"
+                aoResponder={(resposta) => {
+                    definirConfirmacaoDescarte(false)
+                    if (resposta === "confirm") void descartarAlteracoes()
+                }}
+            />
+            <MensagemPopup
+                aberto={resultadoPreservacao !== null}
+                titulo={resultadoPreservacao === "descarte-falha" ? "Não foi possível descartar" : "Não foi possível preservar"}
+                mensagem={resultadoPreservacao === "descarte-falha"
+                    ? "Suas alterações continuam protegidas neste dispositivo. Tente novamente."
+                    : "Suas alterações continuam protegidas neste dispositivo. Tente preservar novamente."}
+                acoes="ok"
+                cor="warning"
+                aoResponder={() => definirResultadoPreservacao(null)}
             />
         </EstruturaCaptura>
     )
