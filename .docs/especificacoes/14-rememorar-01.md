@@ -750,7 +750,7 @@ O operador aprovou testar uma apresentação única e esmaecida para os marcador
 - `JanelaTemporal` agora recebe somente `densidadeMaximaMarcadores`; o laboratório mantém um único campo para esse limiar, usando 7 como valor inicial. Marcadores presentes usam `border-weak`, opacidade e desfoque aprovados; acima do limiar, não são renderizados. Os estilos e estados de marcador pleno foram removidos.
 - `deno test app/utilitarios/janelaTemporal_test.ts`: 16 testes passaram; a regra de densidade não possui teste unitário próprio porque pertence à renderização/CSS.
 - `deno lint`, `deno fmt --check`, `deno check components/JanelaTemporal.tsx islands/ExperimentoJanelaTemporal.tsx` e `git diff --check`: passaram.
-- Verificação visual pelo operador: pendente.
+- Verificação visual pelo operador: confirmada em `/rememorar` após a aplicação da simplificação.
 - Checkpoint: `2e848de` (`Spec 14: simplificar marcadores por densidade`).
 
 ## Integração do CMP-008 em `/rememorar` — 30/09/2026
@@ -762,12 +762,37 @@ O operador aprovou visualmente o componente e autorizou seguir para a aplicaçã
 1. Passar o conjunto de datas simuladas da rota para a ilha que já contém a região principal autenticada. Concluída.
 2. Renderizar o aviso de cenário de desenvolvimento e o CMP-008 dentro de `main#pagina-rememorar`. Concluída.
 3. Verificar tipo, lint, formatação, testes e diff; registrar checkpoint. Concluída com ressalva da checagem direta da rota (`558a9d6`).
-4. Apresentar `/rememorar` para avaliação visual/funcional do operador. Pendente.
+4. Apresentar `/rememorar` para avaliação visual/funcional do operador. Concluída; o operador considerou a composição perfeita.
 
 - Aceite visual do CMP-008 no laboratório: confirmado pelo operador nesta sessão.
-- Integração pronta para validação no destino `/rememorar`; o cenário mock usa cinco datas irregulares determinísticas: 01/01, 06/01, 08/01, 27/01 e 30/01/2025.
+- Integração visual e funcional aprovada pelo operador em `/rememorar`; o cenário mock usa cinco datas irregulares determinísticas: 01/01, 06/01, 08/01, 27/01 e 30/01/2025.
 - `deno test app/utilitarios/janelaTemporal_test.ts`: 16 passaram; `deno lint`, `deno fmt --check`, `deno check islands/EstruturaProtegida.tsx components/JanelaTemporal.tsx` e `git diff --check`: passaram.
 - `deno check routes/rememorar.tsx`: não concluído; o manifesto JSR de `@fresh/core` não está no cache e a rede está restrita.
-- Próximo passo: avaliação visual/funcional da composição e do fixture na rota `/rememorar`.
+- Próximo passo: Parecer final da Especificação.
 - Indicadores de contexto nos três marcos: não disponíveis na interface.
 - Alterações preexistentes preservadas: remoção de `.docs/especificacoes/13-Preservacao.md` e arquivo novo `.docs/especificacoes/concluidas/13-Preservacao.md`.
+
+## Parecer final
+
+A Especificação 05.14 foi concluída. A casca autenticada de `/rememorar` agora hospeda CMP-008 — Janela Temporal de Rememorar — na região principal, com um conjunto determinístico de desenvolvimento identificado ao operador. O CMP-008 foi experimentado no laboratório, aprovado visualmente e, depois de integrado, aprovado pelo operador em `/rememorar`.
+
+### Componente CMP-008 para uso em próximas especificações
+
+- Fonte reutilizável: `components/JanelaTemporal.tsx`; utilitários independentes da interface: `app/utilitarios/janelaTemporal.ts`; CSS isolado: `assets/janela-temporal.css`, importado globalmente por `assets/app.css`.
+- Entrada: lista ordenada de dias preservados no formato civil `YYYY-MM-DD` e um `id` único. Opcionalmente recebe estado inicial com posições contínuas normalizadas (`esquerda`, `direita`, entre 0 e 1) e o último `intervaloValido`. `inicializacaoPronta` permite adiar a instalação do estado até a restauração do chamador.
+- Resultado: `IntervaloJanela` contém índices discretos inicial/final, datas inicial/final e quantidade de dias. `aoAlterarIntervalo` publica um novo intervalo válido; `aoAlterarPosicoes` fornece também a geometria normalizada para restauração. O estado pode carregar `intervaloDeslocado` para identificar uma translação contínua e preservar o último intervalo durante geometria temporariamente inválida.
+- Conversão: cada posição normalizada é arredondada para uma das posições igualmente espaçadas dos dias (`round(posição × (quantidade - 1))`). Lacunas reais entre datas não alteram a geometria. A seleção inicial sem estado anterior cobre a sequência inteira. Um intervalo válido precisa abranger pelo menos dois dias distintos.
+- Alças: movimento contínuo, sem salto físico entre dias; as alças não se cruzam. A interface oferece alças acessíveis como sliders, com leitura da data/posição e operação por teclado. A largura é observada por `ResizeObserver`; o resize conserva as posições normalizadas.
+- Arraste do conjunto: traduz fisicamente ambas as alças pelo mesmo deslocamento contínuo, mas converte cada extremo de forma independente. Por decisão funcional aprovada durante a unidade, a quantidade de dias pode variar. Se os extremos caírem no mesmo dia, o componente indica geometria inválida e mantém o último intervalo válido; não publica seleção de um único dia.
+- Marcadores: posições nas fronteiras de arredondamento entre dias. A densidade é calculada em dias por 100 px. `densidadeMaximaMarcadores` (padrão 7) controla o único estado de presença: até o limite são exibidos; acima dele, desaparecem. Os traços usam `--bulma-border-weak`, opacidade 0,35, blur 0,5 px e altura de 0,4 rem, igual à faixa colorida. Essa apresentação única substitui os três estados descritos originalmente no corpo da Especificação, conforme decisão do operador.
+- `mostrarDiagnostico` expõe posições, intervalo, densidade e resolução para experimentação; é usado no laboratório. `/laboratorio` também contém controle numérico de quantidade de dias, distribuição, largura, limiar único e restauração de sessão opcional por cenário. A rota real não persiste a seleção.
+- Integração corrente: `routes/rememorar.tsx` fornece cinco datas simuladas irregulares de 2025. `islands/EstruturaProtegida.tsx` exibe o aviso de cenário de desenvolvimento e renderiza o CMP-008. O componente ainda não consulta acervo, servidor ou IndexedDB e não altera categorias ou outros elementos do Panorama. Próximas especificações podem usar o componente passando a lista ordenada de dias e consumindo o callback do intervalo, sem inferir uma fonte real de dados ou persistência.
+
+### Diferenças relevantes, verificações e processo
+
+- Duas decisões funcionais refinadas com o operador divergem da leitura inicial do corpo aprovado: o arraste conjunto mapeia cada extremo independentemente e pode variar a quantidade; os marcadores têm uma única aparência esmaecida e um único limiar, sem distinção visível/esmaecido.
+- `deno test app/utilitarios/janelaTemporal_test.ts`: 16 testes passaram. Também passaram lint, formatação, `deno check islands/EstruturaProtegida.tsx components/JanelaTemporal.tsx` e `git diff --check`.
+- `deno check routes/rememorar.tsx` não pôde ser concluído porque o manifesto JSR de `@fresh/core` não estava no cache e a rede estava restrita. A ilha foi checada, a aplicação local exibiu a rota e o operador confirmou a composição como perfeita.
+- O operador testou a seleção com 1.500 dias preservados e conseguiu selecionar somente dois dias. A validação visual e funcional do CMP-008 foi feita pelo operador no laboratório e na rota integrada.
+- Luna 6.0 com esforço médio foi suficiente para concluir a unidade. Houve várias iterações e, segundo a lembrança do operador, cerca de uma ou duas compactações de sessão; o baixo consumo não limitou o trabalho.
+- Este Parecer foi entregue ao operador nesta conversa. O documento canônico no Drive não foi atualizado por esta sessão.
