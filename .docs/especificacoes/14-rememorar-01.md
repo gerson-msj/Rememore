@@ -684,4 +684,4 @@ O operador testou o laboratório e pediu alças circulares, semelhantes ao Selet
 - `deno lint`, `deno fmt --check` e `deno check components/JanelaTemporal.tsx`: passaram.
 - `git diff --check`: sem erros; avisos LF/CRLF do Windows são informativos.
 - A validação visual continua aberta para novos retornos do operador. Integração em `/rememorar` permanece pendente da aprovação do componente no laboratório.
-- Commit do refinamento: pendente de conferência e gravação.
+- Commit do refinamento: `7e06216` (`Spec 14: ajustar alcas e divisorias da janela`).
