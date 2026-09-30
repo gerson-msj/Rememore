@@ -739,5 +739,5 @@ O operador substituiu a preferência anterior de `Link`/`Info`: marcadores visí
 
 O operador pediu um teste de aparência esfumada para os marcadores. Foi aplicado `filter: blur(0.5px)` aos traços, preservando cores, opacidades e dimensões; a avaliação visual permanece pendente.
 
-- `git diff --check`: em verificação final.
-- Checkpoint: pendente.
+- `git diff --check`: passou.
+- Checkpoint: `25950e6` (`Spec 14: suavizar marcadores temporais`).
