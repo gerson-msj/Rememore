@@ -39,11 +39,7 @@
     height: 0.4rem;
     transform: translateX(-50%);
     filter: blur(0.5px);
-    border-left: 2px solid var(--bulma-border);
-    opacity: 0.82;
-}
-.janela-temporal-trilho[data-marcadores="esmaecidos"] .janela-temporal-marcadores i {
-    border-left-color: var(--bulma-border-weak);
+    border-left: 2px solid var(--bulma-border-weak);
     opacity: 0.35;
 }
 .janela-temporal-selecao {

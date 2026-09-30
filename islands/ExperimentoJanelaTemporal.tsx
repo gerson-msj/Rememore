@@ -28,8 +28,7 @@ export default function ExperimentoJanelaTemporal() {
     const quantidade = Number.isInteger(quantidadeInformada) ? Math.max(2, quantidadeInformada) : 2
     const [distribuicao, definirDistribuicao] = useState<DistribuicaoDias>("irregulares")
     const [largura, definirLargura] = useState(100)
-    const [marcadoresPlenosAte, definirMarcadoresPlenosAte] = useState(5)
-    const [marcadoresEsmaecidosAte, definirMarcadoresEsmaecidosAte] = useState(7)
+    const [densidadeMaximaMarcadores, definirDensidadeMaximaMarcadores] = useState(7)
     const [preservarPosicoes, definirPreservarPosicoes] = useState(false)
     const [preferenciaLida, definirPreferenciaLida] = useState(false)
     const [chaveLida, definirChaveLida] = useState<string | null>(null)
@@ -156,41 +155,17 @@ export default function ExperimentoJanelaTemporal() {
                     <p class="help">{largura}% da largura disponível</p>
                 </div>
                 <div class="field">
-                    <label class="label" for="janela-limiar-marcadores-visiveis">Densidade máxima dos marcadores visíveis</label>
+                    <label class="label" for="janela-limiar-marcadores">Densidade máxima dos marcadores</label>
                     <div class="control">
                         <input
                             class="input"
-                            id="janela-limiar-marcadores-visiveis"
+                            id="janela-limiar-marcadores"
                             type="number"
                             min="0.1"
-                            max="20"
-                            step="0.1"
-                            value={marcadoresPlenosAte}
-                            onInput={(evento) => {
-                                const valor = Number(evento.currentTarget.value)
-                                definirMarcadoresPlenosAte(valor)
-                                if (valor >= marcadoresEsmaecidosAte) definirMarcadoresEsmaecidosAte(valor + 0.5)
-                            }}
-                        />
-                    </div>
-                    <p class="help">Dias por 100 px</p>
-                </div>
-                <div class="field">
-                    <label class="label" for="janela-limiar-marcadores-esmaecidos">Densidade máxima dos marcadores esmaecidos</label>
-                    <div class="control">
-                        <input
-                            class="input"
-                            id="janela-limiar-marcadores-esmaecidos"
-                            type="number"
-                            min="0.2"
                             max="40"
                             step="0.1"
-                            value={marcadoresEsmaecidosAte}
-                            onInput={(evento) => {
-                                const valor = Number(evento.currentTarget.value)
-                                definirMarcadoresEsmaecidosAte(valor)
-                                if (valor <= marcadoresPlenosAte) definirMarcadoresPlenosAte(Math.max(0.1, valor - 0.5))
-                            }}
+                            value={densidadeMaximaMarcadores}
+                            onInput={(evento) => definirDensidadeMaximaMarcadores(Number(evento.currentTarget.value))}
                         />
                     </div>
                     <p class="help">Dias por 100 px</p>
@@ -210,8 +185,7 @@ export default function ExperimentoJanelaTemporal() {
                     dias={dias}
                     estadoInicial={estadoInicial}
                     inicializacaoPronta={inicializacaoPronta}
-                    marcadoresPlenosAte={marcadoresPlenosAte}
-                    marcadoresEsmaecidosAte={marcadoresEsmaecidosAte}
+                    densidadeMaximaMarcadores={densidadeMaximaMarcadores}
                     mostrarDiagnostico
                     aoAlterarPosicoes={guardarEstado}
                 />

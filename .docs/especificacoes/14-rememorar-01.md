@@ -741,3 +741,14 @@ O operador pediu um teste de aparência esfumada para os marcadores. Foi aplicad
 
 - `git diff --check`: passou.
 - Checkpoint: `25950e6` (`Spec 14: suavizar marcadores temporais`).
+
+## Simplificação dos estados dos marcadores — 30/09/2026
+
+O operador aprovou testar uma apresentação única e esmaecida para os marcadores. Este ajuste substitui, para o CMP-008, os estados separados de marcador visível/esmaecido definidos no corpo: todos os marcadores presentes usam `--bulma-border-weak` com a suavização aprovada e desaparecem acima de um único limiar de densidade, inicialmente mantido em 7 dias por 100 px. O laboratório terá apenas esse limiar editável. A simplificação não altera gestos, conversão discreta ou validade da seleção.
+
+- Registro funcional feito antes da edição do componente.
+- `JanelaTemporal` agora recebe somente `densidadeMaximaMarcadores`; o laboratório mantém um único campo para esse limiar, usando 7 como valor inicial. Marcadores presentes usam `border-weak`, opacidade e desfoque aprovados; acima do limiar, não são renderizados. Os estilos e estados de marcador pleno foram removidos.
+- `deno test app/utilitarios/janelaTemporal_test.ts`: 16 testes passaram; a regra de densidade não possui teste unitário próprio porque pertence à renderização/CSS.
+- `deno lint`, `deno fmt --check`, `deno check components/JanelaTemporal.tsx islands/ExperimentoJanelaTemporal.tsx` e `git diff --check`: passaram.
+- Verificação visual pelo operador: pendente.
+- Checkpoint: pendente.

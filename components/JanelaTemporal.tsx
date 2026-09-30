@@ -18,8 +18,7 @@ interface PropriedadesJanelaTemporal {
     dias: readonly string[]
     estadoInicial?: EstadoJanelaTemporal | null
     inicializacaoPronta?: boolean
-    marcadoresPlenosAte?: number
-    marcadoresEsmaecidosAte?: number
+    densidadeMaximaMarcadores?: number
     mostrarDiagnostico?: boolean
     aoAlterarIntervalo?: (intervalo: IntervaloJanela) => void
     aoAlterarPosicoes?: (estado: EstadoJanelaTemporal) => void
@@ -43,8 +42,7 @@ export default function JanelaTemporal({
     dias,
     estadoInicial = null,
     inicializacaoPronta = true,
-    marcadoresPlenosAte = 5,
-    marcadoresEsmaecidosAte = 7,
+    densidadeMaximaMarcadores = 7,
     mostrarDiagnostico = false,
     aoAlterarIntervalo,
     aoAlterarPosicoes
@@ -104,14 +102,10 @@ export default function JanelaTemporal({
         }`
         : "Amplie o intervalo para incluir pelo menos dois dias preservados."
     const densidade = largura > 0 ? dias.length / (largura / 100) : Number.POSITIVE_INFINITY
-    const estadoMarcadores = densidade <= marcadoresPlenosAte
-        ? "visiveis"
-        : densidade <= marcadoresEsmaecidosAte
-        ? "esmaecidos"
-        : "ausentes"
+    const estadoMarcadores = densidade <= densidadeMaximaMarcadores ? "visiveis" : "ausentes"
     const porcentagemEsquerda = posicoes.esquerda * 100
     const porcentagemDireita = posicoes.direita * 100
-    const numeroMarcadores = estadoMarcadores === "ausentes" ? [] : dias.slice(0, -1).map((_, indice) => indice)
+    const numeroMarcadores = estadoMarcadores === "visiveis" ? dias.slice(0, -1).map((_, indice) => indice) : []
 
     function atualizarPosicoes(proximas: PosicoesJanela, ladoAtivo?: "esquerda" | "direita") {
         if (intervaloDaFaixa) definirIntervaloDaFaixa(null)

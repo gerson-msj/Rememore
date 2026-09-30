@@ -118,8 +118,7 @@ Essa apresentação substitui o empilhamento vertical por decisão visual do ope
 `components/JanelaTemporal.tsx` recebe uma sequência ordenada de datas civis `YYYY-MM-DD`, um `id` único e, opcionalmente, o estado
 normalizado a restaurar (`posicoes` contínuas de 0 a 1 e `intervaloValido`; `intervaloDeslocado` identifica a translação contínua da faixa). Publica intervalos iniciais e posteriores somente quando
 posições discretas correspondem a pelo menos dois dias; durante geometria inválida mantém o último intervalo válido. Os callbacks
-`aoAlterarIntervalo` e `aoAlterarPosicoes` separam resultado semântico de geometria restaurável. Os limiares `marcadoresPlenosAte` e
-`marcadoresEsmaecidosAte` são medidos em dias por 100 px; as divisórias ficam nos limites de arredondamento entre posições discretas.
+`aoAlterarIntervalo` e `aoAlterarPosicoes` separam resultado semântico de geometria restaurável. `densidadeMaximaMarcadores` é medida em dias por 100 px; os marcadores usam sempre a apresentação esmaecida até o limite e depois desaparecem. As divisórias ficam nos limites de arredondamento entre posições discretas.
 `mostrarDiagnostico` ativa dados exclusivos de laboratório. Arraste da área selecionada translada as duas posições contínuas juntas, mas cada extremo é convertido independentemente para seu dia; por isso, a quantidade discreta pode variar durante o gesto. Se a geometria momentânea resultar em menos de dois dias, mantém-se o último intervalo válido até a recuperação. Resize conserva as posições normalizadas. O CSS próprio é
 `assets/janela-temporal.css`, importado por `assets/app.css`.
 
