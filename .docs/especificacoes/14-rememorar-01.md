@@ -705,4 +705,4 @@ O operador esclareceu que os marcadores devem acompanhar somente a espessura da 
 
 - `deno lint`, `deno fmt --check` e `git diff --check`: passaram; não há teste automatizado para a espessura visual dos marcadores.
 - Confirmação funcional pelo operador: arraste contínuo e troca de intervalo somente quando muda o primeiro dia, conforme as anotações; validar visualmente a nova altura dos marcadores no laboratório.
-- Checkpoint: pendente.
+- Checkpoint: `1a11801` (`Spec 14: alinhar marcadores à faixa colorida`).
