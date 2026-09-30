@@ -1,0 +1,115 @@
+.janela-temporal {
+    min-width: 0;
+}
+.janela-temporal-orientacao {
+    min-height: 2.6em;
+    margin-bottom: 0.85rem;
+}
+.janela-temporal-trilho {
+    position: relative;
+    height: 2.75rem;
+    margin-inline: clamp(0.5rem, 3vw, 2rem);
+    touch-action: none;
+    user-select: none;
+}
+.janela-temporal-trilho::before {
+    content: "";
+    position: absolute;
+    inset: calc(50% - 0.2rem) 0 auto;
+    height: 0.4rem;
+    border-radius: 999px;
+    background: var(--bulma-border-weak, var(--bulma-border));
+}
+.janela-temporal-faixa {
+    position: absolute;
+    top: calc(50% - 0.2rem);
+    height: 0.4rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--bulma-primary) 62%, var(--bulma-link));
+    pointer-events: none;
+}
+.janela-temporal-marcadores {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.janela-temporal-marcadores i {
+    position: absolute;
+    top: 37%;
+    height: 26%;
+    border-left: 1px solid var(--bulma-text-weak);
+    opacity: 0.72;
+}
+.janela-temporal-trilho[data-marcadores="esmaecidos"] .janela-temporal-marcadores i {
+    opacity: 0.24;
+}
+.janela-temporal-selecao {
+    position: absolute;
+    z-index: 1;
+    inset-block: 0;
+    cursor: grab;
+    touch-action: none;
+}
+.janela-temporal-selecao:active {
+    cursor: grabbing;
+}
+.janela-temporal-alca {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    width: 2.5rem;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: ew-resize;
+    touch-action: none;
+}
+.janela-temporal-alca-esquerda {
+    transform: translateX(-100%);
+}
+.janela-temporal-alca::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 0.65rem;
+    height: 1.85rem;
+    transform: translateY(-50%);
+    border: 2px solid var(--bulma-scheme-main);
+    border-radius: 0.45rem;
+    box-shadow: 0 0 0 1px var(--bulma-text-weak), 0 1px 3px color-mix(in srgb, var(--bulma-text) 22%, transparent);
+}
+.janela-temporal-alca-esquerda::before {
+    right: 0;
+    background: var(--bulma-primary);
+}
+.janela-temporal-alca-direita::before {
+    left: 0;
+    background: var(--bulma-link);
+}
+.janela-temporal-alca:focus-visible {
+    outline: 2px solid var(--bulma-link);
+    outline-offset: -1px;
+    border-radius: 0.4rem;
+}
+.janela-temporal-diagnostico {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: 0.55rem 1.25rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--bulma-border);
+    font-size: 0.85rem;
+}
+.janela-temporal-diagnostico > div {
+    min-width: 0;
+}
+.janela-temporal-diagnostico dt {
+    color: var(--bulma-text-weak);
+}
+.janela-temporal-diagnostico dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+}

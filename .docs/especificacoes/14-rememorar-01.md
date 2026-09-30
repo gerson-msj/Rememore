@@ -642,3 +642,36 @@ A leitura da Especificação, da memória técnica, da referência de componente
 - Antes das leituras: não disponível na interface; valor inicial não pode ser reconstruído.
 - Após AGENTS, índice, memória inicial e Especificação, antes do fonte: não disponível na interface.
 - Ao final desta sessão: não disponível na interface.
+
+## Sessão CMP-008 — implementação para laboratório
+
+### Escopo e plano
+
+O operador autorizou a criação do CMP-008 para experimentação no laboratório, mantendo Luna 6.0 com esforço médio e solicitou que o componente tenha um arquivo CSS isolado. Não surgiu lacuna funcional nova; a Especificação existente define os comportamentos e textos. A preferência de CSS será atendida com `assets/janela-temporal.css`, importado pela entrada central de estilos.
+
+1. Implementar funções puras para posições normalizadas, conversão discreta, validade, deslocamento e restauração, com testes automatizados. Concluída.
+2. Construir `JanelaTemporal` com alças contínuas acessíveis, seleção mínima, gesto de faixa, marcadores configuráveis e preservação das coordenadas em resize. Concluída para primeira experimentação.
+3. Integrar o componente ao bloco de laboratório com cenários, observabilidade e memória de sessão; manter `/rememorar` fora desta etapa. Concluída.
+4. Rodar verificações técnicas, registrar o checkpoint e criar o commit solicitado pelo operador. Em andamento.
+
+### Estado desta sessão
+
+- Etapas 1–3 implementadas; etapa 4 em andamento.
+- Próximo ponto de validação: avaliação visual e funcional pelo operador no laboratório, antes de integrar em `/rememorar`.
+- Componentes existentes lidos: `ExperimentoJanelaTemporal`, `SeletorTom` e seu CSS; testes existentes usam `Deno.test` com assertivas simples locais.
+- Arquivos alterados nesta etapa: `app/utilitarios/janelaTemporal.ts`, `app/utilitarios/janelaTemporal_test.ts`, `components/JanelaTemporal.tsx`, `assets/janela-temporal.css`, `assets/app.css`, `islands/ExperimentoJanelaTemporal.tsx`, CSS auxiliar de laboratório, a referência de componentes e este Markdown.
+- Decisões técnicas materializadas: posições contínuas normalizadas são mapeadas por arredondamento para posições igualmente espaçadas dos dias existentes; as bordas internas das alças definem seus pontos lógicos e podem se tocar; o gesto da faixa desloca limites discretos mantendo a extensão; a restauração guarda posições e último intervalo válido juntos.
+- O laboratório já oferece contagens 2, 3, 4, 5, 10, 30 e 100, distribuições consecutiva/espaçada/irregular, largura ajustável, limiares numéricos dos marcadores, diagnóstico e memória opcional em `sessionStorage`, incluindo recuperação após F5 e reinício de jornada.
+- Validação visual do operador: ainda não realizada.
+- Indicadores de contexto: antes das leituras, depois da leitura inicial e ao final desta sessão não disponíveis na interface.
+
+### Verificações e checkpoint
+
+- `deno test app/utilitarios/janelaTemporal_test.ts`: 11 passaram, 0 falharam.
+- `deno lint` nos quatro módulos TS/TSX da unidade: passou.
+- `deno fmt --check` nos quatro módulos TS/TSX da unidade: passou.
+- `deno check components/JanelaTemporal.tsx islands/ExperimentoJanelaTemporal.tsx`: passou.
+- `deno check routes/laboratorio.tsx`: não concluído; o manifesto JSR de `@fresh/core` não está no cache e a rede permanece restrita.
+- `git diff --check`: sem erros; avisos LF/CRLF do Windows permanecem informativos.
+- Próximo passo: revisar a composição visual e os gestos no laboratório; ajustar apenas conforme retorno do operador. Depois de aprovação visual, integrar CMP-008 em `/rememorar` com dados controlados.
+- Commit deste checkpoint: pendente até concluir a conferência final dos arquivos desta sessão.
