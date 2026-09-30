@@ -5,6 +5,7 @@ import {
     limitarPosicaoAlca,
     moverAlcaSemCruzamento,
     posicaoDiscreta,
+    posicaoDivisoria,
     restaurarEstadoJanela,
     restaurarPosicoesJanela
 } from "./janelaTemporal.ts"
@@ -24,6 +25,13 @@ Deno.test("janela temporal: posição contínua vira uma das posições dos dias
     igual(criarIntervaloJanela(dias, 1, 3)?.quantidadeDias, 3)
     igual(criarIntervaloJanela(dias, 1, 3)?.primeiroDia, "2025-01-02")
     igual(criarIntervaloJanela(dias, 1, 3)?.ultimoDia, "2025-02-15")
+})
+
+Deno.test("janela temporal: divisórias ficam nos limites entre as regiões discretas", () => {
+    igual(posicaoDivisoria(0, 2), 0.5)
+    igual([0, 1, 2, 3].map((indice) => posicaoDivisoria(indice, 5)), [0.125, 0.375, 0.625, 0.875])
+    igual(posicaoDivisoria(4, 5), null)
+    igual(posicaoDivisoria(0, 1), null)
 })
 
 Deno.test("janela temporal: exige pelo menos duas posições discretas distintas", () => {

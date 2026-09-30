@@ -9,6 +9,7 @@ import {
     limitarPosicaoContinua,
     moverAlcaSemCruzamento,
     posicaoDiscreta,
+    posicaoDivisoria,
     type PosicoesJanela
 } from "../app/utilitarios/janelaTemporal.ts"
 
@@ -99,7 +100,7 @@ export default function JanelaTemporal({
         : "ausentes"
     const porcentagemEsquerda = posicoes.esquerda * 100
     const porcentagemDireita = posicoes.direita * 100
-    const numeroMarcadores = estadoMarcadores === "ausentes" ? [] : dias.map((_, indice) => indice)
+    const numeroMarcadores = estadoMarcadores === "ausentes" ? [] : dias.slice(0, -1).map((_, indice) => indice)
 
     function atualizarPosicoes(proximas: PosicoesJanela, ladoAtivo?: "esquerda" | "direita") {
         const ordenadas = ladoAtivo ? moverAlcaSemCruzamento(posicoesRef.current, ladoAtivo, proximas[ladoAtivo]) : proximas
@@ -244,9 +245,10 @@ export default function JanelaTemporal({
                     style={{ left: `${porcentagemEsquerda}%`, width: `${porcentagemDireita - porcentagemEsquerda}%` }}
                 />
                 <span class="janela-temporal-marcadores" aria-hidden="true">
-                    {numeroMarcadores.map((indice) => (
-                        <i key={indice} style={{ left: `${dias.length <= 1 ? 0 : indice / (dias.length - 1) * 100}%` }} />
-                    ))}
+                    {numeroMarcadores.map((indice) => {
+                        const posicao = posicaoDivisoria(indice, dias.length) ?? 0
+                        return <i key={indice} style={{ left: `${posicao * 100}%` }} />
+                    })}
                 </span>
                 <span
                     class="janela-temporal-selecao"

@@ -35,13 +35,14 @@
 }
 .janela-temporal-marcadores i {
     position: absolute;
-    top: 37%;
-    height: 26%;
-    border-left: 1px solid var(--bulma-text-weak);
-    opacity: 0.72;
+    top: 30%;
+    height: 40%;
+    transform: translateX(-50%);
+    border-left: 2px solid var(--bulma-text-strong);
+    opacity: 0.82;
 }
 .janela-temporal-trilho[data-marcadores="esmaecidos"] .janela-temporal-marcadores i {
-    opacity: 0.24;
+    opacity: 0.35;
 }
 .janela-temporal-selecao {
     position: absolute;
@@ -73,11 +74,11 @@
     content: "";
     position: absolute;
     top: 50%;
-    width: 0.65rem;
-    height: 1.85rem;
+    width: 1.15rem;
+    height: 1.15rem;
     transform: translateY(-50%);
     border: 2px solid var(--bulma-scheme-main);
-    border-radius: 0.45rem;
+    border-radius: 50%;
     box-shadow: 0 0 0 1px var(--bulma-text-weak), 0 1px 3px color-mix(in srgb, var(--bulma-text) 22%, transparent);
 }
 .janela-temporal-alca-esquerda::before {

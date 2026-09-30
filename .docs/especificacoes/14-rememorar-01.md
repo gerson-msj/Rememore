@@ -675,3 +675,13 @@ O operador autorizou a criação do CMP-008 para experimentação no laboratóri
 - `git diff --check`: sem erros; avisos LF/CRLF do Windows permanecem informativos.
 - Próximo passo: revisar a composição visual e os gestos no laboratório; ajustar apenas conforme retorno do operador. Depois de aprovação visual, integrar CMP-008 em `/rememorar` com dados controlados.
 - Commit deste checkpoint: pendente até concluir a conferência final dos arquivos desta sessão.
+
+## Refinamento após primeira experimentação visual — 30/09/2026
+
+O operador testou o laboratório e pediu alças circulares, semelhantes ao Seletor de Tom; divisórias nos limites entre posições discretas, em vez de centralizadas sobre cada dia; e marcas mais espessas e visíveis. Ajustes feitos em `JanelaTemporal` e `assets/janela-temporal.css`: as alças visuais são círculos mantendo as bordas internas como coordenadas lógicas; há uma divisória por transição, posicionada no ponto de mudança do arredondamento; a espessura passou a 2 px com contraste aumentado. A função `posicaoDivisoria` cobre esses limites em teste.
+
+- `deno test app/utilitarios/janelaTemporal_test.ts`: 12 passaram, 0 falharam.
+- `deno lint`, `deno fmt --check` e `deno check components/JanelaTemporal.tsx`: passaram.
+- `git diff --check`: sem erros; avisos LF/CRLF do Windows são informativos.
+- A validação visual continua aberta para novos retornos do operador. Integração em `/rememorar` permanece pendente da aprovação do componente no laboratório.
+- Commit do refinamento: pendente de conferência e gravação.

@@ -74,6 +74,11 @@ export function posicaoDiscreta(posicao: number, quantidade: number): number {
     return Math.round(limitarPosicaoContinua(posicao) * (quantidade - 1))
 }
 
+export function posicaoDivisoria(indiceAnterior: number, quantidade: number): number | null {
+    if (!Number.isInteger(indiceAnterior) || quantidade < 2 || indiceAnterior < 0 || indiceAnterior >= quantidade - 1) return null
+    return (indiceAnterior + 0.5) / (quantidade - 1)
+}
+
 export function limitarPosicaoAlca(posicao: number, outraAlca: number, lado: "esquerda" | "direita"): number {
     const limitada = limitarPosicaoContinua(posicao)
     const outra = limitarPosicaoContinua(outraAlca)

@@ -119,7 +119,8 @@ Essa apresentação substitui o empilhamento vertical por decisão visual do ope
 normalizado a restaurar (`posicoes` contínuas de 0 a 1 e `intervaloValido`). Publica intervalos iniciais e posteriores somente quando
 posições discretas correspondem a pelo menos dois dias; durante geometria inválida mantém o último intervalo válido. Os callbacks
 `aoAlterarIntervalo` e `aoAlterarPosicoes` separam resultado semântico de geometria restaurável. Os limiares `marcadoresPlenosAte` e
-`marcadoresEsmaecidosAte` são medidos em dias por 100 px; `mostrarDiagnostico` ativa dados exclusivos de laboratório. Arraste da área
+`marcadoresEsmaecidosAte` são medidos em dias por 100 px; as divisórias ficam nos limites de arredondamento entre posições discretas.
+`mostrarDiagnostico` ativa dados exclusivos de laboratório. Arraste da área
 selecionada preserva a quantidade discreta de dias; resize conserva as posições normalizadas. O CSS próprio é
 `assets/janela-temporal.css`, importado por `assets/app.css`.
 
