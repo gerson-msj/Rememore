@@ -685,3 +685,16 @@ O operador testou o laboratório e pediu alças circulares, semelhantes ao Selet
 - `git diff --check`: sem erros; avisos LF/CRLF do Windows são informativos.
 - A validação visual continua aberta para novos retornos do operador. Integração em `/rememorar` permanece pendente da aprovação do componente no laboratório.
 - Commit do refinamento: `7e06216` (`Spec 14: ajustar alcas e divisorias da janela`).
+
+## Refinamento de densidade, faixa contínua e marcadores — 30/09/2026
+
+O operador solicitou marcadores com altura completa do trilho, quantidade do cenário como campo numérico inteiro, limiares iniciais de densidade em 5 (visíveis) e 7 (esmaecidos), ainda editáveis, e movimento menos magnético ao arrastar toda a seleção. O CSS estende as divisórias pela altura do trilho. O campo de quantidade usa `type="number"`, mínimo 2 e passo 1. Os valores 5 e 7 são padrões tanto no componente quanto no laboratório.
+
+O gesto da faixa agora translada ambas as posições normalizadas pelo deslocamento físico do ponteiro. O intervalo semântico continua discreto, muda conforme a alça esquerda cruza os limites dos dias e preserva sua quantidade; nas extremidades, o gesto é limitado às posições possíveis. A marca `intervaloDeslocado` permite restaurar a relação entre a geometria contínua e o intervalo publicado em `sessionStorage`.
+
+- `deno test app/utilitarios/janelaTemporal_test.ts`: 14 testes passaram, incluindo movimento pequeno contínuo, manutenção da quantidade, extremidades e restauração da faixa.
+- `deno lint`, `deno fmt --check`, `deno check components/JanelaTemporal.tsx islands/ExperimentoJanelaTemporal.tsx` e `git diff --check`: passaram.
+- A validação visual/funcional desta revisão pelo operador permanece pendente. A integração de CMP-008 em `/rememorar` também permanece pendente de aprovação visual no laboratório.
+- Indicadores de contexto antes das leituras, após leituras iniciais e ao final: não disponíveis na interface.
+- Próximo passo: operador testar no laboratório o campo inteiro, limiares, extensão dos marcadores e arraste da faixa com cenários de poucos dias; ajustar ao retorno antes da integração em `/rememorar`.
+- Checkpoint desta revisão: pendente.

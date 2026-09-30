@@ -116,12 +116,12 @@ Essa apresentação substitui o empilhamento vertical por decisão visual do ope
 ## Janela Temporal de Rememorar — CMP-008
 
 `components/JanelaTemporal.tsx` recebe uma sequência ordenada de datas civis `YYYY-MM-DD`, um `id` único e, opcionalmente, o estado
-normalizado a restaurar (`posicoes` contínuas de 0 a 1 e `intervaloValido`). Publica intervalos iniciais e posteriores somente quando
+normalizado a restaurar (`posicoes` contínuas de 0 a 1 e `intervaloValido`; `intervaloDeslocado` identifica a translação contínua da faixa). Publica intervalos iniciais e posteriores somente quando
 posições discretas correspondem a pelo menos dois dias; durante geometria inválida mantém o último intervalo válido. Os callbacks
 `aoAlterarIntervalo` e `aoAlterarPosicoes` separam resultado semântico de geometria restaurável. Os limiares `marcadoresPlenosAte` e
 `marcadoresEsmaecidosAte` são medidos em dias por 100 px; as divisórias ficam nos limites de arredondamento entre posições discretas.
 `mostrarDiagnostico` ativa dados exclusivos de laboratório. Arraste da área
-selecionada preserva a quantidade discreta de dias; resize conserva as posições normalizadas. O CSS próprio é
+selecionada preserva a quantidade discreta de dias enquanto traduz fisicamente ambas as alças sem saltos; resize conserva as posições normalizadas. O CSS próprio é
 `assets/janela-temporal.css`, importado por `assets/app.css`.
 
 `app/utilitarios/janelaTemporal.ts` concentra a conversão e validação independente da interface, incluindo restauração, limites sem

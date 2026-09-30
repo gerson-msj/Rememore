@@ -6,6 +6,7 @@ export interface PosicoesJanela {
 export interface EstadoJanelaTemporal {
     posicoes: PosicoesJanela
     intervaloValido: IntervaloJanela
+    intervaloDeslocado?: boolean
 }
 
 export interface IntervaloJanela {
@@ -43,6 +44,7 @@ export function restaurarPosicoesJanela(valor: unknown): PosicoesJanela | null {
 export function restaurarEstadoJanela(valor: unknown, dias: readonly string[]): EstadoJanelaTemporal | null {
     if (typeof valor !== "object" || valor === null) return null
     const estado = valor as Partial<EstadoJanelaTemporal>
+    if (estado.intervaloDeslocado !== undefined && typeof estado.intervaloDeslocado !== "boolean") return null
     const posicoes = restaurarPosicoesJanela(estado.posicoes)
     const intervaloArmazenado = estado.intervaloValido
     if (!posicoes || typeof intervaloArmazenado !== "object" || intervaloArmazenado === null) return null
@@ -61,12 +63,17 @@ export function restaurarEstadoJanela(valor: unknown, dias: readonly string[]): 
     ) return null
     const intervaloFisico = avaliarPosicoesJanela(dias, posicoes, null).intervaloAtual
     if (
+        estado.intervaloDeslocado !== true &&
         intervaloFisico && (
             intervaloFisico.primeiraPosicao !== intervalo.primeiraPosicao ||
             intervaloFisico.ultimaPosicao !== intervalo.ultimaPosicao
         )
     ) return null
-    return { posicoes, intervaloValido: intervalo }
+    return {
+        posicoes,
+        intervaloValido: intervalo,
+        ...(estado.intervaloDeslocado === true ? { intervaloDeslocado: true } : {})
+    }
 }
 
 export function posicaoDiscreta(posicao: number, quantidade: number): number {
@@ -148,4 +155,30 @@ export function deslocarIntervaloJanela(
         ultimoDia: dias[ultima],
         quantidadeDias: quantidade
     }
+}
+
+export function moverJanelaPorFaixa(
+    dias: readonly string[],
+    estado: EstadoJanelaTemporal,
+    deslocamento: number
+): EstadoJanelaTemporal {
+    const total = dias.length - 1
+    const intervalo = estado.intervaloValido
+    if (total < 1 || intervalo.quantidadeDias < 2 || intervalo.quantidadeDias > dias.length) return estado
+
+    const primeiroIndicePossivel = 0
+    const ultimoIndicePossivel = dias.length - intervalo.quantidadeDias
+    const menorPosicao = primeiroIndicePossivel === 0 ? 0 : (primeiroIndicePossivel - 0.5) / total
+    const maiorPosicao = ultimoIndicePossivel === total ? 1 : (ultimoIndicePossivel + 0.5) / total - 1e-9
+    const deslocamentoMinimo = Math.max(-estado.posicoes.esquerda, menorPosicao - estado.posicoes.esquerda)
+    const deslocamentoMaximo = Math.min(1 - estado.posicoes.direita, maiorPosicao - estado.posicoes.esquerda)
+    const aplicado = Math.min(deslocamentoMaximo, Math.max(deslocamentoMinimo, deslocamento))
+    const posicoes = {
+        esquerda: estado.posicoes.esquerda + aplicado,
+        direita: estado.posicoes.direita + aplicado
+    }
+    const novoIndice = posicaoDiscreta(posicoes.esquerda, dias.length)
+    const novoDeslocamentoIndice = novoIndice - intervalo.primeiraPosicao
+    const intervaloValido = deslocarIntervaloJanela(dias, intervalo, novoDeslocamentoIndice) ?? intervalo
+    return { posicoes, intervaloValido, intervaloDeslocado: true }
 }

@@ -23,11 +23,13 @@ function formatarDia(data: string): string {
 }
 
 export default function ExperimentoJanelaTemporal() {
-    const [quantidade, definirQuantidade] = useState(5)
+    const [quantidadeTexto, definirQuantidadeTexto] = useState("5")
+    const quantidadeInformada = Number.parseInt(quantidadeTexto, 10)
+    const quantidade = Number.isInteger(quantidadeInformada) ? Math.max(2, quantidadeInformada) : 2
     const [distribuicao, definirDistribuicao] = useState<DistribuicaoDias>("irregulares")
     const [largura, definirLargura] = useState(100)
-    const [marcadoresPlenosAte, definirMarcadoresPlenosAte] = useState(1.5)
-    const [marcadoresEsmaecidosAte, definirMarcadoresEsmaecidosAte] = useState(3)
+    const [marcadoresPlenosAte, definirMarcadoresPlenosAte] = useState(5)
+    const [marcadoresEsmaecidosAte, definirMarcadoresEsmaecidosAte] = useState(7)
     const [preservarPosicoes, definirPreservarPosicoes] = useState(false)
     const [preferenciaLida, definirPreferenciaLida] = useState(false)
     const [chaveLida, definirChaveLida] = useState<string | null>(null)
@@ -110,14 +112,16 @@ export default function ExperimentoJanelaTemporal() {
                 <div class="field">
                     <label class="label" for="janela-quantidade-dias">Quantidade de dias preservados</label>
                     <div class="control">
-                        <select
-                            class="select"
+                        <input
+                            class="input"
                             id="janela-quantidade-dias"
-                            value={quantidade}
-                            onChange={(evento) => definirQuantidade(Number(evento.currentTarget.value))}
-                        >
-                            {[2, 3, 4, 5, 10, 30, 100].map((valor) => <option key={valor} value={valor}>{valor}</option>)}
-                        </select>
+                            type="number"
+                            min="2"
+                            step="1"
+                            value={quantidadeTexto}
+                            onInput={(evento) => definirQuantidadeTexto(evento.currentTarget.value)}
+                            onBlur={() => definirQuantidadeTexto(String(quantidade))}
+                        />
                     </div>
                 </div>
                 <div class="field">

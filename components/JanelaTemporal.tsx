@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "preact/hooks"
 import {
     avaliarPosicoesJanela,
     criarIntervaloJanela,
-    deslocarIntervaloJanela,
     type EstadoJanelaTemporal,
     type IntervaloJanela,
     limitarPosicaoAlca,
     limitarPosicaoContinua,
     moverAlcaSemCruzamento,
+    moverJanelaPorFaixa,
     posicaoDiscreta,
     posicaoDivisoria,
     type PosicoesJanela
@@ -27,7 +27,7 @@ interface PropriedadesJanelaTemporal {
 
 type Arraste =
     | { tipo: "alca"; lado: "esquerda" | "direita"; deslocamentoPx: number }
-    | { tipo: "faixa"; inicioX: number; intervalo: IntervaloJanela; largura: number }
+    | { tipo: "faixa"; inicioX: number; estado: EstadoJanelaTemporal; largura: number }
 
 function formatarData(data: string): string {
     const [ano, mes, dia] = data.split("-")
@@ -43,14 +43,17 @@ export default function JanelaTemporal({
     dias,
     estadoInicial = null,
     inicializacaoPronta = true,
-    marcadoresPlenosAte = 1.5,
-    marcadoresEsmaecidosAte = 3,
+    marcadoresPlenosAte = 5,
+    marcadoresEsmaecidosAte = 7,
     mostrarDiagnostico = false,
     aoAlterarIntervalo,
     aoAlterarPosicoes
 }: PropriedadesJanelaTemporal) {
     const iniciais: PosicoesJanela = estadoInicial?.posicoes ?? { esquerda: 0, direita: 1 }
     const [posicoes, definirPosicoes] = useState<PosicoesJanela>(iniciais)
+    const [intervaloDaFaixa, definirIntervaloDaFaixa] = useState<IntervaloJanela | null>(
+        estadoInicial?.intervaloDeslocado ? estadoInicial.intervaloValido : null
+    )
     const [largura, definirLargura] = useState(0)
     const [dpr, definirDpr] = useState(1)
     const trilho = useRef<HTMLDivElement>(null)
@@ -80,16 +83,20 @@ export default function JanelaTemporal({
             posicoesRef.current = restauradas
             definirPosicoes(restauradas)
             intervaloValido.current = estadoInicial.intervaloValido
+            definirIntervaloDaFaixa(estadoInicial.intervaloDeslocado ? estadoInicial.intervaloValido : null)
         }
         if (intervaloValido.current) callbackIntervalo.current?.(intervaloValido.current)
     }, [dias, estadoInicial, inicializacaoPronta])
 
     const avaliacao = avaliarPosicoesJanela(dias, posicoes, intervaloValido.current)
+    const intervaloAtual = intervaloDaFaixa ?? avaliacao.intervaloAtual
+    const intervaloPublicado = intervaloDaFaixa ?? avaliacao.intervaloPublicado
+    const geometriaValida = intervaloDaFaixa !== null || avaliacao.valido
     const orientacao = dias.length < 2
         ? ""
-        : avaliacao.valido
-        ? `${avaliacao.intervaloAtual!.quantidadeDias} dias preservados, entre ${formatarData(avaliacao.intervaloAtual!.primeiroDia)} e ${
-            formatarData(avaliacao.intervaloAtual!.ultimoDia)
+        : geometriaValida
+        ? `${intervaloAtual!.quantidadeDias} dias preservados, entre ${formatarData(intervaloAtual!.primeiroDia)} e ${
+            formatarData(intervaloAtual!.ultimoDia)
         }`
         : "Amplie o intervalo para incluir pelo menos dois dias preservados."
     const densidade = largura > 0 ? dias.length / (largura / 100) : Number.POSITIVE_INFINITY
@@ -103,6 +110,7 @@ export default function JanelaTemporal({
     const numeroMarcadores = estadoMarcadores === "ausentes" ? [] : dias.slice(0, -1).map((_, indice) => indice)
 
     function atualizarPosicoes(proximas: PosicoesJanela, ladoAtivo?: "esquerda" | "direita") {
+        if (intervaloDaFaixa) definirIntervaloDaFaixa(null)
         const ordenadas = ladoAtivo ? moverAlcaSemCruzamento(posicoesRef.current, ladoAtivo, proximas[ladoAtivo]) : proximas
         const antes = posicoesRef.current
         posicoesRef.current = ordenadas
@@ -138,9 +146,14 @@ export default function JanelaTemporal({
     function iniciarFaixa(evento: PointerEvent) {
         evento.stopPropagation()
         const caixa = trilho.current?.getBoundingClientRect()
-        const intervalo = avaliacao.intervaloPublicado
+        const intervalo = intervaloDaFaixa ?? avaliacao.intervaloAtual
         if (!caixa || caixa.width <= 0 || !intervalo) return
-        arraste.current = { tipo: "faixa", inicioX: evento.clientX, intervalo, largura: caixa.width }
+        arraste.current = {
+            tipo: "faixa",
+            inicioX: evento.clientX,
+            estado: { posicoes: posicoesRef.current, intervaloValido: intervalo },
+            largura: caixa.width
+        }
         trilho.current?.setPointerCapture(evento.pointerId)
     }
 
@@ -170,14 +183,18 @@ export default function JanelaTemporal({
             )
             return
         }
-        const total = dias.length - 1
-        const deslocamento = Math.round((evento.clientX - atual.inicioX) / atual.largura * total)
-        const intervalo = deslocarIntervaloJanela(dias, atual.intervalo, deslocamento)
-        if (!intervalo) return
-        atualizarPosicoes({
-            esquerda: intervalo.primeiraPosicao / total,
-            direita: intervalo.ultimaPosicao / total
-        })
+        const deslocamento = (evento.clientX - atual.inicioX) / atual.largura
+        const proximo = moverJanelaPorFaixa(dias, atual.estado, deslocamento)
+        const antes = posicoesRef.current
+        posicoesRef.current = proximo.posicoes
+        definirPosicoes(proximo.posicoes)
+        definirIntervaloDaFaixa(proximo.intervaloValido)
+        const mudouIntervalo = !mesmoIntervalo(intervaloValido.current, proximo.intervaloValido)
+        if (mudouIntervalo) aoAlterarIntervalo?.(proximo.intervaloValido)
+        intervaloValido.current = proximo.intervaloValido
+        if (antes.esquerda !== proximo.posicoes.esquerda || antes.direita !== proximo.posicoes.direita) {
+            aoAlterarPosicoes?.(proximo)
+        }
     }
 
     function finalizarArraste() {
@@ -213,7 +230,10 @@ export default function JanelaTemporal({
     }
 
     function descricaoAlca(lado: "esquerda" | "direita") {
-        const indice = posicaoDiscreta(posicoes[lado], dias.length)
+        const intervalo = intervaloDaFaixa
+        const indice = intervalo
+            ? (lado === "esquerda" ? intervalo.primeiraPosicao : intervalo.ultimaPosicao)
+            : posicaoDiscreta(posicoes[lado], dias.length)
         const dia = dias[indice]
         return dia ? `${formatarData(dia)}; posição contínua ${Math.round(posicoes[lado] * 100)}%` : "Sem dia disponível"
     }
@@ -221,7 +241,7 @@ export default function JanelaTemporal({
     return (
         <section class="janela-temporal" aria-labelledby={`${id}-orientacao`}>
             <p
-                class={`janela-temporal-orientacao${avaliacao.valido ? "" : " has-text-warning"}`}
+                class={`janela-temporal-orientacao${geometriaValida ? "" : " has-text-warning"}`}
                 id={`${id}-orientacao`}
                 aria-live="polite"
                 aria-atomic="true"
@@ -300,14 +320,14 @@ export default function JanelaTemporal({
                     <div>
                         <dt>Intervalo publicado</dt>
                         <dd>
-                            {avaliacao.intervaloPublicado
-                                ? `${avaliacao.intervaloPublicado.primeiraPosicao}–${avaliacao.intervaloPublicado.ultimaPosicao} (${avaliacao.intervaloPublicado.quantidadeDias} dias)`
+                            {intervaloPublicado
+                                ? `${intervaloPublicado.primeiraPosicao}–${intervaloPublicado.ultimaPosicao} (${intervaloPublicado.quantidadeDias} dias)`
                                 : "indisponível"}
                         </dd>
                     </div>
                     <div>
                         <dt>Estado geométrico</dt>
-                        <dd>{avaliacao.valido ? "válido" : "inválido"}</dd>
+                        <dd>{geometriaValida ? "válido" : "inválido"}</dd>
                     </div>
                     <div>
                         <dt>Resolução física aproximada</dt>

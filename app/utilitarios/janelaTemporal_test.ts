@@ -4,6 +4,7 @@ import {
     deslocarIntervaloJanela,
     limitarPosicaoAlca,
     moverAlcaSemCruzamento,
+    moverJanelaPorFaixa,
     posicaoDiscreta,
     posicaoDivisoria,
     restaurarEstadoJanela,
@@ -80,6 +81,27 @@ Deno.test("janela temporal: deslocamento preserva a extensão e respeita as extr
     igual([recuado.primeiraPosicao, recuado.ultimaPosicao, recuado.quantidadeDias], [0, 2, 3])
 })
 
+Deno.test("janela temporal: arrastar a faixa mantém movimento contínuo e quantidade discreta", () => {
+    const intervalo = criarIntervaloJanela(dias, 1, 3)!
+    const inicial = { posicoes: { esquerda: 0.25, direita: 0.75 }, intervaloValido: intervalo }
+    const pequeno = moverJanelaPorFaixa(dias, inicial, 0.01)
+    igual(pequeno.posicoes, { esquerda: 0.26, direita: 0.76 })
+    igual(pequeno.intervaloValido.quantidadeDias, 3)
+    igual(pequeno.intervaloValido.primeiraPosicao, 1)
+    const avancado = moverJanelaPorFaixa(dias, inicial, 0.3)
+    igual(avancado.intervaloValido.primeiraPosicao, 2)
+    igual(avancado.intervaloValido.ultimaPosicao, 4)
+    igual(avancado.intervaloValido.quantidadeDias, 3)
+})
+
+Deno.test("janela temporal: faixa com dois dias só se move dentro do único intervalo possível", () => {
+    const conjunto = dias.slice(0, 2)
+    const intervalo = criarIntervaloJanela(conjunto, 0, 1)!
+    const movido = moverJanelaPorFaixa(conjunto, { posicoes: { esquerda: 0, direita: 1 }, intervaloValido: intervalo }, 0.5)
+    igual(movido.posicoes, { esquerda: 0, direita: 1 })
+    igual(movido.intervaloValido, intervalo)
+})
+
 Deno.test("janela temporal: restauração aceita somente posições normalizadas ordenadas", () => {
     igual(restaurarPosicoesJanela({ esquerda: 0.2, direita: 0.8 }), { esquerda: 0.2, direita: 0.8 })
     igual(restaurarPosicoesJanela({ esquerda: 0.9, direita: 0.1 }), null)
@@ -93,6 +115,8 @@ Deno.test("janela temporal: restaura o último intervalo válido junto da geomet
     igual(restaurarEstadoJanela(estado, dias), estado)
     igual(restaurarEstadoJanela(estado, ["2025-01-01", "2025-02-01"]), null)
     igual(restaurarEstadoJanela({ ...estado, posicoes: { esquerda: 0.1, direita: 0.9 } }, dias), null)
+    const faixa = moverJanelaPorFaixa(dias, { posicoes: { esquerda: 0.25, direita: 0.75 }, intervaloValido }, 0.03)
+    igual(restaurarEstadoJanela(faixa, dias), faixa)
 })
 
 Deno.test("janela temporal: resolução da geometria não participa da seleção semântica", () => {
