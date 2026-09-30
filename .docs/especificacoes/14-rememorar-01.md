@@ -726,3 +726,11 @@ Após confirmar o comportamento do arraste conjunto e selecionar dois dias entre
 - Verificação de nomes de tokens: `--bulma-link` e `--bulma-info` estão disponíveis em `assets/palettes.css`.
 - Verificação visual pelo operador: pendente.
 - Checkpoint: `c5a83fd` (`Spec 14: colorir marcadores pela paleta`).
+
+### Refinamento dos tokens de cor — 30/09/2026
+
+O operador substituiu a preferência anterior de `Link`/`Info`: marcadores visíveis usam `--bulma-border` e marcadores esmaecidos usam `--bulma-border-weak`. Os dois tokens foram conferidos em `assets/palettes.css`; a alteração permanece restrita ao CSS do CMP-008.
+
+- `git diff --check`: em verificação final.
+- Validação visual: pendente.
+- Checkpoint: pendente.
