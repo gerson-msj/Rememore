@@ -163,22 +163,16 @@ export function moverJanelaPorFaixa(
     deslocamento: number
 ): EstadoJanelaTemporal {
     const total = dias.length - 1
-    const intervalo = estado.intervaloValido
-    if (total < 1 || intervalo.quantidadeDias < 2 || intervalo.quantidadeDias > dias.length) return estado
+    if (total < 1) return estado
 
-    const primeiroIndicePossivel = 0
-    const ultimoIndicePossivel = dias.length - intervalo.quantidadeDias
-    const menorPosicao = primeiroIndicePossivel === 0 ? 0 : (primeiroIndicePossivel - 0.5) / total
-    const maiorPosicao = ultimoIndicePossivel === total ? 1 : (ultimoIndicePossivel + 0.5) / total - 1e-9
-    const deslocamentoMinimo = Math.max(-estado.posicoes.esquerda, menorPosicao - estado.posicoes.esquerda)
-    const deslocamentoMaximo = Math.min(1 - estado.posicoes.direita, maiorPosicao - estado.posicoes.esquerda)
+    const deslocamentoMinimo = -estado.posicoes.esquerda
+    const deslocamentoMaximo = 1 - estado.posicoes.direita
     const aplicado = Math.min(deslocamentoMaximo, Math.max(deslocamentoMinimo, deslocamento))
     const posicoes = {
         esquerda: estado.posicoes.esquerda + aplicado,
         direita: estado.posicoes.direita + aplicado
     }
-    const novoIndice = posicaoDiscreta(posicoes.esquerda, dias.length)
-    const novoDeslocamentoIndice = novoIndice - intervalo.primeiraPosicao
-    const intervaloValido = deslocarIntervaloJanela(dias, intervalo, novoDeslocamentoIndice) ?? intervalo
+    const avaliacao = avaliarPosicoesJanela(dias, posicoes, estado.intervaloValido)
+    const intervaloValido = avaliacao.intervaloAtual ?? estado.intervaloValido
     return { posicoes, intervaloValido, intervaloDeslocado: true }
 }

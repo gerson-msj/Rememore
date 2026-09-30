@@ -120,8 +120,7 @@ normalizado a restaurar (`posicoes` contínuas de 0 a 1 e `intervaloValido`; `in
 posições discretas correspondem a pelo menos dois dias; durante geometria inválida mantém o último intervalo válido. Os callbacks
 `aoAlterarIntervalo` e `aoAlterarPosicoes` separam resultado semântico de geometria restaurável. Os limiares `marcadoresPlenosAte` e
 `marcadoresEsmaecidosAte` são medidos em dias por 100 px; as divisórias ficam nos limites de arredondamento entre posições discretas.
-`mostrarDiagnostico` ativa dados exclusivos de laboratório. Arraste da área
-selecionada preserva a quantidade discreta de dias enquanto traduz fisicamente ambas as alças sem saltos; resize conserva as posições normalizadas. O CSS próprio é
+`mostrarDiagnostico` ativa dados exclusivos de laboratório. Arraste da área selecionada translada as duas posições contínuas juntas, mas cada extremo é convertido independentemente para seu dia; por isso, a quantidade discreta pode variar durante o gesto. Se a geometria momentânea resultar em menos de dois dias, mantém-se o último intervalo válido até a recuperação. Resize conserva as posições normalizadas. O CSS próprio é
 `assets/janela-temporal.css`, importado por `assets/app.css`.
 
 `app/utilitarios/janelaTemporal.ts` concentra a conversão e validação independente da interface, incluindo restauração, limites sem

@@ -81,7 +81,7 @@ Deno.test("janela temporal: deslocamento preserva a extensão e respeita as extr
     igual([recuado.primeiraPosicao, recuado.ultimaPosicao, recuado.quantidadeDias], [0, 2, 3])
 })
 
-Deno.test("janela temporal: arrastar a faixa mantém movimento contínuo e quantidade discreta", () => {
+Deno.test("janela temporal: arrastar a faixa traduz as posições sem saltos", () => {
     const intervalo = criarIntervaloJanela(dias, 1, 3)!
     const inicial = { posicoes: { esquerda: 0.25, direita: 0.75 }, intervaloValido: intervalo }
     const pequeno = moverJanelaPorFaixa(dias, inicial, 0.01)
@@ -92,6 +92,28 @@ Deno.test("janela temporal: arrastar a faixa mantém movimento contínuo e quant
     igual(avancado.intervaloValido.primeiraPosicao, 2)
     igual(avancado.intervaloValido.ultimaPosicao, 4)
     igual(avancado.intervaloValido.quantidadeDias, 3)
+})
+
+Deno.test("janela temporal: no arraste da faixa cada extremo muda ao cruzar sua própria divisão", () => {
+    const intervalo = criarIntervaloJanela(dias, 1, 3)!
+    const inicial = { posicoes: { esquerda: 0.36, direita: 0.64 }, intervaloValido: intervalo }
+    const movido = moverJanelaPorFaixa(dias, inicial, -0.02)
+    igual(
+        [movido.posicoes.esquerda, movido.posicoes.direita].map((posicao) => Number(posicao.toFixed(4))),
+        [0.34, 0.62]
+    )
+    igual(movido.intervaloValido.primeiraPosicao, 1)
+    igual(movido.intervaloValido.ultimaPosicao, 2)
+    igual(movido.intervaloValido.quantidadeDias, 2)
+})
+
+Deno.test("janela temporal: ao cair temporariamente no mesmo dia, preserva o último intervalo válido", () => {
+    const intervalo = criarIntervaloJanela(dias, 1, 2)!
+    const inicial = { posicoes: { esquerda: 0.373, direita: 0.376 }, intervaloValido: intervalo }
+    const movido = moverJanelaPorFaixa(dias, inicial, -0.002)
+    igual(movido.posicoes, { esquerda: 0.371, direita: 0.374 })
+    igual(avaliarPosicoesJanela(dias, movido.posicoes, null).valido, false)
+    igual(movido.intervaloValido, intervalo)
 })
 
 Deno.test("janela temporal: faixa com dois dias só se move dentro do único intervalo possível", () => {

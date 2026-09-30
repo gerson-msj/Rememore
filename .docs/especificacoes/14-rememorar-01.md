@@ -699,6 +699,18 @@ O gesto da faixa agora translada ambas as posições normalizadas pelo deslocame
 - Próximo passo: operador testar no laboratório o campo inteiro, limiares, extensão dos marcadores e arraste da faixa com cenários de poucos dias; ajustar ao retorno antes da integração em `/rememorar`.
 - Checkpoint desta revisão: `187d83e` (`Spec 14: suavizar arraste da faixa temporal`).
 
+### Clarificação funcional do arraste conjunto — 30/09/2026
+
+Ao arrastar o conjunto, cada alça deve atualizar seu próprio dia quando cruza uma divisão discreta. A quantidade de dias pode variar durante esse gesto. Isso substitui, para o comportamento do CMP-008 aprovado nesta clarificação, a interpretação anterior de deslocar o intervalo como bloco discreto de extensão fixa. A regra geral de validade continua aplicável: não publicar seleção inferior a dois dias; enquanto a geometria for inválida, manter o último intervalo válido até a seleção se recuperar.
+
+O operador apontou que a alça final já podia cruzar para o dia anterior enquanto o intervalo publicado permanecia preso ao dia determinado pela alça inicial. A nova regra deriva ambos os extremos das posições contínuas traduzidas juntas e só mantém o último intervalo publicado quando a combinação momentânea não satisfaz a extensão mínima.
+
+Esta clarificação substitui a interpretação da verificação visual anterior nesta Continuidade que considerava suficiente a troca do intervalo somente quando a alça inicial mudava de dia.
+
+- `deno test app/utilitarios/janelaTemporal_test.ts`: 16 testes passaram, incluindo atualização independente dos extremos e preservação do último intervalo válido quando a geometria fica abaixo do mínimo.
+- `deno lint`, `deno fmt --check`, `deno check components/JanelaTemporal.tsx islands/ExperimentoJanelaTemporal.tsx` e `git diff --check`: passaram.
+- Checkpoint da implementação: pendente.
+
 ### Verificação das anotações do laboratório — 30/09/2026
 
 O operador esclareceu que os marcadores devem acompanhar somente a espessura da faixa colorida (0,4 rem), não toda a altura disponível para interação; `assets/janela-temporal.css` foi ajustado para centralizá-los sobre essa faixa. As três anotações do gesto mostram que os dias publicados permanecem 2–4 enquanto a posição contínua se move dentro da mesma região discreta, e que o intervalo muda para 1–3 quando a posição discreta inicial cruza o limite. Esse resultado preserva a quantidade de três dias e corresponde à semântica de deslocamento definida na Especificação.

@@ -52,7 +52,9 @@ export default function JanelaTemporal({
     const iniciais: PosicoesJanela = estadoInicial?.posicoes ?? { esquerda: 0, direita: 1 }
     const [posicoes, definirPosicoes] = useState<PosicoesJanela>(iniciais)
     const [intervaloDaFaixa, definirIntervaloDaFaixa] = useState<IntervaloJanela | null>(
-        estadoInicial?.intervaloDeslocado ? estadoInicial.intervaloValido : null
+        estadoInicial?.intervaloDeslocado && !avaliarPosicoesJanela(dias, estadoInicial.posicoes, null).valido
+            ? estadoInicial.intervaloValido
+            : null
     )
     const [largura, definirLargura] = useState(0)
     const [dpr, definirDpr] = useState(1)
@@ -82,8 +84,10 @@ export default function JanelaTemporal({
             }
             posicoesRef.current = restauradas
             definirPosicoes(restauradas)
-            intervaloValido.current = estadoInicial.intervaloValido
-            definirIntervaloDaFaixa(estadoInicial.intervaloDeslocado ? estadoInicial.intervaloValido : null)
+            const avaliacaoRestaurada = avaliarPosicoesJanela(dias, restauradas, null)
+            const intervaloRestaurado = avaliacaoRestaurada.intervaloAtual ?? estadoInicial.intervaloValido
+            intervaloValido.current = intervaloRestaurado
+            definirIntervaloDaFaixa(avaliacaoRestaurada.valido ? null : intervaloRestaurado)
         }
         if (intervaloValido.current) callbackIntervalo.current?.(intervaloValido.current)
     }, [dias, estadoInicial, inicializacaoPronta])
@@ -91,7 +95,7 @@ export default function JanelaTemporal({
     const avaliacao = avaliarPosicoesJanela(dias, posicoes, intervaloValido.current)
     const intervaloAtual = intervaloDaFaixa ?? avaliacao.intervaloAtual
     const intervaloPublicado = intervaloDaFaixa ?? avaliacao.intervaloPublicado
-    const geometriaValida = intervaloDaFaixa !== null || avaliacao.valido
+    const geometriaValida = avaliacao.valido
     const orientacao = dias.length < 2
         ? ""
         : geometriaValida
@@ -146,7 +150,7 @@ export default function JanelaTemporal({
     function iniciarFaixa(evento: PointerEvent) {
         evento.stopPropagation()
         const caixa = trilho.current?.getBoundingClientRect()
-        const intervalo = intervaloDaFaixa ?? avaliacao.intervaloAtual
+        const intervalo = intervaloDaFaixa ?? avaliacao.intervaloAtual ?? intervaloValido.current
         if (!caixa || caixa.width <= 0 || !intervalo) return
         arraste.current = {
             tipo: "faixa",
@@ -185,10 +189,11 @@ export default function JanelaTemporal({
         }
         const deslocamento = (evento.clientX - atual.inicioX) / atual.largura
         const proximo = moverJanelaPorFaixa(dias, atual.estado, deslocamento)
+        const avaliacaoProxima = avaliarPosicoesJanela(dias, proximo.posicoes, proximo.intervaloValido)
         const antes = posicoesRef.current
         posicoesRef.current = proximo.posicoes
         definirPosicoes(proximo.posicoes)
-        definirIntervaloDaFaixa(proximo.intervaloValido)
+        definirIntervaloDaFaixa(avaliacaoProxima.valido ? null : proximo.intervaloValido)
         const mudouIntervalo = !mesmoIntervalo(intervaloValido.current, proximo.intervaloValido)
         if (mudouIntervalo) aoAlterarIntervalo?.(proximo.intervaloValido)
         intervaloValido.current = proximo.intervaloValido
