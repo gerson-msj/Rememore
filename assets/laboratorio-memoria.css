@@ -4,6 +4,29 @@
     padding-block: 1rem;
     border-top: 1px solid var(--bulma-border);
 }
+.lab-janela-temporal .lab-controles {
+    margin-bottom: 1.5rem;
+}
+.lab-janela-temporal-dados {
+    min-width: 0;
+    overflow: hidden;
+}
+.lab-janela-temporal-datas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-block: 1rem 0;
+    padding: 0;
+    list-style: none;
+    overflow-wrap: anywhere;
+}
+.lab-janela-temporal-datas li {
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--bulma-border);
+    border-radius: var(--bulma-radius);
+    background: var(--bulma-scheme-main-bis);
+    font-variant-numeric: tabular-nums;
+}
 .lab-bloco-titulo {
     font: inherit;
     color: inherit;

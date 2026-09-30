@@ -4,6 +4,7 @@ import ControlesLaboratorio from "./ControlesLaboratorio.tsx"
 import VisualizacaoLaboratorio from "../components/VisualizacaoLaboratorio.tsx"
 import ExperimentoMemoria from "../components/ExperimentoMemoria.tsx"
 import MemoriaLaboratorio from "../components/MemoriaLaboratorio.tsx"
+import ExperimentoJanelaTemporal from "./ExperimentoJanelaTemporal.tsx"
 
 function Bloco({ id, titulo, children }: { id: string; titulo: string; children: ComponentChildren }) {
     const [aberto, definirAberto] = useState(true)
@@ -75,6 +76,9 @@ export default function Laboratorio() {
             </Bloco>
             <Bloco id="memoria-real" titulo="Componente de memória — componente real">
                 <MemoriaLaboratorio />
+            </Bloco>
+            <Bloco id="janela-temporal" titulo="CMP-008 — Janela Temporal de Rememorar">
+                <ExperimentoJanelaTemporal />
             </Bloco>
         </div>
     )

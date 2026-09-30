@@ -4,9 +4,10 @@ import MensagemPopup, { type ResultadoPopup } from "../components/MensagemPopup.
 
 interface PropriedadesEstruturaProtegida {
     titulo: string
+    regiaoPrincipal?: "rememorar"
 }
 
-export default function EstruturaProtegida({ titulo }: PropriedadesEstruturaProtegida) {
+export default function EstruturaProtegida({ titulo, regiaoPrincipal }: PropriedadesEstruturaProtegida) {
     const [confirmarSaida, definirConfirmarSaida] = useState(false)
     const formulario = useRef<HTMLFormElement>(null)
 
@@ -22,7 +23,10 @@ export default function EstruturaProtegida({ titulo }: PropriedadesEstruturaProt
                 aoVoltar={() => globalThis.location.assign("/principal")}
                 aoSair={() => definirConfirmarSaida(true)}
             />
-            <main class="rememore-conteiner pagina-com-cabecalho" />
+            <main
+                class={`rememore-conteiner pagina-com-cabecalho${regiaoPrincipal ? ` pagina-${regiaoPrincipal}` : ""}`}
+                id={regiaoPrincipal ? `pagina-${regiaoPrincipal}` : undefined}
+            />
             <form ref={formulario} method="post" action="/principal" hidden />
             <MensagemPopup
                 aberto={confirmarSaida}
