@@ -38,6 +38,7 @@
     top: calc(50% - 0.2rem);
     height: 0.4rem;
     transform: translateX(-50%);
+    filter: blur(0.5px);
     border-left: 2px solid var(--bulma-border);
     opacity: 0.82;
 }

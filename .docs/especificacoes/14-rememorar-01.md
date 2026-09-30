@@ -734,3 +734,10 @@ O operador substituiu a preferência anterior de `Link`/`Info`: marcadores visí
 - `git diff --check`: passou.
 - Validação visual: pendente.
 - Checkpoint: `c2b323a` (`Spec 14: usar bordas nos marcadores`).
+
+### Experimento de suavização — 30/09/2026
+
+O operador pediu um teste de aparência esfumada para os marcadores. Foi aplicado `filter: blur(0.5px)` aos traços, preservando cores, opacidades e dimensões; a avaliação visual permanece pendente.
+
+- `git diff --check`: em verificação final.
+- Checkpoint: pendente.
