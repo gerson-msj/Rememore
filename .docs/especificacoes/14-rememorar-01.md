@@ -709,7 +709,7 @@ Esta clarificação substitui a interpretação da verificação visual anterior
 
 - `deno test app/utilitarios/janelaTemporal_test.ts`: 16 testes passaram, incluindo atualização independente dos extremos e preservação do último intervalo válido quando a geometria fica abaixo do mínimo.
 - `deno lint`, `deno fmt --check`, `deno check components/JanelaTemporal.tsx islands/ExperimentoJanelaTemporal.tsx` e `git diff --check`: passaram.
-- Checkpoint da implementação: pendente.
+- Checkpoint da implementação: `ac6c46e` (`Spec 14: atualizar extremos no arraste conjunto`).
 
 ### Verificação das anotações do laboratório — 30/09/2026
 
