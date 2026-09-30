@@ -35,8 +35,8 @@
 }
 .janela-temporal-marcadores i {
     position: absolute;
-    top: 0;
-    height: 100%;
+    top: calc(50% - 0.2rem);
+    height: 0.4rem;
     transform: translateX(-50%);
     border-left: 2px solid var(--bulma-text-strong);
     opacity: 0.82;

@@ -688,7 +688,7 @@ O operador testou o laboratório e pediu alças circulares, semelhantes ao Selet
 
 ## Refinamento de densidade, faixa contínua e marcadores — 30/09/2026
 
-O operador solicitou marcadores com altura completa do trilho, quantidade do cenário como campo numérico inteiro, limiares iniciais de densidade em 5 (visíveis) e 7 (esmaecidos), ainda editáveis, e movimento menos magnético ao arrastar toda a seleção. O CSS estende as divisórias pela altura do trilho. O campo de quantidade usa `type="number"`, mínimo 2 e passo 1. Os valores 5 e 7 são padrões tanto no componente quanto no laboratório.
+O operador solicitou marcadores com altura da faixa colorida do trilho, quantidade do cenário como campo numérico inteiro, limiares iniciais de densidade em 5 (visíveis) e 7 (esmaecidos), ainda editáveis, e movimento menos magnético ao arrastar toda a seleção. O campo de quantidade usa `type="number"`, mínimo 2 e passo 1. Os valores 5 e 7 são padrões tanto no componente quanto no laboratório.
 
 O gesto da faixa agora translada ambas as posições normalizadas pelo deslocamento físico do ponteiro. O intervalo semântico continua discreto, muda conforme a alça esquerda cruza os limites dos dias e preserva sua quantidade; nas extremidades, o gesto é limitado às posições possíveis. A marca `intervaloDeslocado` permite restaurar a relação entre a geometria contínua e o intervalo publicado em `sessionStorage`.
 
@@ -698,3 +698,11 @@ O gesto da faixa agora translada ambas as posições normalizadas pelo deslocame
 - Indicadores de contexto antes das leituras, após leituras iniciais e ao final: não disponíveis na interface.
 - Próximo passo: operador testar no laboratório o campo inteiro, limiares, extensão dos marcadores e arraste da faixa com cenários de poucos dias; ajustar ao retorno antes da integração em `/rememorar`.
 - Checkpoint desta revisão: `187d83e` (`Spec 14: suavizar arraste da faixa temporal`).
+
+### Verificação das anotações do laboratório — 30/09/2026
+
+O operador esclareceu que os marcadores devem acompanhar somente a espessura da faixa colorida (0,4 rem), não toda a altura disponível para interação; `assets/janela-temporal.css` foi ajustado para centralizá-los sobre essa faixa. As três anotações do gesto mostram que os dias publicados permanecem 2–4 enquanto a posição contínua se move dentro da mesma região discreta, e que o intervalo muda para 1–3 quando a posição discreta inicial cruza o limite. Esse resultado preserva a quantidade de três dias e corresponde à semântica de deslocamento definida na Especificação.
+
+- `deno lint`, `deno fmt --check` e `git diff --check`: passaram; não há teste automatizado para a espessura visual dos marcadores.
+- Confirmação funcional pelo operador: arraste contínuo e troca de intervalo somente quando muda o primeiro dia, conforme as anotações; validar visualmente a nova altura dos marcadores no laboratório.
+- Checkpoint: pendente.
