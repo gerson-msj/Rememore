@@ -761,7 +761,7 @@ O operador aprovou visualmente o componente e autorizou seguir para a aplicaçã
 
 1. Passar o conjunto de datas simuladas da rota para a ilha que já contém a região principal autenticada. Concluída.
 2. Renderizar o aviso de cenário de desenvolvimento e o CMP-008 dentro de `main#pagina-rememorar`. Concluída.
-3. Verificar tipo, lint, formatação, testes e diff; registrar checkpoint. Concluída com ressalva da checagem direta da rota.
+3. Verificar tipo, lint, formatação, testes e diff; registrar checkpoint. Concluída com ressalva da checagem direta da rota (`558a9d6`).
 4. Apresentar `/rememorar` para avaliação visual/funcional do operador. Pendente.
 
 - Aceite visual do CMP-008 no laboratório: confirmado pelo operador nesta sessão.
