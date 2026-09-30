@@ -120,8 +120,9 @@ normalizado a restaurar (`posicoes` contínuas de 0 a 1 e `intervaloValido`; `in
 posições discretas correspondem a pelo menos dois dias; durante geometria inválida mantém o último intervalo válido. Os callbacks
 `aoAlterarIntervalo` e `aoAlterarPosicoes` separam resultado semântico de geometria restaurável. `densidadeMaximaMarcadores` é medida em dias por 100 px; os marcadores usam sempre a apresentação esmaecida até o limite e depois desaparecem. As divisórias ficam nos limites de arredondamento entre posições discretas.
 `mostrarDiagnostico` ativa dados exclusivos de laboratório. Arraste da área selecionada translada as duas posições contínuas juntas, mas cada extremo é convertido independentemente para seu dia; por isso, a quantidade discreta pode variar durante o gesto. Se a geometria momentânea resultar em menos de dois dias, mantém-se o último intervalo válido até a recuperação. Resize conserva as posições normalizadas. O CSS próprio é
-`assets/janela-temporal.css`, importado por `assets/app.css`.
+`assets/janela-temporal.css`, importado por `assets/app.css`. `/rememorar` hospeda o CMP-008 em `EstruturaProtegida` com um fixture
+determinístico de cinco datas identificado na interface como cenário de desenvolvimento; não há integração a backend ou a categorias.
 
 `app/utilitarios/janelaTemporal.ts` concentra a conversão e validação independente da interface, incluindo restauração, limites sem
 cruzamento e deslocamento do intervalo. `/laboratorio` fornece cenários determinísticos e, quando habilitado, mantém o estado completo
-da janela em `sessionStorage`, vinculado à quantidade e distribuição de datas. A rota `/rememorar` ainda não consome CMP-008.
+da janela em `sessionStorage`, vinculado à quantidade e distribuição de datas.

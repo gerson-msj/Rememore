@@ -752,3 +752,22 @@ O operador aprovou testar uma apresentação única e esmaecida para os marcador
 - `deno lint`, `deno fmt --check`, `deno check components/JanelaTemporal.tsx islands/ExperimentoJanelaTemporal.tsx` e `git diff --check`: passaram.
 - Verificação visual pelo operador: pendente.
 - Checkpoint: `2e848de` (`Spec 14: simplificar marcadores por densidade`).
+
+## Integração do CMP-008 em `/rememorar` — 30/09/2026
+
+O operador aprovou visualmente o componente e autorizou seguir para a aplicação real prevista na Especificação. A leitura do contrato não revelou lacunas funcionais adicionais. `routes/rememorar.tsx` fornecerá cinco datas simuladas determinísticas (as datas irregulares já usadas no laboratório); a região principal da página apresentará uma indicação explícita de cenário de desenvolvimento e hospedará o CMP-008. Não serão adicionados backend, persistência, efeitos em categorias ou outros componentes.
+
+### Plano e estado
+
+1. Passar o conjunto de datas simuladas da rota para a ilha que já contém a região principal autenticada. Concluída.
+2. Renderizar o aviso de cenário de desenvolvimento e o CMP-008 dentro de `main#pagina-rememorar`. Concluída.
+3. Verificar tipo, lint, formatação, testes e diff; registrar checkpoint. Concluída com ressalva da checagem direta da rota.
+4. Apresentar `/rememorar` para avaliação visual/funcional do operador. Pendente.
+
+- Aceite visual do CMP-008 no laboratório: confirmado pelo operador nesta sessão.
+- Integração pronta para validação no destino `/rememorar`; o cenário mock usa cinco datas irregulares determinísticas: 01/01, 06/01, 08/01, 27/01 e 30/01/2025.
+- `deno test app/utilitarios/janelaTemporal_test.ts`: 16 passaram; `deno lint`, `deno fmt --check`, `deno check islands/EstruturaProtegida.tsx components/JanelaTemporal.tsx` e `git diff --check`: passaram.
+- `deno check routes/rememorar.tsx`: não concluído; o manifesto JSR de `@fresh/core` não está no cache e a rede está restrita.
+- Próximo passo: avaliação visual/funcional da composição e do fixture na rota `/rememorar`.
+- Indicadores de contexto nos três marcos: não disponíveis na interface.
+- Alterações preexistentes preservadas: remoção de `.docs/especificacoes/13-Preservacao.md` e arquivo novo `.docs/especificacoes/concluidas/13-Preservacao.md`.
