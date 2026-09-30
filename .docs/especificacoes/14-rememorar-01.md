@@ -718,3 +718,11 @@ O operador esclareceu que os marcadores devem acompanhar somente a espessura da 
 - `deno lint`, `deno fmt --check` e `git diff --check`: passaram; não há teste automatizado para a espessura visual dos marcadores.
 - Confirmação funcional pelo operador: arraste contínuo e troca de intervalo somente quando muda o primeiro dia, conforme as anotações; validar visualmente a nova altura dos marcadores no laboratório.
 - Checkpoint: `1a11801` (`Spec 14: alinhar marcadores à faixa colorida`).
+
+## Ajuste cromático dos marcadores — 30/09/2026
+
+Após confirmar o comportamento do arraste conjunto e selecionar dois dias entre 1.500 preservados, o operador pediu que os marcadores acompanhem as cores da paleta do trilho em vez do preto atual. `Link` identifica marcadores visíveis; `Info` identifica os esmaecidos. O ajuste foi aplicado somente ao CSS isolado do CMP-008.
+
+- Verificação de nomes de tokens: `--bulma-link` e `--bulma-info` estão disponíveis em `assets/palettes.css`.
+- Verificação visual pelo operador: pendente.
+- Checkpoint: pendente.

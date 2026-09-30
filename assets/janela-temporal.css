@@ -39,9 +39,11 @@
     height: 0.4rem;
     transform: translateX(-50%);
     border-left: 2px solid var(--bulma-text-strong);
+    border-left-color: var(--bulma-link);
     opacity: 0.82;
 }
 .janela-temporal-trilho[data-marcadores="esmaecidos"] .janela-temporal-marcadores i {
+    border-left-color: var(--bulma-info);
     opacity: 0.35;
 }
 .janela-temporal-selecao {
