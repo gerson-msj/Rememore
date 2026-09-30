@@ -725,4 +725,4 @@ Após confirmar o comportamento do arraste conjunto e selecionar dois dias entre
 
 - Verificação de nomes de tokens: `--bulma-link` e `--bulma-info` estão disponíveis em `assets/palettes.css`.
 - Verificação visual pelo operador: pendente.
-- Checkpoint: pendente.
+- Checkpoint: `c5a83fd` (`Spec 14: colorir marcadores pela paleta`).
