@@ -731,6 +731,6 @@ Após confirmar o comportamento do arraste conjunto e selecionar dois dias entre
 
 O operador substituiu a preferência anterior de `Link`/`Info`: marcadores visíveis usam `--bulma-border` e marcadores esmaecidos usam `--bulma-border-weak`. Os dois tokens foram conferidos em `assets/palettes.css`; a alteração permanece restrita ao CSS do CMP-008.
 
-- `git diff --check`: em verificação final.
+- `git diff --check`: passou.
 - Validação visual: pendente.
-- Checkpoint: pendente.
+- Checkpoint: `c2b323a` (`Spec 14: usar bordas nos marcadores`).
