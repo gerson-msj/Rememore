@@ -751,4 +751,4 @@ O operador aprovou testar uma apresentação única e esmaecida para os marcador
 - `deno test app/utilitarios/janelaTemporal_test.ts`: 16 testes passaram; a regra de densidade não possui teste unitário próprio porque pertence à renderização/CSS.
 - `deno lint`, `deno fmt --check`, `deno check components/JanelaTemporal.tsx islands/ExperimentoJanelaTemporal.tsx` e `git diff --check`: passaram.
 - Verificação visual pelo operador: pendente.
-- Checkpoint: pendente.
+- Checkpoint: `2e848de` (`Spec 14: simplificar marcadores por densidade`).
