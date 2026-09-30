@@ -697,4 +697,4 @@ O gesto da faixa agora translada ambas as posições normalizadas pelo deslocame
 - A validação visual/funcional desta revisão pelo operador permanece pendente. A integração de CMP-008 em `/rememorar` também permanece pendente de aprovação visual no laboratório.
 - Indicadores de contexto antes das leituras, após leituras iniciais e ao final: não disponíveis na interface.
 - Próximo passo: operador testar no laboratório o campo inteiro, limiares, extensão dos marcadores e arraste da faixa com cenários de poucos dias; ajustar ao retorno antes da integração em `/rememorar`.
-- Checkpoint desta revisão: pendente.
+- Checkpoint desta revisão: `187d83e` (`Spec 14: suavizar arraste da faixa temporal`).
