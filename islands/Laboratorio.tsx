@@ -5,6 +5,7 @@ import VisualizacaoLaboratorio from "../components/VisualizacaoLaboratorio.tsx"
 import ExperimentoMemoria from "../components/ExperimentoMemoria.tsx"
 import MemoriaLaboratorio from "../components/MemoriaLaboratorio.tsx"
 import ExperimentoJanelaTemporal from "./ExperimentoJanelaTemporal.tsx"
+import ExperimentoCategoriaPanorama from "./ExperimentoCategoriaPanorama.tsx"
 
 function Bloco({ id, titulo, children }: { id: string; titulo: string; children: ComponentChildren }) {
     const [aberto, definirAberto] = useState(true)
@@ -79,6 +80,9 @@ export default function Laboratorio() {
             </Bloco>
             <Bloco id="janela-temporal" titulo="CMP-008 — Janela Temporal de Rememorar">
                 <ExperimentoJanelaTemporal />
+            </Bloco>
+            <Bloco id="categoria-panorama" titulo="CMP-009 — Categoria do Panorama">
+                <ExperimentoCategoriaPanorama />
             </Bloco>
         </div>
     )

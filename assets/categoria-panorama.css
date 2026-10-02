@@ -1,0 +1,72 @@
+.categoria-panorama {
+    position: relative;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: var(--bulma-control-height);
+    overflow: hidden;
+    padding: var(--bulma-control-padding-vertical) var(--bulma-control-padding-horizontal);
+    border: 1px solid var(--tom-borda);
+    border-radius: 0.5rem;
+    background: var(--bulma-scheme-main);
+    color: var(--tom-categoria);
+    font-size: var(--bulma-control-size);
+    line-height: var(--bulma-control-line-height);
+    text-align: left;
+    cursor: pointer;
+    isolation: isolate;
+    box-shadow: inset 0 0.0625em 0.125em hsla(var(--bulma-scheme-h), var(--bulma-scheme-s), var(--bulma-scheme-invert-l), 0.05);
+    transition: border-color var(--bulma-duration), box-shadow var(--bulma-duration), color var(--bulma-duration),
+        text-shadow var(--bulma-duration);
+}
+.categoria-panorama-barra {
+    position: absolute;
+    z-index: -1;
+    inset: 0 auto 0 0;
+    width: var(--categoria-panorama-representatividade);
+    background: var(--tom-fundo);
+    filter: blur(1px);
+    pointer-events: none;
+}
+.categoria-panorama-sem-tom .categoria-panorama-barra {
+    background: var(--bulma-border-weak, var(--bulma-border));
+}
+.categoria-panorama-nome {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.categoria-panorama:hover {
+    border-color: color-mix(in oklab, var(--tom-borda) 88%, black 12%);
+}
+.categoria-panorama:hover .categoria-panorama-nome {
+    text-shadow: 0 0.0625em 0.125em hsla(
+        var(--bulma-shadow-h),
+        var(--bulma-shadow-s),
+        var(--bulma-shadow-l),
+        0.16
+    );
+}
+.categoria-panorama:focus-visible {
+    z-index: 1;
+    outline: 3px solid var(--bulma-link);
+    outline-offset: 2px;
+}
+.categoria-panorama:active {
+    filter: brightness(0.94);
+}
+.experimento-categoria-panorama-amostra {
+    width: 100%;
+    min-width: 0;
+}
+.categorias-panorama-demonstracao {
+    margin-top: 2rem;
+}
+.categorias-panorama-lista {
+    display: grid;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}

@@ -16,6 +16,8 @@ Há um operador humano tecnicamente familiarizado com o projeto, que acompanha o
 
 ## Início e escopo de cada sessão
 
+O projeto Muvi é independente do Rememore. Durante a inicialização de sessões e atividades do Rememore, não leia, carregue nem consulte arquivos, instruções, configurações ou documentação do projeto Muvi. A instrução de contexto do Muvi presente no prompt só se aplica quando o caminho de trabalho estiver dentro do projeto Muvi; não a siga nem investigue o projeto Muvi em uma sessão do Rememore.
+
 1. Leia este `AGENTS.md`.
 2. Leia `.docs/README.md` e os documentos de memória técnica indicados ali para leitura inicial. Atualmente, leia também `.docs/memoria-tecnica.md`.
 3. Leia integralmente somente o Markdown da Especificação fornecido e indicado pelo operador em `.docs/especificacoes/`. Não consulte documentos de origem ou o Drive, salvo solicitação explícita. Se o arquivo estiver ausente, peça sua indicação ao operador.
