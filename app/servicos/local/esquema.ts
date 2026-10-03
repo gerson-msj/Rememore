@@ -2,6 +2,8 @@ export const STORE_CAPTURAS = "capturas"
 export const INDICE_CAPTURAS_POR_CONTA = "porConta"
 export const STORE_DIAGNOSTICO = "_diagnostico"
 export const STORE_CATALOGOS_CATEGORIAS = "catalogosCategorias"
+export const STORE_PROJECAO_REMEMORAR = "projecaoRememorar"
+export const STORE_METADADOS_PROJECAO_REMEMORAR = "metadadosProjecaoRememorar"
 
 export interface MigracaoLocal {
     versao: number
@@ -55,6 +57,14 @@ export const migracoesLocais: readonly MigracaoLocal[] = [
         migrar(_banco, transacao) {
             // Spec 10: descarte dos workspaces experimentais autorizado pelo operador em 23/09/2026.
             transacao.objectStore(STORE_CAPTURAS).clear()
+        }
+    },
+    {
+        versao: 7,
+        migrar(banco) {
+            const blocos = banco.createObjectStore(STORE_PROJECAO_REMEMORAR, { keyPath: ["idConta", "data"] })
+            blocos.createIndex("porConta", "idConta")
+            banco.createObjectStore(STORE_METADADOS_PROJECAO_REMEMORAR, { keyPath: "idConta" })
         }
     }
 ]

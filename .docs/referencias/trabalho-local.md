@@ -9,21 +9,20 @@
   `listarPorConta(idConta)`. `obter` retorna `undefined` para ausência; a consulta retorna `[]` para conta sem registros. Escrita e remoção
   retornam `void` somente após commit; remover registro ausente é sucesso idempotente. Toda falha rejeita a Promise.
 - `CapturaLocal`: `idConta: string`, `dataCaptura: string` (data civil YYYY-MM-DD fornecida pelo consumidor), `memorias: MemoriaLocal[]`.
-  Exige `alterada: boolean` (somente true é pendência), `alteracoesOutras: boolean` (alterações confirmadas de texto/composição/ordem/Tom/balanço),
-  `categoriasOrigem: Record<string, AssociacaoCategoria[]>` (associações por ID de memória do snapshot da origem) e
-  `primeiraMemoriaConfirmada: boolean` (não volta a false ao excluir memórias). Os três campos são metadados exclusivamente locais. Mantém
-  também `origemPreservada: boolean`, `revisaoOrigem: string | null` (revisão opaca, null para ausência remota), `idAreaTrabalho: string`
-  (identidade desta materialização) e `prazoEdicaoDias: number` (prazo recebido na preparação). `MemoriaLocal`: `id: string`,
-  `conteudo: string`, `ordem: number`, `primeiraPreservacaoEm: string | null`, `complementos: ComplementoLocal[]`,
+  Exige `alterada: boolean` (somente true é pendência), `alteracoesOutras: boolean` (alterações confirmadas de
+  texto/composição/ordem/Tom/balanço), `categoriasOrigem: Record<string, AssociacaoCategoria[]>` (associações por ID de memória do snapshot
+  da origem) e `primeiraMemoriaConfirmada: boolean` (não volta a false ao excluir memórias). Os três campos são metadados exclusivamente
+  locais. Mantém também `origemPreservada: boolean`, `revisaoOrigem: string | null` (revisão opaca, null para ausência remota),
+  `idAreaTrabalho: string` (identidade desta materialização) e `prazoEdicaoDias: number` (prazo recebido na preparação). `MemoriaLocal`:
+  `id: string`, `conteudo: string`, `ordem: number`, `primeiraPreservacaoEm: string | null`, `complementos: ComplementoLocal[]`,
   `categorias?: AssociacaoCategoria[]` (`idCategoria: string | null`, `nome: string`), `tom?: number` (ausência distinta de 0) e
   `balancoSentimental?: string` (texto opcional preservado como digitado, após rejeitar valor vazio/só espaços). Ausência de categorias em
   registros anteriores equivale a conjunto vazio. Tom e balanço permanecem no agregado IndexedDB `capturas` sem mudança de schema e são
-  enviados como valores explícitos (ou `null` quando ausentes) no payload integral de preservação. Complementos estão em ordem histórica, com `id`, `conteudo` e
-  `primeiraPreservacaoEm` próprios. null significa
-  nunca preservado; timestamp ISO representa a primeira preservação e não deve ser reiniciado em futuras edições/preservações. O fluxo
-  atribui um identificador uma única vez, por exemplo com `crypto.randomUUID()`, e o mantém ao editar/reordenar. O repositório persiste o
-  agregado fornecido, sem gerar identidades, ordenar arrays, converter datas ou definir regras de edição. A ordem explícita é independente
-  da posição no array.
+  enviados como valores explícitos (ou `null` quando ausentes) no payload integral de preservação. Complementos estão em ordem histórica,
+  com `id`, `conteudo` e `primeiraPreservacaoEm` próprios. null significa nunca preservado; timestamp ISO representa a primeira preservação
+  e não deve ser reiniciado em futuras edições/preservações. O fluxo atribui um identificador uma única vez, por exemplo com
+  `crypto.randomUUID()`, e o mantém ao editar/reordenar. O repositório persiste o agregado fornecido, sem gerar identidades, ordenar arrays,
+  converter datas ou definir regras de edição. A ordem explícita é independente da posição no array.
 - Conta e data formam a chave composta; substituição afeta somente esse par. O índice `porConta` restringe a consulta à conta informada.
   Esse isolamento é de seleção dos dados, não uma fronteira de segurança contra scripts da mesma origem. A identidade da conta vem de
   `ServicoSessao.accountId(request)` nos handlers; não fixar uma identidade nas páginas.
@@ -44,14 +43,14 @@ Mudança para found chama `read`, que entrega composição, revisão e prazo do 
 configuração inválida rejeita sem substituir o estado anterior. A revisão de origem permanece no workspace alterado para a futura
 preservação.
 
-`app/servicos/captura/contratos.ts` define `MemoriaPreservada`, `ComplementoPreservado` e a fronteira `ServicoCapturasPreservadas`, separados
-dos tipos locais. `inspect` consulta estado/revisão, `read` transfere composição integral para abertura e `preserve` substitui a composição
-integral, devolvendo nova revisão e categorias criadas. Memórias incluem texto, ordem, primeira preservação, Tom, balanço sentimental,
-categorias e complementos; categoria local sem identidade remota é enviada com `id: null`. `prepararCaptura` converte os campos remotos para
-o agregado local, conservando valores, IDs, ordem e historicidade. O mock de desenvolvimento é stateful por conta. `rememoreCaptureMock.set/configure/reset`
-seleciona cenários da consulta; `configureRemoto` altera o estado/revisão remotos; `configurarCategoria` prepara categorias ativas/inativas;
-`resetarEstadoRemoto` limpa o estado mock da conta; `falharPreservacao`, `falharResolucaoCategoria` e `definirLatencia` controlam
-falhas e latência sem depender de condições acidentais.
+`app/servicos/captura/contratos.ts` define `MemoriaPreservada`, `ComplementoPreservado` e a fronteira `ServicoCapturasPreservadas`,
+separados dos tipos locais. `inspect` consulta estado/revisão, `read` transfere composição integral para abertura e `preserve` substitui a
+composição integral, devolvendo nova revisão e categorias criadas. Memórias incluem texto, ordem, primeira preservação, Tom, balanço
+sentimental, categorias e complementos; categoria local sem identidade remota é enviada com `id: null`. `prepararCaptura` converte os campos
+remotos para o agregado local, conservando valores, IDs, ordem e historicidade. O mock de desenvolvimento é stateful por conta.
+`rememoreCaptureMock.set/configure/reset` seleciona cenários da consulta; `configureRemoto` altera o estado/revisão remotos;
+`configurarCategoria` prepara categorias ativas/inativas; `resetarEstadoRemoto` limpa o estado mock da conta; `falharPreservacao`,
+`falharResolucaoCategoria` e `definirLatencia` controlam falhas e latência sem depender de condições acidentais.
 
 `app/servicos/captura/sessaoAberta.ts`: `SessaoCapturaAberta` usa sessionStorage por conta/data. `retomar(tipoNavegacao)` só retorna
 identidade para reload; navigate/back_forward encerram a sessão anterior. `iniciar(idAreaTrabalho)` ocorre após preparação confirmada.
@@ -125,21 +124,23 @@ Referência técnica consultada para commit, bloqueio e rollback: [Indexed Datab
 
 ## Schema e diagnóstico
 
-Banco `rememore-local`, versão 6. A migração 2 limpa registros experimentais sem estado/origem. A migração 3 limpa capturas experimentais
+Banco `rememore-local`, versão 7. A migração 2 limpa registros experimentais sem estado/origem. A migração 3 limpa capturas experimentais
 anteriores à 07 sem revisão/historicidade, conforme dispensa explícita do operador em 14/09/2026. A migração 4 substitui
 `captures`/`_health` pelos stores em PT-BR e descarta os dados anteriores, conforme aprovação do operador em 15/09/2026. Migrações 1–3
-mantêm seus nomes históricos e comportamento, independentemente das constantes do schema atual. Cada limpeza ocorre somente no upgrade
-correspondente, sem limpar capturas nas aberturas posteriores. A migração 5 adiciona `catalogosCategorias` sem modificar ou apagar capturas.
-A migração 6 descarta apenas os workspaces em `capturas`, uma única vez, para introduzir os metadados locais da Spec 10; descarte autorizado
-em 23/09/2026. Preserva o catálogo. `app/servicos/local/esquema.ts` concentra migrações consecutivas a partir de 1. Para evoluir,
-acrescentar uma migração com a próxima versão; ela recebe banco e transação de upgrade, permitindo criar stores/índices ou transformar
-registros com requisições IndexedDB. O mecanismo aplica somente versões posteriores à armazenada, dentro da transação nativa de upgrade. Não
-aumentar versão sem migração nem alterar retroativamente a migração já aplicada. Não existe recriação silenciosa para contornar falhas.
+mantêm seus nomes históricos e comportamento, independentemente das constantes do schema atual. A migração 7 apenas acrescenta os stores da
+projeção de Rememorar e seus metadados, sem alterar capturas nem catálogo. Cada limpeza ocorre somente no upgrade correspondente, sem limpar
+capturas nas aberturas posteriores. A migração 5 adiciona `catalogosCategorias` sem modificar ou apagar capturas. A migração 6 descarta
+apenas os workspaces em `capturas`, uma única vez, para introduzir os metadados locais da Spec 10; descarte autorizado em 23/09/2026.
+Preserva o catálogo. `app/servicos/local/esquema.ts` concentra migrações consecutivas a partir de 1. Para evoluir, acrescentar uma migração
+com a próxima versão; ela recebe banco e transação de upgrade, permitindo criar stores/índices ou transformar registros com requisições
+IndexedDB. O mecanismo aplica somente versões posteriores à armazenada, dentro da transação nativa de upgrade. Não aumentar versão sem
+migração nem alterar retroativamente a migração já aplicada. Não existe recriação silenciosa para contornar falhas.
 
-Stores atuais: `capturas`, chave `[idConta, dataCaptura]`, índice `porConta`; `catalogosCategorias`, chave `idConta`; `_diagnostico`,
-técnico, sem dados funcionais. O diagnóstico prepara/abre o banco, grava um token na chave `sonda`, lê e remove esse token em uma transação
-de escrita. Compara a leitura e aguarda commit. Sucesso não garante operações futuras nem diagnostica exaustivamente corrupção, capacidade
-disponível ou a política de retenção do navegador.
+Stores atuais: `capturas`, chave `[idConta, dataCaptura]`, índice `porConta`; `catalogosCategorias`, chave `idConta`; `projecaoRememorar`,
+chave `[idConta, data]`, índice `porConta`; `metadadosProjecaoRememorar`, chave `idConta`; `_diagnostico`, técnico, sem dados funcionais. O
+diagnóstico prepara/abre o banco, grava um token na chave `sonda`, lê e remove esse token em uma transação de escrita. Compara a leitura e
+aguarda commit. Sucesso não garante operações futuras nem diagnostica exaustivamente corrupção, capacidade disponível ou a política de
+retenção do navegador.
 
 Os construtores `BancoLocal({nome, fabrica, migracoes})` e `RepositorioCapturasLocais(banco)` permitem validação técnica isolada. Não há
 dependência externa de runtime. Cenários de desenvolvimento usaram `fake-indexeddb` em memória; não equivalem a teste de persistência em
@@ -170,17 +171,18 @@ fecha a pesquisa. Voltar limpa o marcador e retorna à lista com a memória trab
 Como as categorias são gravadas imediatamente, não há seleção não confirmada a proteger no abandono ou em `beforeunload`.
 `app/servicos/captura/balanco.ts` salva ou remove `MemoriaLocal.balancoSentimental` com validação da historicidade, mantendo o texto
 original digitado. O agregado só é publicado após commit; sucesso marca `alterada` e `alteracoesOutras`. `ProtecaoRascunhoBalanco` usa
-`rememore:rascunho-balanco:v1:` em sessionStorage, separado da captura confirmada, e retoma apenas na mesma sessão, materialização,
-memória e versão confirmada do balanço. A interface protege o rascunho durante digitação, antes de `pagehide`/`beforeunload` e antes de
-navegação controlada; cancelamento e exclusão são confirmados no próprio popup.
-`app/servicos/local/catalogoCategorias.ts` persiste `{idConta, revisao, categorias: [{id, nome, versao, ativa}]}` atomicamente. A revisão
-global é opaca; versões individuais são inteiros crescentes. `app/servicos/categorias.ts` consulta por revisão e aplica somente alterações;
-revisão inalterada não grava novamente. `prepararCatalogo` serializa sincronizações da conta com um Web Lock separado do lock por data,
-evitando regressão do cursor em aberturas paralelas. A consulta ocorre a cada abertura de CapturaDia, independentemente da revisão ou
-pendência da composição. Falha mantém o catálogo anterior quando legível e permite continuar com as categorias da captura, com aviso.
+`rememore:rascunho-balanco:v1:` em sessionStorage, separado da captura confirmada, e retoma apenas na mesma sessão, materialização, memória
+e versão confirmada do balanço. A interface protege o rascunho durante digitação, antes de `pagehide`/`beforeunload` e antes de navegação
+controlada; cancelamento e exclusão são confirmados no próprio popup. `app/servicos/local/catalogoCategorias.ts` persiste
+`{idConta, revisao, categorias: [{id, nome, versao, ativa}]}` atomicamente. A revisão global é opaca; versões individuais são inteiros
+crescentes. `app/servicos/categorias.ts` consulta por revisão e aplica somente alterações; revisão inalterada não grava novamente.
+`prepararCatalogo` serializa sincronizações da conta com um Web Lock separado do lock por data, evitando regressão do cursor em aberturas
+paralelas. A consulta ocorre a cada abertura de CapturaDia, independentemente da revisão ou pendência da composição. Falha mantém o catálogo
+anterior quando legível e permite continuar com as categorias da captura, com aviso.
 
-`app/servicos/categorias/contratos.ts` é a fronteira substituível; `simulado.ts` fornece catálogo inicialmente vazio e deltas por conta.
-Somente em desenvolvimento, `rememoreCategoriasMock.alterar(idConta, id, nome, ativa)` acrescenta um evento e incrementa a versão;
+`app/servicos/categorias/contratos.ts` é a fronteira substituível; `simulado.ts` fornece deltas por conta. Na jornada Rememorar, o mock
+semeia o catálogo compartilhado de referência na primeira utilização; não existe store nem fronteira paralela de categorias. Somente em
+desenvolvimento, `rememoreCategoriasMock.alterar(idConta, id, nome, ativa)` acrescenta um evento e incrementa a versão;
 `falhar(idConta, boolean)` controla indisponibilidade. Reabrir uma captura ou recarregar consulta a revisão. O mock não implementa
 preservação nem decisão automática de inativação/reconciliação. IDs locais sem servidor não são reconciliados antecipadamente.
 

@@ -253,7 +253,13 @@ Deno.test("migração 4: substitui stores antigos, mantém novos dados e renova 
     verificarIgualdade(await repositorio.listarPorConta("a"), [])
     await banco.transacao(["capturas", "_diagnostico"], "readonly", "read", (transacao) => {
         verificarIgualdade(transacao.db.version, migracoesLocais.length)
-        verificarIgualdade(Array.from(transacao.db.objectStoreNames), ["_diagnostico", "capturas", "catalogosCategorias"])
+        verificarIgualdade(Array.from(transacao.db.objectStoreNames), [
+            "_diagnostico",
+            "capturas",
+            "catalogosCategorias",
+            "metadadosProjecaoRememorar",
+            "projecaoRememorar"
+        ])
         const capturas = transacao.objectStore("capturas")
         verificarIgualdade(capturas.keyPath, ["idConta", "dataCaptura"])
         verificarIgualdade(Array.from(capturas.indexNames), ["porConta"])

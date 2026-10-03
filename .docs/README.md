@@ -29,6 +29,8 @@ o analista e o Drive. Não é necessário criar outro arquivo nem uma versão re
   autenticada.
 - [Ambiente e fundação visual](referencias/ambiente-e-fundacao-visual.md): execução do Deno, estilos, paletas e laboratório.
 - [Trabalho local](referencias/trabalho-local.md): IndexedDB, disponibilidade, capturas por conta/data, transações e evolução de schema.
+- [Projeção de Rememorar](referencias/projecao-rememorar.md): blocos por data, revisão global, sincronização mockada e fixtures de
+  referência.
 
 Leia somente a referência pertinente à unidade. Para reutilizar um contrato documentado, a referência pode bastar; antes de alterá-lo,
 confira o fonte e os chamadores afetados. O catálogo cresce quando o trabalho demanda, sem inventário geral do projeto.

@@ -1,17 +1,23 @@
-import { useRef, useState } from "preact/hooks"
+import { useEffect, useRef, useState } from "preact/hooks"
 import CabecalhoPagina from "../components/CabecalhoPagina.tsx"
 import JanelaTemporal from "../components/JanelaTemporal.tsx"
 import MensagemPopup, { type ResultadoPopup } from "../components/MensagemPopup.tsx"
+import { prepararDadosRememorar } from "../app/servicos/rememorar.ts"
 
 interface PropriedadesEstruturaProtegida {
     titulo: string
     regiaoPrincipal?: "rememorar"
     diasPreservadosMock?: readonly string[]
+    accountId?: string
 }
 
-export default function EstruturaProtegida({ titulo, regiaoPrincipal, diasPreservadosMock }: PropriedadesEstruturaProtegida) {
+export default function EstruturaProtegida({ titulo, regiaoPrincipal, diasPreservadosMock, accountId }: PropriedadesEstruturaProtegida) {
     const [confirmarSaida, definirConfirmarSaida] = useState(false)
     const formulario = useRef<HTMLFormElement>(null)
+
+    useEffect(() => {
+        if (regiaoPrincipal === "rememorar" && accountId) void prepararDadosRememorar(accountId)
+    }, [accountId, regiaoPrincipal])
 
     function receberResultadoSaida(resultado: ResultadoPopup) {
         definirConfirmarSaida(false)

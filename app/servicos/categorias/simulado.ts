@@ -1,5 +1,5 @@
-import type { CategoriaPreservada } from "../local/catalogoCategorias.ts"
 import type { ServicoCatalogoCategorias } from "./contratos.ts"
+import type { CategoriaPreservada } from "../local/catalogoCategorias.ts"
 
 interface EstadoSimulado {
     eventos: CategoriaPreservada[]
@@ -44,4 +44,18 @@ if (desenvolvimento) {
             }
         }
     })
+}
+
+/** Povoa a primeira utilização do catálogo compartilhado com o vocabulário de referência de Rememorar. */
+export function prepararCatalogoReferenciaSimulado(idConta: string, categorias: CategoriaPreservada[]) {
+    if (!desenvolvimento) return
+    const salvo = localStorage.getItem(chave(idConta))
+    const estado: EstadoSimulado = salvo ? JSON.parse(salvo) : { eventos: [] }
+    const idsExistentes = new Set(estado.eventos.map((item) => item.id))
+    const faltantes = categorias.filter((categoria) => !idsExistentes.has(categoria.id))
+    if (!faltantes.length) return
+    localStorage.setItem(
+        chave(idConta),
+        JSON.stringify({ ...estado, eventos: [...estado.eventos, ...faltantes.map((item) => ({ ...item }))] })
+    )
 }

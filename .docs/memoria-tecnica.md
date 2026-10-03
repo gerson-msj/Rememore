@@ -11,11 +11,11 @@ Leitura obrigatória curta. As referências do índice são consultadas somente 
 - `/laboratorio` permanece disponível para calibração. Seus rascunhos não modificam o tema da Página Inicial nem os valores definitivos.
 - Capacidades da Principal chegam resolvidas; pendências de captura pertencem ao front. Para contratos concretos, consulte a referência
   pertinente.
-- O IndexedDB real em `app/servicos/local/` sustenta Seleção, Captura do dia e pendências da Principal. Capturas são agregados por
-  conta/data; somente `alterada: true` é pendência. Schema 6 mantém campos locais em PT-BR e catálogo por conta, acrescenta origem de
-  categorias e estado de aprendizagem; categorias exclusivamente locais são derivadas apenas da captura aberta. Payloads remotos mantêm seu
-  contrato e são convertidos na preparação. Operações rejeitam falhas explicitamente. Consulte a referência antes de integrar ou evoluir o
-  schema.
+- O IndexedDB real em `app/servicos/local/` sustenta Seleção, Captura do dia, pendências da Principal e projeção de Rememorar. Capturas são
+  agregados por conta/data; somente `alterada: true` é pendência. Schema 7 mantém campos locais em PT-BR e catálogo por conta, acrescenta
+  origem de categorias e estado de aprendizagem; categorias exclusivamente locais são derivadas apenas da captura aberta. Payloads remotos
+  mantêm seu contrato e são convertidos na preparação. Operações rejeitam falhas explicitamente. Consulte a referência antes de integrar ou
+  evoluir o schema.
 
 ## Referências sob demanda
 
@@ -23,5 +23,7 @@ Leitura obrigatória curta. As referências do índice são consultadas somente 
   fronteira autenticada.
 - [Ambiente e fundação visual](referencias/ambiente-e-fundacao-visual.md): Deno no Windows, cascata CSS, paletas e laboratório.
 - [Trabalho local](referencias/trabalho-local.md): contratos de diagnóstico, persistência de capturas e migrações.
+- [Projeção de Rememorar](referencias/projecao-rememorar.md): blocos por data, revisão global, sincronização mockada e fixtures de
+  referência.
 
 Estas notas representam o presente. Atualize ou remova conhecimento superado; mantenha detalhes por assunto fora da leitura obrigatória.
