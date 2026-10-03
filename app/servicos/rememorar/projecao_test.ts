@@ -322,3 +322,30 @@ Deno.test("mock remoto mantém revisão por data e transmite somente o estado co
     igual(incremental.blocos.length, 1)
     igual(incremental.blocos[0].categorias[0].tons, [75])
 })
+
+Deno.test("mock remoto muda o cenário com revisão incremental e remove datas que saíram", async () => {
+    let quantidadeDias: 2 | 7 | 30 | 300 = 30
+    const estados = new Map<
+        string,
+        {
+            revisao: number
+            blocos: Record<string, BlocoProjecaoRememorar>
+            ultimaRevisao: Record<string, number>
+            cenario?: 2 | 7 | 30 | 300
+        }
+    >()
+    const remoto = criarProjecaoRemotaSimulada({
+        ler: (conta) => estados.get(conta) ?? { revisao: 0, blocos: {}, ultimaRevisao: {} },
+        gravar: (conta, estado) => estados.set(conta, estado),
+        cenario: () => quantidadeDias
+    })
+    const inicial = await remoto.consultar("conta-a", null)
+    if (inicial.tipo !== "completa") throw new Error("Carga inicial não completa")
+    igual(inicial.blocos.length, 30)
+
+    quantidadeDias = 7
+    const alterada = await remoto.consultar("conta-a", inicial.revisao)
+    if (alterada.tipo !== "incremental") throw new Error("Resposta incremental esperada")
+    igual(alterada.blocos.length, 7)
+    igual(alterada.removidas.length, 23)
+})

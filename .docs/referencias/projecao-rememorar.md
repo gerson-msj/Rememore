@@ -13,7 +13,8 @@ conta selecionada. Schema 7 acrescenta stores e índice sem tocar nos dados das 
 promove a revisão após persistência. `simulado.ts` acompanha revisão da última alteração por data: entrega somente o estado atual do bloco
 alterado, ou tombstone da data removida. Remoção seguida de recriação entrega o bloco atual. Em desenvolvimento,
 `rememoreRememorarMock.selecionarCenario(2 | 7 | 30 | 300)`, `alterarData`, `removerData` e `falhar` controlam o remoto por conta.
-Selecionar outro cenário limpa o estado derivado do mock para que a próxima consulta inicial use a nova quantidade.
+O cenário padrão de desenvolvimento é 300 dias; produção simulada mantém 30. Selecionar outro cenário preserva a revisão anterior e
+publica blocos/tombstones incrementais para reconciliar o cache local sem deixar datas do cenário anterior.
 
 `app/servicos/rememorar.ts` prepara projeção antes de `prepararCatalogo`; retorna status e dados locais de ambos sem compor interface ou
 calcular o Panorama. `/rememorar` fornece a identidade da conta autenticada e inicia essa preparação no cliente. Falhas preservam e devolvem

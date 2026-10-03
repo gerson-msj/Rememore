@@ -6,8 +6,11 @@ interface EstadoSimulado {
     revisao: number
     blocos: Record<string, BlocoProjecaoRememorar>
     ultimaRevisao: Record<string, number>
+    cenario?: 2 | 7 | 30 | 300
     falhar?: boolean
 }
+
+export type CenarioRememorar = 2 | 7 | 30 | 300
 
 type ArmazenamentoSimulado = {
     ler(idConta: string): EstadoSimulado
@@ -22,14 +25,19 @@ function clonar<T>(valor: T): T {
 export function criarProjecaoRemotaSimulada(armazenamento: ArmazenamentoSimulado): ServicoProjecaoRemota {
     function lerEstado(idConta: string): EstadoSimulado {
         const existente = armazenamento.ler(idConta)
-        if (existente.revisao > 0) return existente
-        const cenario = obterCenarioAcervoRememorar(armazenamento.cenario())
+        const quantidadeDias = armazenamento.cenario()
+        if (existente.revisao > 0 && existente.cenario === quantidadeDias) return existente
+        const cenario = obterCenarioAcervoRememorar(quantidadeDias)
+        const revisao = existente.revisao + 1
         const blocos: Record<string, BlocoProjecaoRememorar> = {}
         for (const data of cenario.dias) blocos[data] = projetarDiaAcervoRememorar(idConta, cenario, data)
         const inicial: EstadoSimulado = {
-            revisao: 1,
+            revisao,
             blocos,
-            ultimaRevisao: Object.fromEntries(cenario.dias.map((data) => [data, 1]))
+            cenario: quantidadeDias,
+            ultimaRevisao: Object.fromEntries(
+                [...new Set([...Object.keys(existente.blocos), ...cenario.dias])].map((data) => [data, revisao])
+            )
         }
         armazenamento.gravar(idConta, inicial)
         return inicial
@@ -81,18 +89,24 @@ const armazenamentoNavegador: ArmazenamentoSimulado = {
         if (desenvolvimento) localStorage.setItem(chaveEstado(idConta), JSON.stringify(estado))
     },
     cenario() {
-        const valor = desenvolvimento ? Number(localStorage.getItem(chaveCenario)) : 30
-        return valor === 2 || valor === 7 || valor === 30 || valor === 300 ? valor : 30
+        const valor = desenvolvimento ? Number(localStorage.getItem(chaveCenario) ?? "300") : 30
+        return valor === 2 || valor === 7 || valor === 30 || valor === 300 ? valor : desenvolvimento ? 300 : 30
     }
 }
 
 export const projecaoRemotaSimulada = criarProjecaoRemotaSimulada(armazenamentoNavegador)
 
+export function selecionarCenarioRememorar(quantidade: CenarioRememorar) {
+    if (desenvolvimento) localStorage.setItem(chaveCenario, String(quantidade))
+}
+
 function alterarEstado(idConta: string, alterar: (estado: EstadoSimulado) => void) {
     const estado = armazenamentoNavegador.ler(idConta)
     if (estado.revisao === 0) {
-        const cenario: CenarioAcervoRememorar = obterCenarioAcervoRememorar(armazenamentoNavegador.cenario())
+        const quantidadeDias = armazenamentoNavegador.cenario()
+        const cenario: CenarioAcervoRememorar = obterCenarioAcervoRememorar(quantidadeDias)
         estado.revisao = 1
+        estado.cenario = quantidadeDias
         for (const data of cenario.dias) {
             estado.blocos[data] = projetarDiaAcervoRememorar(idConta, cenario, data)
             estado.ultimaRevisao[data] = 1
@@ -106,9 +120,7 @@ if (desenvolvimento) {
     Object.assign(globalThis, {
         rememoreRememorarMock: {
             selecionarCenario(quantidade: 2 | 7 | 30 | 300) {
-                localStorage.setItem(chaveCenario, String(quantidade))
-                const chavesEstado = Object.keys(localStorage).filter((chave) => chave.startsWith("rememore:dev:projecao:"))
-                for (const chave of chavesEstado) localStorage.removeItem(chave)
+                selecionarCenarioRememorar(quantidade)
             },
             alterarData(idConta: string, data: string, bloco?: BlocoProjecaoRememorar) {
                 alterarEstado(idConta, (estado) => {

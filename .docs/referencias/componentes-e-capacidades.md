@@ -28,6 +28,12 @@ identidade por conta própria. A Seleção já recebe esse identificador pelo ha
 mostra book-open sem ação. Sair aparece somente com `aoSair`. Os callbacks pertencem ao chamador, incluindo navegação e confirmação de
 saída.
 
+## Categoria do Panorama
+
+`components/CategoriaPanorama.tsx` recebe `identificador`, `nome`, `representatividade` normalizada, `tom` e `aoSelecionar`. A largura
+visível da barra usa a representatividade calculada pelo chamador como `sqrt(q/qMax)`. O componente continua sem conhecer a projeção ou as
+regras de cálculo.
+
 ## MensagemPopup
 
 `components/MensagemPopup.tsx`: propriedades obrigatórias `aberto`, `mensagem`, `acoes` e `aoResponder`; opcionais `titulo`, `icone`, `cor`,

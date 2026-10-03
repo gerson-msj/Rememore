@@ -39,6 +39,17 @@
 }
 .categoria-panorama:hover {
     border-color: color-mix(in oklab, var(--tom-borda) 88%, black 12%);
+    box-shadow: 0 0.125rem 0.35rem -0.05rem hsla(
+        var(--bulma-shadow-h),
+        var(--bulma-shadow-s),
+        var(--bulma-shadow-l),
+        0.14
+    ), inset 0 0.0625em 0.125em hsla(
+        var(--bulma-scheme-h),
+        var(--bulma-scheme-s),
+        var(--bulma-scheme-invert-l),
+        0.05
+    );
 }
 .categoria-panorama:hover .categoria-panorama-nome {
     text-shadow: 0 0.0625em 0.125em hsla(
