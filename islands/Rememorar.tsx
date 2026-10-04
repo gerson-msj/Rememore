@@ -3,11 +3,36 @@ import CategoriaPanorama from "../components/CategoriaPanorama.tsx"
 import JanelaTemporal from "../components/JanelaTemporal.tsx"
 import { type EstadoPreparacaoRememorar, prepararDadosRememorar } from "../app/servicos/rememorar.ts"
 import type { IntervaloJanela } from "../app/utilitarios/janelaTemporal.ts"
-import { derivarPanoramaRememorar } from "../app/utilitarios/panoramaRememorar.ts"
+import { derivarPanoramaRememorar, type CategoriaPanoramaDerivada } from "../app/utilitarios/panoramaRememorar.ts"
 import { type CenarioRememorar, selecionarCenarioRememorar } from "../app/servicos/rememorar/simulado.ts"
 
 interface PropriedadesRememorar {
     accountId: string
+}
+
+interface CategoriaPanoramaAnimada extends CategoriaPanoramaDerivada {
+    animacao: "entrando" | "saindo" | null
+}
+
+function reconciliarCategoriasAnimadas(
+    atuais: readonly CategoriaPanoramaAnimada[],
+    desejadas: readonly CategoriaPanoramaDerivada[]
+): CategoriaPanoramaAnimada[] {
+    const idsDesejados = new Set(desejadas.map(({ identificador }) => identificador))
+    const existentes = new Map(atuais.map((categoria) => [categoria.identificador, categoria] as const))
+    const proximas: CategoriaPanoramaAnimada[] = desejadas.map((categoria) => {
+        const existente = existentes.get(categoria.identificador)
+        return {
+            ...categoria,
+            animacao: !existente || existente.animacao === "saindo" ? "entrando" : existente.animacao
+        }
+    })
+    for (const categoria of atuais) {
+        if (!idsDesejados.has(categoria.identificador)) {
+            proximas.push(categoria.animacao === "saindo" ? categoria : { ...categoria, animacao: "saindo" })
+        }
+    }
+    return proximas
 }
 
 export default function Rememorar({ accountId }: PropriedadesRememorar) {
@@ -15,6 +40,7 @@ export default function Rememorar({ accountId }: PropriedadesRememorar) {
     const [intervalo, definirIntervalo] = useState<IntervaloJanela | null>(null)
     const [carregandoCenario, definirCarregandoCenario] = useState(false)
     const [geracaoJanela, definirGeracaoJanela] = useState(0)
+    const [categoriasAnimadas, definirCategoriasAnimadas] = useState<CategoriaPanoramaAnimada[]>([])
 
     useEffect(() => {
         let ativa = true
@@ -41,6 +67,21 @@ export default function Rememorar({ accountId }: PropriedadesRememorar) {
             preparacao.catalogo.dados
         )
     }, [dadosProntos, dias, intervalo, preparacao])
+
+    useEffect(() => {
+        definirCategoriasAnimadas((atuais) => reconciliarCategoriasAnimadas(atuais, categorias))
+    }, [categorias])
+
+    function finalizarAnimacaoCategoria(identificador: string, animacao: CategoriaPanoramaAnimada["animacao"]) {
+        if (!animacao) return
+        if (animacao === "saindo") {
+            definirCategoriasAnimadas((atuais) => atuais.filter((categoria) => categoria.identificador !== identificador))
+            return
+        }
+        definirCategoriasAnimadas((atuais) => atuais.map((categoria) => categoria.identificador === identificador
+            ? { ...categoria, animacao: null }
+            : categoria))
+    }
 
     async function trocarCenario(quantidade: CenarioRememorar) {
         if (carregandoCenario) return
@@ -82,8 +123,12 @@ export default function Rememorar({ accountId }: PropriedadesRememorar) {
                 </div>
             )}
             <ul class="categorias-panorama-lista">
-                {categorias.map((categoria) => (
-                    <li key={categoria.identificador}>
+                {categoriasAnimadas.map(({ animacao, ...categoria }) => (
+                    <li
+                        key={categoria.identificador}
+                        class={`categoria-panorama-item${animacao ? ` categoria-panorama-item-${animacao}` : ""}`}
+                        onAnimationEnd={() => finalizarAnimacaoCategoria(categoria.identificador, animacao)}
+                    >
                         <CategoriaPanorama
                             identificador={categoria.identificador}
                             nome={categoria.nome}
