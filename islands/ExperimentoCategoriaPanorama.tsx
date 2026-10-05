@@ -1,7 +1,7 @@
 import { useState } from "preact/hooks"
 import CategoriaPanorama from "../components/CategoriaPanorama.tsx"
 
-const categoriasDemonstrativas = [
+export const categoriasDemonstrativas = [
     { identificador: "convivencia", nome: "Convivência", representatividade: 1, tom: 82 },
     { identificador: "rituais", nome: "Pequenos rituais de manhã", representatividade: 0.64, tom: 28 },
     { identificador: "despedidas", nome: "Mudanças e despedidas", representatividade: 0.42, tom: -68 },
@@ -107,23 +107,6 @@ export default function ExperimentoCategoriaPanorama() {
                     ? "Selecione a categoria para observar o retorno do identificador."
                     : `Identificador acionado: ${selecionada}`}
             </p>
-            <section class="categorias-panorama-demonstracao" aria-labelledby="titulo-lista-categorias-panorama">
-                <h3 class="title is-5" id="titulo-lista-categorias-panorama">Composição demonstrativa</h3>
-                <p class="mb-4">Amostras fixas para observar a proporção e o Tom em várias categorias.</p>
-                <ul class="categorias-panorama-lista">
-                    {categoriasDemonstrativas.map((categoria) => (
-                        <li key={categoria.identificador}>
-                            <CategoriaPanorama
-                                identificador={categoria.identificador}
-                                nome={categoria.nome}
-                                representatividade={categoria.representatividade}
-                                tom={categoria.tom}
-                                aoSelecionar={definirSelecionada}
-                            />
-                        </li>
-                    ))}
-                </ul>
-            </section>
         </section>
     )
 }

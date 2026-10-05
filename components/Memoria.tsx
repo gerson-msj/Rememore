@@ -9,6 +9,7 @@ type PropriedadesMemoria =
         aoAcionar: () => void
         inativa?: boolean
         categoriaEmAtencao?: boolean
+        transformarTom?: (tom: number | null) => number | null
     }
     & (
         | {
@@ -22,11 +23,11 @@ type PropriedadesMemoria =
     )
 
 export default function Memoria(propriedades: PropriedadesMemoria) {
-    const { conteudo, categorias, tom, contexto, aoAcionar, inativa = false } = propriedades
+    const { conteudo, categorias, tom, contexto, aoAcionar, inativa = false, transformarTom } = propriedades
     const completa = contexto === "revisar"
     const mostrarCategoria = categorias.length > 0 || contexto !== "registrar"
     const categoria = categorias.length ? (completa ? categorias.join(", ") : categorias[0]) : "Sem categoria"
-    const aparencia = aparenciaTom(tom)
+    const aparencia = aparenciaTom(tom, transformarTom)
     return (
         <article
             class={`memoria ${aparencia.className}${inativa ? " memoria-inativa" : ""}${

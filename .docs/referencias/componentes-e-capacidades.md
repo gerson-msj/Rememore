@@ -30,9 +30,9 @@ saída.
 
 ## Categoria do Panorama
 
-`components/CategoriaPanorama.tsx` recebe `identificador`, `nome`, `representatividade` normalizada, `tom` e `aoSelecionar`. A largura
-visível da barra usa a representatividade calculada pelo chamador como `sqrt(q/qMax)`. O componente continua sem conhecer a projeção ou as
-regras de cálculo.
+`components/CategoriaPanorama.tsx` recebe `identificador`, `nome`, `representatividade` normalizada, `tom` e `aoSelecionar`. A propriedade
+opcional `transformarTom` altera somente a intensidade visual, sem alterar o Tom funcional. A largura visível da barra usa a
+representatividade calculada pelo chamador como `sqrt(q/qMax)`. O componente continua sem conhecer a projeção ou as regras de cálculo.
 
 ## MensagemPopup
 
@@ -82,13 +82,15 @@ ao diálogo por `aria-describedby`; preserve essa associação ao evoluir a estr
 `conteudo`, `categorias`, `tom` (`number` entre -100 e +100 ou `null`), `contexto` (`registrar`, `categorizar`, `revisar`) e `aoAcionar`. No
 contexto `registrar`, recebe também `primeira`, `ultima`, `aoElevar` e `aoRebaixar`; os callbacks de ordem recebem o botão acionado para
 preservar a rolagem contextual. `inativa` desabilita os três acionamentos, incluindo teclado e legenda, e esmaece a apresentação. Não contém
-persistência nem navegação. Seu CSS é `assets/memoria.css`. Categorias compactas usam primeiro nome e excedentes; revisão usa todos os
-nomes. Texto integral fica no DOM e a prévia é limitada por CSS.
+persistência nem navegação. A propriedade opcional `transformarTom` altera somente a intensidade visual. Seu CSS é `assets/memoria.css`.
+Categorias compactas usam primeiro nome e excedentes; revisão usa todos os nomes. Texto integral fica no DOM e a prévia é limitada por CSS.
 
 `app/utilitarios/aparenciaTom.ts` fornece classes e variáveis para um valor de Tom e centraliza `configuracaoTom`: categoria, borda, sombra,
 fundo, faixa e setas. `assets/tom.css` define extremos por tema e variáveis de saída por região. Outro consumidor pode usar essa aparência
-sem depender de Memoria. Desligar uma região restaura o tema; a faixa começa desligada por decisão do operador na Spec 08. Tom ausente não
-recebe tonalização; zero recebe as misturas neutras. O gradiente sempre usa o fundo efetivo.
+sem depender de Memoria. `aparenciaTom` aceita uma transformação visual opcional para comparar curvas sem alterar o valor funcional recebido.
+`app/utilitarios/curvaTom.ts` oferece a curva experimental por dois trechos lineares, parametrizada por limiar e intensidade no limiar; a
+curva padrão permanece linear até decisão posterior. Desligar uma região restaura o tema; a faixa começa desligada por decisão do operador na
+Spec 08. Tom ausente não recebe tonalização; zero recebe as misturas neutras. O gradiente sempre usa o fundo efetivo.
 
 ## Categorização
 

@@ -6,6 +6,7 @@ interface PropriedadesCategoriaPanorama {
     representatividade: number
     tom: number | null
     aoSelecionar: (identificador: string) => void
+    transformarTom?: (tom: number | null) => number | null
 }
 
 export default function CategoriaPanorama({
@@ -13,9 +14,10 @@ export default function CategoriaPanorama({
     nome,
     representatividade,
     tom,
-    aoSelecionar
+    aoSelecionar,
+    transformarTom
 }: PropriedadesCategoriaPanorama) {
-    const aparencia = aparenciaTom(tom)
+    const aparencia = aparenciaTom(tom, transformarTom)
     const estilo = {
         ...aparencia.style,
         "--categoria-panorama-representatividade": `${representatividade * 100}%`

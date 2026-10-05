@@ -20,6 +20,7 @@ interface PropriedadesJanelaTemporal {
     inicializacaoPronta?: boolean
     densidadeMaximaMarcadores?: number
     mostrarDiagnostico?: boolean
+    mostrarDatasExtremas?: boolean
     aoAlterarIntervalo?: (intervalo: IntervaloJanela) => void
     aoAlterarPosicoes?: (estado: EstadoJanelaTemporal) => void
 }
@@ -44,6 +45,7 @@ export default function JanelaTemporal({
     inicializacaoPronta = true,
     densidadeMaximaMarcadores = 7,
     mostrarDiagnostico = false,
+    mostrarDatasExtremas = false,
     aoAlterarIntervalo,
     aoAlterarPosicoes
 }: PropriedadesJanelaTemporal) {
@@ -238,15 +240,21 @@ export default function JanelaTemporal({
     }
 
     return (
-        <section class="janela-temporal" aria-labelledby={`${id}-orientacao`}>
-            <p
-                class={`janela-temporal-orientacao${geometriaValida ? "" : " has-text-warning"}`}
-                id={`${id}-orientacao`}
-                aria-live="polite"
-                aria-atomic="true"
-            >
-                {orientacao}
-            </p>
+        <section
+            class={`janela-temporal${mostrarDatasExtremas ? " janela-temporal-com-datas" : ""}`}
+            aria-labelledby={mostrarDatasExtremas ? `${id}-rotulo` : `${id}-orientacao`}
+        >
+            {mostrarDatasExtremas && <p class="janela-temporal-rotulo" id={`${id}-rotulo`}>Período</p>}
+            {!mostrarDatasExtremas && (
+                <p
+                    class={`janela-temporal-orientacao${geometriaValida ? "" : " has-text-warning"}`}
+                    id={`${id}-orientacao`}
+                    aria-live="polite"
+                    aria-atomic="true"
+                >
+                    {orientacao}
+                </p>
+            )}
             <div
                 class="janela-temporal-trilho"
                 id={`${id}-trilho`}
@@ -306,6 +314,23 @@ export default function JanelaTemporal({
                     onKeyDown={(evento) => operarTeclado(evento, "direita")}
                 />
             </div>
+            {mostrarDatasExtremas && (
+                <p
+                    class={`janela-temporal-datas${geometriaValida ? "" : " has-text-warning"}`}
+                    id={`${id}-orientacao`}
+                    aria-live="polite"
+                    aria-atomic="true"
+                >
+                    {geometriaValida
+                        ? (
+                            <>
+                                <span>{formatarData(intervaloAtual!.primeiroDia)}</span>
+                                <span>{formatarData(intervaloAtual!.ultimoDia)}</span>
+                            </>
+                        )
+                        : "Inclua pelo menos dois dias no período."}
+                </p>
+            )}
             {mostrarDiagnostico && (
                 <dl class="janela-temporal-diagnostico">
                     <div>

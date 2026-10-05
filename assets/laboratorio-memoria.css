@@ -9,7 +9,7 @@
 }
 .lab-janela-temporal-dados {
     min-width: 0;
-    overflow: hidden;
+    overflow: clip;
 }
 .lab-janela-temporal-datas {
     display: flex;

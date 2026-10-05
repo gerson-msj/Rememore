@@ -6,6 +6,7 @@ import ExperimentoMemoria from "../components/ExperimentoMemoria.tsx"
 import MemoriaLaboratorio from "../components/MemoriaLaboratorio.tsx"
 import ExperimentoJanelaTemporal from "./ExperimentoJanelaTemporal.tsx"
 import ExperimentoCategoriaPanorama from "./ExperimentoCategoriaPanorama.tsx"
+import ExperimentoCurvaTom from "./ExperimentoCurvaTom.tsx"
 
 function Bloco({ id, titulo, children }: { id: string; titulo: string; children: ComponentChildren }) {
     const [aberto, definirAberto] = useState(true)
@@ -83,6 +84,9 @@ export default function Laboratorio() {
             </Bloco>
             <Bloco id="categoria-panorama" titulo="CMP-009 — Categoria do Panorama">
                 <ExperimentoCategoriaPanorama />
+            </Bloco>
+            <Bloco id="curva-tom" titulo="Tom — curva cromática experimental">
+                <ExperimentoCurvaTom />
             </Bloco>
         </div>
     )
