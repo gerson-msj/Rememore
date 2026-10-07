@@ -7,6 +7,7 @@ import MemoriaLaboratorio from "../components/MemoriaLaboratorio.tsx"
 import ExperimentoJanelaTemporal from "./ExperimentoJanelaTemporal.tsx"
 import ExperimentoCategoriaPanorama from "./ExperimentoCategoriaPanorama.tsx"
 import ExperimentoCurvaTom from "./ExperimentoCurvaTom.tsx"
+import ExperimentoOndaUtilizacaoCategoria from "../components/ExperimentoOndaUtilizacaoCategoria.tsx"
 import { RESPOSTA_JANELA_PADRAO, RESPOSTA_TOM_PADRAO } from "../app/utilitarios/respostaSeletor.ts"
 
 function Bloco({ id, titulo, children }: { id: string; titulo: string; children: ComponentChildren }) {
@@ -99,6 +100,9 @@ export default function Laboratorio() {
             </Bloco>
             <Bloco id="curva-tom" titulo="Tom — curva cromática experimental">
                 <ExperimentoCurvaTom />
+            </Bloco>
+            <Bloco id="onda-utilizacao-categoria" titulo="CMP-011 — Onda de Utilização da Categoria">
+                <ExperimentoOndaUtilizacaoCategoria />
             </Bloco>
         </div>
     )

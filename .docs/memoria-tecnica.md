@@ -26,4 +26,16 @@ Leitura obrigatória curta. As referências do índice são consultadas somente 
 - [Projeção de Rememorar](referencias/projecao-rememorar.md): blocos por data, revisão global, sincronização mockada e fixtures de
   referência.
 
+## Onda de Utilização da Categoria — CMP-011
+
+`components/OndaUtilizacaoCategoria.tsx` é passivo: recebe uma série cronológica de quantidades e um Tom já calculado. Não acessa projeção
+ou persistência. `app/utilitarios/ondaUtilizacaoCategoria.ts` exporta `calcularOndaUtilizacaoCategoria` para quatro pontos e
+`calcularOndaUtilizacaoCategoriaB` para sete pontos experimentais; ambas removem quantidades não positivas, amostram uniformemente por
+interpolação linear e normalizam pela amplitude da série filtrada. Séries constantes ou vazias retornam pontos centrais. O componente
+separado `components/OndaUtilizacaoCategoriaB.tsx` existe somente para comparação visual no laboratório e não substitui CMP-011.
+`calcularTangentesOnda` aceita dois ou mais pontos e fornece inclinações cúbicas preservadoras de forma. Os componentes compartilham a
+aparência `aparenciaTom` e a moldura com tokens de campo; ausência de dados força Tom nulo. O bloco de experimentação fica em
+`components/ExperimentoOndaUtilizacaoCategoria.tsx`, carregado somente pelo `/laboratorio`; controles e diagnóstico não pertencem aos
+componentes da onda.
+
 Estas notas representam o presente. Atualize ou remova conhecimento superado; mantenha detalhes por assunto fora da leitura obrigatória.

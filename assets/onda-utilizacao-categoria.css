@@ -1,0 +1,50 @@
+.onda-utilizacao {
+    width: 100%;
+    height: 4.75rem;
+    padding: 0.35rem 0.55rem;
+    border: var(--bulma-control-border-width) solid var(--bulma-border);
+    border-radius: var(--bulma-control-radius);
+    background-color: var(--bulma-scheme-main);
+    overflow: hidden;
+    color: var(--bulma-text-weak);
+}
+.onda-utilizacao svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+.onda-utilizacao path {
+    fill: none;
+    stroke: var(--tom-cor, currentColor);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 180ms ease;
+}
+.experimento-onda-utilizacao-amostra {
+    width: 100%;
+    margin-inline: auto;
+}
+.experimento-onda-utilizacao-comparacao {
+    display: grid;
+    gap: 1.25rem;
+}
+.experimento-onda-utilizacao-diagnostico {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: 0.75rem 1.5rem;
+    overflow-wrap: anywhere;
+}
+.experimento-onda-utilizacao-diagnostico dt {
+    color: var(--bulma-text-weak);
+    font-size: 0.875rem;
+}
+.experimento-onda-utilizacao-diagnostico dd {
+    font-variant-numeric: tabular-nums;
+}
+@media (prefers-reduced-motion: reduce) {
+    .onda-utilizacao path {
+        transition: none;
+    }
+}
