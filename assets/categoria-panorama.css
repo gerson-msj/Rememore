@@ -9,7 +9,7 @@
     border: 1px solid var(--tom-borda);
     border-radius: 0.5rem;
     background: var(--bulma-scheme-main);
-    color: var(--tom-categoria);
+    color: var(--bulma-text-strong, var(--bulma-text));
     font-size: var(--bulma-control-size);
     line-height: var(--bulma-control-line-height);
     text-align: left;
@@ -77,19 +77,48 @@
 .panorama-ordenacao {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     flex-wrap: wrap;
-    gap: 0.35rem;
+    gap: 0.75rem;
+    width: 100%;
     padding-top: 0.5rem;
+    font-size: var(--bulma-size-small);
+    line-height: var(--bulma-control-line-height);
 }
 .panorama-ordenacao > span {
-    margin-right: 0.2rem;
     color: var(--bulma-text-weak);
 }
 .panorama-ordenacao-botoes {
     display: inline-flex;
     flex-wrap: nowrap;
-    gap: 0.35rem;
+    gap: 0.75rem;
     white-space: nowrap;
+}
+.panorama-ordenacao-opcao {
+    display: inline-flex;
+    align-items: baseline;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--bulma-text);
+    font: inherit;
+    cursor: pointer;
+}
+.panorama-ordenacao-opcao[aria-pressed="true"] {
+    color: var(--bulma-link);
+}
+.panorama-ordenacao-opcao:hover {
+    color: var(--bulma-link);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+.panorama-ordenacao-opcao:focus-visible {
+    border-radius: 0.15rem;
+    outline: 2px solid var(--bulma-link);
+    outline-offset: 3px;
+}
+.panorama-ordenacao-sinal {
+    color: var(--bulma-info);
 }
 .curva-tom-comparacao {
     display: grid;
@@ -118,6 +147,24 @@
     margin: 0;
     padding: 0;
     list-style: none;
+}
+.rememorar-regiao-fixa {
+    position: sticky;
+    z-index: 20;
+    top: 4.5rem;
+    margin-bottom: 1rem;
+    padding: 1.25rem 0 0.75rem;
+    border-bottom: 1px solid var(--bulma-border-weak, var(--bulma-border));
+    background: var(--bulma-scheme-main);
+}
+.rememorar-regiao-fixa .panorama-ordenacao {
+    padding-top: 0.5rem;
+}
+.rememorar-cenarios {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-top: 1.5rem;
 }
 .categorias-panorama-lista[data-movimento-reduzido="true"] .categoria-panorama,
 .categorias-panorama-lista[data-movimento-reduzido="true"] .categoria-panorama-barra {

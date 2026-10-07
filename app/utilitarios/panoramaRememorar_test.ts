@@ -1,7 +1,7 @@
 import type { CatalogoCategorias } from "../servicos/local/catalogoCategorias.ts"
 import type { BlocoProjecaoRememorar } from "../servicos/local/projecaoRememorar.ts"
 import { obterCenarioAcervoRememorar, projetarDiaAcervoRememorar } from "../servicos/rememorar/acervo.ts"
-import { derivarPanoramaRememorar } from "./panoramaRememorar.ts"
+import { calcularTomMedioCategoria, calcularTomMedioPanorama, derivarPanoramaRememorar } from "./panoramaRememorar.ts"
 
 function igual(obtido: unknown, esperado: unknown) {
     if (JSON.stringify(obtido) !== JSON.stringify(esperado)) {
@@ -68,6 +68,23 @@ Deno.test("Panorama: empates têm ordem determinística por identificador e cate
     igual(primeira.map(({ identificador }) => identificador), ["amigos", "casa"])
     igual(segunda.map(({ identificador }) => identificador), primeira.map(({ identificador }) => identificador))
     igual(primeira.map(({ representatividade }) => representatividade), [1, 1])
+})
+
+Deno.test("Panorama: média global pondera Tons definidos, inclui zero e ignora categorias sem Tom", () => {
+    const categorias = derivarPanoramaRememorar(dias, 0, 1, blocos, catalogo)
+    igual(categorias.map(({ identificador, quantidadeTons }) => [identificador, quantidadeTons]), [
+        ["casa", 3],
+        ["amigos", 1],
+        ["trabalho", 0]
+    ])
+    igual(calcularTomMedioPanorama(categorias), 0)
+    igual(calcularTomMedioPanorama([]), null)
+    igual(calcularTomMedioPanorama([{ ...categorias[1], quantidadeTons: 0 }]), null)
+})
+
+Deno.test("Detalhe: média simples inclui zero e exclui Tons nulos", () => {
+    igual(calcularTomMedioCategoria([null, 0, 30, null]), 15)
+    igual(calcularTomMedioCategoria([null, null]), null)
 })
 
 Deno.test("Panorama: cenários de 2, 7, 30 e 300 dias derivam sem limites artificiais de categorias", () => {

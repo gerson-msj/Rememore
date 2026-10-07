@@ -307,7 +307,8 @@ Deno.test("mock remoto mantém revisão por data e transmite somente o estado co
     const remoto = criarProjecaoRemotaSimulada({
         ler: (conta) => estados.get(conta) ?? { revisao: 0, blocos: {}, ultimaRevisao: {} },
         gravar: (conta, estado) => estados.set(conta, estado),
-        cenario: () => 2
+        cenario: () => 2,
+        tonsForcados: () => false
     })
     const carga = await remoto.consultar("conta-a", null)
     if (carga.tipo !== "completa") throw new Error("Carga inicial não completa")
@@ -337,7 +338,8 @@ Deno.test("mock remoto muda o cenário com revisão incremental e remove datas q
     const remoto = criarProjecaoRemotaSimulada({
         ler: (conta) => estados.get(conta) ?? { revisao: 0, blocos: {}, ultimaRevisao: {} },
         gravar: (conta, estado) => estados.set(conta, estado),
-        cenario: () => quantidadeDias
+        cenario: () => quantidadeDias,
+        tonsForcados: () => false
     })
     const inicial = await remoto.consultar("conta-a", null)
     if (inicial.tipo !== "completa") throw new Error("Carga inicial não completa")

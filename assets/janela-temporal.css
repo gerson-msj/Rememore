@@ -45,7 +45,8 @@
     top: calc(50% - 0.2rem);
     height: 0.4rem;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--bulma-primary) 62%, var(--bulma-link));
+    background: var(--janela-temporal-cor, color-mix(in srgb, var(--bulma-primary) 62%, var(--bulma-link)));
+    transition: background-color 300ms ease;
     pointer-events: none;
 }
 .janela-temporal-marcadores {
@@ -101,11 +102,31 @@
 }
 .janela-temporal-alca-esquerda::before {
     right: 0;
-    background: var(--bulma-primary);
+    background: var(--janela-temporal-cor, var(--bulma-primary));
+    transition: background-color 300ms ease;
 }
 .janela-temporal-alca-direita::before {
     left: 0;
-    background: var(--bulma-link);
+    background: var(--janela-temporal-cor, var(--bulma-link));
+    transition: background-color 300ms ease;
+}
+
+.janela-temporal.tom-informado {
+    --janela-temporal-cor: color-mix(in oklab, var(--tom-extremo) var(--tom-peso), var(--bulma-text-weak));
+}
+.janela-temporal:not(.tom-informado) {
+    --janela-temporal-cor: var(--bulma-text-weak);
+}
+.janela-temporal.tom-neutro {
+    --janela-temporal-cor: var(--bulma-text-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .janela-temporal-trilho::before,
+    .janela-temporal-faixa,
+    .janela-temporal-alca::before {
+        transition-duration: 0.01ms;
+    }
 }
 .janela-temporal-alca:focus-visible {
     outline: 2px solid var(--bulma-link);

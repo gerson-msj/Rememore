@@ -7,6 +7,7 @@ interface EstadoSimulado {
     blocos: Record<string, BlocoProjecaoRememorar>
     ultimaRevisao: Record<string, number>
     cenario?: 2 | 7 | 30 | 300
+    tonsForcados?: boolean
     falhar?: boolean
 }
 
@@ -16,6 +17,7 @@ type ArmazenamentoSimulado = {
     ler(idConta: string): EstadoSimulado
     gravar(idConta: string, estado: EstadoSimulado): void
     cenario(): 2 | 7 | 30 | 300
+    tonsForcados(): boolean
 }
 
 function clonar<T>(valor: T): T {
@@ -26,8 +28,13 @@ export function criarProjecaoRemotaSimulada(armazenamento: ArmazenamentoSimulado
     function lerEstado(idConta: string): EstadoSimulado {
         const existente = armazenamento.ler(idConta)
         const quantidadeDias = armazenamento.cenario()
-        if (existente.revisao > 0 && existente.cenario === quantidadeDias) return existente
+        const tonsForcados = armazenamento.tonsForcados()
+        if (existente.revisao > 0 && existente.cenario === quantidadeDias && existente.tonsForcados === tonsForcados) return existente
         const cenario = obterCenarioAcervoRememorar(quantidadeDias)
+        if (tonsForcados && (quantidadeDias === 7 || quantidadeDias === 30)) {
+            const tomForcado = quantidadeDias === 7 ? -55 : 55
+            for (const memoria of cenario.memorias) memoria.tom = tomForcado
+        }
         const revisao = existente.revisao + 1
         const blocos: Record<string, BlocoProjecaoRememorar> = {}
         for (const data of cenario.dias) blocos[data] = projetarDiaAcervoRememorar(idConta, cenario, data)
@@ -35,6 +42,7 @@ export function criarProjecaoRemotaSimulada(armazenamento: ArmazenamentoSimulado
             revisao,
             blocos,
             cenario: quantidadeDias,
+            tonsForcados,
             ultimaRevisao: Object.fromEntries(
                 [...new Set([...Object.keys(existente.blocos), ...cenario.dias])].map((data) => [data, revisao])
             )
@@ -80,6 +88,7 @@ export function criarProjecaoRemotaSimulada(armazenamento: ArmazenamentoSimulado
 const desenvolvimento = import.meta.env?.DEV && typeof window !== "undefined"
 const chaveEstado = (idConta: string) => `rememore:dev:projecao:${idConta}`
 const chaveCenario = "rememore:dev:projecao:cenario"
+const chaveTonsForcados = "rememore:dev:projecao:tons-forcados"
 const armazenamentoNavegador: ArmazenamentoSimulado = {
     ler(idConta) {
         const salvo = desenvolvimento ? localStorage.getItem(chaveEstado(idConta)) : null
@@ -91,6 +100,9 @@ const armazenamentoNavegador: ArmazenamentoSimulado = {
     cenario() {
         const valor = desenvolvimento ? Number(localStorage.getItem(chaveCenario) ?? "300") : 30
         return valor === 2 || valor === 7 || valor === 30 || valor === 300 ? valor : desenvolvimento ? 300 : 30
+    },
+    tonsForcados() {
+        return desenvolvimento && localStorage.getItem(chaveTonsForcados) === "true"
     }
 }
 
@@ -98,6 +110,14 @@ export const projecaoRemotaSimulada = criarProjecaoRemotaSimulada(armazenamentoN
 
 export function selecionarCenarioRememorar(quantidade: CenarioRememorar) {
     if (desenvolvimento) localStorage.setItem(chaveCenario, String(quantidade))
+}
+
+export function definirTonsForcadosRememorar(forcar: boolean) {
+    if (desenvolvimento) localStorage.setItem(chaveTonsForcados, String(forcar))
+}
+
+export function lerTonsForcadosRememorar(): boolean {
+    return armazenamentoNavegador.tonsForcados()
 }
 
 function alterarEstado(idConta: string, alterar: (estado: EstadoSimulado) => void) {

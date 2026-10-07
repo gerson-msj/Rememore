@@ -1,5 +1,6 @@
 import { useState } from "preact/hooks"
 import SeletorTom from "./SeletorTom.tsx"
+import type { RespostaSeletor } from "../app/utilitarios/respostaSeletor.ts"
 
 type Tema = "light" | "dark"
 const modelos = [
@@ -59,10 +60,12 @@ const sugestoes = [
     }
 ]
 
-export default function ExperimentoMemoria({ tema, cores, definirCores }: {
+export default function ExperimentoMemoria({ tema, cores, definirCores, respostaSeletor, definirRespostaSeletor }: {
     tema: Tema
     cores: CoresTom
     definirCores: (cores: CoresTom) => void
+    respostaSeletor: RespostaSeletor
+    definirRespostaSeletor: (resposta: RespostaSeletor) => void
 }) {
     const [habilitado, definirHabilitado] = useState(true)
     const [tom, definirTom] = useState(65)
@@ -103,11 +106,46 @@ export default function ExperimentoMemoria({ tema, cores, definirCores }: {
                     </div>
                     <div class="field">
                         <label class="label" for="lab-tom">Escala do Tom</label>
+                        <label class="label" for="lab-tom-atraso">Atraso da escala: {respostaSeletor.atrasoMs} ms</label>
+                        <input
+                            class="slider is-fullwidth"
+                            id="lab-tom-atraso"
+                            type="range"
+                            min="0"
+                            max="1200"
+                            step="50"
+                            value={respostaSeletor.atrasoMs}
+                            onInput={(evento) =>
+                                definirRespostaSeletor({
+                                    ...respostaSeletor,
+                                    atrasoMs: Number(evento.currentTarget.value)
+                                })}
+                        />
+                        <div class="field mt-2">
+                            <label class="label" for="lab-tom-curva">Curva da escala</label>
+                            <div class="select">
+                                <select
+                                    id="lab-tom-curva"
+                                    value={respostaSeletor.curva}
+                                    onChange={(evento) =>
+                                        definirRespostaSeletor({
+                                            ...respostaSeletor,
+                                            curva: evento.currentTarget.value as RespostaSeletor["curva"]
+                                        })}
+                                >
+                                    <option value="linear">Linear</option>
+                                    <option value="ease-in">Acelera ao longo do movimento</option>
+                                    <option value="ease-out">Desacelera ao se aproximar</option>
+                                    <option value="ease-in-out">Acelera e depois desacelera</option>
+                                </select>
+                            </div>
+                        </div>
                         <SeletorTom
                             id="lab-tom"
                             valor={habilitado ? tom : 0}
                             desabilitado={!habilitado}
                             aoAlterar={definirTom}
+                            respostaSeletor={respostaSeletor}
                         />
                         <p class="help">
                             Estado atual: {habilitado ? (tom === 0 ? "Neutro" : tom < 0 ? "Negativo" : "Positivo") : "Sem Tom"}

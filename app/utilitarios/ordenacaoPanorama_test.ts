@@ -1,21 +1,44 @@
+import type { CategoriaPanoramaDerivada } from "./panoramaRememorar.ts"
 import {
     avancarOrdenacaoPanorama,
     type CategoriaOrdenavelPanorama,
     estadoInicialOrdenacaoPanorama,
-    ordenarCategoriasPanorama
+    lerOrdenacaoPanorama,
+    ORDENACAO_PANORAMA_PADRAO,
+    type OrdenacaoPanorama,
+    ordenarCategoriasPanorama,
+    salvarOrdenacaoPanorama
 } from "./ordenacaoPanorama.ts"
 
-function igual(obtido: unknown, esperado: unknown) {
+function verificarIgualdade(obtido: unknown, esperado: unknown) {
     if (JSON.stringify(obtido) !== JSON.stringify(esperado)) {
         throw new Error(`Esperado ${JSON.stringify(esperado)}, recebido ${JSON.stringify(obtido)}`)
     }
 }
 
-interface CategoriaTeste extends CategoriaOrdenavelPanorama {
+function categoria(nome: string, representatividade: number, tom: number | null): CategoriaPanoramaDerivada {
+    return { identificador: nome, nome, quantidade: 1, representatividade, tom }
+}
+
+function armazenamentoMemoria(): Storage {
+    const valores = new Map<string, string>()
+    return {
+        getItem: (chave: string) => valores.get(chave) ?? null,
+        setItem: (chave: string, valor: string) => void valores.set(chave, valor),
+        removeItem: (chave: string) => void valores.delete(chave),
+        clear: () => valores.clear(),
+        key: (indice: number) => [...valores.keys()][indice] ?? null,
+        get length() {
+            return valores.size
+        }
+    } as Storage
+}
+
+interface CategoriaLaboratorio extends CategoriaOrdenavelPanorama {
     identificador: string
 }
 
-const categorias: CategoriaTeste[] = [
+const categoriasLaboratorio: CategoriaLaboratorio[] = [
     { identificador: "b", nome: "Beta", representatividade: 0.5, tom: 40 },
     { identificador: "ausente-2", nome: "Casa", representatividade: 0.2, tom: null },
     { identificador: "neutro", nome: "Neutro", representatividade: 0.9, tom: 0 },
@@ -25,62 +48,103 @@ const categorias: CategoriaTeste[] = [
     { identificador: "positivo", nome: "Positivo", representatividade: 0.3, tom: 80 }
 ]
 
-function ids(estado = estadoInicialOrdenacaoPanorama): string[] {
-    return ordenarCategoriasPanorama(categorias, estado).map((categoria) => categoria.identificador)
+function idsLaboratorio(ordenacao = estadoInicialOrdenacaoPanorama): string[] {
+    return ordenarCategoriasPanorama(categoriasLaboratorio, ordenacao).map(({ identificador }) => identificador)
 }
 
-Deno.test("Representatividade começa em +, alterna e retorna para +", () => {
+Deno.test("Representatividade do laboratório mantém alternância e desempate aprovado", () => {
     let estado = estadoInicialOrdenacaoPanorama
     estado = avancarOrdenacaoPanorama(estado, "representatividade")
-    igual(estado.ordemRepresentatividade, "crescente")
+    verificarIgualdade(estado.ordemRepresentatividade, "crescente")
+    verificarIgualdade(idsLaboratorio(), ["neutro", "ausente-1", "negativo", "a", "b", "positivo", "ausente-2"])
+    verificarIgualdade(idsLaboratorio(estado), ["ausente-2", "positivo", "a", "b", "negativo", "ausente-1", "neutro"])
     estado = avancarOrdenacaoPanorama(estado, "representatividade")
-    igual(estado.ordemRepresentatividade, "decrescente")
+    verificarIgualdade(estado.ordemRepresentatividade, "decrescente")
 })
 
-Deno.test("Tom começa em + e percorre +, −, ∅, +", () => {
+Deno.test("Tom do laboratório mantém ciclo, ordenação de sinais e tratamento de ausência", () => {
     let estado = avancarOrdenacaoPanorama(estadoInicialOrdenacaoPanorama, "tom")
-    igual(estado.ordemTom, "decrescente")
+    verificarIgualdade(estado.ordemTom, "decrescente")
+    verificarIgualdade(idsLaboratorio(estado), ["positivo", "a", "b", "neutro", "negativo", "ausente-1", "ausente-2"])
     estado = avancarOrdenacaoPanorama(estado, "tom")
-    igual(estado.ordemTom, "crescente")
+    verificarIgualdade(estado.ordemTom, "crescente")
+    verificarIgualdade(idsLaboratorio(estado), ["negativo", "neutro", "a", "b", "positivo", "ausente-1", "ausente-2"])
     estado = avancarOrdenacaoPanorama(estado, "tom")
-    igual(estado.ordemTom, "ausentes-primeiro")
+    verificarIgualdade(estado.ordemTom, "ausentes-primeiro")
+    verificarIgualdade(idsLaboratorio(estado), ["ausente-1", "ausente-2", "neutro", "negativo", "a", "b", "positivo"])
     estado = avancarOrdenacaoPanorama(estado, "tom")
-    igual(estado.ordemTom, "decrescente")
+    verificarIgualdade(estado.ordemTom, "decrescente")
 })
 
-Deno.test("trocar o critério reinicia os subestados em +", () => {
+Deno.test("trocar critério no estado legado reinicia em positivo", () => {
     let estado = avancarOrdenacaoPanorama(estadoInicialOrdenacaoPanorama, "representatividade")
-    igual(estado.ordemRepresentatividade, "crescente")
     estado = avancarOrdenacaoPanorama(estado, "tom")
-    igual(estado.ordemRepresentatividade, "decrescente")
-    igual(estado.ordemTom, "decrescente")
+    verificarIgualdade(estado.ordemRepresentatividade, "decrescente")
+    verificarIgualdade(estado.ordemTom, "decrescente")
     estado = avancarOrdenacaoPanorama(estado, "tom")
     estado = avancarOrdenacaoPanorama(estado, "tom")
     estado = avancarOrdenacaoPanorama(estado, "representatividade")
-    igual(estado.ordemTom, "decrescente")
-    igual(estado.ordemRepresentatividade, "decrescente")
+    verificarIgualdade(estado.ordemTom, "decrescente")
+    verificarIgualdade(estado.ordemRepresentatividade, "decrescente")
 })
 
-Deno.test("Representatividade ordena em ambas as direções e desempata alfabeticamente", () => {
-    igual(ids(), ["neutro", "ausente-1", "negativo", "a", "b", "positivo", "ausente-2"])
-    const estado = avancarOrdenacaoPanorama(estadoInicialOrdenacaoPanorama, "representatividade")
-    igual(ids(estado), ["ausente-2", "positivo", "a", "b", "negativo", "ausente-1", "neutro"])
+Deno.test("ordenação padrão e preferência persistida são isoladas por conta", () => {
+    const armazenamento = armazenamentoMemoria()
+    verificarIgualdade(lerOrdenacaoPanorama("conta-a", armazenamento), ORDENACAO_PANORAMA_PADRAO)
+    const tomNegativo: OrdenacaoPanorama = { criterio: "tom", direcao: "negativo" }
+    salvarOrdenacaoPanorama("conta-a", tomNegativo, armazenamento)
+    verificarIgualdade(lerOrdenacaoPanorama("conta-a", armazenamento), tomNegativo)
+    verificarIgualdade(lerOrdenacaoPanorama("conta-b", armazenamento), ORDENACAO_PANORAMA_PADRAO)
 })
 
-Deno.test("Tom + ordena valores decrescentes, zero normalmente e ausentes ao final", () => {
-    const estado = avancarOrdenacaoPanorama(estadoInicialOrdenacaoPanorama, "tom")
-    igual(ids(estado), ["positivo", "a", "b", "neutro", "negativo", "ausente-1", "ausente-2"])
+Deno.test("trocar critério reinicia e o mesmo critério percorre seus estados", () => {
+    let ordenacao: OrdenacaoPanorama = { criterio: "representatividade", direcao: "crescente" }
+    ordenacao = avancarOrdenacaoPanorama(ordenacao, "tom")
+    verificarIgualdade(ordenacao, { criterio: "tom", direcao: "positivo" })
+    ordenacao = avancarOrdenacaoPanorama(ordenacao, "tom")
+    verificarIgualdade(ordenacao, { criterio: "tom", direcao: "negativo" })
+    ordenacao = avancarOrdenacaoPanorama(ordenacao, "tom")
+    verificarIgualdade(ordenacao, { criterio: "tom", direcao: "ausentePrimeiro" })
+    ordenacao = avancarOrdenacaoPanorama(ordenacao, "representatividade")
+    verificarIgualdade(ordenacao, { criterio: "representatividade", direcao: "decrescente" })
 })
 
-Deno.test("Tom − ordena valores crescentes e ausentes ao final", () => {
-    let estado = avancarOrdenacaoPanorama(estadoInicialOrdenacaoPanorama, "tom")
-    estado = avancarOrdenacaoPanorama(estado, "tom")
-    igual(ids(estado), ["negativo", "neutro", "a", "b", "positivo", "ausente-1", "ausente-2"])
+Deno.test("representatividade ordena os empates pelo nome crescente", () => {
+    const resultado = ordenarCategoriasPanorama([
+        categoria("Gama", 0.5, null),
+        categoria("Alfa", 0.5, null),
+        categoria("Beta", 0.8, null)
+    ], ORDENACAO_PANORAMA_PADRAO)
+    verificarIgualdade(resultado.map(({ nome }) => nome), ["Beta", "Alfa", "Gama"])
 })
 
-Deno.test("Tom ∅ põe ausentes primeiro e ordena ambos os grupos por representatividade", () => {
-    let estado = avancarOrdenacaoPanorama(estadoInicialOrdenacaoPanorama, "tom")
-    estado = avancarOrdenacaoPanorama(estado, "tom")
-    estado = avancarOrdenacaoPanorama(estado, "tom")
-    igual(ids(estado), ["ausente-1", "ausente-2", "neutro", "negativo", "a", "b", "positivo"])
+Deno.test("Tom positivo e negativo ordenam valores definidos antes da ausência", () => {
+    const itens = [categoria("Nulo", 0.9, null), categoria("Zero", 0.2, 0), categoria("Positivo", 0.3, 40), categoria("Negativo", 0.4, -30)]
+    verificarIgualdade(ordenarCategoriasPanorama(itens, { criterio: "tom", direcao: "positivo" }).map(({ nome }) => nome), [
+        "Positivo",
+        "Zero",
+        "Negativo",
+        "Nulo"
+    ])
+    verificarIgualdade(ordenarCategoriasPanorama(itens, { criterio: "tom", direcao: "negativo" }).map(({ nome }) => nome), [
+        "Negativo",
+        "Zero",
+        "Positivo",
+        "Nulo"
+    ])
+})
+
+Deno.test("Tom sem valor fica primeiro sem ordenar por Tom os valores definidos", () => {
+    const itens = [
+        categoria("Zero", 0.3, 0),
+        categoria("Nulo B", 0.2, null),
+        categoria("Nulo A", 0.2, null),
+        categoria("Positivo", 0.9, 50)
+    ]
+    verificarIgualdade(ordenarCategoriasPanorama(itens, { criterio: "tom", direcao: "ausentePrimeiro" }).map(({ nome }) => nome), [
+        "Nulo A",
+        "Nulo B",
+        "Positivo",
+        "Zero"
+    ])
 })

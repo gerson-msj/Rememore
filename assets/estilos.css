@@ -392,6 +392,9 @@ textarea {
 .pagina-com-cabecalho {
     padding-top: calc(4.5rem + var(--rememore-intervalo-secao));
 }
+.pagina-com-cabecalho.pagina-rememorar {
+    padding-top: 4.5rem;
+}
 .entrada-formulario {
     width: 100%;
     max-width: 28rem;
@@ -480,6 +483,12 @@ textarea {
     margin: 0;
     overflow-wrap: anywhere;
     text-align: left;
+}
+@media (max-width: 480px) {
+    .cabecalho-pagina:has(+ main.pagina-rememorar) .cabecalho-titulo {
+        font-size: 1.5rem;
+        white-space: nowrap;
+    }
 }
 .cabecalho-lateral,
 .cabecalho-acao {

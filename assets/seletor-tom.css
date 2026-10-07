@@ -1,7 +1,7 @@
 .seletor-tom {
     --seletor-tom-neutro: var(--bulma-border-weak, var(--bulma-border));
     position: relative;
-    height: 2.6rem;
+    height: 2.9rem;
     margin-block: 0.35rem 0.2rem;
 }
 .seletor-tom-trilha {
@@ -9,7 +9,7 @@
     inset: 1rem 0.575rem auto;
     height: 0.45rem;
     border-radius: 999px;
-    background: var(--seletor-tom-neutro);
+    background: var(--seletor-tom-trilha, var(--seletor-tom-neutro));
     pointer-events: none;
 }
 .seletor-tom-revelado {
@@ -37,14 +37,27 @@
     background: transparent;
     cursor: pointer;
     touch-action: pan-y;
+    pointer-events: none;
+}
+.seletor-tom-controle:focus-visible {
+    outline: none;
 }
 .seletor-tom-controle:disabled {
     cursor: not-allowed;
 }
-.seletor-tom-controle:focus-visible {
+.seletor-tom-superficie-ponteiro {
+    position: absolute;
+    z-index: 2;
+    inset: 0 0.575rem 0.5rem;
+    cursor: pointer;
+    touch-action: none;
+}
+.seletor-tom:has(.seletor-tom-controle:focus-visible) .seletor-tom-alca-visual {
     outline: 2px solid var(--bulma-link);
     outline-offset: 2px;
-    border-radius: 999px;
+}
+.seletor-tom:has(.seletor-tom-controle:disabled) .seletor-tom-superficie-ponteiro {
+    cursor: not-allowed;
 }
 .seletor-tom-controle::-webkit-slider-runnable-track {
     height: 0.45rem;
@@ -63,6 +76,7 @@
     border-radius: 50%;
     background: var(--seletor-tom-alca);
     box-shadow: 0 0 0 1px var(--bulma-text-weak);
+    opacity: 0;
 }
 .seletor-tom-controle::-moz-range-thumb {
     width: 0.9rem;
@@ -71,11 +85,31 @@
     border-radius: 50%;
     background: var(--seletor-tom-alca);
     box-shadow: 0 0 0 1px var(--bulma-text-weak);
+    opacity: 0;
+}
+.seletor-tom-alcas {
+    position: absolute;
+    inset: 0 0.575rem;
+    pointer-events: none;
+}
+.seletor-tom-alca-visual {
+    position: absolute;
+    z-index: 1;
+    top: 0.65rem;
+    left: var(--seletor-tom-posicao);
+    width: 1.15rem;
+    height: 1.15rem;
+    transform: translateX(-50%);
+    border: 2px solid var(--bulma-scheme-main);
+    border-radius: 50%;
+    background: var(--seletor-tom-alca);
+    box-shadow: 0 0 0 1px var(--bulma-text-weak);
+    pointer-events: none;
 }
 .seletor-tom-referencias {
     display: flex;
     justify-content: space-between;
-    padding-top: 2rem;
+    padding-top: 2.4rem;
     color: var(--bulma-text-weak);
     font-size: 0.8rem;
 }

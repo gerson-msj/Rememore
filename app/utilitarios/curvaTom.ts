@@ -1,4 +1,4 @@
-export function transformarTomVisual(tom: number | null, limiar: number, intensidadeNoLimiar: number): number | null {
+export function transformarTomVisual(tom: number | null, limiar = 20, intensidadeNoLimiar = 50): number | null {
     if (tom === null) return null
     const magnitude = Math.max(0, Math.min(100, Math.abs(tom)))
     const limiarAjustado = Math.max(1, Math.min(99, limiar))

@@ -1,3 +1,5 @@
+import { transformarTomVisual } from "./curvaTom.ts"
+
 // Política visual comum aos consumidores de Tom; desligar uma região restaura o tema.
 export const configuracaoTom = {
     categoria: true,
@@ -8,10 +10,13 @@ export const configuracaoTom = {
     setas: true
 }
 
-export function aparenciaTom(tom: number | null, transformarTom?: (tom: number | null) => number | null) {
+export function aparenciaTom(
+    tom: number | null,
+    transformar: (tom: number | null) => number | null = transformarTomVisual
+) {
     if (tom === null) return { className: "aparencia-tom", style: {} }
     const valor = Math.max(-100, Math.min(100, tom))
-    const tomVisual = transformarTom?.(valor) ?? valor
+    const tomVisual = transformar(valor) ?? valor
     const intensidadeVisual = Math.max(0, Math.min(100, Math.abs(tomVisual)))
     return {
         className: "aparencia-tom tom-informado " + Object.entries(configuracaoTom)

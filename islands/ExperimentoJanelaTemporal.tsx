@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks"
-import JanelaTemporal from "../components/JanelaTemporal.tsx"
+import { useEffect, useMemo, useState } from "preact/hooks"
+import JanelaTemporal, { type CurvaRespostaSeletor } from "../components/JanelaTemporal.tsx"
+import type { RespostaSeletor } from "../app/utilitarios/respostaSeletor.ts"
 import { type EstadoJanelaTemporal, restaurarEstadoJanela } from "../app/utilitarios/janelaTemporal.ts"
 import CategoriaPanorama from "../components/CategoriaPanorama.tsx"
 import {
@@ -29,7 +30,10 @@ function formatarDia(data: string): string {
     return `${dia}/${mes}/${ano}`
 }
 
-export default function ExperimentoJanelaTemporal() {
+export default function ExperimentoJanelaTemporal({ respostaSeletor, definirRespostaSeletor }: {
+    respostaSeletor: RespostaSeletor
+    definirRespostaSeletor: (resposta: RespostaSeletor) => void
+}) {
     const [quantidadeTexto, definirQuantidadeTexto] = useState("5")
     const quantidadeInformada = Number.parseInt(quantidadeTexto, 10)
     const quantidade = Number.isInteger(quantidadeInformada) ? Math.max(2, quantidadeInformada) : 2
@@ -46,11 +50,8 @@ export default function ExperimentoJanelaTemporal() {
     const [ordenacao, definirOrdenacao] = useState(estadoInicialOrdenacaoPanorama)
     const [categoriaSelecionada, definirCategoriaSelecionada] = useState<string | null>(null)
     const [variacaoCenario, definirVariacaoCenario] = useState(0)
-    const [duracaoReordenacao, definirDuracaoReordenacao] = useState(180)
     const [simularMovimentoReduzido, definirSimularMovimentoReduzido] = useState(false)
-    const listaCategorias = useRef<HTMLUListElement>(null)
-    const posicoesCategorias = useRef(new Map<string, DOMRect>())
-    const animacoesCategorias = useRef<Animation[]>([])
+    const [tomMedioDemonstrativo, definirTomMedioDemonstrativo] = useState<number | null>(35)
     const dias = useMemo(() => gerarDias(quantidade, distribuicao), [quantidade, distribuicao])
     const categoriasVariadas = useMemo(() =>
         categoriasDemonstrativas.map((categoria, indice) => {
@@ -69,39 +70,6 @@ export default function ExperimentoJanelaTemporal() {
     const chavePreferencia = "rememore:lab:janela-temporal:preservar:v1"
     const estadoInicial = restauracao?.chave === chaveMemoria ? restauracao.estado : null
     const inicializacaoPronta = preferenciaLida && (!preservarPosicoes || chaveLida === chaveMemoria)
-
-    useLayoutEffect(() => {
-        const lista = listaCategorias.current
-        if (!lista) return
-        const movimentoReduzido = simularMovimentoReduzido || globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches
-        const proximasPosicoes = new Map<string, DOMRect>()
-        const proximasAnimacoes: Animation[] = []
-        for (const elemento of lista.querySelectorAll<HTMLElement>("[data-categoria-id]")) {
-            const identificador = elemento.dataset.categoriaId
-            if (!identificador) continue
-            const posicao = elemento.getBoundingClientRect()
-            const anterior = posicoesCategorias.current.get(identificador)
-            proximasPosicoes.set(identificador, posicao)
-            if (!movimentoReduzido && anterior) {
-                const deslocamentoX = anterior.left - posicao.left
-                const deslocamentoY = anterior.top - posicao.top
-                if (deslocamentoX !== 0 || deslocamentoY !== 0) {
-                    proximasAnimacoes.push(elemento.animate(
-                        [
-                            { transform: `translate(${deslocamentoX}px, ${deslocamentoY}px)` },
-                            { transform: "translate(0, 0)" }
-                        ],
-                        { duration: duracaoReordenacao, easing: "ease-out" }
-                    ))
-                }
-            }
-        }
-        animacoesCategorias.current = proximasAnimacoes
-        posicoesCategorias.current = proximasPosicoes
-        return () => {
-            for (const animacao of animacoesCategorias.current) animacao.cancel()
-        }
-    }, [categoriasOrdenadas, duracaoReordenacao, simularMovimentoReduzido])
 
     useEffect(() => {
         try {
@@ -230,6 +198,44 @@ export default function ExperimentoJanelaTemporal() {
                     </div>
                     <p class="help">Dias por 100 px</p>
                 </div>
+                <div class="field">
+                    <label class="label" for="janela-atraso-seletor">Atraso de resposta: {respostaSeletor.atrasoMs} ms</label>
+                    <input
+                        class="slider is-fullwidth"
+                        id="janela-atraso-seletor"
+                        type="range"
+                        min="0"
+                        max="2400"
+                        step="10"
+                        value={respostaSeletor.atrasoMs}
+                        onInput={(evento) => definirRespostaSeletor({ ...respostaSeletor, atrasoMs: Number(evento.currentTarget.value) })}
+                    />
+                    <p class="help">
+                        Tempo maior deixa as alças mais lentas; zero move imediatamente. Datas e categorias acompanham a posição efetiva da
+                        janela. O Tom possui controles próprios de atraso e curva no experimento da escala.
+                    </p>
+                </div>
+                <div class="field">
+                    <label class="label" for="janela-curva-seletor">Curva de aproximação</label>
+                    <div class="control">
+                        <div class="select">
+                            <select
+                                id="janela-curva-seletor"
+                                value={respostaSeletor.curva}
+                                onChange={(evento) =>
+                                    definirRespostaSeletor({
+                                        ...respostaSeletor,
+                                        curva: evento.currentTarget.value as CurvaRespostaSeletor
+                                    })}
+                            >
+                                <option value="linear">Linear</option>
+                                <option value="ease-in">Acelera ao longo do movimento</option>
+                                <option value="ease-out">Desacelera ao se aproximar</option>
+                                <option value="ease-in-out">Acelera e depois desacelera</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
                 <label class="checkbox">
                     <input
                         type="checkbox"
@@ -247,6 +253,30 @@ export default function ExperimentoJanelaTemporal() {
             >
                 <h3 class="title is-5" id="titulo-experimento-janela-temporal">Cenário controlado</h3>
                 <p>{dias.length} dias preservados · {distribuicao}</p>
+                <div class="field">
+                    <label class="label" for="janela-tom-medio">
+                        Tom médio da vista: {tomMedioDemonstrativo === null ? "Sem Tom" : tomMedioDemonstrativo}
+                    </label>
+                    <input
+                        class="slider is-fullwidth"
+                        id="janela-tom-medio"
+                        type="range"
+                        min="-100"
+                        max="100"
+                        step="1"
+                        value={tomMedioDemonstrativo ?? 0}
+                        disabled={tomMedioDemonstrativo === null}
+                        onInput={(evento) => definirTomMedioDemonstrativo(Number(evento.currentTarget.value))}
+                    />
+                    <label class="checkbox">
+                        <input
+                            type="checkbox"
+                            checked={tomMedioDemonstrativo === null}
+                            onChange={(evento) => definirTomMedioDemonstrativo(evento.currentTarget.checked ? null : 0)}
+                        />
+                        Vista sem categorias ou sem Tons definidos
+                    </label>
+                </div>
                 <div class="lab-panorama-regiao-fixa">
                     <JanelaTemporal
                         key={`${chaveCenario}-${novaJornada}`}
@@ -255,6 +285,9 @@ export default function ExperimentoJanelaTemporal() {
                         estadoInicial={estadoInicial}
                         inicializacaoPronta={inicializacaoPronta}
                         densidadeMaximaMarcadores={densidadeMaximaMarcadores}
+                        respostaSeletor={respostaSeletor}
+                        tomAparencia={tomMedioDemonstrativo}
+                        movimentoReduzido={simularMovimentoReduzido}
                         mostrarDatasExtremas
                         aoAlterarPosicoes={guardarEstado}
                     />
@@ -263,7 +296,7 @@ export default function ExperimentoJanelaTemporal() {
                         <div class="panorama-ordenacao-botoes">
                             <button
                                 type="button"
-                                class={`button is-small${ordenacao.criterio === "representatividade" ? " is-link" : ""}`}
+                                class="panorama-ordenacao-opcao"
                                 aria-pressed={ordenacao.criterio === "representatividade"}
                                 aria-label={ordenacao.criterio === "representatividade"
                                     ? `Representatividade: ${
@@ -272,13 +305,18 @@ export default function ExperimentoJanelaTemporal() {
                                     : "Representatividade"}
                                 onClick={() => definirOrdenacao((atual) => avancarOrdenacaoPanorama(atual, "representatividade"))}
                             >
-                                Representatividade{ordenacao.criterio === "representatividade"
-                                    ? ordenacao.ordemRepresentatividade === "decrescente" ? " +" : " −"
-                                    : ""}
+                                Representatividade{ordenacao.criterio === "representatividade" && (
+                                    <>
+                                        {" "}
+                                        <span class="panorama-ordenacao-sinal" aria-hidden="true">
+                                            {ordenacao.ordemRepresentatividade === "decrescente" ? "+" : "−"}
+                                        </span>
+                                    </>
+                                )}
                             </button>
                             <button
                                 type="button"
-                                class={`button is-small${ordenacao.criterio === "tom" ? " is-link" : ""}`}
+                                class="panorama-ordenacao-opcao"
                                 aria-pressed={ordenacao.criterio === "tom"}
                                 aria-label={ordenacao.criterio === "tom"
                                     ? ordenacao.ordemTom === "decrescente"
@@ -289,9 +327,14 @@ export default function ExperimentoJanelaTemporal() {
                                     : "Tom"}
                                 onClick={() => definirOrdenacao((atual) => avancarOrdenacaoPanorama(atual, "tom"))}
                             >
-                                Tom{ordenacao.criterio === "tom"
-                                    ? ordenacao.ordemTom === "decrescente" ? " +" : ordenacao.ordemTom === "crescente" ? " −" : " ∅"
-                                    : ""}
+                                Tom{ordenacao.criterio === "tom" && (
+                                    <>
+                                        {" "}
+                                        <span class="panorama-ordenacao-sinal" aria-hidden="true">
+                                            {ordenacao.ordemTom === "decrescente" ? "+" : ordenacao.ordemTom === "crescente" ? "−" : "×"}
+                                        </span>
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
@@ -316,20 +359,6 @@ export default function ExperimentoJanelaTemporal() {
                             />
                             <p class="help">{variacaoCenario}% · dados fictícios para provocar reordenações</p>
                         </div>
-                        <div class="field">
-                            <label class="label" for="panorama-duracao-reordenacao">Duração da reordenação</label>
-                            <input
-                                class="slider is-fullwidth"
-                                id="panorama-duracao-reordenacao"
-                                type="range"
-                                min="80"
-                                max="600"
-                                step="20"
-                                value={duracaoReordenacao}
-                                onInput={(evento) => definirDuracaoReordenacao(Number(evento.currentTarget.value))}
-                            />
-                            <p class="help">{duracaoReordenacao} ms</p>
-                        </div>
                         <label class="checkbox">
                             <input
                                 type="checkbox"
@@ -341,11 +370,10 @@ export default function ExperimentoJanelaTemporal() {
                     </div>
                     <ul
                         class="categorias-panorama-lista"
-                        ref={listaCategorias}
                         data-movimento-reduzido={simularMovimentoReduzido}
                     >
                         {categoriasOrdenadas.map((categoria) => (
-                            <li key={categoria.identificador} class="categoria-panorama-item" data-categoria-id={categoria.identificador}>
+                            <li key={categoria.identificador} class="categoria-panorama-item">
                                 <CategoriaPanorama
                                     identificador={categoria.identificador}
                                     nome={categoria.nome}

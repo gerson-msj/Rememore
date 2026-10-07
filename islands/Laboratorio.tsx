@@ -7,6 +7,7 @@ import MemoriaLaboratorio from "../components/MemoriaLaboratorio.tsx"
 import ExperimentoJanelaTemporal from "./ExperimentoJanelaTemporal.tsx"
 import ExperimentoCategoriaPanorama from "./ExperimentoCategoriaPanorama.tsx"
 import ExperimentoCurvaTom from "./ExperimentoCurvaTom.tsx"
+import { RESPOSTA_JANELA_PADRAO, RESPOSTA_TOM_PADRAO } from "../app/utilitarios/respostaSeletor.ts"
 
 function Bloco({ id, titulo, children }: { id: string; titulo: string; children: ComponentChildren }) {
     const [aberto, definirAberto] = useState(true)
@@ -51,6 +52,8 @@ function Bloco({ id, titulo, children }: { id: string; titulo: string; children:
 }
 
 export default function Laboratorio() {
+    const [respostaJanela, definirRespostaJanela] = useState(RESPOSTA_JANELA_PADRAO)
+    const [respostaTom, definirRespostaTom] = useState(RESPOSTA_TOM_PADRAO)
     const [coresTom, definirCoresTom] = useState({
         light: { negativa: "#B45F4D", positiva: "#237F88" },
         dark: { negativa: "#E99E89", positiva: "#79CBD1" }
@@ -74,13 +77,22 @@ export default function Laboratorio() {
                 <VisualizacaoLaboratorio />
             </Bloco>
             <Bloco id="memoria" titulo="Componente de memória — experimentação">
-                <ExperimentoMemoria tema={temaEfetivo} cores={coresTom} definirCores={definirCoresTom} />
+                <ExperimentoMemoria
+                    tema={temaEfetivo}
+                    cores={coresTom}
+                    definirCores={definirCoresTom}
+                    respostaSeletor={respostaTom}
+                    definirRespostaSeletor={definirRespostaTom}
+                />
             </Bloco>
             <Bloco id="memoria-real" titulo="Componente de memória — componente real">
                 <MemoriaLaboratorio />
             </Bloco>
             <Bloco id="janela-temporal" titulo="CMP-008 — Janela Temporal de Rememorar">
-                <ExperimentoJanelaTemporal />
+                <ExperimentoJanelaTemporal
+                    respostaSeletor={respostaJanela}
+                    definirRespostaSeletor={definirRespostaJanela}
+                />
             </Bloco>
             <Bloco id="categoria-panorama" titulo="CMP-009 — Categoria do Panorama">
                 <ExperimentoCategoriaPanorama />

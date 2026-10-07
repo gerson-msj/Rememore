@@ -1,13 +1,35 @@
 import { useEffect, useMemo, useState } from "preact/hooks"
 import CategoriaPanorama from "../components/CategoriaPanorama.tsx"
 import JanelaTemporal from "../components/JanelaTemporal.tsx"
+import { RESPOSTA_JANELA_PADRAO } from "../app/utilitarios/respostaSeletor.ts"
 import { type EstadoPreparacaoRememorar, prepararDadosRememorar } from "../app/servicos/rememorar.ts"
-import type { IntervaloJanela } from "../app/utilitarios/janelaTemporal.ts"
-import { derivarPanoramaRememorar, type CategoriaPanoramaDerivada } from "../app/utilitarios/panoramaRememorar.ts"
-import { type CenarioRememorar, selecionarCenarioRememorar } from "../app/servicos/rememorar/simulado.ts"
+import type { BlocoProjecaoRememorar } from "../app/servicos/local/projecaoRememorar.ts"
+import type { EstadoJanelaTemporal, IntervaloJanela } from "../app/utilitarios/janelaTemporal.ts"
+import {
+    calcularTomMedioCategoria,
+    calcularTomMedioPanorama,
+    type CategoriaPanoramaDerivada,
+    derivarPanoramaRememorar
+} from "../app/utilitarios/panoramaRememorar.ts"
+import {
+    avancarOrdenacaoPanorama,
+    lerOrdenacaoPanorama,
+    ORDENACAO_PANORAMA_PADRAO,
+    type OrdenacaoPanorama,
+    ordenarCategoriasPanorama,
+    salvarOrdenacaoPanorama
+} from "../app/utilitarios/ordenacaoPanorama.ts"
+import {
+    type CenarioRememorar,
+    definirTonsForcadosRememorar,
+    lerTonsForcadosRememorar,
+    selecionarCenarioRememorar
+} from "../app/servicos/rememorar/simulado.ts"
 
 interface PropriedadesRememorar {
     accountId: string
+    aoAtualizarCabecalho: (titulo: string, aoVoltar: () => void) => void
+    aoRestaurarCabecalho: () => void
 }
 
 interface CategoriaPanoramaAnimada extends CategoriaPanoramaDerivada {
@@ -35,12 +57,30 @@ function reconciliarCategoriasAnimadas(
     return proximas
 }
 
-export default function Rememorar({ accountId }: PropriedadesRememorar) {
+export default function Rememorar({ accountId, aoAtualizarCabecalho, aoRestaurarCabecalho }: PropriedadesRememorar) {
     const [preparacao, definirPreparacao] = useState<EstadoPreparacaoRememorar | null>(null)
     const [intervalo, definirIntervalo] = useState<IntervaloJanela | null>(null)
     const [carregandoCenario, definirCarregandoCenario] = useState(false)
+    const [tonsForcados, definirTonsForcados] = useState(false)
     const [geracaoJanela, definirGeracaoJanela] = useState(0)
     const [categoriasAnimadas, definirCategoriasAnimadas] = useState<CategoriaPanoramaAnimada[]>([])
+    const [ordenacao, definirOrdenacao] = useState<OrdenacaoPanorama>(ORDENACAO_PANORAMA_PADRAO)
+    const [contaPreferenciaLida, definirContaPreferenciaLida] = useState<string | null>(null)
+    const [estadoPanorama, definirEstadoPanorama] = useState<EstadoJanelaTemporal | null>(null)
+    const [categoriaSelecionada, definirCategoriaSelecionada] = useState<string | null>(null)
+    const [estadoDetalhe, definirEstadoDetalhe] = useState<EstadoJanelaTemporal | null>(null)
+    const [intervaloDetalhe, definirIntervaloDetalhe] = useState<IntervaloJanela | null>(null)
+
+    useEffect(() => {
+        definirOrdenacao(lerOrdenacaoPanorama(accountId))
+        definirContaPreferenciaLida(accountId)
+    }, [accountId])
+
+    useEffect(() => definirTonsForcados(lerTonsForcadosRememorar()), [])
+
+    useEffect(() => {
+        if (contaPreferenciaLida === accountId) salvarOrdenacaoPanorama(accountId, ordenacao)
+    }, [accountId, ordenacao, contaPreferenciaLida])
 
     useEffect(() => {
         let ativa = true
@@ -57,16 +97,46 @@ export default function Rememorar({ accountId }: PropriedadesRememorar) {
         dadosProntos,
         preparacao
     ])
-    const categorias = useMemo(() => {
+    const blocosPorData = useMemo(() => {
+        const indice = new Map<string, BlocoProjecaoRememorar[]>()
+        if (dadosProntos) {
+            for (const bloco of preparacao.projecao.blocos) {
+                const blocosDaData = indice.get(bloco.data) ?? []
+                blocosDaData.push(bloco)
+                indice.set(bloco.data, blocosDaData)
+            }
+        }
+        return indice
+    }, [dadosProntos, preparacao])
+    const categoriasDerivadas = useMemo(() => {
         if (!dadosProntos || !preparacao.catalogo.dados || !intervalo) return []
         return derivarPanoramaRememorar(
             dias,
             intervalo.primeiraPosicao,
             intervalo.ultimaPosicao,
             preparacao.projecao.blocos,
-            preparacao.catalogo.dados
+            preparacao.catalogo.dados,
+            blocosPorData
         )
-    }, [dadosProntos, dias, intervalo, preparacao])
+    }, [blocosPorData, dadosProntos, dias, intervalo, preparacao])
+    const categorias = useMemo(
+        () => ordenarCategoriasPanorama(categoriasDerivadas, ordenacao),
+        [categoriasDerivadas, ordenacao]
+    )
+    const tomPanorama = useMemo(() => calcularTomMedioPanorama(categoriasDerivadas), [categoriasDerivadas])
+    const tomDetalhe = useMemo(() => {
+        if (!categoriaSelecionada || !intervaloDetalhe) return null
+        const tons: (number | null)[] = []
+        for (let indice = intervaloDetalhe.primeiraPosicao; indice <= intervaloDetalhe.ultimaPosicao; indice++) {
+            for (const bloco of blocosPorData.get(dias[indice]) ?? []) {
+                for (const associacao of bloco.categorias) {
+                    if (associacao.idCategoria !== categoriaSelecionada) continue
+                    tons.push(...associacao.tons)
+                }
+            }
+        }
+        return calcularTomMedioCategoria(tons)
+    }, [blocosPorData, categoriaSelecionada, dias, intervaloDetalhe])
 
     useEffect(() => {
         definirCategoriasAnimadas((atuais) => reconciliarCategoriasAnimadas(atuais, categorias))
@@ -78,14 +148,15 @@ export default function Rememorar({ accountId }: PropriedadesRememorar) {
             definirCategoriasAnimadas((atuais) => atuais.filter((categoria) => categoria.identificador !== identificador))
             return
         }
-        definirCategoriasAnimadas((atuais) => atuais.map((categoria) => categoria.identificador === identificador
-            ? { ...categoria, animacao: null }
-            : categoria))
+        definirCategoriasAnimadas((atuais) =>
+            atuais.map((categoria) => categoria.identificador === identificador ? { ...categoria, animacao: null } : categoria)
+        )
     }
 
-    async function trocarCenario(quantidade: CenarioRememorar) {
+    async function trocarCenario(quantidade: CenarioRememorar, forcarTons = tonsForcados) {
         if (carregandoCenario) return
         definirCarregandoCenario(true)
+        definirTonsForcadosRememorar(forcarTons)
         selecionarCenarioRememorar(quantidade)
         try {
             const resultado = await prepararDadosRememorar(accountId)
@@ -97,31 +168,117 @@ export default function Rememorar({ accountId }: PropriedadesRememorar) {
         }
     }
 
-    if (!dadosProntos || dias.length < 2) return null
+    if (!dadosProntos || dias.length < 2 || contaPreferenciaLida !== accountId) return null
+
+    const direcaoAcessivel = ordenacao.criterio === "representatividade"
+        ? ordenacao.direcao === "decrescente" ? "maior primeiro" : "menor primeiro"
+        : ordenacao.direcao === "positivo"
+        ? "mais positivo primeiro"
+        : ordenacao.direcao === "negativo"
+        ? "mais negativo primeiro"
+        : "categorias sem Tom primeiro"
+
+    function selecionarCriterio(criterio: OrdenacaoPanorama["criterio"]) {
+        definirOrdenacao((atual) => avancarOrdenacaoPanorama(atual, criterio))
+    }
+
+    function abrirCategoria(identificador: string) {
+        const estado = estadoPanorama ?? (intervalo
+            ? {
+                posicoes: {
+                    esquerda: intervalo.primeiraPosicao / Math.max(1, dias.length - 1),
+                    direita: intervalo.ultimaPosicao / Math.max(1, dias.length - 1)
+                },
+                intervaloValido: intervalo
+            }
+            : null)
+        if (!estado) return
+        definirEstadoPanorama(estado)
+        definirEstadoDetalhe(estado)
+        definirIntervaloDetalhe(estado.intervaloValido)
+        definirCategoriaSelecionada(identificador)
+        const nome = categoriasDerivadas.find((categoria) => categoria.identificador === identificador)?.nome ?? "Categoria"
+        aoAtualizarCabecalho(nome, voltarAoPanorama)
+    }
+
+    function voltarAoPanorama() {
+        aoRestaurarCabecalho()
+        definirCategoriaSelecionada(null)
+        definirEstadoDetalhe(null)
+        definirIntervaloDetalhe(null)
+    }
+
+    if (categoriaSelecionada) {
+        return (
+            <section class="rememorar-detalhe-categoria">
+                <JanelaTemporal
+                    id="janela-temporal-detalhe-categoria"
+                    dias={dias}
+                    estadoInicial={estadoDetalhe}
+                    respostaSeletor={RESPOSTA_JANELA_PADRAO}
+                    tomAparencia={tomDetalhe}
+                    mostrarDatasExtremas
+                    aoAlterarIntervalo={definirIntervaloDetalhe}
+                    aoAlterarPosicoes={definirEstadoDetalhe}
+                />
+            </section>
+        )
+    }
 
     return (
         <>
-            <JanelaTemporal
-                key={geracaoJanela}
-                id="janela-temporal-rememorar"
-                dias={dias}
-                aoAlterarIntervalo={definirIntervalo}
-            />
-            {import.meta.env?.DEV && (
-                <div aria-label="Cenários de desenvolvimento">
-                    {([2, 7, 30, 300] as const).map((quantidade) => (
+            <div class="rememorar-regiao-fixa">
+                <JanelaTemporal
+                    respostaSeletor={RESPOSTA_JANELA_PADRAO}
+                    key={geracaoJanela}
+                    id="janela-temporal-rememorar"
+                    dias={dias}
+                    mostrarDatasExtremas
+                    estadoInicial={estadoPanorama}
+                    tomAparencia={tomPanorama}
+                    aoAlterarIntervalo={definirIntervalo}
+                    aoAlterarPosicoes={definirEstadoPanorama}
+                />
+                <div class="panorama-ordenacao" role="group" aria-label="Ordenação das categorias">
+                    <span>Ordenar por</span>
+                    <div class="panorama-ordenacao-botoes">
                         <button
-                            key={quantidade}
+                            class="panorama-ordenacao-opcao"
                             type="button"
-                            aria-pressed={dias.length === quantidade}
-                            disabled={carregandoCenario}
-                            onClick={() => void trocarCenario(quantidade)}
+                            aria-pressed={ordenacao.criterio === "representatividade"}
+                            aria-label={`Representatividade, ${
+                                ordenacao.criterio === "representatividade" ? direcaoAcessivel : "selecionar critério"
+                            }`}
+                            onClick={() => selecionarCriterio("representatividade")}
                         >
-                            {quantidade} dias
+                            Representatividade{ordenacao.criterio === "representatividade" && (
+                                <>
+                                    {" "}
+                                    <span class="panorama-ordenacao-sinal" aria-hidden="true">
+                                        {ordenacao.direcao === "decrescente" ? "+" : "−"}
+                                    </span>
+                                </>
+                            )}
                         </button>
-                    ))}
+                        <button
+                            class="panorama-ordenacao-opcao"
+                            type="button"
+                            aria-pressed={ordenacao.criterio === "tom"}
+                            aria-label={`Tom, ${ordenacao.criterio === "tom" ? direcaoAcessivel : "selecionar critério"}`}
+                            onClick={() => selecionarCriterio("tom")}
+                        >
+                            Tom{ordenacao.criterio === "tom" && (
+                                <>
+                                    {" "}
+                                    <span class="panorama-ordenacao-sinal" aria-hidden="true">
+                                        {ordenacao.direcao === "positivo" ? "+" : ordenacao.direcao === "negativo" ? "−" : "×"}
+                                    </span>
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
-            )}
+            </div>
             <ul class="categorias-panorama-lista">
                 {categoriasAnimadas.map(({ animacao, ...categoria }) => (
                     <li
@@ -134,11 +291,40 @@ export default function Rememorar({ accountId }: PropriedadesRememorar) {
                             nome={categoria.nome}
                             representatividade={categoria.representatividade}
                             tom={categoria.tom}
-                            aoSelecionar={() => {}}
+                            aoSelecionar={abrirCategoria}
                         />
                     </li>
                 ))}
             </ul>
+            {import.meta.env?.DEV && (
+                <div class="rememorar-cenarios" aria-label="Cenários de desenvolvimento">
+                    {([2, 7, 30, 300] as const).map((quantidade) => (
+                        <button
+                            key={quantidade}
+                            class="button is-small is-ghost"
+                            type="button"
+                            aria-pressed={dias.length === quantidade}
+                            disabled={carregandoCenario}
+                            onClick={() => void trocarCenario(quantidade)}
+                        >
+                            {quantidade} dias
+                        </button>
+                    ))}
+                    <button
+                        class="button is-small is-ghost"
+                        type="button"
+                        aria-pressed={tonsForcados}
+                        disabled={carregandoCenario}
+                        onClick={() => {
+                            const novaForcagem = !tonsForcados
+                            definirTonsForcados(novaForcagem)
+                            void trocarCenario(dias.length as CenarioRememorar, novaForcagem)
+                        }}
+                    >
+                        {tonsForcados ? "Tons de teste ativos: 7− / 30+" : "Forçar cores: 7− / 30+"}
+                    </button>
+                </div>
+            )}
         </>
     )
 }
