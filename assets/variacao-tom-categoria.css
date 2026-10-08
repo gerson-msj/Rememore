@@ -1,0 +1,92 @@
+.variacao-tom-categoria {
+    width: 100%;
+    height: 4.75rem;
+    padding: 0.35rem 0.55rem;
+    border: var(--bulma-control-border-width) solid var(--bulma-border);
+    border-radius: var(--bulma-control-radius);
+    background: var(--bulma-scheme-main);
+    color: var(--bulma-text-weak);
+    overflow: hidden;
+}
+.variacao-tom-trilha {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.variacao-tom-trilha::before {
+    content: "";
+    position: absolute;
+    top: calc(50% - 0.225rem);
+    right: 0;
+    left: 0;
+    height: 0.45rem;
+    border-radius: 999px;
+    background: var(--bulma-border-weak, var(--bulma-border));
+}
+.variacao-tom-lado {
+    position: absolute;
+    top: calc(50% - 0.225rem);
+    z-index: 1;
+    width: var(--variacao-tom-largura-positiva);
+    height: 0.45rem;
+    border-radius: 999px;
+    transition: width 180ms ease, background 180ms ease;
+}
+.variacao-tom-lado-negativo {
+    right: 50%;
+    width: var(--variacao-tom-largura-negativa);
+    background: linear-gradient(to left, var(--bulma-text-weak), var(--variacao-tom-cor-negativa));
+}
+.variacao-tom-lado-positivo {
+    left: 50%;
+    background: linear-gradient(to right, var(--bulma-text-weak), var(--variacao-tom-cor-positiva));
+}
+.variacao-tom-centro {
+    position: absolute;
+    top: calc(50% - 0.42rem);
+    left: 50%;
+    z-index: 2;
+    height: 0.84rem;
+    border-left: 1px solid var(--bulma-text-weak);
+}
+.variacao-tom-ausente .variacao-tom-centro {
+    border-left-style: dashed;
+    opacity: 0.55;
+}
+.variacao-tom-animada .variacao-tom-lado {
+    transition: width 180ms ease, background 180ms ease;
+}
+.experimento-variacao-amostra {
+    width: 100%;
+    min-width: 0;
+    margin-inline: auto;
+}
+.experimento-variacao-comparacao {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+}
+.experimento-variacao-diagnostico {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    gap: 0.75rem 1.5rem;
+    overflow-wrap: anywhere;
+}
+.experimento-variacao-diagnostico dt {
+    color: var(--bulma-text-weak);
+    font-size: 0.875rem;
+}
+.experimento-variacao-diagnostico dd {
+    font-variant-numeric: tabular-nums;
+}
+@media (prefers-reduced-motion: reduce) {
+    .variacao-tom-lado {
+        transition: none;
+    }
+}
+@media (max-width: 48rem) {
+    .experimento-variacao-comparacao {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
