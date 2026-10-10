@@ -16,6 +16,9 @@ Leitura obrigatória curta. As referências do índice são consultadas somente 
   origem de categorias e estado de aprendizagem; categorias exclusivamente locais são derivadas apenas da captura aberta. Payloads remotos
   mantêm seu contrato e são convertidos na preparação. Operações rejeitam falhas explicitamente. Consulte a referência antes de integrar ou
   evoluir o schema.
+- O detalhe de Rememorar deriva série diária e Tons locais em `derivarSinteseCategoriaRememorar`; a jornada de categoria e as duas janelas
+  temporais são validadas em `jornadaRememorar.ts` e restauradas da sessão da aba após recarga. A referência de projeção registra os recortes
+  e o acervo determinístico atual.
 
 ## Referências sob demanda
 

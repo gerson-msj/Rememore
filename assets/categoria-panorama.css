@@ -160,6 +160,29 @@
 .rememorar-regiao-fixa .panorama-ordenacao {
     padding-top: 0.5rem;
 }
+.rememorar-detalhe-categoria {
+    min-width: 0;
+}
+.rememorar-detalhe-periodo-fixo {
+    position: sticky;
+    z-index: 20;
+    top: 4.5rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem 0 0.65rem;
+    border-bottom: 1px solid var(--bulma-border-weak, var(--bulma-border));
+    background: var(--bulma-scheme-main);
+}
+.rememorar-detalhe-sinteses {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    min-width: 0;
+}
+@media (max-width: 48rem) {
+    .rememorar-detalhe-sinteses {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
 .rememorar-cenarios {
     display: flex;
     flex-wrap: wrap;

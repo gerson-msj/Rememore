@@ -105,7 +105,8 @@ function criarUniverso(): CenarioAcervoRememorar {
             const id = `memoria-${String(indiceDia + 1).padStart(3, "0")}-${String(indiceMemoria + 1).padStart(2, "0")}`
             const categorias = [categoriaReferencia(indiceDia, indiceMemoria)]
             if ((indiceDia * 11 + indiceMemoria) % 17 === 0) {
-                categorias.push(catalogoReferenciaRememorar[(indiceDia * 3 + indiceMemoria * 5 + 9) % 40].id)
+                const categoriaSecundaria = catalogoReferenciaRememorar[(indiceDia * 3 + indiceMemoria * 5 + 9) % 40].id
+                if (!categorias.includes(categoriaSecundaria)) categorias.push(categoriaSecundaria)
             }
             const quantidadeAdendos = (indiceDia + indiceMemoria * 2) % 4
             memorias.push({

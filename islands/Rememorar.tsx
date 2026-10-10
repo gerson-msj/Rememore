@@ -1,16 +1,15 @@
-import { useEffect, useMemo, useState } from "preact/hooks"
+import { useEffect, useMemo, useRef, useState } from "preact/hooks"
 import CategoriaPanorama from "../components/CategoriaPanorama.tsx"
 import JanelaTemporal from "../components/JanelaTemporal.tsx"
+import OndaUtilizacaoCategoria from "../components/OndaUtilizacaoCategoria.tsx"
+import VariacaoTomCategoria from "../components/VariacaoTomCategoria.tsx"
 import { RESPOSTA_JANELA_PADRAO } from "../app/utilitarios/respostaSeletor.ts"
 import { type EstadoPreparacaoRememorar, prepararDadosRememorar } from "../app/servicos/rememorar.ts"
 import type { BlocoProjecaoRememorar } from "../app/servicos/local/projecaoRememorar.ts"
 import type { EstadoJanelaTemporal, IntervaloJanela } from "../app/utilitarios/janelaTemporal.ts"
-import {
-    calcularTomMedioCategoria,
-    calcularTomMedioPanorama,
-    type CategoriaPanoramaDerivada,
-    derivarPanoramaRememorar
-} from "../app/utilitarios/panoramaRememorar.ts"
+import { calcularTomMedioPanorama, type CategoriaPanoramaDerivada, derivarPanoramaRememorar } from "../app/utilitarios/panoramaRememorar.ts"
+import { derivarSinteseCategoriaRememorar } from "../app/utilitarios/sinteseCategoriaRememorar.ts"
+import { chaveJornadaRememorar, lerJornadaRememorar, serializarJornadaRememorar } from "../app/utilitarios/jornadaRememorar.ts"
 import {
     avancarOrdenacaoPanorama,
     lerOrdenacaoPanorama,
@@ -70,6 +69,9 @@ export default function Rememorar({ accountId, aoAtualizarCabecalho, aoRestaurar
     const [categoriaSelecionada, definirCategoriaSelecionada] = useState<string | null>(null)
     const [estadoDetalhe, definirEstadoDetalhe] = useState<EstadoJanelaTemporal | null>(null)
     const [intervaloDetalhe, definirIntervaloDetalhe] = useState<IntervaloJanela | null>(null)
+    const [contaJornadaRestaurada, definirContaJornadaRestaurada] = useState<string | null>(null)
+    const callbacksCabecalho = useRef({ aoAtualizarCabecalho, aoRestaurarCabecalho })
+    callbacksCabecalho.current = { aoAtualizarCabecalho, aoRestaurarCabecalho }
 
     useEffect(() => {
         definirOrdenacao(lerOrdenacaoPanorama(accountId))
@@ -124,19 +126,60 @@ export default function Rememorar({ accountId, aoAtualizarCabecalho, aoRestaurar
         [categoriasDerivadas, ordenacao]
     )
     const tomPanorama = useMemo(() => calcularTomMedioPanorama(categoriasDerivadas), [categoriasDerivadas])
-    const tomDetalhe = useMemo(() => {
-        if (!categoriaSelecionada || !intervaloDetalhe) return null
-        const tons: (number | null)[] = []
-        for (let indice = intervaloDetalhe.primeiraPosicao; indice <= intervaloDetalhe.ultimaPosicao; indice++) {
-            for (const bloco of blocosPorData.get(dias[indice]) ?? []) {
-                for (const associacao of bloco.categorias) {
-                    if (associacao.idCategoria !== categoriaSelecionada) continue
-                    tons.push(...associacao.tons)
-                }
+    const sinteseDetalhe = useMemo(() => {
+        return derivarSinteseCategoriaRememorar(
+            accountId,
+            categoriaSelecionada ?? "",
+            dias,
+            intervaloDetalhe,
+            blocosPorData
+        )
+    }, [accountId, blocosPorData, categoriaSelecionada, dias, intervaloDetalhe])
+
+    useEffect(() => {
+        const catalogo = preparacao?.catalogo.dados
+        if (!dadosProntos || !catalogo) return
+        let valor: string | null = null
+        try {
+            const navegacao = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined
+            if (navegacao?.type === "reload") valor = sessionStorage.getItem(chaveJornadaRememorar(accountId))
+        } catch {
+            valor = null
+        }
+        const jornada = lerJornadaRememorar(accountId, dias, valor)
+        definirCategoriaSelecionada(null)
+        definirIntervalo(null)
+        definirEstadoPanorama(jornada?.estadoPanorama ?? null)
+        definirEstadoDetalhe(null)
+        definirIntervaloDetalhe(null)
+        if (jornada?.tela === "detalhe" && jornada.categoria) {
+            const categoria = catalogo.categorias.find(({ id }) => id === jornada.categoria)
+            if (categoria) {
+                definirCategoriaSelecionada(categoria.id)
+                definirEstadoDetalhe(jornada.estadoDetalhe)
+                callbacksCabecalho.current.aoAtualizarCabecalho(categoria.nome, voltarAoPanorama)
             }
         }
-        return calcularTomMedioCategoria(tons)
-    }, [blocosPorData, categoriaSelecionada, dias, intervaloDetalhe])
+        definirContaJornadaRestaurada(accountId)
+    }, [accountId, dadosProntos, dias, preparacao])
+
+    useEffect(() => {
+        if (contaJornadaRestaurada !== accountId || !dadosProntos) return
+        const jornada = {
+            tela: categoriaSelecionada ? "detalhe" as const : "panorama" as const,
+            categoria: categoriaSelecionada,
+            estadoPanorama,
+            estadoDetalhe
+        }
+        try {
+            sessionStorage.setItem(
+                chaveJornadaRememorar(accountId),
+                serializarJornadaRememorar(accountId, jornada)
+            )
+        } catch {
+            // O estado em memória continua disponível se o navegador bloquear o armazenamento da sessão.
+        }
+    }, [accountId, categoriaSelecionada, contaJornadaRestaurada, dadosProntos, estadoDetalhe, estadoPanorama])
 
     useEffect(() => {
         definirCategoriasAnimadas((atuais) => reconciliarCategoriasAnimadas(atuais, categorias))
@@ -168,7 +211,10 @@ export default function Rememorar({ accountId, aoAtualizarCabecalho, aoRestaurar
         }
     }
 
-    if (!dadosProntos || dias.length < 2 || contaPreferenciaLida !== accountId) return null
+    if (
+        !dadosProntos || dias.length < 2 || contaPreferenciaLida !== accountId ||
+        contaJornadaRestaurada !== accountId
+    ) return null
 
     const direcaoAcessivel = ordenacao.criterio === "representatividade"
         ? ordenacao.direcao === "decrescente" ? "maior primeiro" : "menor primeiro"
@@ -211,16 +257,22 @@ export default function Rememorar({ accountId, aoAtualizarCabecalho, aoRestaurar
     if (categoriaSelecionada) {
         return (
             <section class="rememorar-detalhe-categoria">
-                <JanelaTemporal
-                    id="janela-temporal-detalhe-categoria"
-                    dias={dias}
-                    estadoInicial={estadoDetalhe}
-                    respostaSeletor={RESPOSTA_JANELA_PADRAO}
-                    tomAparencia={tomDetalhe}
-                    mostrarDatasExtremas
-                    aoAlterarIntervalo={definirIntervaloDetalhe}
-                    aoAlterarPosicoes={definirEstadoDetalhe}
-                />
+                <div class="rememorar-detalhe-periodo-fixo">
+                    <JanelaTemporal
+                        id="janela-temporal-detalhe-categoria"
+                        dias={dias}
+                        estadoInicial={estadoDetalhe}
+                        respostaSeletor={RESPOSTA_JANELA_PADRAO}
+                        tomAparencia={sinteseDetalhe.tom}
+                        mostrarDatasExtremas
+                        aoAlterarIntervalo={definirIntervaloDetalhe}
+                        aoAlterarPosicoes={definirEstadoDetalhe}
+                    />
+                </div>
+                <div class="rememorar-detalhe-sinteses">
+                    <OndaUtilizacaoCategoria serie={sinteseDetalhe.serie} tom={sinteseDetalhe.tom} />
+                    <VariacaoTomCategoria tons={sinteseDetalhe.tons} />
+                </div>
             </section>
         )
     }

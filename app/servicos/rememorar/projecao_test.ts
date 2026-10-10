@@ -229,6 +229,9 @@ Deno.test("fixtures determinísticas atendem cenários, Tons, cauda longa e form
             const memorias = cenario.memorias.filter((memoria) => memoria.data === data)
             if (memorias.length < 1 || memorias.length > 15) throw new Error(`Quantidade inválida em ${data}`)
             if (memorias.some((memoria) => memoria.complementos.length > 3)) throw new Error("Memória com mais de três adendos")
+            if (memorias.some((memoria) => new Set(memoria.categorias).size !== memoria.categorias.length)) {
+                throw new Error("Memória com a mesma categoria associada mais de uma vez")
+            }
         }
         igual(new Set(cenario.memorias.map((memoria) => memoria.id)).size, cenario.memorias.length)
     }
@@ -247,6 +250,17 @@ Deno.test("fixtures determinísticas atendem cenários, Tons, cauda longa e form
         for (const categoria of memoria.categorias) frequencias.set(categoria, (frequencias.get(categoria) ?? 0) + 1)
     }
     if (Math.max(...frequencias.values()) <= Math.min(...frequencias.values())) throw new Error("Distribuição de categorias uniforme")
+    igual(amplo.memorias.length, 2430)
+    igual(frequencias.get("categoria-01"), 853)
+    const contarCategoriaNoRecorte = (idCategoria: string, inicio: string, fim: string) => {
+        const datas = new Set(amplo.dias.filter((data) => data >= inicio && data <= fim))
+        return amplo.memorias.filter((memoria) => datas.has(memoria.data) && memoria.categorias.includes(idCategoria)).length
+    }
+    igual(contarCategoriaNoRecorte("categoria-02", "2025-10-07", "2025-10-09"), 0)
+    igual(contarCategoriaNoRecorte("categoria-01", "2024-05-21", "2024-05-31"), 7)
+    igual(contarCategoriaNoRecorte("categoria-01", "2025-09-24", "2025-10-01"), 30)
+    igual(contarCategoriaNoRecorte("categoria-01", "2025-05-05", "2025-05-13"), 31)
+    igual(contarCategoriaNoRecorte("categoria-01", "2025-06-03", "2025-07-03"), 91)
     const cenarioRepetido = obterCenarioAcervoRememorar(300)
     const blocoProjetado = projetarDiaAcervoRememorar("conta-a", amplo, amplo.dias[0])
     if (blocoProjetado.categorias.some((categoria) => categoria.tons.length === 0)) throw new Error("Associação sem Tom, inclusive ausente")
@@ -322,6 +336,28 @@ Deno.test("mock remoto mantém revisão por data e transmite somente o estado co
     if (incremental.tipo !== "incremental") throw new Error("Resposta incremental esperada")
     igual(incremental.blocos.length, 1)
     igual(incremental.blocos[0].categorias[0].tons, [75])
+})
+
+Deno.test("mock remoto reconstrói acervo persistido quando a versão da fixture muda", async () => {
+    let estado: {
+        revisao: number
+        blocos: Record<string, BlocoProjecaoRememorar>
+        ultimaRevisao: Record<string, number>
+        versaoAcervo?: number
+        cenario?: 2 | 7 | 30 | 300
+        tonsForcados?: boolean
+    } = { revisao: 8, blocos: {}, ultimaRevisao: {}, cenario: 300, tonsForcados: false }
+    const remoto = criarProjecaoRemotaSimulada({
+        ler: () => estado,
+        gravar: (_conta, novoEstado) => estado = novoEstado,
+        cenario: () => 300,
+        tonsForcados: () => false
+    })
+    const refeita = await remoto.consultar("conta-a", null)
+    if (refeita.tipo !== "completa") throw new Error("Carga refeita não completa")
+    igual(refeita.revisao, "9")
+    igual(refeita.blocos.length, 300)
+    igual(estado.versaoAcervo, 2)
 })
 
 Deno.test("mock remoto muda o cenário com revisão incremental e remove datas que saíram", async () => {

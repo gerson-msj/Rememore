@@ -20,10 +20,10 @@ export default function VariacaoTomCategoria({ tons }: VariacaoTomCategoriaProps
     const pesoNegativo = Math.abs(transformarTomVisual(resultado.mediaNegativa) ?? 0)
     const pesoPositivo = Math.abs(transformarTomVisual(resultado.mediaPositiva) ?? 0)
     const descricao = resultado.possuiTomDefinido
-        ? `Variação do Tom. Negativo: ${
+        ? `Variação do Tom no período selecionado. Negativo: ${
             resultado.mediaNegativa === null ? "sem extensão" : resultado.mediaNegativa.toFixed(1)
         }. Neutro: centro. Positivo: ${resultado.mediaPositiva === null ? "sem extensão" : resultado.mediaPositiva.toFixed(1)}.`
-        : "Variação do Tom sem Tons definidos. Negativo à esquerda, neutro ao centro e positivo à direita."
+        : "Variação do Tom no período selecionado, sem Tons definidos. Negativo à esquerda, neutro ao centro e positivo à direita."
 
     return (
         <div
@@ -39,6 +39,7 @@ export default function VariacaoTomCategoria({ tons }: VariacaoTomCategoriaProps
             role="img"
             aria-label={descricao}
         >
+            <span class="variacao-tom-identificacao" aria-hidden="true">Variação do Tom</span>
             <span class="variacao-tom-trilha" aria-hidden="true">
                 <span class="variacao-tom-lado variacao-tom-lado-negativo" />
                 <span class="variacao-tom-lado variacao-tom-lado-positivo" />

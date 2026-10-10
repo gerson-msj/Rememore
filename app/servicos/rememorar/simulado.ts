@@ -6,12 +6,15 @@ interface EstadoSimulado {
     revisao: number
     blocos: Record<string, BlocoProjecaoRememorar>
     ultimaRevisao: Record<string, number>
+    versaoAcervo?: number
     cenario?: 2 | 7 | 30 | 300
     tonsForcados?: boolean
     falhar?: boolean
 }
 
 export type CenarioRememorar = 2 | 7 | 30 | 300
+
+const VERSAO_ACERVO = 2
 
 type ArmazenamentoSimulado = {
     ler(idConta: string): EstadoSimulado
@@ -29,7 +32,10 @@ export function criarProjecaoRemotaSimulada(armazenamento: ArmazenamentoSimulado
         const existente = armazenamento.ler(idConta)
         const quantidadeDias = armazenamento.cenario()
         const tonsForcados = armazenamento.tonsForcados()
-        if (existente.revisao > 0 && existente.cenario === quantidadeDias && existente.tonsForcados === tonsForcados) return existente
+        if (
+            existente.revisao > 0 && existente.versaoAcervo === VERSAO_ACERVO &&
+            existente.cenario === quantidadeDias && existente.tonsForcados === tonsForcados
+        ) return existente
         const cenario = obterCenarioAcervoRememorar(quantidadeDias)
         if (tonsForcados && (quantidadeDias === 7 || quantidadeDias === 30)) {
             const tomForcado = quantidadeDias === 7 ? -55 : 55
@@ -41,6 +47,7 @@ export function criarProjecaoRemotaSimulada(armazenamento: ArmazenamentoSimulado
         const inicial: EstadoSimulado = {
             revisao,
             blocos,
+            versaoAcervo: VERSAO_ACERVO,
             cenario: quantidadeDias,
             tonsForcados,
             ultimaRevisao: Object.fromEntries(
@@ -126,6 +133,7 @@ function alterarEstado(idConta: string, alterar: (estado: EstadoSimulado) => voi
         const quantidadeDias = armazenamentoNavegador.cenario()
         const cenario: CenarioAcervoRememorar = obterCenarioAcervoRememorar(quantidadeDias)
         estado.revisao = 1
+        estado.versaoAcervo = VERSAO_ACERVO
         estado.cenario = quantidadeDias
         for (const data of cenario.dias) {
             estado.blocos[data] = projetarDiaAcervoRememorar(idConta, cenario, data)

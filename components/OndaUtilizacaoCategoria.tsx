@@ -66,8 +66,14 @@ export default function OndaUtilizacaoCategoria({ serie, tom }: OndaUtilizacaoCa
 
     const aparencia = aparenciaTom(resultado.serie.length === 0 ? null : tom)
     return (
-        <div class={`onda-utilizacao ${aparencia.className}`} style={aparencia.style} aria-hidden="true">
-            <svg viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
+        <div
+            class={`onda-utilizacao ${aparencia.className}`}
+            style={aparencia.style}
+            role="img"
+            aria-label="Uso da categoria. Quantidade de associações da categoria nos dias com ocorrências no período selecionado."
+        >
+            <span class="onda-utilizacao-identificacao" aria-hidden="true">Uso da categoria</span>
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false" aria-hidden="true">
                 <path d={gerarCaminhoSvg(pontos)} />
             </svg>
         </div>

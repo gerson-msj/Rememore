@@ -34,8 +34,24 @@ conta `rememore:rememorar:ordenacao:v1:<conta codificada>`; falha de armazenamen
 Tom funcional e a família pelo sinal. Tom nulo não recebe intensidade. Componentes podem injetar transformação apenas para experimentação;
 consumidores regulares usam o mapeamento comum.
 
+## Sínteses do detalhe da categoria
+
+`app/utilitarios/sinteseCategoriaRememorar.ts` exporta `derivarSinteseCategoriaRememorar`: recebe conta, categoria, datas ordenadas,
+intervalo válido e índice dos blocos locais por data; retorna a série com associações por dia (omitindo dias sem ocorrência), todos os Tons
+dessas associações e sua média simples definida. O helper não consulta serviços nem persistência; CMP-011 e CMP-012 seguem passivos e recebem
+seus valores pela ilha `islands/Rememorar.tsx`.
+
+`app/utilitarios/jornadaRememorar.ts` valida o estado serializado da navegação por conta e contra as datas atuais. A ilha salva no
+`sessionStorage` categoria, estado da janela do detalhe e estado anterior do Panorama; só restaura em recarga do documento. Uma entrada de
+navegação nova começa no Panorama. Falha ou estado inválido de armazenamento não impede o uso em memória.
+
 ## Acervo de referência
 
 `acervo.ts` constrói um universo determinístico de 300 dias, IDs de memória estáveis, 1–15 memórias por dia, Tons definidos/ausentes,
 associações múltiplas e até três adendos. Os cenários menores reutilizam os primeiros dias; todos usam o mesmo catálogo de 40 categorias,
 incluindo duas inativas. A projeção derivada omite texto, adendos e balanço. Os testes correspondentes ficam em `projecao_test.ts`.
+Associações de categoria são únicas por memória; `simulado.ts` atualiza a versão da fixture armazenada em desenvolvimento quando essa origem
+muda. No acervo atual, `categoria-01` (Família) tem 853 memórias entre várias datas. Para reproduzir recortes usando as extremidades
+inclusivas dos dias preservados no cenário de 300 dias: `categoria-02` (Amizade), 07/10/2025–09/10/2025 = 0; `categoria-01`,
+21/05/2024–31/05/2024 = 7, 24/09/2025–01/10/2025 = 30, 05/05/2025–13/05/2025 = 31 e 03/06/2025–03/07/2025 = 91. A seleção da
+categoria deve ocorrer no panorama amplo antes de ajustar para o recorte sem ocorrência.
