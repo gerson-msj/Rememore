@@ -3,6 +3,7 @@ import CabecalhoPagina from "../components/CabecalhoPagina.tsx"
 import MensagemPopup, { type ResultadoPopup } from "../components/MensagemPopup.tsx"
 import type { CapacidadesPrincipal } from "../app/servicos/principal/contratos.ts"
 import { capturasLocais } from "../app/servicos/local/capturas.ts"
+import { encerrarJornadaRememorar } from "../app/servicos/rememorar/jornada.ts"
 
 interface PropriedadesPrincipal {
     accountId: string
@@ -97,9 +98,16 @@ export default function Principal({ capabilities: capacidades, accountId: idCont
         }
     ]
 
-    function receberResultadoSaida(resultado: ResultadoPopup) {
+    async function receberResultadoSaida(resultado: ResultadoPopup) {
         definirConfirmarSaida(false)
-        if (resultado === "confirm") formulario.current!.requestSubmit()
+        if (resultado === "confirm") {
+            try {
+                await encerrarJornadaRememorar(idConta)
+            } catch {
+                // O encerramento da sessão deve prosseguir mesmo se o armazenamento local estiver indisponível.
+            }
+            formulario.current!.requestSubmit()
+        }
     }
 
     function abrirJornada(jornada: Jornada) {

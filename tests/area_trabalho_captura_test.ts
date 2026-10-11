@@ -257,6 +257,7 @@ Deno.test("migração 4: substitui stores antigos, mantém novos dados e renova 
             "_diagnostico",
             "capturas",
             "catalogosCategorias",
+            "memoriasRememorar",
             "metadadosProjecaoRememorar",
             "projecaoRememorar"
         ])

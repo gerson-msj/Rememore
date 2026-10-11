@@ -1,7 +1,8 @@
-import { useState } from "preact/hooks"
+import { useEffect, useState } from "preact/hooks"
 import CabecalhoPagina from "../components/CabecalhoPagina.tsx"
 import CampoSenha from "../components/CampoSenha.tsx"
 import { temConteudoEntrada } from "../app/utilitarios/entrada.ts"
+import { limparJornadasRememorarSemSessao } from "../app/servicos/rememorar/jornada.ts"
 
 export interface PropriedadesEntrada {
     username: string
@@ -10,6 +11,9 @@ export interface PropriedadesEntrada {
 }
 
 export default function Entrada({ username: nomeUsuarioInicial, password: senhaInicial, failed: falhou }: PropriedadesEntrada) {
+    useEffect(() => {
+        void limparJornadasRememorarSemSessao().catch(() => {})
+    }, [])
     const [nomeUsuario, definirNomeUsuario] = useState(nomeUsuarioInicial)
     const [senha, definirSenha] = useState(senhaInicial)
     const [invalido, definirInvalido] = useState(falhou)

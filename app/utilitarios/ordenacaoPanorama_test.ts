@@ -17,7 +17,7 @@ function verificarIgualdade(obtido: unknown, esperado: unknown) {
 }
 
 function categoria(nome: string, representatividade: number, tom: number | null): CategoriaPanoramaDerivada {
-    return { identificador: nome, nome, quantidade: 1, representatividade, tom }
+    return { identificador: nome, nome, quantidade: 1, quantidadeTons: tom === null ? 0 : 1, representatividade, tom }
 }
 
 function armazenamentoMemoria(): Storage {

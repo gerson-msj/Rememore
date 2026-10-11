@@ -28,6 +28,8 @@ interface PropriedadesJanelaTemporal {
     tomAparencia?: number | null
     aoAlterarIntervalo?: (intervalo: IntervaloJanela) => void
     aoAlterarPosicoes?: (estado: EstadoJanelaTemporal) => void
+    aoConcluirAlteracao?: (intervalo: IntervaloJanela) => void
+    aoAlcancarAlvoLiberado?: (intervalo: IntervaloJanela) => void
 }
 
 export type { CurvaRespostaSeletor }
@@ -61,7 +63,9 @@ export default function JanelaTemporal({
     movimentoReduzido = false,
     tomAparencia = null,
     aoAlterarIntervalo,
-    aoAlterarPosicoes
+    aoAlterarPosicoes,
+    aoConcluirAlteracao,
+    aoAlcancarAlvoLiberado
 }: PropriedadesJanelaTemporal) {
     const iniciais: PosicoesJanela = estadoInicial?.posicoes ?? { esquerda: 0, direita: 1 }
     const [posicoes, definirPosicoes] = useState<PosicoesJanela>(iniciais)
@@ -88,6 +92,15 @@ export default function JanelaTemporal({
     const intervaloValido = useRef(estadoInicial?.intervaloValido ?? criarIntervaloJanela(dias, 0, Math.max(1, dias.length - 1)))
     const callbackIntervalo = useRef(aoAlterarIntervalo)
     callbackIntervalo.current = aoAlterarIntervalo
+    const callbackAlvoLiberado = useRef(aoAlcancarAlvoLiberado)
+    callbackAlvoLiberado.current = aoAlcancarAlvoLiberado
+    const aguardarAlvoLiberado = useRef(false)
+
+    function notificarAlvoLiberado() {
+        if (!aguardarAlvoLiberado.current || !intervaloValido.current) return
+        aguardarAlvoLiberado.current = false
+        callbackAlvoLiberado.current?.(intervaloValido.current)
+    }
 
     useEffect(() => {
         const elemento = trilho.current
@@ -131,6 +144,7 @@ export default function JanelaTemporal({
             alvo.tipo === "alca" ? alvo.lado : undefined,
             alvo.tipo === "faixa"
         )
+        notificarAlvoLiberado()
     }, [movimentoReduzido, movimentoReduzidoSistema])
 
     useEffect(() => {
@@ -221,6 +235,7 @@ export default function JanelaTemporal({
             )
             instanteAproximacao.current = null
             velocidadeAlca.current = 0
+            notificarAlvoLiberado()
             return
         }
 
@@ -251,6 +266,7 @@ export default function JanelaTemporal({
             alvoAproximacao.current = null
             instanteAproximacao.current = null
             velocidadeAlca.current = 0
+            notificarAlvoLiberado()
             return
         }
         velocidadeAlca.current = avancamento.velocidade
@@ -298,6 +314,7 @@ export default function JanelaTemporal({
 
     function iniciarAlca(evento: PointerEvent, lado: "esquerda" | "direita") {
         evento.stopPropagation()
+        aguardarAlvoLiberado.current = false
         alvoAproximacao.current = null
         if (quadroAproximacao.current !== null) cancelAnimationFrame(quadroAproximacao.current)
         quadroAproximacao.current = null
@@ -312,6 +329,7 @@ export default function JanelaTemporal({
 
     function iniciarFaixa(evento: PointerEvent) {
         evento.stopPropagation()
+        aguardarAlvoLiberado.current = false
         const caixa = trilho.current?.getBoundingClientRect()
         const intervalo = intervaloDaFaixa ?? avaliacao.intervaloAtual ?? intervaloValido.current
         if (!caixa || caixa.width <= 0 || !intervalo) return
@@ -331,6 +349,7 @@ export default function JanelaTemporal({
 
     function iniciarTrilho(evento: PointerEvent) {
         if (evento.target !== evento.currentTarget || dias.length < 2) return
+        aguardarAlvoLiberado.current = false
         const ponto = coordenadaContinua(evento)
         alvoAproximacao.current = null
         if (quadroAproximacao.current !== null) cancelAnimationFrame(quadroAproximacao.current)
@@ -358,11 +377,27 @@ export default function JanelaTemporal({
         moverFaixaComResposta(proximo.posicoes)
     }
 
-    function finalizarArraste() {
+    function finalizarArraste(evento: PointerEvent) {
+        const gestoAtivo = arraste.current !== null
+        if (!gestoAtivo) return
+        moverPonteiro(evento)
         arraste.current = null
+        if (!intervaloValido.current) return
+        const alvo = alvoAproximacao.current
+        const posicoesAlvo = alvo?.tipo === "faixa"
+            ? alvo.posicoes
+            : alvo?.tipo === "alca"
+            ? moverAlcaSemCruzamento(posicoesRef.current, alvo.lado, alvo.posicao)
+            : posicoesRef.current
+        const intervaloConcluido = avaliarPosicoesJanela(dias, posicoesAlvo, intervaloValido.current).intervaloAtual ??
+            intervaloValido.current
+        aoConcluirAlteracao?.(intervaloConcluido)
+        aguardarAlvoLiberado.current = alvoAproximacao.current !== null && quadroAproximacao.current !== null
+        if (!aguardarAlvoLiberado.current) aoAlcancarAlvoLiberado?.(intervaloConcluido)
     }
 
     function operarTeclado(evento: KeyboardEvent, lado: "esquerda" | "direita") {
+        aguardarAlvoLiberado.current = false
         alvoAproximacao.current = null
         if (quadroAproximacao.current !== null) cancelAnimationFrame(quadroAproximacao.current)
         quadroAproximacao.current = null
@@ -383,6 +418,8 @@ export default function JanelaTemporal({
                 lado === "esquerda" ? { ...posicoesRef.current, esquerda: posicao } : { ...posicoesRef.current, direita: posicao },
                 lado
             )
+            if (intervaloValido.current) aoConcluirAlteracao?.(intervaloValido.current)
+            if (intervaloValido.current) aoAlcancarAlvoLiberado?.(intervaloValido.current)
             return
         }
         const passo = passos[evento.key]
@@ -393,6 +430,8 @@ export default function JanelaTemporal({
             lado === "esquerda" ? { ...posicoesRef.current, esquerda: posicao } : { ...posicoesRef.current, direita: posicao },
             lado
         )
+        if (intervaloValido.current) aoConcluirAlteracao?.(intervaloValido.current)
+        if (intervaloValido.current) aoAlcancarAlvoLiberado?.(intervaloValido.current)
     }
 
     function descricaoAlca(lado: "esquerda" | "direita") {
@@ -406,7 +445,9 @@ export default function JanelaTemporal({
 
     return (
         <section
-            class={`janela-temporal ${aparencia.className}${tomAparencia === 0 ? " tom-neutro" : ""}${mostrarDatasExtremas ? " janela-temporal-com-datas" : ""}`}
+            class={`janela-temporal ${aparencia.className}${tomAparencia === 0 ? " tom-neutro" : ""}${
+                mostrarDatasExtremas ? " janela-temporal-com-datas" : ""
+            }`}
             style={aparencia.style}
             aria-labelledby={mostrarDatasExtremas ? `${id}-rotulo` : `${id}-orientacao`}
         >

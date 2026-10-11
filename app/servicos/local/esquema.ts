@@ -4,6 +4,7 @@ export const STORE_DIAGNOSTICO = "_diagnostico"
 export const STORE_CATALOGOS_CATEGORIAS = "catalogosCategorias"
 export const STORE_PROJECAO_REMEMORAR = "projecaoRememorar"
 export const STORE_METADADOS_PROJECAO_REMEMORAR = "metadadosProjecaoRememorar"
+export const STORE_MEMORIAS_REMEMORAR = "memoriasRememorar"
 
 export interface MigracaoLocal {
     versao: number
@@ -65,6 +66,12 @@ export const migracoesLocais: readonly MigracaoLocal[] = [
             const blocos = banco.createObjectStore(STORE_PROJECAO_REMEMORAR, { keyPath: ["idConta", "data"] })
             blocos.createIndex("porConta", "idConta")
             banco.createObjectStore(STORE_METADADOS_PROJECAO_REMEMORAR, { keyPath: "idConta" })
+        }
+    },
+    {
+        versao: 8,
+        migrar(banco) {
+            banco.createObjectStore(STORE_MEMORIAS_REMEMORAR, { keyPath: "idConta" })
         }
     }
 ]

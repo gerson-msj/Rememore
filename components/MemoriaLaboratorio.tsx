@@ -28,6 +28,8 @@ export default function MemoriaLaboratorio() {
                     aoRebaixar={() => receber(`${id}: Rebaixar`)}
                 />
             )
+            : contexto === "rememorarDetalheCategoria"
+            ? <Memoria conteudo={conteudo} categorias={categorias} tom={valor} contexto={contexto} />
             : <Memoria {...comum} contexto={contexto} />
     }
     return (
@@ -49,6 +51,7 @@ export default function MemoriaLaboratorio() {
                                 <option value="registrar">Memorar</option>
                                 <option value="categorizar">Categorizar</option>
                                 <option value="revisar">Revisar</option>
+                                <option value="rememorarDetalheCategoria">Rememorar — Detalhe da Categoria</option>
                             </select>
                         </div>
                     </div>

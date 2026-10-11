@@ -4,6 +4,7 @@ import type { BlocoProjecaoRememorar } from "../local/projecaoRememorar.ts"
 export interface MemoriaReferenciaRememorar {
     id: string
     data: string
+    ordem: number
     conteudo: string
     categorias: string[]
     tom: number | null
@@ -112,6 +113,7 @@ function criarUniverso(): CenarioAcervoRememorar {
             memorias.push({
                 id,
                 data,
+                ordem: indiceMemoria + 1,
                 conteudo: `Memória ${indiceDia + 1}.${indiceMemoria + 1}`,
                 categorias,
                 tom: tons[(indiceDia * 3 + indiceMemoria * 7) % tons.length],

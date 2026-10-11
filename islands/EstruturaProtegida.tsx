@@ -2,6 +2,7 @@ import { useRef, useState } from "preact/hooks"
 import CabecalhoPagina from "../components/CabecalhoPagina.tsx"
 import Rememorar from "./Rememorar.tsx"
 import MensagemPopup, { type ResultadoPopup } from "../components/MensagemPopup.tsx"
+import { encerrarJornadaRememorar } from "../app/servicos/rememorar/jornada.ts"
 
 interface PropriedadesEstruturaProtegida {
     titulo: string
@@ -25,9 +26,16 @@ export default function EstruturaProtegida({ titulo, regiaoPrincipal, accountId 
         acaoVoltar.current = aoVoltar
     }
 
-    function receberResultadoSaida(resultado: ResultadoPopup) {
+    async function receberResultadoSaida(resultado: ResultadoPopup) {
         definirConfirmarSaida(false)
-        if (resultado === "confirm") formulario.current!.requestSubmit()
+        if (resultado === "confirm") {
+            try {
+                if (accountId) await encerrarJornadaRememorar(accountId)
+            } catch {
+                // O encerramento da sessão deve prosseguir mesmo se o armazenamento local estiver indisponível.
+            }
+            formulario.current!.requestSubmit()
+        }
     }
 
     return (

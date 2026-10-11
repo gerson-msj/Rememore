@@ -1,6 +1,7 @@
 import { type EstadoJanelaTemporal, restaurarEstadoJanela } from "./janelaTemporal.ts"
 
 export interface JornadaRememorar {
+    idJornada?: string
     tela: "panorama" | "detalhe"
     categoria: string | null
     estadoPanorama: EstadoJanelaTemporal | null
@@ -26,6 +27,7 @@ export function lerJornadaRememorar(idConta: string, dias: readonly string[], va
     }
     if (
         persistida.versao !== 1 || persistida.conta !== idConta ||
+        (persistida.idJornada !== undefined && (typeof persistida.idJornada !== "string" || !persistida.idJornada)) ||
         (persistida.tela !== "panorama" && persistida.tela !== "detalhe") ||
         (persistida.tela === "detalhe" && (typeof persistida.categoria !== "string" || !persistida.categoria)) ||
         (persistida.tela === "panorama" && persistida.categoria !== null)
@@ -42,6 +44,7 @@ export function lerJornadaRememorar(idConta: string, dias: readonly string[], va
         (persistida.tela === "detalhe" && (!estadoPanorama || !estadoDetalhe))
     ) return null
     return {
+        ...(persistida.idJornada ? { idJornada: persistida.idJornada } : {}),
         tela: persistida.tela,
         categoria: persistida.categoria ?? null,
         estadoPanorama,
