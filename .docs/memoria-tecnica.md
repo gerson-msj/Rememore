@@ -14,6 +14,15 @@
 
 **Ainda não consolidados.** Adicionar a este índice **somente após implementação validada**: nome, responsabilidade, contratos públicos, localização e modos previstos de extensão. Antes de criar componente parecido, verificar este índice e a implementação existente. O antigo `Memoria` é exemplo histórico de comportamento pensado para extensão, não um componente já existente no Blazor.
 
+## Recursos visuais locais
+
+- `src/Rememore.Client/wwwroot/css/bulma.min.css`: Bulma 1.0.4, copiado de `Stack1/assets/bulma.min.css` e carregado globalmente pelo `index.html`.
+- `src/Rememore.Client/wwwroot/css/all.min.css` e `wwwroot/webfonts/fa-*.woff2`: Font Awesome Free 7.3.1 (solid, regular, brands e compatibilidade v4), copiado de `Stack1/_fresh/client`; o CSS usa caminhos relativos aos arquivos de fonte.
+- `src/Rememore.Client/wwwroot/css/fontes.css` registra as famílias Chewy, Damion, Dekko, Dongle, Faculty Glyphic, Happy Monkey, Iansui e Kalam. Os arquivos e licenças correspondentes ficam em `wwwroot/webfonts/`; as fontes só são baixadas pelo navegador quando usadas.
+- A ordem global em `wwwroot/index.html` carrega Bulma, Font Awesome, as fontes autorais e depois `app.css`, permitindo personalização do Bulma pelo CSS da aplicação sem editar o arquivo distribuído.
+- Validação em 12/10/2026: o operador compilou `Rememore.Client.csproj` com `--no-restore` no PowerShell do Windows com sucesso; o manifesto de static web assets do build inclui as folhas CSS e fontes locais. A tentativa pelo ambiente restrito do Codex falhou ao iniciar o task host do MSBuild (MSB4216), mas isso não se reproduziu no Windows do operador.
+- Execução no Codex: confirmado em 12/10/2026 que `dotnet build src/Rememore.Client/Rememore.Client.csproj --no-restore --verbosity:minimal` falha no sandbox Windows ao criar/conectar o task host NET/x64 de `ComputeWasmBuildAssets` (MSB4216); o build da API passa no mesmo sandbox e o build do cliente passa com execução fora dele. Para evitar repetir essa falha conhecida, executar diretamente fora do sandbox, solicitando aprovação (`sandbox_permissions: require_escalated`), qualquer comando que compile o cliente Blazor WASM, inclusive build da solução, `dotnet run` ou `dotnet publish` do cliente. Manter as permissões gerais do sandbox em “Aprovar por mim”; os demais comandos continuam no sandbox quando apropriado. Rever esta orientação se uma atualização do Codex, Windows ou SDK/MSBuild alterar o resultado.
+
 ## Questões técnicas ainda não validadas
 
 - IndexedDB real via JS Interop e tratamento de falhas no Blazor.
