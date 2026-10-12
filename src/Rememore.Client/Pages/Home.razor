@@ -1,7 +1,36 @@
-﻿@page "/"
+@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Rememore</PageTitle>
 
-<h1>Hello, world!</h1>
+<main class="inicio" aria-labelledby="titulo-inicio">
+    <header class="cabecalho">
+        <div class="marca" aria-label="Rememore">
+            <span class="marca-simbolo" aria-hidden="true">R</span>
+            <span>Rememore</span>
+        </div>
+        <span class="etiqueta">Uma nova etapa</span>
+    </header>
 
-Welcome to your new app.
+    <section class="apresentacao">
+        <p class="sobretitulo">Um espaço para lembrar</p>
+        <h1 id="titulo-inicio">Suas memórias começam aqui.</h1>
+        <p class="descricao">
+            Esta é a página inicial do Rememore. O client está funcionando de forma independente,
+            pronto para crescer passo a passo.
+        </p>
+
+        <div class="estado" role="status">
+            <span class="estado-indicador" aria-hidden="true"></span>
+            <div class="estado-texto">
+                <strong>Client ativo</strong>
+                <span>Blazor WebAssembly carregado com sucesso.</span>
+            </div>
+        </div>
+    </section>
+
+    <footer class="rodape">
+        <span>Rememore</span>
+        <span>Uma lembrança de cada vez.</span>
+    </footer>
+</main>
+
