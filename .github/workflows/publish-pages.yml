@@ -2,7 +2,7 @@ name: Publicar no GitHub Pages
 
 on:
   push:
-    branches: [Stack2]
+    branches: [main]
     paths:
       - 'src/Rememore.Client/**'
       - '.github/workflows/publish-pages.yml'
