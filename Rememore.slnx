@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Rememore.Api/Rememore.Api.csproj" />
+    <Project Path="src/Rememore.Client/Rememore.Client.csproj" />
+  </Folder>
+</Solution>
