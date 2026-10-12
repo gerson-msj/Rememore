@@ -1,0 +1,15 @@
+/* Uma única entrada preserva a cascata também nas páginas sem islands. */
+@import "./bulma.css";
+@import "./fontes.css";
+@import "./palettes.css";
+@import "./tema.css";
+@import "./estilos.css";
+@import "./laboratorio-memoria.css";
+@import "./tom.css";
+@import "./memoria.css";
+@import "./categorizacao.css";
+@import "./seletor-tom.css";
+@import "./janela-temporal.css";
+@import "./categoria-panorama.css";
+@import "./onda-utilizacao-categoria.css";
+@import "./variacao-tom-categoria.css";

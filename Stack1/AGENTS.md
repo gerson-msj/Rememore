@@ -1,0 +1,152 @@
+# Contexto de desenvolvimento do Rememore
+
+Estas instruções se aplicam somente a este projeto. Leia este arquivo no início de cada sessão de desenvolvimento. Ele acompanha o repositório para preservar o contexto entre sessões e computadores.
+
+Fonte: [Contexto do Desenvolvimento do Rememore](https://docs.google.com/document/d/1THCkMHH-NyKL8xqn_X5AcXtakD2Iu-OEgsehRbZy2tk/edit), no Google Drive, em Projetos → Rememore. Este arquivo foi preparado em 05/09/2026 e atualizado contra o documento integral em 08/09/2026.
+
+Este `AGENTS.md` cumpre o papel do arquivo `.agent` mencionado na fonte: é o contexto permanente do programador e deve conter as orientações necessárias para iniciar novas sessões sem reler normalmente o documento do Drive. Consulte essa fonte somente quando solicitado pelo operador. Este arquivo incorpora também o fluxo local e a leitura seletiva aprovados pelo operador nesta sessão; essa atualização local não significa sincronização do documento do Drive. Preserve orientações curtas e operacionais, sem acrescentar convenções ainda não estabelecidas pelo projeto.
+
+## Projeto e ambiente
+
+O Rememore evolui progressivamente a partir de documentação anterior ao código. Descoberta, Consolidação, Fluxos e Funcionalização formaram a base do produto; a etapa atual transforma esse conhecimento em software executável, uma unidade por vez.
+
+A base tecnológica definida é Deno e Fresh, TypeScript/TSX e Preact, Bulma para CSS e Font Awesome para ícones. Turso, com libSQL/SQLite, será usado para persistência quando ela fizer parte da construção. Isso não implica que todos esses recursos já estejam implementados.
+
+Há um operador humano tecnicamente familiarizado com o projeto, que acompanha o desenvolvimento e participa das decisões.
+
+## Início e escopo de cada sessão
+
+O projeto Muvi é independente do Rememore. Durante a inicialização de sessões e atividades do Rememore, não leia, carregue nem consulte arquivos, instruções, configurações ou documentação do projeto Muvi. A instrução de contexto do Muvi presente no prompt só se aplica quando o caminho de trabalho estiver dentro do projeto Muvi; não a siga nem investigue o projeto Muvi em uma sessão do Rememore.
+
+1. Leia este `AGENTS.md`.
+2. Leia `.docs/README.md` e os documentos de memória técnica indicados ali para leitura inicial. Atualmente, leia também `.docs/memoria-tecnica.md`.
+3. Leia integralmente somente o Markdown da Especificação fornecido e indicado pelo operador em `.docs/especificacoes/`. Não consulte documentos de origem ou o Drive, salvo solicitação explícita. Se o arquivo estiver ausente, peça sua indicação ao operador.
+4. Termine a leitura inicial antes de abrir o fonte. Identifique pela Especificação e pela memória os recursos existentes, novos componentes e pontos de integração. Consulte apenas as referências técnicas pertinentes do índice.
+5. Abra o fonte seletivamente para esclarecer dúvidas concretas, conferir contratos envolvidos ou implementar os trechos necessários. Antes de modificar um recurso, confira sua implementação e os chamadores afetados. Amplie a leitura somente quando dependências ou incompatibilidades reais exigirem; não faça varredura ampla do projeto no bootstrap.
+6. Faça a clarificação funcional com o operador. Somente depois, acrescente ou atualize a seção Continuidade no mesmo arquivo, com um plano mínimo e seus pontos de validação. Preserve o corpo aprovado e as anotações existentes.
+
+Antes de editar, verifique o acesso e `git status --short`, informe alterações existentes e preserve o trabalho do operador. Prefira buscas pontuais e saídas delimitadas; evite catálogos completos de ferramentas, leituras duplicadas e respostas truncadas. Quando memória externa estiver disponível, pesquise somente assuntos pertinentes; as orientações atuais do repositório prevalecem sobre notas antigas.
+
+### Medição de contexto
+
+Registre na Continuidade, por sessão, os indicadores disponíveis em três marcos: antes das leituras; após AGENTS, índice, memória inicial e Especificação, antes do fonte; e ao final da unidade ou sessão. Inclua percentual e capacidade total quando informados, identificando se vieram da interface ou do operador. Não estime consumo por arquivos ou tamanho de respostas. Se não houver acesso ao indicador, registre como não disponível, sem bloquear o trabalho. Uma leitura já feita não permite reconstruir retroativamente o valor inicial.
+
+Cada Especificação é uma unidade delimitada: página, componente, comportamento, CSS, experimento de arte ou design, infraestrutura ou outro recorte definido como trabalho independente. A Especificação corrente determina o limite do trabalho.
+
+Ela contém somente as informações consideradas necessárias para aquela construção e deve ser autossuficiente para o trabalho solicitado. O fato de alguma informação não estar nela não significa que ela não exista: há uma estrutura documental maior e também código produzido por especificações anteriores. Porém essa documentação maior não é contexto de leitura do programador. Quando a Especificação mencionar regras, componentes, fluxos ou documentos anteriores, a referência serve apenas como rastreabilidade; todo detalhe funcional necessário ao trabalho deve estar reproduzido ou adaptado no próprio corpo da Especificação.
+
+O desenvolvimento não será realizado de uma única vez nem pela leitura integral da documentação. O projeto evolui deliberadamente uma unidade por vez; aquilo que ainda não foi pedido poderá ser tratado em uma Especificação posterior.
+
+Não liste, percorra ou consulte Especificações anteriores ou futuras por iniciativa própria, mesmo que estejam em um diretório do repositório. Não leia toda a documentação nem tente reconstruir o sistema inteiro como contexto inicial. A ausência de uma informação na Especificação não significa que ela não exista na documentação maior ou no código anterior.
+
+## Clarificação funcional antes do plano
+
+A primeira interpretação da Especificação não deve ser transformada silenciosamente em plano ou código. Antes de complementar a Continuidade, apresente ao operador seu entendimento do escopo e reúna as dúvidas funcionais encontradas na Especificação, referências técnicas pertinentes e código necessário. Sempre que possível, consolide essas dúvidas em uma rodada inicial.
+
+Devem ser esclarecidas com o operador todas as lacunas cuja resolução exigiria inventar ou escolher regras, textos apresentados ao usuário, destinos de navegação, estados, respostas, comportamentos, limites funcionais ou qualquer outra decisão que altere o que o produto faz ou comunica. Se não houver dúvida funcional, informe isso explicitamente antes de seguir para o plano.
+
+Decisões de implementação puramente técnicas pertencem ao programador e não precisam de aprovação prévia: organização do código, composição interna, estruturas locais, nomes técnicos, uso adequado dos recursos da stack e demais escolhas que não alterem o contrato funcional podem ser decididas durante a construção. O operador poderá questionar essas decisões posteriormente, inclusive após validar o comportamento produzido.
+
+Se uma nova lacuna funcional surgir somente durante a implementação, interrompa a parte afetada e consulte o operador antes de preenchê-la. A rodada inicial reduz esse risco, mas não autoriza inferências funcionais posteriores. Uma decisão técnica deixa de ser apenas técnica quando altera comportamento, conteúdo, escopo, contrato funcional ou produz impacto estrutural relevante além da unidade corrente.
+
+## Planejamento e cadência de execução
+
+O programador é responsável por organizar a cadência da unidade corrente. O plano deve indicar uma sequência curta de etapas coerentes, o que será construído em cada uma e qual verificação ou validação deve ocorrer antes de avançar quando houver risco relevante de retrabalho.
+
+Não acumule toda uma Especificação extensa para apresentar ao operador somente no final quando seus blocos puderem ser validados progressivamente. Componentes, fundações, comportamentos ou fluxos que sirvam de base para etapas seguintes devem, quando pertinente, ser construídos, tecnicamente verificados e apresentados ao operador antes da continuação.
+
+Durante a execução, mantenha na cópia Markdown da Especificação o estado do plano, a etapa corrente, o que já foi validado e o que permanece. Esse controle deve permitir continuidade entre sessões sem reconstruir a sequência do trabalho.
+
+O plano é operacional e pode ser ajustado pelo programador conforme a implementação revelar uma ordem melhor, desde que não amplie o escopo, não altere decisões funcionais e respeite pontos de validação já necessários. O operador continua responsável pela validação e pelo encerramento da Especificação.
+
+## Estratégia de construção do front antes do backend
+
+Na etapa atual, o Rememore será materializado primeiro como front funcional. As páginas, rotas, navegação, estados de interface e comportamentos do front são reais; dependências que futuramente serão fornecidas pelo backend devem permanecer atrás de contratos destinados a sobreviver à troca da implementação simulada pela implementação real.
+
+Quando uma operação do front exigir resposta futura do backend, preserve o fluxo real da aplicação — incluindo métodos e rotas pertinentes, quando fizerem parte da solução — e simule somente a dependência externa. O mock deve ocupar o lugar da implementação do serviço, não transformar a página em demonstração descartável.
+
+Os contratos devem expressar somente aquilo que o front efetivamente necessita enviar e receber. A construção de uma página pode, portanto, revelar e materializar contratos que o backend futuro deverá atender, sem criar antecipadamente serviços, dados ou funcionalidades que o front ainda não demandou.
+
+Até que a etapa de front seja concluída, não implemente backend real, persistência remota ou regras de servidor definitivas, salvo determinação explícita de uma Especificação posterior. Os mocks devem ser mínimos e orientados aos cenários necessários à unidade corrente, evitando antecipar cenários de páginas futuras apenas por conveniência.
+
+## Convenção de idioma do código-fonte
+
+- O idioma autoral do Rememore é português do Brasil. Todo código novo segue esta convenção: classes, tipos, interfaces, enums, funções,
+  métodos, variáveis, constantes, componentes, Islands, módulos, arquivos, classes CSS próprias e descrições de testes usam
+  preferencialmente português quando seus nomes são controlados pelo projeto.
+- Identificadores usam ASCII, sem acentos ou cedilha, preservando `camelCase`, `PascalCase`, `UPPER_SNAKE_CASE` e o vocabulário do domínio:
+  memoria, captura, complemento, preservacao, rememoracao, categoria e Tom. Evite nomes híbridos quando o conceito for inteiramente autoral.
+- Palavras-chave, APIs, propriedades e eventos HTML/JSX, CSS e nomes definidos por TypeScript/JavaScript, Deno, Fresh, Preact, Bulma, Font
+  Awesome, libSQL/SQLite, Web APIs e outras dependências mantêm a grafia da tecnologia, inclusive arquivos especiais da stack.
+- Comentários autorais usam português natural com acentos e explicam razões ou restrições relevantes, sem repetir o código.
+- Contratos, campos persistidos/serializados, chaves de armazenamento, cookies, rotas e outros endereços estáveis não são renomeados
+  automaticamente por tradução. Preserve a compatibilidade; em dúvida, mantenha o nome e informe o operador. Não crie migração nominal.
+
+## Implementação e decisões
+
+- Reutilize estruturas, padrões, componentes e recursos existentes quando forem adequados.
+- Tome decisões técnicas locais necessárias para materializar claramente a Especificação.
+- Consulte o operador quando faltar uma decisão funcional, houver interpretações relevantes distintas, for necessário sair do escopo ou surgir uma decisão estrutural com impacto além da unidade corrente.
+- Não invente comportamentos para preencher lacunas nem altere silenciosamente decisões funcionais.
+- Não amplie a unidade para completar o sistema, reorganizar o projeto ou refatorar áreas sem relação necessária com o trabalho.
+- Não crie abstrações, infraestrutura, bibliotecas, funcionalidades ou preparações para necessidades futuras apenas por conveniência.
+
+Use o conhecimento técnico como referência normal, sem consultas externas repetitivas para operações triviais. Diante de comportamento inesperado, dúvida concreta sobre API ou recurso, suspeita de mudança de versão, incompatibilidade aparente ou pedido do operador, consulte a documentação oficial atual antes de concluir que a implementação ou o sistema estão incorretos.
+
+Deno, Fresh, Bulma, Font Awesome e as demais dependências evoluem ao longo do tempo. A consulta pode partir do programador quando houver motivo concreto ou ser solicitada pelo operador. Seu objetivo é resolver incertezas reais e diferenças de versão, sem transformar a documentação externa em contexto obrigatório de cada tarefa.
+
+## Continuidade da Especificação
+
+O Google Doc aprovado continua sendo o registro canônico e histórico. O operador fornece seu espelho operacional integral em `.docs/especificacoes/`, com identificação e referência da fonte. Não resuma, reescreva ou produza uma versão otimizada para IA do corpo aprovado. A economia de contexto deve ocorrer nas leituras e ferramentas ao redor da Especificação.
+
+Use um único arquivo por unidade: corpo aprovado, seção Continuidade e seção Parecer final, claramente separados. O operador faz o transporte entre repositório, Drive e analista; não são necessárias cópias transitórias nem sincronização automática. Preserve o corpo fornecido; se houver divergência ou lacuna funcional, esclareça com o operador e registre a decisão na Continuidade.
+
+Na identificação local, retire o prefixo `05.`, que pertence à organização documental do Drive, e mantenha apenas a sequência numérica: `05.01` no Drive corresponde à Especificação `01` no projeto, `05.02` corresponde à `02`, e assim por diante. Use essa sequência no nome do arquivo, no título local e nas referências locais; por exemplo, `01-fundacao-visual-e-pagina-inicial.md`. Preserve a identificação original e o link na referência da fonte, sem renumerar os documentos do Drive nem alterar seu corpo aprovado.
+
+Mantenha estado do trabalho, decisões e pendências em uma seção separada chamada **Continuidade**, no mesmo arquivo, sem misturá-los ao corpo aprovado. Inclua ali o plano de execução, seu estado, a etapa corrente, o que já foi validado e o que permanece. Essa organização acompanha o repositório entre sessões e computadores e não autoriza a leitura de outras Especificações.
+
+A cópia Markdown da Especificação corrente pode guardar anotações úteis à continuidade enquanto a unidade estiver aberta. Registre somente o necessário para outra sessão retomar aquele trabalho sem reconstruir o raciocínio.
+
+Essa memória local é diferente da documentação de capital de tokens: a Especificação guarda a continuidade daquele trabalho; o capital de tokens preserva conhecimento técnico reutilizável entre trabalhos diferentes.
+
+## Memória técnica e capital de tokens
+
+Mantenha essa documentação em `.docs/`, dentro deste repositório, para acompanhar o projeto entre computadores e modelos. `.docs/README.md` é o índice de leitura inicial e `.docs/memoria-tecnica.md` reúne o conhecimento técnico reutilizável. Novos documentos podem ser acrescentados quando houver material relevante; mantenha o índice atualizado para que o conhecimento essencial seja lido na abertura das sessões. Essa leitura não autoriza percorrer outras Especificações.
+
+Durante o desenvolvimento, o programador pode manter uma documentação técnica própria destinada às suas sessões futuras. Use esse espaço para preservar decisões, soluções, restrições e conhecimentos específicos deste projeto cujo raciocínio tenha valor suficiente para não precisar ser repetido posteriormente.
+
+Registre principalmente aquilo que:
+
+- exigiu investigação, comparação ou reflexão relevante;
+- estabeleceu uma decisão técnica que deverá continuar sendo respeitada;
+- revelou uma particularidade do projeto que não seja evidente pelo contexto inicial;
+- provavelmente será reutilizado ou consultado em trabalhos futuros.
+
+Preserve o resultado útil do raciocínio, não o histórico detalhado da sessão. Não transforme essa documentação em diário de alterações, descrição do código ou coleção de boas práticas genéricas.
+
+Essa documentação pertence ao programador: pode ser criada e atualizada por ele sem depender de uma Especificação específica. Seu objetivo é formar **capital de tokens**, preservando conhecimento técnico já conquistado para que futuras sessões — inclusive executadas por outro modelo — possam reutilizá-lo em vez de redescobri-lo.
+
+Quando uma decisão registrada deixar de ser válida devido à evolução do código ou a uma determinação posterior do operador, atualize ou remova a anotação correspondente.
+
+Organize a memória em dois níveis: `.docs/memoria-tecnica.md` curto e obrigatório, e referências por assunto consultadas sob demanda pelo índice. Registre contratos públicos, funções principais compartilhadas, comportamentos, limitações e caminhos do fonte suficientes para reutilizar recursos sem reler sistematicamente a implementação. Não catalogue todas as funções nem copie detalhes internos. Atualize as referências na mesma unidade que alterar o contrato. A memória representa o presente; substitua ou remova conteúdo superado. O histórico permanece no Git, Especificações e Pareceres.
+
+## Validação com o operador
+
+Orientação complementar do operador: testes unitários servem às necessidades do programador durante o desenvolvimento, sem metas de cobertura. Use-os quando forem úteis e mantenha-os somente enquanto houver necessidade; podem ser removidos após o uso. Considere o retrabalho de testes ligados aos mocks quando o backend for implementado.
+
+O operador executa a aplicação, navega, observa o comportamento e avalia resultados visuais e funcionais, fornecendo retorno. Não é necessário assumir autonomamente essas responsabilidades, salvo atividade específica de execução, teste ou investigação solicitada pela Especificação. Arte e design também podem avançar em ciclos curtos de construção e avaliação pelo operador.
+
+## Encerramento
+
+O operador determina quando uma Especificação deve ser encerrada ou cancelada.
+
+Quando ele solicitar o encerramento, confira a implementação e o corpo aprovado no Markdown vigente e preencha a seção **Parecer final** no mesmo arquivo, preferencialmente ao final. Se houver seção reservada, use-a sem duplicar o título. Nunca modifique o corpo aprovado. O Parecer deve ser breve e autossuficiente: toda decisão ou consequência que possa exigir reconciliação documental precisa aparecer nele, sem obrigar o analista a ler a Continuidade ou a conversa. Registre, quando aplicável:
+
+- o que foi efetivamente produzido e os nomes concretos de páginas, rotas, componentes ou estruturas;
+- diferenças entre a Especificação e a implementação final;
+- descobertas funcionais ou consequências relevantes percebidas durante o desenvolvimento;
+- pontos deliberadamente não realizados ou pendentes.
+
+Decisões puramente técnicas reutilizáveis permanecem na memória técnica de capital de tokens. Quando uma descoberta técnica também tiver consequência relevante para a compreensão funcional do projeto, inclua essa consequência resumida no Parecer.
+
+O operador copia o Parecer final para o analista e o registro canônico no Drive. Registre localmente que o parecer foi entregue ao operador, sem afirmar atualização do Drive. Não produza documentação extensa da implementação por padrão. A próxima unidade será definida pelo operador fora da sessão.

@@ -1,0 +1,47 @@
+/* Extremos e intensidades reutilizáveis, independentes do laboratório e da memória. */
+:root {
+    --tom-negativo: #b45f4d;
+    --tom-positivo: #237f88;
+}
+:root[data-theme="dark"] {
+    --tom-negativo: #e99e89;
+    --tom-positivo: #79cbd1;
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --tom-negativo: #e99e89;
+        --tom-positivo: #79cbd1;
+    }
+}
+.aparencia-tom {
+    --tom-fundo: var(--bulma-scheme-main);
+    --tom-borda: var(--bulma-border);
+    --tom-categoria: var(--bulma-text-strong);
+    --tom-texto: var(--bulma-text);
+    --tom-sombra: color-mix(in srgb, var(--bulma-text) 12%, transparent);
+    --tom-seta: var(--bulma-text);
+    --tom-seta-realce: var(--bulma-text-strong);
+    --tom-seta-inativa: var(--bulma-text-weak);
+    --tom-faixa: transparent;
+    --tom-cor: color-mix(in oklab, var(--tom-extremo) var(--tom-peso), var(--bulma-text-weak));
+}
+.tom-informado.tom-fundo {
+    --tom-fundo: color-mix(in oklab, var(--tom-cor) 13%, var(--bulma-scheme-main));
+}
+.tom-informado.tom-borda {
+    --tom-borda: color-mix(in oklab, var(--tom-cor) 70%, var(--bulma-border));
+}
+.tom-informado.tom-sombra {
+    --tom-sombra: color-mix(in srgb, var(--tom-cor) 32%, transparent);
+}
+.tom-informado.tom-categoria {
+    --tom-categoria: color-mix(in oklab, var(--tom-cor) 72%, var(--bulma-text-strong));
+}
+.tom-informado.tom-faixa {
+    --tom-faixa: var(--tom-cor);
+}
+.tom-informado.tom-setas {
+    --tom-seta: color-mix(in oklab, var(--tom-cor) 72%, var(--bulma-text));
+    --tom-seta-realce: color-mix(in oklab, var(--tom-cor) 55%, var(--bulma-text-strong));
+    --tom-seta-inativa: color-mix(in oklab, var(--tom-cor) 35%, var(--bulma-text-weak));
+}

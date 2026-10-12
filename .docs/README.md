@@ -1,17 +1,28 @@
-# Memória do programador
+# Documentação operacional — Stack .NET
 
-Esta pasta preserva a memória técnica e o capital de tokens do Rememore no próprio repositório. Seu conteúdo acompanha o projeto entre sessões, computadores e modelos.
+Este diretório é a memória técnica do desenvolvimento vigente de Rememore em .NET 10. Não substitui a documentação canônica do produto no Google Drive.
 
-## Leitura inicial
+## Leitura inicial do programador
 
-Depois do `AGENTS.md`, leia este índice e [Memória técnica](memoria-tecnica.md). Em seguida, leia somente a Especificação indicada pelo operador em `especificacoes/`, dentro desta pasta. A leitura inicial da memória não autoriza listar ou ler outras Especificações.
+1. `/AGENTS.md` — instruções operacionais permanentes.
+2. `.docs/memoria-tecnica.md` — fatos e recursos técnicos **atuais**, reutilizáveis.
+3. **Somente** a especificação da unidade indicada pelo operador em `.docs/especificacoes/`.
 
-As Especificações locais usam somente a sequência numérica: `01`, `02` etc. O prefixo `05.` é mantido apenas na identificação da fonte do Drive.
+Não ler por padrão o histórico `Stack1/.docs/`, outras especificações, toda a árvore do código ou documentos Google Drive. A especificação corrente deve ser autossuficiente. Para dúvidas pontuais sobre comportamento da implementação anterior, consultar seletivamente `Stack1/` sem editar seu conteúdo.
 
-O `AGENTS.md` guarda as orientações de trabalho; a memória técnica guarda decisões, descobertas e suas razões; a Continuidade da Especificação guarda o estado daquela unidade.
+## Organização
 
-## Manutenção
+- `memoria-tecnica.md`: índice curto dos contratos, componentes e conhecimentos **verificados** da nova stack.
+- `especificacoes/`: somente as unidades operacionais abertas, corpo original aprovado preservado, continuidade, checkpoints e decisões.
+- `especificacoes/concluidas/`: unidades encerradas, incluindo seus pareceres finais completos.
+- Referências técnicas temáticas poderão ser criadas conforme necessidade comprovada, com indicação neste índice.
 
-Preserve resultados de investigação e decisões que poupem raciocínio futuro. Atualize ou remova conhecimento superado. Acrescente documentos quando houver conteúdo relevante e mantenha aqui os links para a leitura inicial. Evite diários de alterações, cópias do código e boas práticas genéricas.
+Não importar automaticamente a memória técnica da Stack1. A nova memória cresce conforme as unidades .NET sejam implementadas.
 
-Esta organização foi definida com o operador e pode evoluir conforme a experiência de trabalho no projeto.
+## Ciclo
+
+O analista prepara a unidade a partir da documentação vigente e do histórico original, quando relevante, e o operador a aprova. O programador lê somente a unidade entregue, clarifica dúvidas antes do plano, implementa e valida em checkpoints e registra as decisões/observações a cada conclusão. Compactações de contexto não exigem preparação nem nova sessão.
+
+No encerramento solicitado pelo operador, o programador registra o Parecer final no mesmo Markdown, move-o para `concluidas/` e entrega um bloco completo copiável no chat. O operador/analista reconciliam o Google Drive somente após discussão e autorização.
+
+Referência do contexto canônico: https://docs.google.com/document/d/1THCkMHH-NyKL8xqn_X5AcXtakD2Iu-OEgsehRbZy2tk/edit

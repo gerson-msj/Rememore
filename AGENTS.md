@@ -1,91 +1,82 @@
-# Contexto de desenvolvimento do Rememore
+# Contexto operacional do desenvolvimento do Rememore — Stack .NET
 
-Estas instruções se aplicam somente a este projeto. Leia este arquivo no início de cada sessão de desenvolvimento. Ele acompanha o repositório para preservar o contexto entre sessões e computadores.
+Este arquivo orienta o programador na implementação vigente. Leia-o no início de cada nova sessão de desenvolvimento. Fonte metodológica: [Contexto do Desenvolvimento do Rememore](https://docs.google.com/document/d/1THCkMHH-NyKL8xqn_X5AcXtakD2Iu-OEgsehRbZy2tk/edit). A documentação funcional vigente prevalece sobre inferências do código anterior. O operador aprova escopo, decisões funcionais e encerramento.
 
-Fonte: [Contexto do Desenvolvimento do Rememore](https://docs.google.com/document/d/1THCkMHH-NyKL8xqn_X5AcXtakD2Iu-OEgsehRbZy2tk/edit), no Google Drive, em Projetos → Rememore. Este arquivo foi preparado em 05/09/2026 e conferido novamente contra o documento integral em 07/09/2026.
+## Situação e limites
 
-Este `AGENTS.md` cumpre o papel do arquivo `.agent` mencionado na fonte: é o contexto permanente do programador e deve conter as orientações necessárias para iniciar novas sessões sem reler normalmente o documento do Drive. A leitura da fonte serve para criar ou ajustar este arquivo; volte ao documento completo somente quando o operador solicitar ou quando for necessário reconstruir o contexto. Preserve aqui orientações curtas e operacionais, mantendo seu significado e seus detalhes relevantes, sem acrescentar convenções ainda não estabelecidas pelo projeto.
+O produto evolui por documentação: Descoberta → Consolidado → Fluxos → Funcionalização → Especificações → implementação → Parecer e reconciliação. O Consolidado expressa a verdade funcional vigente; Fluxos, Funcionalização e Especificações derivam dela. O programador recebe **uma especificação operacional autossuficiente por vez**; não precisa consultar o Google Drive nem toda a documentação de produto, salvo pedido expresso do operador.
 
-## Projeto e ambiente
+A solução atual `Rememore.slnx` contém `src/Rememore.Client` (Blazor WebAssembly **standalone**, .NET 10, estático) e `src/Rememore.Api` (ASP.NET Core **Minimal API**, .NET 10). A API experimental usa `Turso.Data.Sqlite.Provider` 0.8.2 via ADO.NET, sem EF Core validado. O frontend é publicado por GitHub Actions no GitHub Pages; a API, via Docker na Render; os dados remotos de teste estão no Turso. O teste de viabilidade provou a integração pública de leitura de categorias, **não** provou que o restante do domínio ou o backend definitivo esteja implementado.
 
-O Rememore evolui progressivamente a partir de documentação anterior ao código. Descoberta, Consolidação, Fluxos e Funcionalização formaram a base do produto; a etapa atual transforma esse conhecimento em software executável, uma unidade por vez.
+`Stack1/` contém a implementação histórica Deno/Fresh/Preact, seu `AGENTS.md`, documentação técnica e 24 especificações concluídas. **Não altere ou exclua Stack1.** Ela será mantida até equivalência funcional suficiente e decisão expressa de sua retirada, preservando-se referência histórica. Pode ser consultada **pontualmente** para esclarecer comportamento, algoritmo ou contrato da unidade corrente, nunca como arquitetura, CSS ou layout a copiar obrigatoriamente. Não faça varreduras do legado ou de especificações antigas por iniciativa própria. A documentação vigente e as decisões aprovadas prevalecem.
 
-A base tecnológica definida é Deno e Fresh, TypeScript/TSX e Preact, Bulma para CSS e Font Awesome para ícones. Turso, com libSQL/SQLite, será usado para persistência quando ela fizer parte da construção. Isso não implica que todos esses recursos já estejam implementados.
+Branches: `develop` é a branch de trabalho prevista; `main` será a referência de publicação. **Transição:** os pipelines e configurações da Render/Pages ainda podem publicar `Stack2`; não os modifique ou suponha migrados sem tarefa e autorização específica. Verifique branch, estado de Git e arquivos existentes antes de editar. Não abra `Anotações.md` ou arquivos de credenciais.
 
-Há um operador humano tecnicamente familiarizado com o projeto, que acompanha o desenvolvimento e participa das decisões.
+## Início de cada unidade
 
-## Início e escopo de cada sessão
+1. Leia este `AGENTS.md`, `.docs/README.md` e a memória técnica inicial apontada nele, atualmente `.docs/memoria-tecnica.md`.
+2. Leia **integralmente somente** a especificação operacional atual, indicada pelo operador, em `.docs/especificacoes/`. Não liste nem leia as demais especificações ou suas fontes automaticamente. A referência `05.07` no Drive pode originar `05.07` ou subdivisões `05.07.01`, `05.07.02` etc., conforme aprovação; no repositório os arquivos podem usar prefixos locais `07` e `07.01`.
+3. Identifique, pela especificação e pela memória técnica, contratos, componentes reutilizáveis e pontos de integração. Só então abra código **seletivamente**. Confira a implementação e os chamadores antes de alterá-los.
+4. Antes de iniciar execução ou atualizar o plano, apresente ao operador entendimento do escopo e dúvidas funcionais agrupadas. Caso não existam, declare isso. Não invente regras, textos, navegação, estados, acessibilidade funcional, limites ou comportamentos. Se uma nova dúvida surgir depois, interrompa somente o trabalho afetado e consulte o operador.
+5. Após clarificação, mantenha no **mesmo Markdown operacional** o plano mínimo, checkpoints, validações e estado corrente, separados do corpo aprovado. Faça `git status --short` e informe modificações pré-existentes antes de editar.
 
-1. Leia este `AGENTS.md`.
-2. Leia `.docs/README.md` e os documentos de memória técnica indicados ali para leitura inicial. Atualmente, leia também `.docs/memoria-tecnica.md`.
-3. Leia somente a Especificação indicada explicitamente pelo operador para iniciar ou continuar a sessão, em `.docs/especificacoes/`.
-4. Examine somente o código necessário para compreender e executar esse trabalho, aproveitando o conhecimento já preservado em `.docs/`.
+Toda especificação é uma unidade deliberadamente delimitada. Prefira unidades pequenas e verificáveis quando blocos forem independentes; não fragmente artificialmente um fluxo transacional coeso. Não amplie escopo, faça refatoração geral, instale dependências, crie infraestrutura para demandas futuras ou altere contratos funcionais sem necessidade e autorização. Decisões técnicas locais dentro do escopo pertencem ao programador e podem ser questionadas pelo operador.
 
-Cada Especificação é uma unidade delimitada: página, componente, comportamento, CSS, experimento de arte ou design, infraestrutura ou outro recorte definido como trabalho independente. A Especificação corrente determina o limite do trabalho.
+## Checkpoints e memória permanente da unidade
 
-Ela contém somente as informações consideradas necessárias àquela construção. O desenvolvimento não será realizado de uma única vez nem pela leitura integral da documentação. O projeto evolui deliberadamente uma unidade por vez; aquilo que ainda não foi pedido poderá ser tratado em uma Especificação posterior.
+**O Markdown operacional é a memória permanente da unidade, não somente da sessão.** Preserve integralmente e sem alterações o corpo original aprovado. Fora dele, o programador pode organizar livremente seções, tabelas, registros e notas de trabalho, desde que sejam legíveis e sirvam à retomada, aos checkpoints e ao Parecer final.
 
-Não liste, percorra ou consulte Especificações anteriores ou futuras por iniciativa própria, mesmo que estejam em um diretório do repositório. Não leia toda a documentação nem tente reconstruir o sistema inteiro como contexto inicial. A ausência de uma informação na Especificação não significa que ela não exista na documentação maior ou no código anterior.
+Ao **concluir cada checkpoint**, registre imediatamente: o que foi implementado; testes e validações e seus resultados; arquivos ou contratos relevantes; observações, solicitações, alterações e aceite do operador; decisões que substituíram outras, com a decisão vigente; pendências, riscos e próximo passo concreto. Faça também anotações intermediárias quando uma descoberta ou decisão importante ocorrer. Não dependa de avisos sobre tamanho do contexto, trocas de sessão ou pedidos para anotar: compactação automática ou manual pode acontecer a qualquer momento e a memória escrita deve bastar para retomar. **Não exija medição de tokens nem registros de percentuais de contexto.** A memória da unidade não substitui a memória técnica reutilizável entre diferentes unidades.
 
-## Implementação e decisões
+Valide progressivamente com o operador quando isso evitar retrabalho. O programador executa verificações técnicas e, quando úteis, testes de regras e cenários determinísticos; o operador confirma experiência visual e funcional. Testes não têm meta artificial de cobertura; não apague testes úteis automaticamente, nem confunda testes contra mocks com testes do backend real.
 
-- Reutilize estruturas, padrões, componentes e recursos existentes quando forem adequados.
-- Tome decisões técnicas locais necessárias para materializar claramente a Especificação.
-- Consulte o operador quando faltar uma decisão funcional, houver interpretações relevantes distintas, for necessário sair do escopo ou surgir uma decisão estrutural com impacto além da unidade corrente.
-- Não invente comportamentos para preencher lacunas nem altere silenciosamente decisões funcionais.
-- Não amplie a unidade para completar o sistema, reorganizar o projeto ou refatorar áreas sem relação necessária com o trabalho.
-- Não crie abstrações, infraestrutura, bibliotecas, funcionalidades ou preparações para necessidades futuras apenas por conveniência.
+## Estratégia funcional e mocks
 
-Use o conhecimento técnico como referência normal, sem consultas externas repetitivas para operações triviais. Diante de comportamento inesperado, dúvida concreta sobre API ou recurso, suspeita de mudança de versão, incompatibilidade aparente ou pedido do operador, consulte a documentação oficial atual antes de concluir que a implementação ou o sistema estão incorretos.
+Reconstrua primeiro o **frontend funcional real**: páginas, rotas, estados, interface e comportamento. Dependências de backend ainda não implementadas são simuladas **no projeto Blazor**, atrás de contratos C# explícitos e substituíveis via injeção de dependências. Simule a **dependência externa**, não a página. Mocks podem ser stateful quando o fluxo exigir (preservação, conflitos, sincronização), com dados determinísticos e somente o escopo necessário. Não misture estado remoto simulado e workspace local.
 
-Deno, Fresh, Bulma, Font Awesome e as demais dependências evoluem ao longo do tempo. A consulta pode partir do programador quando houver motivo concreto ou ser solicitada pelo operador. Seu objetivo é resolver incertezas reais e diferenças de versão, sem transformar a documentação externa em contexto obrigatório de cada tarefa.
+**IndexedDB é persistência local real**, não mock; seu acesso em Blazor pode usar JS Interop isolado e encapsulado, mantendo regras autorais em C# quando apropriado. Use `sessionStorage` apenas para responsabilidades efêmeras aprovadas. A API ASP.NET Core existente é infraestrutura **experimental**, com endpoint e tabela de categorias de teste: não converta o esquema, o seed na inicialização ou o contrato experimental em solução definitiva por presunção. Não implemente backend definitivo, autenticação real ou schema remoto/migrations antes de especificação própria e autorização expressa. ADO.NET/Turso tem validação limitada; EF Core/Turso, transações, migrações e operações remotas reais deverão ser verificadas separadamente.
 
-## Continuidade da Especificação
+Frontend no GitHub Pages inicia independentemente da Render. Para uso remoto futuro, preferir recuperação amigável de indisponibilidade/hibernação, sem heartbeat, com espera limitada, retentativa controlada e sem repetição insegura de escritas (idempotência). Essa estratégia precisa de validação na especificação apropriada; não invente implementações prematuras.
 
-Mantenha as cópias operacionais em `.docs/especificacoes/`. Ao receber a indicação de uma Especificação no Google Drive, leia somente esse documento e salve sua cópia Markdown com identificação e título no nome do arquivo, preservando o conteúdo e incluindo o link da fonte. Se a cópia já existir, preserve suas anotações de continuidade ao atualizá-la.
+## Arquitetura, linguagem e reutilização
 
-Na identificação local, retire o prefixo `05.`, que pertence à organização documental do Drive, e mantenha apenas a sequência numérica: `05.01` no Drive corresponde à Especificação `01` no projeto, `05.02` corresponde à `02`, e assim por diante. Use essa sequência no nome do arquivo, no título local e nas referências locais; por exemplo, `01-fundacao-visual-e-pagina-inicial.md`. Preserve a identificação original e o link na referência da fonte, sem renumerar os documentos do Drive nem alterar seu corpo aprovado.
+Use a estrutura de projetos existente e crie abstrações apenas quando o comportamento exigir; não introduza DDD, repositories, services ou projetos compartilhados por hábito. Evite lógica desnecessariamente duplicada e acoplamento de regra de negócio a componentes visuais. Prefira componentes Razor coesos e reutilizáveis quando houver comportamento compartilhado, sem obrigar que toda divisão organizacional gere um componente público.
 
-Mantenha estado do trabalho, decisões e pendências em uma seção separada chamada **Continuidade**, no mesmo arquivo, sem misturá-los ao corpo aprovado. Essa organização acompanha o repositório entre sessões e computadores e não autoriza a leitura de outras Especificações.
+**Antes de criar ou duplicar um componente, consulte o índice de componentes compartilhados na memória técnica, os contratos e os usos existentes.** Considere ampliar com cuidado um componente criado para extensão, como `Memoria`, preservando usos anteriores e validando regressões. Na preparação da especificação, oportunidades de reutilização devem ser explicitadas; o programador deve verificar se permanecem válidas no código atual. Mantenha na memória técnica um índice **seletivo** de componentes reutilizáveis, contratos, modos de uso e pontos previstos para extensão. Não produza inventário exaustivo de arquivos.
 
-A cópia Markdown da Especificação corrente pode guardar anotações úteis à continuidade enquanto a unidade estiver aberta. Registre somente o necessário para outra sessão retomar aquele trabalho sem reconstruir o raciocínio.
+Idioma autoral: **português brasileiro** para tipos, classes, interfaces, métodos, variáveis, componentes Razor, arquivos, CSS próprio, descrições de testes e comentários, usando identificadores ASCII sem acentos, com PascalCase/camelCase e convenções usuais de C#/.NET. Preserve nomes de APIs, protocolos, bibliotecas, atributos Razor/HTML, contratos externos, rotas e identificadores estáveis em sua grafia imposta. Não traduza esquemas, payloads, stores IndexedDB ou outros contratos já persistidos sem migração deliberada. Comentários devem explicar decisões ou restrições, não parafrasear o código.
 
-Essa memória local é diferente da documentação de capital de tokens: a Especificação guarda a continuidade daquele trabalho; o capital de tokens preserva conhecimento técnico reutilizável entre trabalhos diferentes.
+## UX, acessibilidade, CSS e identidade visual
 
-## Memória técnica e capital de tokens
+A reescrita **não copia fielmente** layouts, usabilidade, CSS ou organização de `Stack1`. Preserve regras e objetivos funcionais vigentes; redesenhe livremente a apresentação **dentro das decisões aprovadas**. O operador valida escolhas novas que alterem experiência relevante. Princípios de qualidade:
+- Clareza e hierarquia visual; consistência e continuidade entre páginas e componentes.
+- Revelação progressiva; feedback claro de carregamento, sucesso, vazio, falha e recuperação; proteção do trabalho do usuário.
+- Responsividade e acessibilidade orientadas a WCAG 2.2 AA: semântica, contraste, teclado, foco visível, nomes acessíveis e respeito a `prefers-reduced-motion`.
+- Identidade visual sistemática: tipografia, espaçamento, cores, estados e componentes compartilhados, sem impor precocemente um design system extenso.
+- Transições suaves quando ajudam o usuário a compreender uma mudança; nunca sacrifique acessibilidade ou fluidez por decoração. A aprovação em laboratório não substitui validação na página real.
 
-Mantenha essa documentação em `.docs/`, dentro deste repositório, para acompanhar o projeto entre computadores e modelos. `.docs/README.md` é o índice de leitura inicial e `.docs/memoria-tecnica.md` reúne o conhecimento técnico reutilizável. Novos documentos podem ser acrescentados quando houver material relevante; mantenha o índice atualizado para que o conhecimento essencial seja lido na abertura das sessões. Essa leitura não autoriza percorrer outras Especificações.
+**Bulma é a base CSS prevista**, junto às fontes e ao Font Awesome; ainda não pressuponha que estejam instalados no projeto Blazor. Priorize utilizar e **estender/personalizar** Bulma (tokens/variáveis, classes e configurações suportadas), evitando modificar seus arquivos distribuídos. Criar CSS novo é normal; organize por responsabilidade, com estilos globais e `.razor.css` quando adequado, sem formar monolito e sem duplicações. Não tente reduzir o acoplamento a Bulma às custas de pior UX: não há plano de substituí-lo sem motivo forte. Registre padrões visuais compartilhados quando se consolidarem, sem copiar estilos inteiros para cada componente.
 
-Durante o desenvolvimento, o programador pode manter uma documentação técnica própria destinada às suas sessões futuras. Use esse espaço para preservar decisões, soluções, restrições e conhecimentos específicos deste projeto cujo raciocínio tenha valor suficiente para não precisar ser repetido posteriormente.
+Boas práticas orientam decisões técnicas e de apresentação, **não autorizam mudar** regras, mensagens, rotas, fluxos ou decisões de UX explicitamente aprovadas. Consultar o operador em caso de dúvida funcional.
 
-Registre principalmente aquilo que:
+## Ferramentas, execução, segurança e publicação
 
-- exigiu investigação, comparação ou reflexão relevante;
-- estabeleceu uma decisão técnica que deverá continuar sendo respeitada;
-- revelou uma particularidade do projeto que não seja evidente pelo contexto inicial;
-- provavelmente será reutilizado ou consultado em trabalhos futuros.
+A solução usa .NET 10; comandos usuais incluem `dotnet restore Rememore.slnx`, `dotnet build Rememore.slnx`, `dotnet run --project src/Rememore.Api` e `dotnet run --project src/Rememore.Client`. Verifique endpoints/ports em configurações atuais; não os suponha fixos. `src/Rememore.Client/wwwroot/appsettings.json` contém apenas dados públicos de configuração e a URL de API local; o workflow ajusta a URL no artefato de publicação.
 
-Preserve o resultado útil do raciocínio, não o histórico detalhado da sessão. Não transforme essa documentação em diário de alterações, descrição do código ou coleção de boas práticas genéricas.
+O cliente estático, seus artefatos WASM e qualquer arquivo distribuído são **públicos**: nunca inclua credenciais neles. Token Turso/connection string sensível pertence somente ao servidor e a segredos da plataforma, como `ConnectionStrings__Rememore` na Render. Não copie `Anotações.md`, não exponha tokens em código, logs, prompts ou commits; não abra esse arquivo. Configure CORS explicitamente pelas origens aprovadas, sem confundi-lo com autenticação. Nunca implemente endpoints de escrita reais sem autorização e proteção adequadas. Nenhuma alteração de pipelines, segredos, dados remotos ou publicação é implícita ao desenvolvimento de frontend.
 
-Essa documentação pertence ao programador: pode ser criada e atualizada por ele sem depender de uma Especificação específica. Seu objetivo é formar **capital de tokens**, preservando conhecimento técnico já conquistado para que futuras sessões — inclusive executadas por outro modelo — possam reutilizá-lo em vez de redescobri-lo.
+`.github/workflows/publish-pages.yml` e `Dockerfile` são os mecanismos experimentais existentes. GitHub Pages ajusta base `/Rememore/`; rotas SPA internas, refresh e comportamento de recuperação da API ainda requerem testes próprios. O trabalho cotidiano ocorre em `develop`; publicação futura será em `main`; até migração efetiva os serviços podem continuar configurados para `Stack2`.
 
-Quando uma decisão registrada deixar de ser válida devido à evolução do código ou a uma determinação posterior do operador, atualize ou remova a anotação correspondente.
+## Capital de tokens e continuidade entre unidades
 
-## Validação com o operador
+`.docs/README.md` mantém o índice de leitura obrigatória e seletiva. `.docs/memoria-tecnica.md` é curta, atual e necessária na abertura. O programador pode criar referências temáticas quando houver conhecimento reutilizável: decisões não óbvias, contratos públicos, componentes compartilhados, limitações verificadas e caminhos relevantes. Registre **o resultado útil** do raciocínio, não um diário, catálogo de funções ou teoria genérica. Corrija ou remova conhecimento superado; decisões da Stack1 são históricas, não memória técnica atual da Stack2. Alterações em contratos compartilhados pedem atualização concomitante dessa memória.
 
-O operador executa a aplicação, navega, observa o comportamento e avalia resultados visuais e funcionais, fornecendo retorno. Não é necessário assumir autonomamente essas responsabilidades, salvo atividade específica de execução, teste ou investigação solicitada pela Especificação. Arte e design também podem avançar em ciclos curtos de construção e avaliação pelo operador.
+## Encerramento, Parecer e reconciliação
 
-## Encerramento
+**Somente o operador encerra ou cancela** a especificação. Quando ele determinar encerramento:
+1. Confira corpo aprovado, código entregue, checkpoints, validações e todas as observações e alterações do operador; escreva **Parecer final autossuficiente** no próprio Markdown operacional, sem tocar no corpo aprovado. Preserve diferenças entre intenção e resultado, decisões finais que substituíram anteriores, nomes concretos, comportamentos aceitos, pendências, limitações e evidências de validação. O analista precisa reconciliar a documentação **sem ler toda a Continuidade ou a conversa**.
+2. Após o parecer, mova o Markdown para `.docs/especificacoes/concluidas/` (preserve nome e conteúdo); não arquive antes da solicitação do operador.
+3. Apresente **no chat um bloco copiável com o Parecer final integral**, idêntico ao escrito no arquivo, para o operador transferir ao analista e ao Google Drive. Não afirme que atualizou o Drive sem fazê-lo.
+4. O analista e o operador discutem o Parecer e autorizam reconciliação com a Funcionalização e, quando necessário, Fluxos/Consolidado. A próxima especificação só é determinada depois disso.
 
-O operador determina quando uma Especificação deve ser encerrada ou cancelada.
-
-Quando ele solicitar o encerramento, releia o corpo original da Especificação no Google Drive e acrescente somente um **Parecer final** breve. Nunca modifique o corpo aprovado. Registre, quando aplicável:
-
-- o que foi efetivamente produzido e os nomes concretos de páginas, rotas, componentes ou estruturas;
-- diferenças entre a Especificação e a implementação final;
-- descobertas funcionais ou consequências relevantes percebidas durante o desenvolvimento;
-- pontos deliberadamente não realizados ou pendentes.
-
-Decisões puramente técnicas reutilizáveis permanecem na memória técnica de capital de tokens. Quando uma descoberta técnica também tiver consequência relevante para a compreensão funcional do projeto, inclua essa consequência resumida no Parecer.
-
-O Parecer pertence somente ao documento do Google Drive; não precisa ser reproduzido na cópia Markdown operacional. Não produza documentação extensa da implementação por padrão. A próxima unidade será definida pelo operador fora da sessão.
+Não refaça especificações históricas, não altere o corpo aprovado e não apague evidências de divergências para fazer o resultado parecer idêntico ao plano.
