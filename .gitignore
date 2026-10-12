@@ -491,3 +491,5 @@ Stack1/.env.local
 Stack1/_fresh/
 Stack1/node_modules/
 Stack1/vendor/
+# Banco local usado pela API durante o desenvolvimento
+/rememore.db*
