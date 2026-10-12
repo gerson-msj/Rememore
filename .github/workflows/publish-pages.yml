@@ -32,6 +32,10 @@ jobs:
       - name: Publicar Blazor
         run: dotnet publish src/Rememore.Client/Rememore.Client.csproj -c Release -p:CompressionEnabled=false
 
+      - name: Configurar URL da API no site publicado
+        run: |
+          sed -i 's|http://localhost:5297/|https://rememore.onrender.com/|' src/Rememore.Client/bin/Release/net10.0/publish/wwwroot/appsettings.json
+
       - name: Preparar arquivos
         shell: bash
         run: |
