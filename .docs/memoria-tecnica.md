@@ -1,18 +1,23 @@
 # Memória técnica reutilizável — Stack .NET
 
-**Situação:** fundação experimental aprovada quanto à viabilidade pública. Esta memória descreve apenas o que está efetivamente disponível, não o estado funcional das futuras especificações.
+**Situação:** fundação visual inicial implementada na Spec 01; a API continua experimental e aprovada apenas quanto à viabilidade pública. Esta memória descreve o que está efetivamente disponível, sem antecipar as futuras jornadas funcionais.
 
 ## Estruturas verificadas
 
 - Solução: `Rememore.slnx` com `src/Rememore.Client` (Blazor WebAssembly standalone, .NET 10) e `src/Rememore.Api` (ASP.NET Core Minimal API, .NET 10).
-- Cliente: `Program.cs` registra `HttpClient` com `ApiBaseUrl`; `Pages/Home.razor` consome categorias de exemplo. Não há ainda componentes autorais funcionais do Rememore portados.
+- Cliente: `Program.cs` registra `HttpClient` com `ApiBaseUrl` e `EstadoTema`. `Pages/Home.razor` é a Página Inicial da Spec 01; o acesso de categorias experimental não deve ser inferido como jornada do produto.
 - API de prova: `GET /api/categorias`; `Turso.Data.Sqlite.Provider` 0.8.2 com ADO.NET. Criação/seed de Categorias na inicialização é **experimental** e não deve ser adotada como política de produção.
 - Publicação: `.github/workflows/publish-pages.yml` no GitHub Pages, `Dockerfile` da API na Render, Turso remoto. Workflow atual aponta para `Stack2`; `develop` será trabalho e `main` publicação após transição deliberada.
 - `Stack1/` contém implementação anterior protegida para consulta seletiva; não reutilizar automaticamente sua arquitetura, CSS ou dados.
 
 ## Contratos e componentes compartilhados da nova stack
 
-**Ainda não consolidados.** Adicionar a este índice **somente após implementação validada**: nome, responsabilidade, contratos públicos, localização e modos previstos de extensão. Antes de criar componente parecido, verificar este índice e a implementação existente. O antigo `Memoria` é exemplo histórico de comportamento pensado para extensão, não um componente já existente no Blazor.
+- `CabecalhoPagina` — `src/Rememore.Client/Componentes/CabecalhoPagina.razor`: cabeçalho de página com título obrigatório, fixação configurável e ações opcionais de retorno/saída via `EventCallback`; callbacks delegam ao chamador e não navegam nem encerram sessão por conta própria. Extensão: o chamador fornece título e ações conforme a jornada.
+- `SeletorTema` — `src/Rememore.Client/Componentes/SeletorTema.razor`: seleção única Sistema/Claro/Escuro; recebe `PreferenciaTema` e emite `PreferenciaChanged`. Não persiste nem aplica paletas por si; deve ficar ligado ao contexto proprietário do estado.
+- `EstadoTema`, `PreferenciaTema`, `PaletaTema` — `src/Rememore.Client/Infraestrutura/`: serviço scoped que centraliza escolha, preferência de sistema, paletas e aplicação; enums e valores iniciais em tipo/record separado. Laboratório usa localStorage (`rememore.lab.tema.v1`, `rememore.lab.paletas.v1`); isso não é preferência de conta. Se vários descendentes precisarem refletir mutações do serviço via cascata, `Revisao` deve acompanhar a alteração para provocar renderização.
+- `BlocoLaboratorio` — `src/Rememore.Client/Componentes/BlocoLaboratorio.razor`: contêiner independente, acessível e expansível com `Identificador`, `Titulo`, `ExpandidoInicial` e `ChildContent`; persiste expansão em `rememore.lab.bloco.{Identificador}.v1`. Componente específico do laboratório, não presumir que seja estrutura geral de página.
+
+Antes de criar componente parecido, verificar este índice e a implementação existente. O antigo `Memoria` é exemplo histórico de comportamento pensado para extensão, não um componente já existente no Blazor. CMP-029 foi implementado nesta unidade; a reconciliação da Funcionalização compartilhada depende do processo documental autorizado após o Parecer.
 
 ## Recursos visuais locais
 
@@ -30,6 +35,6 @@
 - Autenticação, preservação transacional real, versionamento/schema de produção e migrações Turso.
 - Pacote EF Core oficial para Turso e compatibilidade remota com EF Core 10.
 - Recuperação UX após suspensão da Render, rotas internas SPA do GitHub Pages e comportamento em produção.
-- Bulma, fontes e Font Awesome serão integrados conforme especificação: não pressupor sua presença no projeto .NET atual.
+- Viewport estreito, cálculo de contraste e percurso completo de teclado não foram medidos separadamente pelo programador durante o encerramento da Spec 01; o operador informou que a unidade estava validada.
 
 Não registrar tokens, connection strings secretas ou conteúdo de `Anotações.md`.

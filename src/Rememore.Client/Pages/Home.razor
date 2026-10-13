@@ -1,97 +1,36 @@
 @page "/"
-@using System.Net.Http.Json
-@inject HttpClient Http
+@implements IDisposable
+@inject EstadoTema Tema
 
 <PageTitle>Rememore</PageTitle>
 
-<main class="inicio" aria-labelledby="titulo-inicio">
-    <header class="cabecalho">
-        <div class="marca" aria-label="Rememore">
-            <span class="marca-simbolo" aria-hidden="true">R</span>
-            <span>Rememore</span>
-        </div>
-        <span class="etiqueta">Uma nova etapa</span>
-    </header>
-
-    <section class="apresentacao">
-        <p class="sobretitulo">Um espaço para lembrar</p>
-        <h1 id="titulo-inicio">Suas memórias começam aqui.</h1>
-        <p class="descricao">
-            Esta é a página inicial do Rememore. O client está funcionando de forma independente,
-            pronto para crescer passo a passo.
-        </p>
-
-        <div class="estado" role="status">
-            <span class="estado-indicador" aria-hidden="true"></span>
-            <div class="estado-texto">
-                <strong>Client ativo</strong>
-                <span>Blazor WebAssembly carregado com sucesso.</span>
+<div class="pagina-inicial">
+    <CabecalhoPagina Titulo="Rememore" Fixo="false" />
+    <main class="pagina-inicial__conteudo" aria-labelledby="titulo-inicio">
+        <section class="inicio-apresentacao">
+            <h1 class="inicio-apresentacao__abertura" id="titulo-inicio">Nem todos os dias são iguais. Às vezes, é a memória que os torna parecidos.</h1>
+            <div class="inicio-apresentacao__texto">
+                <p>O Rememore ajuda você a preservar lembranças do cotidiano e voltar a elas ao longo do tempo, recuperando detalhes que poderiam se perder com a passagem dos dias.</p>
             </div>
-        </div>
-
-        <section class="categorias" aria-labelledby="titulo-categorias">
-            <div class="categorias-cabecalho">
-                <div>
-                    <p class="sobretitulo">Seus círculos</p>
-                    <h2 id="titulo-categorias">Categorias de exemplo</h2>
-                </div>
-                @if (categorias is not null)
-                {
-                    <span class="contador-categorias">@categorias.Count</span>
-                }
+            <div class="inicio-apresentacao__convite">
+                <p>Entre na sua conta ou, se recebeu um convite, comece por aqui.</p>
+                <nav class="inicio-acoes" aria-label="Acesso à conta">
+                    <NavLink class="button is-link is-medium" href="entrar">Entrar</NavLink>
+                    <NavLink class="inicio-acoes__cadastro" href="cadastro">Criar conta <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></NavLink>
+                </nav>
             </div>
-
-            @if (mensagemErro is not null)
-            {
-                <p class="erro-api" role="alert">@mensagemErro</p>
-            }
-            else if (carregando)
-            {
-                <p class="mensagem-categorias" role="status">Carregando categorias…</p>
-            }
-            else if (categorias is { Count: 0 })
-            {
-                <p class="mensagem-categorias">A API não retornou categorias.</p>
-            }
-            else
-            {
-                <ul class="lista-categorias">
-                    @foreach (var categoria in categorias ?? [])
-                    {
-                        <li>@categoria.Nome</li>
-                    }
-                </ul>
-            }
         </section>
-    </section>
-
-    <footer class="rodape">
-        <span>Rememore</span>
-        <span>Uma lembrança de cada vez.</span>
-    </footer>
-</main>
+    </main>
+</div>
 
 @code {
-    private List<CategoriaDto>? categorias;
-    private string? mensagemErro;
-    private bool carregando = true;
+    protected override void OnInitialized() => Tema.Alterado += Atualizar;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
     {
-        try
-        {
-            categorias = await Http.GetFromJsonAsync<List<CategoriaDto>>("api/categorias") ?? [];
-        }
-        catch (Exception ex)
-        {
-            mensagemErro = $"Não foi possível carregar as categorias: {ex.Message}";
-        }
-        finally
-        {
-            carregando = false;
-        }
+        if (primeiroRender) await Tema.InicializarHomeAsync();
     }
 
-    private sealed record CategoriaDto(int Id, string Nome);
+    private void Atualizar() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() => Tema.Alterado -= Atualizar;
 }
-

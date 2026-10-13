@@ -1,0 +1,46 @@
+@page "/laboratorio"
+@implements IDisposable
+@inject EstadoTema Tema
+
+<PageTitle>Laboratório — Rememore</PageTitle>
+
+<div class="pagina-laboratorio">
+    <CabecalhoPagina Titulo="Laboratório" />
+    <div class="laboratorio-ferramentas">
+        <div class="laboratorio-ferramentas__conteudo">
+            <span class="laboratorio-ferramentas__rotulo">Aparência</span>
+            <SeletorTema Preferencia="Tema.Preferencia" PreferenciaChanged="Tema.SelecionarAsync" />
+        </div>
+    </div>
+    <main class="laboratorio-conteudo" aria-label="Demonstrações visuais">
+        <h1 class="sr-only">Laboratório</h1>
+        <CascadingValue Value="Tema">
+        <CascadingValue Value="Tema.Revisao">
+        <BlocoLaboratorio Identificador="fundacao-visual" Titulo="Fundação Visual" ExpandidoInicial="true">
+            <DemonstracaoFundacao />
+        </BlocoLaboratorio>
+        <BlocoLaboratorio Identificador="temas-paletas" Titulo="Temas e Paletas">
+            <DemonstracaoPaletas />
+        </BlocoLaboratorio>
+        <BlocoLaboratorio Identificador="cmp-027" Titulo="CMP-027 — Cabeçalho de Página">
+            <DemonstracaoCabecalho />
+        </BlocoLaboratorio>
+        <BlocoLaboratorio Identificador="cmp-029" Titulo="CMP-029 — Seletor de Tema">
+            <DemonstracaoSeletorTema />
+        </BlocoLaboratorio>
+        </CascadingValue>
+        </CascadingValue>
+    </main>
+</div>
+
+@code {
+    protected override void OnInitialized() => Tema.Alterado += Atualizar;
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (primeiroRender) await Tema.InicializarLaboratorioAsync();
+    }
+
+    private void Atualizar() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() => Tema.Alterado -= Atualizar;
+}

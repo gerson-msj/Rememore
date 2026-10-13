@@ -1,0 +1,17 @@
+<div class="demonstracao-cabecalho">
+    <label class="label" for="titulo-demonstracao">Título de demonstração</label>
+    <input class="input" id="titulo-demonstracao" @bind="titulo" />
+    <div class="cabecalho-amostras">
+        <div><p class="help">Contexto sem retorno ou saída</p><CabecalhoPagina Titulo="@titulo" Fixo="false" /></div>
+        <div><p class="help">Ação de retorno delegada</p><CabecalhoPagina Titulo="@titulo" Fixo="false" MostrarRetorno AoRetornar="RegistrarRetorno" /></div>
+        <div><p class="help">Ação de saída delegada</p><CabecalhoPagina Titulo="@titulo" Fixo="false" MostrarSaida AoSair="RegistrarSaida" /></div>
+    </div>
+    <p class="notification is-info is-light" role="status">@mensagem</p>
+</div>
+
+@code {
+    private string titulo = "Laboratório";
+    private string mensagem = "Acione os controles para observar o evento delegado.";
+    private Task RegistrarRetorno() { mensagem = "O evento de retorno chegou ao contexto chamador."; return Task.CompletedTask; }
+    private Task RegistrarSaida() { mensagem = "O evento de saída chegou ao contexto chamador."; return Task.CompletedTask; }
+}

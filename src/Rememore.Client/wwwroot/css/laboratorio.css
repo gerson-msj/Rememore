@@ -1,0 +1,42 @@
+.pagina-laboratorio { min-height: 100vh; background: var(--cor-background); }
+.laboratorio-ferramentas { position: sticky; z-index: 25; top: 4.25rem; border-bottom: 1px solid var(--cor-border); background: var(--cor-bis); }
+.laboratorio-ferramentas__conteudo { display: flex; width: min(100%, var(--rememore-largura-conteudo)); min-height: 4rem; align-items: center; justify-content: space-between; gap: 1rem; margin-inline: auto; padding: 0.55rem var(--rememore-espaco-lateral); }
+.laboratorio-ferramentas__rotulo { color: var(--cor-text-weak); font-size: 0.875rem; font-weight: 600; }
+.laboratorio-conteudo { display: grid; width: min(100%, var(--rememore-largura-conteudo)); gap: 1rem; margin-inline: auto; padding: 1.5rem var(--rememore-espaco-lateral) 4rem; }
+.bloco-laboratorio { overflow: clip; border: 1px solid var(--cor-border); border-radius: 0.9rem; background: var(--cor-main); }
+.bloco-laboratorio__titulo { margin: 0; font-size: 1rem; }
+.bloco-laboratorio__controle { display: flex; width: 100%; min-height: 3.8rem; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.85rem 1.1rem; border: 0; background: transparent; color: var(--cor-title); cursor: pointer; text-align: left; }
+.bloco-laboratorio__controle:hover { background: var(--cor-bis); }
+.bloco-laboratorio__conteudo { padding: 0 1.1rem 1.25rem; animation: aparecer-conteudo 160ms ease-out; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+@keyframes aparecer-conteudo { from { opacity: 0; transform: translateY(-0.25rem); } to { opacity: 1; transform: translateY(0); } }
+.demonstracao-fundacao { display: grid; gap: 1.5rem; }
+.fundacao-amostra { padding: clamp(1rem, 3vw, 2rem); border: 1px solid var(--cor-border-weak); border-radius: 0.75rem; background: var(--cor-bis); }
+.fundacao-amostra--estreita { max-width: 48rem; }
+.fundacao-amostra--larga { width: 100%; }
+.fundacao-amostra .sobrelinha { color: var(--cor-text-weak); font-size: 0.75rem; letter-spacing: 0.08em; }
+.fundacao-amostra h3 { max-width: 24ch; color: var(--cor-title); font-size: clamp(1.5rem, 4vw, 2.25rem); line-height: 1.2; }
+.fundacao-amostra p { line-height: 1.7; }
+.fundacao-amostra h4 { color: var(--cor-title); }
+.fundacao-superficies { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: 0.75rem; }
+.fundacao-superficies > div { padding: 1rem; border: 1px solid var(--cor-border); border-radius: 0.6rem; background: var(--cor-main); }
+.fundacao-superficies > div:nth-child(2) { background: var(--cor-bis); }
+.fundacao-superficies > div:nth-child(3) { background: var(--cor-ter); }
+.paleta-acoes { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; }
+.paleta-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 0.65rem; }
+.paleta-entrada { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem 2.25rem; align-items: center; gap: 0.65rem; padding: 0.55rem; border: 1px solid var(--cor-border-weak); border-radius: 0.6rem; }
+.paleta-amostra { width: 2.5rem; height: 2.5rem; border: 1px solid var(--cor-border); border-radius: 0.45rem; background: var(--amostra); }
+.paleta-dados { display: grid; gap: 0.15rem; overflow: hidden; }
+.paleta-dados strong { overflow: hidden; color: var(--cor-text-strong); text-overflow: ellipsis; }
+.paleta-dados code { color: var(--cor-text-weak); }
+.paleta-cor { width: 2.5rem; height: 2.5rem; padding: 0.15rem; border: 1px solid var(--cor-border); border-radius: 0.4rem; background: var(--cor-main); }
+.paleta-restaurar { width: 2.25rem; height: 2.25rem; border: 0; border-radius: 0.4rem; background: transparent; color: var(--cor-text-weak); cursor: pointer; }
+.paleta-restaurar:hover { background: var(--cor-ter); color: var(--cor-text-strong); }
+.cabecalho-amostras { display: grid; gap: 1rem; margin-top: 1rem; }
+.cabecalho-amostras > div { overflow: hidden; border: 1px solid var(--cor-border); border-radius: 0.7rem; background: var(--cor-bis); }
+.cabecalho-amostras .help { margin: 0; padding: 0.7rem 1rem; }
+.cabecalho-pagina--demonstracao { position: static; border: 0; border-bottom: 1px solid var(--cor-border); }
+.demonstracao-seletor { display: grid; justify-items: start; gap: 0.75rem; }
+.demonstracao-seletor p { margin: 0; }
+@media (max-width: 480px) { .laboratorio-ferramentas__conteudo { align-items: flex-start; flex-direction: column; } .laboratorio-ferramentas { top: 4.25rem; } .paleta-entrada { grid-template-columns: 2rem minmax(0, 1fr) 2rem 2rem; gap: 0.4rem; } .paleta-amostra { width: 2rem; height: 2rem; } .paleta-cor { width: 2rem; height: 2rem; } .paleta-restaurar { width: 2rem; height: 2rem; } }
+@media (prefers-reduced-motion: reduce) { .bloco-laboratorio__conteudo { animation: none; } }
