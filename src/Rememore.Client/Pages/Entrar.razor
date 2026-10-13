@@ -1,0 +1,75 @@
+@page "/entrar"
+@attribute [AllowAnonymous]
+@inject IAutenticador Autenticador
+@inject EstadoAutenticacaoProvider EstadoAutenticacao
+@inject NavigationManager Navegacao
+
+<PageTitle>Entrar — Rememore</PageTitle>
+
+<div class="pagina-entrar">
+    <CabecalhoPagina Titulo="Entrar" MostrarRetorno="true" Fixo="false" AoRetornar="VoltarInicio" />
+    <main class="pagina-entrar__conteudo">
+        <form class="pagina-entrar__formulario" @onsubmit="EntrarAsync" @onsubmit:preventDefault="true">
+            <div class="field">
+                <label class="label" for="nome-usuario">Nome de usuário</label>
+                <div class="control">
+                    <input id="nome-usuario" class="input" type="text" autocomplete="username" value="@nomeUsuario" @oninput="NomeAlterado" />
+                </div>
+            </div>
+            <div class="field">
+                <CampoSenha Id="senha-login" Rotulo="Senha" Autocomplete="current-password" Valor="@senha" ValorChanged="SenhaAlterada" />
+            </div>
+            <div class="pagina-entrar__acoes">
+                <button class="button is-link is-medium" type="submit" disabled="@(!PodeEnviar)" aria-busy="@enviando">@(enviando ? "Entrando…" : "Entrar")</button>
+                <NavLink class="pagina-entrar__redefinir" href="redefinir-senha">Redefinir senha</NavLink>
+            </div>
+            <p class="pagina-entrar__erro" role="alert" aria-live="polite">@(erro ? MensagemErro : " ")</p>
+        </form>
+    </main>
+</div>
+
+@code {
+    private const string MensagemErro = "Não foi possível entrar. Confira seu nome de usuário e senha e tente novamente.";
+    private string nomeUsuario = "";
+    private string senha = "";
+    private bool erro;
+    private bool enviando;
+    private bool PodeEnviar => !enviando && !erro && !string.IsNullOrWhiteSpace(nomeUsuario) && !string.IsNullOrWhiteSpace(senha);
+
+    private void VoltarInicio() => Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "").ToString());
+
+    private void NomeAlterado(ChangeEventArgs args)
+    {
+        var novo = args.Value?.ToString() ?? "";
+        if (novo != nomeUsuario) erro = false;
+        nomeUsuario = novo;
+    }
+
+    private Task SenhaAlterada(string novo)
+    {
+        if (novo != senha) erro = false;
+        senha = novo;
+        return Task.CompletedTask;
+    }
+
+    private async Task EntrarAsync()
+    {
+        if (!PodeEnviar) return;
+        enviando = true;
+        try
+        {
+            var nomeNormalizado = NormalizacaoNomeUsuario.Normalizar(nomeUsuario);
+            var resultado = await Autenticador.AutenticarAsync(nomeNormalizado, senha);
+
+            if (!resultado.Autenticado)
+            {
+                erro = true;
+                return;
+            }
+
+            await EstadoAutenticacao.EstabelecerSessaoAsync();
+            Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "principal").ToString());
+        }
+        finally { enviando = false; }
+    }
+}

@@ -1,0 +1,26 @@
+@page "/principal"
+@attribute [Authorize]
+@inject NavigationManager Navegacao
+@inject EstadoAutenticacaoProvider EstadoAutenticacao
+
+<PageTitle>Rememore</PageTitle>
+
+<div class="pagina-principal">
+    <CabecalhoPagina Titulo="Rememore" MostrarSaida="true" AoSair="AbrirConfirmacao" />
+    <MensagemPopup IsOpen="popupAberto" Paragrafos="@MensagemSaida" RotuloConfirmacao="Sim" RotuloCancelamento="Não" AoResponder="ResponderSaidaAsync" />
+</div>
+
+@code {
+    private static readonly IReadOnlyList<string> MensagemSaida = ["Deseja realmente sair?"];
+    private bool popupAberto;
+
+    private void AbrirConfirmacao() => popupAberto = true;
+
+    private async Task ResponderSaidaAsync(RespostaPopup resposta)
+    {
+        popupAberto = false;
+        if (resposta != RespostaPopup.Confirmacao) return;
+        await EstadoAutenticacao.EncerrarSessaoAsync();
+        Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "").ToString());
+    }
+}

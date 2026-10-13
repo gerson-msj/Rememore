@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Rememore.Client;
 using Rememore.Client.Infraestrutura;
+using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -15,5 +16,9 @@ builder.Services.AddScoped(_ => new HttpClient
     BaseAddress = new Uri(apiBaseUrl)
 });
 builder.Services.AddScoped<EstadoTema>();
+builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<IAutenticador, AutenticadorSimulado>();
+builder.Services.AddScoped<EstadoAutenticacaoProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(servicos => servicos.GetRequiredService<EstadoAutenticacaoProvider>());
 
 await builder.Build().RunAsync();

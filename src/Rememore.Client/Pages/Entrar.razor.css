@@ -1,0 +1,9 @@
+.pagina-entrar { min-height: 100vh; }
+.pagina-entrar__conteudo { width: min(100% - 2rem, 30rem); margin: 0 auto; padding: 2.5rem 0; }
+.pagina-entrar__formulario { display: grid; gap: 1rem; }
+.pagina-entrar__acoes { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.pagina-entrar__acoes > .button { height: 2.5rem; min-height: 2.5rem; }
+.pagina-entrar__redefinir { color: var(--cor-link); text-decoration: underline; text-underline-offset: .15em; }
+.pagina-entrar__erro { min-height: 3.25rem; margin: 0; color: var(--cor-danger); }
+.pagina-entrar__formulario input:focus-visible { outline: 2px solid var(--cor-link); outline-offset: 2px; }
+@media (max-width: 30rem) { .pagina-entrar__acoes { align-items: stretch; flex-direction: column; } }

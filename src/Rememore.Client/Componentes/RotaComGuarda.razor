@@ -1,0 +1,31 @@
+@using System.Reflection
+@inject EstadoAutenticacaoProvider Autenticacao
+@inject NavigationManager Navegacao
+
+@if (destinoRedirecionamento is null)
+{
+    <AuthorizeRouteView RouteData="RouteData" DefaultLayout="@typeof(MainLayout)">
+        <Authorizing><main class="estado-inicializacao" aria-busy="true" aria-label="Verificando acesso"></main></Authorizing>
+    </AuthorizeRouteView>
+}
+
+@code {
+    [Parameter, EditorRequired] public RouteData RouteData { get; set; } = default!;
+    private string? destinoRedirecionamento;
+
+    protected override void OnParametersSet()
+    {
+        destinoRedirecionamento = null;
+        var anonima = RouteData.PageType.GetCustomAttribute<AllowAnonymousAttribute>() is not null;
+        var protegida = RouteData.PageType.GetCustomAttribute<AuthorizeAttribute>() is not null;
+
+        if (anonima && Autenticacao.Autenticado) destinoRedirecionamento = "principal";
+        else if (protegida && !Autenticacao.Autenticado) destinoRedirecionamento = "entrar";
+
+        if (destinoRedirecionamento is not null)
+        {
+            var destino = new Uri(new Uri(Navegacao.BaseUri), destinoRedirecionamento);
+            Navegacao.NavigateTo(destino.ToString(), replace: true);
+        }
+    }
+}
