@@ -1,0 +1,59 @@
+dialog.mensagem-popup {
+    width: min(38rem, calc(100vw - 2rem));
+    max-width: none;
+    max-height: min(82dvh, 48rem);
+    padding: 0;
+    overflow: auto;
+    border: 1px solid var(--cor-border);
+    border-radius: 1rem;
+    color: var(--cor-text);
+    background: var(--cor-main);
+    box-shadow: 0 1.25rem 4rem rgb(0 0 0 / 24%);
+    overscroll-behavior: contain;
+    opacity: 0;
+    transform: translateY(0.6rem) scale(0.99);
+    transition: opacity 180ms ease, transform 180ms ease, display 180ms allow-discrete, overlay 180ms allow-discrete;
+}
+
+dialog.mensagem-popup::backdrop {
+    background: rgb(18 22 29 / 58%);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity 180ms ease, display 180ms allow-discrete, overlay 180ms allow-discrete;
+}
+
+dialog.mensagem-popup[open] { opacity: 1; transform: translateY(-0.8rem) scale(1); }
+dialog.mensagem-popup[open]::backdrop { opacity: 1; }
+@starting-style {
+    dialog.mensagem-popup[open] { opacity: 0; transform: translateY(0.6rem) scale(0.99); }
+    dialog.mensagem-popup[open]::backdrop { opacity: 0; }
+}
+
+.mensagem-popup__caixa { padding: clamp(1.25rem, 4vw, 2rem); }
+.mensagem-popup__titulo { margin: 0 0 0.75rem; color: var(--cor-title); font-size: 1.35rem; line-height: 1.3; }
+.mensagem-popup__mensagem { display: flex; align-items: flex-start; gap: 0.9rem; }
+.mensagem-popup__icone { flex: 0 0 auto; margin-top: 0.25rem; color: var(--popup-cor, var(--cor-text-weak)); font-size: 1.3rem; }
+.mensagem-popup__paragrafos { min-width: 0; }
+.mensagem-popup__paragrafos p { margin: 0 0 0.75rem; line-height: 1.6; overflow-wrap: anywhere; }
+.mensagem-popup__paragrafos p:last-child { margin-bottom: 0; }
+.mensagem-popup__acoes { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem; }
+.mensagem-popup__acoes .button { min-height: 2.75rem; }
+.mensagem-popup__acao-cancelar { color: var(--cor-text); border-color: var(--cor-border); background: var(--cor-main); }
+.mensagem-popup:focus-visible, .mensagem-popup__acoes .button:focus-visible { outline: 3px solid var(--cor-link); outline-offset: 3px; }
+.mensagem-popup--principal { --popup-cor: var(--cor-primary); }
+.mensagem-popup--link { --popup-cor: var(--cor-link); }
+.mensagem-popup--informacao { --popup-cor: var(--cor-info); }
+.mensagem-popup--sucesso { --popup-cor: var(--cor-success); }
+.mensagem-popup--atencao { --popup-cor: var(--cor-warning); }
+.mensagem-popup--perigo { --popup-cor: var(--cor-danger); }
+dialog.mensagem-popup[class*="mensagem-popup--"] { border-block-start: 4px solid var(--popup-cor); }
+
+@media (prefers-reduced-motion: reduce) {
+    dialog.mensagem-popup, dialog.mensagem-popup::backdrop { transition-duration: 0.01ms; }
+}
+
+@media (max-width: 30rem) {
+    dialog.mensagem-popup { width: calc(100vw - 1.25rem); max-height: 88dvh; }
+    .mensagem-popup__acoes { justify-content: stretch; }
+    .mensagem-popup__acoes .button { flex: 1 1 auto; }
+}

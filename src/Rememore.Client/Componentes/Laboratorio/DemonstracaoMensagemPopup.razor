@@ -1,0 +1,122 @@
+<div class="demonstracao-popup">
+    <div class="demonstracao-popup__controles">
+        <div class="field">
+            <label class="label" for="popup-titulo">Título</label>
+            <div class="control"><input class="input" id="popup-titulo" @bind="titulo" placeholder="Sem título" /></div>
+            <label class="checkbox demonstracao-popup__opcao"><input type="checkbox" @bind="usarTitulo" /> Exibir título</label>
+        </div>
+        <div class="field">
+            <label class="label" for="popup-mensagem">Mensagem</label>
+            <div class="control"><textarea class="textarea" id="popup-mensagem" @bind="mensagem" rows="4"></textarea></div>
+            <p class="help">Cada linha não vazia será exibida como um parágrafo.</p>
+        </div>
+        <div class="field">
+            <label class="label" for="popup-icone">Ícone Font Awesome (opcional)</label>
+            <div class="control"><input class="input" id="popup-icone" @bind="icone" placeholder="fa-solid fa-circle-info" /></div>
+        </div>
+        <div class="field">
+            <label class="label" for="popup-cor">Cor semântica</label>
+            <div class="control"><div class="select is-fullwidth">
+                <select id="popup-cor" @bind="cor">
+                    <option value="">Neutra</option><option value="Principal">Principal</option><option value="Link">Link</option>
+                    <option value="Informacao">Informação</option><option value="Sucesso">Sucesso</option><option value="Atencao">Atenção</option><option value="Perigo">Perigo</option>
+                </select>
+            </div></div>
+        </div>
+        <div class="field">
+            <label class="label" for="popup-acoes">Ações visíveis</label>
+            <div class="control"><div class="select is-fullwidth">
+                <select id="popup-acoes" @bind="configuracaoAcoes">
+                    <option value="0">Confirmação e cancelamento</option><option value="1">Só confirmação</option>
+                    <option value="2">Só cancelamento</option><option value="3">Sem botões</option>
+                </select>
+            </div></div>
+        </div>
+        <div class="field demonstracao-popup__rotulos">
+            <div><label class="label" for="popup-rotulo-confirmar">Rótulo de confirmação</label><input class="input" id="popup-rotulo-confirmar" @bind="rotuloConfirmacao" /></div>
+            <div><label class="label" for="popup-rotulo-cancelar">Rótulo de cancelamento</label><input class="input" id="popup-rotulo-cancelar" @bind="rotuloCancelamento" /></div>
+        </div>
+        <label class="checkbox demonstracao-popup__opcao"><input type="checkbox" @bind="fechamentoAdiado" /> Manter aberto após a primeira resposta</label>
+        <div class="buttons">
+            <button class="button is-link" type="button" @onclick="Abrir">Abrir popup</button>
+            <button class="button" type="button" @onclick="CenarioInformativo">Cenário informativo</button>
+            <button class="button" type="button" @onclick="CenarioSemBotoes">Cenário sem botões</button>
+        </div>
+    </div>
+    <div class="demonstracao-popup__resultado" role="status" aria-live="polite">
+        <p><strong>Última resposta:</strong> @(ultimaResposta ?? "Nenhuma resposta recebida.")</p>
+        <p>@estadoFechamento</p>
+    </div>
+
+    <MensagemPopup IsOpen="popupAberto" Titulo="@(usarTitulo ? titulo : null)" Paragrafos="Paragrafos" Icone="@icone" Cor="CorSelecionada"
+                   MostrarConfirmacao="@MostrarConfirmacao" MostrarCancelamento="@MostrarCancelamento"
+                   RotuloConfirmacao="@rotuloConfirmacao" RotuloCancelamento="@rotuloCancelamento" AoResponder="ReceberResposta" />
+</div>
+
+@code {
+    private bool popupAberto;
+    private bool usarTitulo = true;
+    private bool fechamentoAdiado;
+    private int configuracaoAcoes;
+    private int respostasDesdeAbertura;
+    private string titulo = "Uma mensagem para você";
+    private string mensagem = "Confira os detalhes antes de continuar.";
+    private string icone = "";
+    private string cor = "";
+    private string rotuloConfirmacao = "Já guardei, entrar";
+    private string rotuloCancelamento = "Voltar e guardar";
+    private string? ultimaResposta;
+    private string estadoFechamento = "A primeira resposta fecha o popup.";
+
+    private bool MostrarConfirmacao => configuracaoAcoes is 0 or 1;
+    private bool MostrarCancelamento => configuracaoAcoes is 0 or 2;
+    private CorSemanticaPopup? CorSelecionada => Enum.TryParse<CorSemanticaPopup>(cor, out var valor) ? valor : null;
+    private IReadOnlyList<string> Paragrafos => mensagem.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+    private void Abrir()
+    {
+        respostasDesdeAbertura = 0;
+        popupAberto = true;
+        estadoFechamento = fechamentoAdiado ? "A primeira resposta será emitida sem fechar o popup." : "A próxima resposta fechará o popup.";
+    }
+
+    private void CenarioInformativo()
+    {
+        usarTitulo = true;
+        titulo = "Antes de continuar";
+        mensagem = "Sua lembrança foi guardada.\nVocê pode continuar quando estiver pronto.\nEste é um cenário informativo com uma única ação.";
+        icone = "fa-solid fa-circle-info";
+        cor = "Informacao";
+        configuracaoAcoes = 1;
+        rotuloConfirmacao = "OK";
+        rotuloCancelamento = "Cancelar";
+        fechamentoAdiado = false;
+    }
+
+    private void CenarioSemBotoes()
+    {
+        usarTitulo = false;
+        titulo = "";
+        mensagem = "Este popup não tem botões.\nUse Esc ou clique no fundo para enviar cancelamento.";
+        icone = "";
+        cor = "";
+        configuracaoAcoes = 3;
+        fechamentoAdiado = false;
+    }
+
+    private Task ReceberResposta(RespostaPopup resposta)
+    {
+        respostasDesdeAbertura++;
+        ultimaResposta = resposta == RespostaPopup.Confirmacao ? "CONFIRMAÇÃO" : "CANCELAMENTO";
+        if (!fechamentoAdiado || respostasDesdeAbertura >= 2)
+        {
+            popupAberto = false;
+            estadoFechamento = "O chamador recebeu a resposta e fechou o popup.";
+        }
+        else
+        {
+            estadoFechamento = "Primeira resposta recebida; o chamador manteve o popup aberto. Responda novamente para fechar.";
+        }
+        return Task.CompletedTask;
+    }
+}
