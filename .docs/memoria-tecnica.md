@@ -1,6 +1,6 @@
 # Memória técnica reutilizável — Stack .NET
 
-**Situação:** fundação visual inicial implementada na Spec 01; a API continua experimental e aprovada apenas quanto à viabilidade pública. Esta memória descreve o que está efetivamente disponível, sem antecipar as futuras jornadas funcionais.
+**Situação:** fundação visual inicial implementada na Spec 01 e fundação de trabalho local na Spec 05; a API continua experimental e aprovada apenas quanto à viabilidade pública. Esta memória descreve o que está efetivamente disponível, sem antecipar as futuras jornadas funcionais.
 
 ## Estruturas verificadas
 
@@ -26,6 +26,15 @@
 
 Antes de criar componente parecido, verificar este índice e a implementação existente. O antigo `Memoria` é exemplo histórico de comportamento pensado para extensão, não um componente já existente no Blazor. CMP-029 foi implementado na unidade anterior; CMP-001 e a fronteira simulada de autenticação foram materializados na Spec 02.02. A reconciliação da Funcionalização compartilhada depende do processo documental autorizado após o Parecer.
 
+## Fundação de trabalho local — Spec 05
+
+- `EstadoAutenticacaoProvider.IdentidadeConta` expõe a identidade opaca fictícia fixa da conta simulada autenticada, também em `ClaimTypes.NameIdentifier`. Independente do nome; sessão v2 e sua validade permanecem compatíveis. Anônimo recebe `null`. Não representa autorização de API.
+- `Infraestrutura/TrabalhoLocal/`: `IDiagnosticoTrabalhoLocal` e `ICapturasLocais` compartilham a instância scoped `TrabalhoLocalIndexedDb`. Operações retornam `ResultadoLocal<T>` com `Sucesso`, `Ausente`, `ApiIndisponivel` ou `Falha`; falha contém etapa e código técnico. Consulta vazia é sucesso com lista vazia; recuperar/remover inexistente é ausência. A conta opaca é argumento explícito de cada operação, obtida pelo consumidor da sessão.
+- `WorkspaceCapturaLocal`: conta, `DateOnly`, `Alterado` e composição de `MemoriaCapturaLocal` (identidade estável, conteúdo e ordem explícita). Existência não significa pendência. Schema não pressupõe revisão nem ausência remota. Ainda não integrado a páginas ou ao `IPendenciaCapturaLocal`.
+- `wwwroot/js/bancoTrabalhoLocal.js`: banco exclusivo `rememore.trabalho.local.dotnet`, schema 1, migrações sequenciais em `migracoes`. Store `capturas` com chave composta `[identidadeConta, data]` e índice `porConta`; store técnico `diagnostico`. Próxima evolução acrescenta migração à lista; não altera a abertura. `transacionar` aceita o conjunto de stores internamente, mas nenhum domínio usa transações de múltiplos stores nesta unidade.
+- `wwwroot/js/trabalhoLocal.js`: diagnóstico, gravação/substituição, recuperação, consulta por conta e remoção. Toda transação permanece numa chamada JS; sucesso/ausência só retornam depois de `complete`. Abort/erro não confirmam dados. Diagnóstico escreve/lê/remove no store técnico em transação única. Conexões fecham ao concluir e em `versionchange`; upgrade bloqueado retorna falha e não prossegue tardiamente após abandono.
+- Prova técnica em 14/10/2026: Chrome real com Blazor/C# e perfil isolado confirmou persistência após F5 e fechamento/reabertura, isolamento, abort após resposta de pedido e evolução não destrutiva em banco técnico. Testes e andaime reutilizável em `tests/TrabalhoLocal/`; copiar o andaime para `Pages` somente durante verificação, retirar antes do build final. Não há rota ou painel técnico permanente.
+
 ## Recursos visuais locais
 
 - `src/Rememore.Client/wwwroot/css/bulma.min.css`: Bulma 1.0.4, copiado de `Stack1/assets/bulma.min.css` e carregado globalmente pelo `index.html`.
@@ -37,7 +46,7 @@ Antes de criar componente parecido, verificar este índice e a implementação e
 
 ## Questões técnicas ainda não validadas
 
-- IndexedDB real via JS Interop e tratamento de falhas no Blazor.
+- Recuperação visual e política de reparação de IndexedDB; a fundação técnica/interop e falhas explícitas já foram verificadas na Spec 05.
 - Equivalência funcional dos fluxos das 24 especificações.
 - Autenticação, preservação transacional real, versionamento/schema de produção e migrações Turso.
 - Pacote EF Core oficial para Turso e compatibilidade remota com EF Core 10.

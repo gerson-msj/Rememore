@@ -10,6 +10,8 @@ public sealed class EstadoAutenticacaoProvider(IJSRuntime js, TimeProvider relog
     private const string ChaveSessao = "rememore.sessao.simulada.v2";
     private const string ChaveLegada = "rememore.sessao.simulada.v1";
     private const int VersaoAtual = 2;
+    // Identidade fictícia da única conta do autenticador simulado, independente do nome.
+    public const string IdentidadeContaSimulada = "5e12a398-04f7-4e61-9c2d-6ad97c15b842";
     private static readonly TimeSpan DuracaoSessao = TimeSpan.FromDays(30);
     private static readonly TimeSpan IntervaloRenovacao = TimeSpan.FromDays(7);
     private static readonly ClaimsPrincipal Anonimo = new(new ClaimsIdentity());
@@ -20,6 +22,7 @@ public sealed class EstadoAutenticacaoProvider(IJSRuntime js, TimeProvider relog
 
     public bool Inicializado { get; private set; }
     public bool Autenticado => usuario.Identity?.IsAuthenticated == true;
+    public string? IdentidadeConta => Autenticado ? IdentidadeContaSimulada : null;
 
     public override Task<AuthenticationState> GetAuthenticationStateAsync() => Task.FromResult(new AuthenticationState(usuario));
 
@@ -152,7 +155,7 @@ public sealed class EstadoAutenticacaoProvider(IJSRuntime js, TimeProvider relog
     }
 
     private static ClaimsPrincipal CriarUsuario() => new(new ClaimsIdentity(
-        [new Claim(ClaimTypes.Name, "usuario")], "SessaoSimulada"));
+        [new Claim(ClaimTypes.Name, "usuario"), new Claim(ClaimTypes.NameIdentifier, IdentidadeContaSimulada)], "SessaoSimulada"));
 
     public async ValueTask DisposeAsync()
     {

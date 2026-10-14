@@ -1,0 +1,27 @@
+@page "/verificacao-trabalho-local"
+@using Rememore.Client.Infraestrutura.TrabalhoLocal
+@using Microsoft.JSInterop
+@implements IDisposable
+@inject IDiagnosticoTrabalhoLocal Diagnostico
+@inject ICapturasLocais Capturas
+@inject EstadoAutenticacaoProvider Autenticacao
+@inject IJSRuntime Js
+
+@* Andaime temporário: copiar para Pages somente durante a execução técnica. *@
+@code {
+    private DotNetObjectReference<VerificacaoTrabalhoLocal>? referencia;
+    protected override async Task OnAfterRenderAsync(bool primeiro)
+    {
+        if (!primeiro) return;
+        referencia = DotNetObjectReference.Create(this);
+        await Js.InvokeVoidAsync("registrarVerificacaoTrabalhoLocal", referencia);
+    }
+
+    [JSInvokable] public Task<ResultadoLocal<bool>> Diagnosticar() => Diagnostico.DiagnosticarAsync();
+    [JSInvokable] public Task<ResultadoLocal<bool>> Gravar(WorkspaceCapturaLocal captura) => Capturas.GravarAsync(captura);
+    [JSInvokable] public Task<ResultadoLocal<WorkspaceCapturaLocal>> Recuperar(string conta, string data) => Capturas.RecuperarAsync(conta, DateOnly.Parse(data));
+    [JSInvokable] public Task<ResultadoLocal<bool>> Remover(string conta, string data) => Capturas.RemoverAsync(conta, DateOnly.Parse(data));
+    [JSInvokable] public Task<ResultadoLocal<IReadOnlyList<WorkspaceCapturaLocal>>> Consultar(string conta) => Capturas.ConsultarAsync(conta);
+    [JSInvokable] public string? IdentidadeConta() => Autenticacao.IdentidadeConta;
+    public void Dispose() => referencia?.Dispose();
+}
