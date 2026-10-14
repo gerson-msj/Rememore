@@ -1,0 +1,33 @@
+@page "/capturar"
+@page "/encontrar"
+@page "/rever"
+@page "/rememorar"
+@page "/conta"
+@page "/admin"
+@attribute [Authorize]
+@inject NavigationManager Navegacao
+
+<PageTitle>@Titulo</PageTitle>
+
+<main class="pagina-casca">
+    <CabecalhoAmbiente Titulo="@Titulo" MostrarRetorno AoRetornar="VoltarPrincipal" />
+    <h1 class="is-sr-only">@Titulo</h1>
+</main>
+
+@code {
+    private string Titulo => Navegacao.ToBaseRelativePath(Navegacao.Uri)
+        .Split('?', 2)[0]
+        .Trim('/')
+        .ToLowerInvariant() switch
+        {
+            "capturar" => "Capturar",
+            "encontrar" => "Encontrar Memórias",
+            "rever" => "Rever um Dia",
+            "rememorar" => "Rememorar",
+            "conta" => "Minha Conta e Meus Dados",
+            "admin" => "Administração",
+            _ => "Rememore"
+        };
+
+    private void VoltarPrincipal() => Navegacao.NavigateTo("principal");
+}

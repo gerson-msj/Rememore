@@ -1,0 +1,28 @@
+@inject NavigationManager Navegacao
+@inject EstadoAutenticacaoProvider EstadoAutenticacao
+
+<CabecalhoPagina Titulo="@Titulo" MostrarRetorno="@MostrarRetorno" MostrarSaida="true" AoRetornar="Retornar" AoSair="AbrirConfirmacao" />
+<MensagemPopup IsOpen="popupAberto" Paragrafos="@MensagemSaida" RotuloConfirmacao="Sim" RotuloCancelamento="Não" AoResponder="ResponderSaidaAsync" />
+
+@code {
+    private static readonly IReadOnlyList<string> MensagemSaida = ["Deseja realmente sair?"];
+    private bool popupAberto;
+
+    [Parameter, EditorRequired] public string Titulo { get; set; } = "";
+    [Parameter] public bool MostrarRetorno { get; set; }
+    [Parameter] public EventCallback AoRetornar { get; set; }
+
+    private Task Retornar() => AoRetornar.HasDelegate
+        ? AoRetornar.InvokeAsync()
+        : Task.CompletedTask;
+
+    private void AbrirConfirmacao() => popupAberto = true;
+
+    private async Task ResponderSaidaAsync(RespostaPopup resposta)
+    {
+        popupAberto = false;
+        if (resposta != RespostaPopup.Confirmacao) return;
+        await EstadoAutenticacao.EncerrarSessaoAsync();
+        Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "").ToString());
+    }
+}

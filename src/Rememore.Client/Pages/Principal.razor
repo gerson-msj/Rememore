@@ -2,25 +2,143 @@
 @attribute [Authorize]
 @inject NavigationManager Navegacao
 @inject EstadoAutenticacaoProvider EstadoAutenticacao
+@inject ICapacidadesAmbiente ServicoCapacidades
+@inject IPendenciaCapturaLocal ServicoPendencia
 
 <PageTitle>Rememore</PageTitle>
 
-<div class="pagina-principal">
-    <CabecalhoPagina Titulo="Rememore" MostrarSaida="true" AoSair="AbrirConfirmacao" />
-    <MensagemPopup IsOpen="popupAberto" Paragrafos="@MensagemSaida" RotuloConfirmacao="Sim" RotuloCancelamento="Não" AoResponder="ResponderSaidaAsync" />
-</div>
+<main class="pagina-principal">
+    <CabecalhoAmbiente Titulo="Rememore" />
+    <h1 class="is-sr-only">Rememore</h1>
+
+    @if (carregando)
+    {
+        <div class="principal-carregando" aria-busy="true" aria-label="Carregando jornadas"></div>
+    }
+    else
+    {
+        <div class="principal-conteudo">
+            <section class="principal-jornadas" aria-label="Jornadas">
+                <div class="principal-jornadas__grade">
+                    @foreach (var jornada in Jornadas)
+                    {
+                        <button class="card principal-jornada" type="button" aria-haspopup="@(jornada.Disponivel ? null : "dialog")" @onclick="() => AcionarJornada(jornada)">
+                            <span class="card-content principal-jornada__conteudo">
+                                <span class="principal-jornada__icone" aria-hidden="true"><i class="@jornada.ClasseIcone"></i></span>
+                                <span class="principal-jornada__texto">
+                                    <span class="principal-jornada__titulo">@jornada.Titulo</span>
+                                    <span class="principal-jornada__descricao">@jornada.Descricao</span>
+                                    @if (!jornada.Disponivel)
+                                    {
+                                        <span class="principal-jornada__disponibilidade">@jornada.MensagemIndisponibilidade</span>
+                                    }
+                                </span>
+                            </span>
+                        </button>
+                    }
+                </div>
+            </section>
+
+            <nav class="principal-acessos" aria-label="Continuidade, conta e sistema">
+                @if (pendenciaCaptura)
+                {
+                    <a class="principal-acesso principal-acesso--pendente" href="capturar">
+                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                        <span>Capturas pendentes</span>
+                    </a>
+                }
+                <a class="principal-acesso" href="conta">
+                    <i class="fa-solid fa-user-gear" aria-hidden="true"></i>
+                    <span>Minha Conta e Meus Dados</span>
+                </a>
+                @if (capacidades?.Administracao == true)
+                {
+                    <a class="principal-acesso" href="admin">
+                        <i class="fa-solid fa-wrench" aria-hidden="true"></i>
+                        <span>Administração</span>
+                    </a>
+                }
+            </nav>
+        </div>
+    }
+
+    <MensagemPopup IsOpen="popupAberto"
+                   Titulo="@jornadaSelecionada?.Titulo"
+                   Icone="@IconeJornadaSelecionada"
+                   Paragrafos="@MensagemJornadaSelecionada"
+                   MostrarCancelamento="false"
+                   RotuloConfirmacao="OK"
+                   AoResponder="FecharExplicacaoAsync" />
+</main>
 
 @code {
-    private static readonly IReadOnlyList<string> MensagemSaida = ["Deseja realmente sair?"];
+    private CapacidadesPrincipal? capacidades;
+    private bool pendenciaCaptura;
+    private bool carregando = true;
     private bool popupAberto;
+    private Jornada? jornadaSelecionada;
 
-    private void AbrirConfirmacao() => popupAberto = true;
+    private IReadOnlyList<Jornada> Jornadas =>
+    [
+        new("Capturar", "fa-solid fa-feather-pointed", "Preserve as memórias de um dia.", true, "", "capturar", []),
+        new("Encontrar Memórias", "fa-solid fa-magnifying-glass", "Localize memórias preservadas usando diferentes critérios.", capacidades?.EncontrarMemorias == true,
+            "Disponível depois que você capturar seu primeiro dia.", "encontrar",
+            [
+                "Encontre memórias já preservadas usando diferentes critérios de busca.",
+                "Para começar a utilizar este recurso, primeiro capture e preserve as memórias de pelo menos um dia."
+            ]),
+        new("Rever um Dia", "fa-solid fa-location-crosshairs", "Volte às memórias preservadas de uma data específica.", capacidades?.ReverDia == true,
+            "Disponível depois que você capturar seu primeiro dia.", "rever",
+            [
+                "Reveja as memórias que você preservou em uma data específica.",
+                "Para utilizar este recurso, primeiro capture e preserve as memórias de pelo menos um dia."
+            ]),
+        new("Rememorar", "fa-solid fa-book-open", "Explore suas memórias por categorias e períodos.", capacidades?.Rememorar == true,
+            "Disponível quando houver mais memórias preservadas.", "rememorar",
+            [
+                "Rememorar permite explorar suas memórias por categorias e períodos, ajudando a perceber relações ao longo do tempo.",
+                "Para que essa exploração faça sentido, é preciso ter memórias preservadas em pelo menos dois dias e distribuídas entre pelo menos duas categorias.",
+                "Continue capturando suas memórias e o recurso ficará disponível conforme seu acervo crescer."
+            ])
+    ];
 
-    private async Task ResponderSaidaAsync(RespostaPopup resposta)
+    private string? IconeJornadaSelecionada => jornadaSelecionada?.ClasseIcone;
+    private IReadOnlyList<string> MensagemJornadaSelecionada => jornadaSelecionada?.Explicacao ?? [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var estado = await EstadoAutenticacao.GetAuthenticationStateAsync();
+        var conta = estado.User.Identity?.Name ?? "";
+        capacidades = await ServicoCapacidades.ObterAsync(conta);
+        pendenciaCaptura = await ServicoPendencia.ExisteAsync(conta);
+        carregando = false;
+    }
+
+    private void AcionarJornada(Jornada jornada)
+    {
+        if (jornada.Disponivel)
+        {
+            Navegacao.NavigateTo(jornada.Rota);
+            return;
+        }
+
+        jornadaSelecionada = jornada;
+        popupAberto = true;
+    }
+
+    private Task FecharExplicacaoAsync(RespostaPopup _)
     {
         popupAberto = false;
-        if (resposta != RespostaPopup.Confirmacao) return;
-        await EstadoAutenticacao.EncerrarSessaoAsync();
-        Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "").ToString());
+        jornadaSelecionada = null;
+        return Task.CompletedTask;
     }
+
+    private sealed record Jornada(
+        string Titulo,
+        string ClasseIcone,
+        string Descricao,
+        bool Disponivel,
+        string MensagemIndisponibilidade,
+        string Rota,
+        IReadOnlyList<string> Explicacao);
 }

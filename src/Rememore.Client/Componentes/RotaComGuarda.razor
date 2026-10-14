@@ -1,5 +1,6 @@
 @using System.Reflection
 @inject EstadoAutenticacaoProvider Autenticacao
+@inject ICapacidadesAmbiente ServicoCapacidades
 @inject NavigationManager Navegacao
 
 @if (verificando || destinoRedirecionamento is not null)
@@ -25,9 +26,17 @@ else
         await Autenticacao.VerificarSessaoAsync();
         var anonima = RouteData.PageType.GetCustomAttribute<AllowAnonymousAttribute>() is not null;
         var protegida = RouteData.PageType.GetCustomAttribute<AuthorizeAttribute>() is not null;
+        var caminho = Navegacao.ToBaseRelativePath(Navegacao.Uri).Split('?', 2)[0].Trim('/');
 
         if (anonima && Autenticacao.Autenticado) destinoRedirecionamento = "principal";
         else if (protegida && !Autenticacao.Autenticado) destinoRedirecionamento = "entrar";
+        else if (protegida && string.Equals(caminho, "admin", StringComparison.OrdinalIgnoreCase))
+        {
+            var estado = await Autenticacao.GetAuthenticationStateAsync();
+            var conta = estado.User.Identity?.Name ?? "";
+            var capacidades = await ServicoCapacidades.ObterAsync(conta);
+            if (!capacidades.Administracao) destinoRedirecionamento = "principal";
+        }
 
         verificando = false;
 
