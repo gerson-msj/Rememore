@@ -3,7 +3,8 @@
     <label class="label" for="@Id">@Rotulo</label>
     <div class="campo-senha__controle">
         <input id="@Id" class="input" type="@(visivel ? "text" : "password")" autocomplete="@Autocomplete"
-               value="@Valor" @oninput="AlterarValor" aria-describedby="@DescricaoId" />
+               value="@Valor" @oninput="AlterarValor" aria-describedby="@DescricaoComErro"
+               aria-invalid="@(!string.IsNullOrWhiteSpace(ErroId))" />
         <button class="campo-senha__alternar" type="button" aria-label="@(visivel ? "Ocultar senha" : "Mostrar senha")"
                 aria-pressed="@visivel" @onclick="AlternarVisibilidade">
             <i class="fa-solid @(visivel ? "fa-eye-slash" : "fa-eye")" aria-hidden="true"></i>
@@ -16,11 +17,13 @@
     [Parameter, EditorRequired] public string Id { get; set; } = "senha";
     [Parameter, EditorRequired] public string Rotulo { get; set; } = "Senha";
     [Parameter] public string Autocomplete { get; set; } = "current-password";
+    [Parameter] public string? ErroId { get; set; }
     [Parameter] public string Valor { get; set; } = "";
     [Parameter] public EventCallback<string> ValorChanged { get; set; }
 
     private bool visivel;
     private string DescricaoId => $"{Id}-estado";
+    private string DescricaoComErro => string.IsNullOrWhiteSpace(ErroId) ? DescricaoId : $"{DescricaoId} {ErroId}";
     private Task AlternarVisibilidade() { visivel = !visivel; return Task.CompletedTask; }
     private Task AlterarValor(ChangeEventArgs args) => ValorChanged.InvokeAsync(args.Value?.ToString() ?? "");
 }

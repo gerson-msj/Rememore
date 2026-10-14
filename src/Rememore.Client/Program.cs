@@ -18,6 +18,8 @@ builder.Services.AddScoped(_ => new HttpClient
 builder.Services.AddScoped<EstadoTema>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<IAutenticador, AutenticadorSimulado>();
+builder.Services.AddScoped<ICadastroPorConvite, CadastroPorConviteSimulado>();
+builder.Services.AddScoped<IContextoChavePendente, ContextoChavePendenteSessionStorage>();
 builder.Services.AddScoped<EstadoAutenticacaoProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(servicos => servicos.GetRequiredService<EstadoAutenticacaoProvider>());
 

@@ -1,0 +1,147 @@
+@page "/cadastro"
+@attribute [AllowAnonymous]
+@using System.Text.Json
+@using Microsoft.JSInterop
+@inject ICadastroPorConvite ServicoCadastro
+@inject IContextoChavePendente ContextoPendente
+@inject NavigationManager Navegacao
+
+<PageTitle>Criar conta — Rememore</PageTitle>
+
+<div class="pagina-cadastro">
+    <CabecalhoPagina Titulo="Criar conta" MostrarRetorno="true" Fixo="false" AoRetornar="VoltarInicio" />
+    <main class="pagina-cadastro__conteudo">
+        <form class="pagina-cadastro__formulario" @onsubmit="CadastrarAsync" @onsubmit:preventDefault="true">
+            <div class="field">
+                <label class="label" for="convite">Convite</label>
+                <div class="control">
+                    <input id="convite" class="input @(erroConvite ? "is-danger" : "")" type="text"
+                           autocomplete="off" readonly="@conviteDaUrl" value="@convite" @oninput="ConviteAlterado"
+                           aria-invalid="@erroConvite" aria-describedby="@(erroConvite ? "convite-erro" : null)" />
+                </div>
+            </div>
+            <div class="field">
+                <label class="label" for="nome-usuario">Nome de usuário</label>
+                <div class="control">
+                    <input id="nome-usuario" class="input @(erroNome ? "is-danger" : "")" type="text"
+                           autocomplete="username" value="@nomeUsuario" @oninput="NomeAlterado"
+                           aria-invalid="@erroNome" aria-describedby="@(erroNome ? "nome-erro" : null)" />
+                </div>
+            </div>
+            <div class="field">
+                <CampoSenha Id="senha-cadastro" Rotulo="Senha" Autocomplete="new-password" Valor="@senha" ValorChanged="SenhaAlterada" ErroId="@(erroSenha ? "senha-erro" : null)" />
+            </div>
+            <section class="pagina-cadastro__informacoes" aria-label="Informações">
+                <p>Esta é uma versão experimental do Rememore. O sistema já pode ser utilizado, mas ainda está em desenvolvimento e não podemos garantir a manutenção permanente dos dados nesta fase.</p>
+                <p>Suas memórias são pessoais. O conteúdo que você registra não fica disponível para leitura por outras pessoas nem pelo administrador.</p>
+            </section>
+            <div class="pagina-cadastro__acoes">
+                <button class="button is-link" type="submit" disabled="@(!PodeEnviar)" aria-busy="@enviando">@(enviando ? "Criando conta…" : "Criar conta")</button>
+            </div>
+            @if (erroPreparacao)
+            {
+                <p class="pagina-cadastro__erro" role="alert">Não foi possível preparar a confirmação. Tente novamente.</p>
+            }
+            @if (erroConvite || erroNome || erroSenha)
+            {
+                <div class="pagina-cadastro__erros">
+                    @if (erroConvite)
+                    {
+                        <p class="pagina-cadastro__erro" id="convite-erro" role="alert">@MensagemConvite</p>
+                    }
+                    @if (erroNome)
+                    {
+                        <p class="pagina-cadastro__erro" id="nome-erro" role="alert">@MensagemNome</p>
+                    }
+                    @if (erroSenha)
+                    {
+                        <p class="pagina-cadastro__erro" id="senha-erro" role="alert">@MensagemSenha</p>
+                    }
+                </div>
+            }
+        </form>
+    </main>
+</div>
+
+@code {
+    private const string MensagemConvite = "Não foi possível usar este convite. Confira o código recebido e tente novamente.";
+    private const string MensagemNome = "Este nome de usuário não pode ser utilizado. Escolha outro e tente novamente.";
+    private const string MensagemSenha = "A senha deve ter pelo menos 6 caracteres.";
+
+    [SupplyParameterFromQuery(Name = "convite")]
+    private string? ConviteRecebido { get; set; }
+
+    private string convite = "";
+    private string nomeUsuario = "";
+    private string senha = "";
+    private bool conviteDaUrl;
+    private bool erroConvite;
+    private bool erroNome;
+    private bool erroSenha;
+    private bool enviando;
+    private string? consultaAplicada;
+    private bool PodeEnviar => !enviando
+        && !string.IsNullOrWhiteSpace(convite)
+        && !string.IsNullOrWhiteSpace(nomeUsuario)
+        && !string.IsNullOrWhiteSpace(senha);
+
+    protected override void OnParametersSet()
+    {
+        if (ConviteRecebido == consultaAplicada) return;
+        consultaAplicada = ConviteRecebido;
+        conviteDaUrl = ConviteRecebido is not null;
+        convite = ConviteRecebido ?? "";
+    }
+
+    private void VoltarInicio() => Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "").ToString());
+
+    private void ConviteAlterado(ChangeEventArgs args)
+    {
+        if (conviteDaUrl) return;
+        var novo = args.Value?.ToString() ?? "";
+        erroPreparacao = false;
+        if (novo != convite) erroConvite = false;
+        convite = novo;
+    }
+
+    private void NomeAlterado(ChangeEventArgs args)
+    {
+        var novo = args.Value?.ToString() ?? "";
+        erroPreparacao = false;
+        if (novo != nomeUsuario) erroNome = false;
+        nomeUsuario = novo;
+    }
+
+    private Task SenhaAlterada(string novo)
+    {
+        erroPreparacao = false;
+        if (novo != senha) erroSenha = false;
+        senha = novo;
+        return Task.CompletedTask;
+    }
+
+    private async Task CadastrarAsync()
+    {
+        if (!PodeEnviar) return;
+        enviando = true;
+        try
+        {
+            var resultado = await ServicoCadastro.CadastrarAsync(convite, NormalizacaoNomeUsuario.Normalizar(nomeUsuario), senha);
+            erroConvite = !resultado.ConviteValido;
+            erroNome = !resultado.NomeDisponivel;
+            erroSenha = !resultado.SenhaValida;
+
+            if (!resultado.Aceito) return;
+
+            await ContextoPendente.CriarAsync(OrigemChavePendente.Cadastro, resultado.ChaveRedefinicao!);
+            Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "cadastro/confirmacao").ToString());
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException or JsonException)
+        {
+            erroPreparacao = true;
+        }
+        finally { enviando = false; }
+    }
+
+    private bool erroPreparacao;
+}

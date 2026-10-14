@@ -37,7 +37,6 @@ dialog.mensagem-popup[open]::backdrop { opacity: 1; }
 .mensagem-popup__paragrafos p { margin: 0 0 0.75rem; line-height: 1.6; overflow-wrap: anywhere; }
 .mensagem-popup__paragrafos p:last-child { margin-bottom: 0; }
 .mensagem-popup__acoes { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem; }
-.mensagem-popup__acoes .button { min-height: 2.75rem; }
 .mensagem-popup__acao-cancelar { color: var(--cor-text); border-color: var(--cor-border); background: var(--cor-main); }
 .mensagem-popup:focus-visible, .mensagem-popup__acoes .button:focus-visible { outline: 3px solid var(--cor-link); outline-offset: 3px; }
 .mensagem-popup--principal { --popup-cor: var(--cor-primary); }

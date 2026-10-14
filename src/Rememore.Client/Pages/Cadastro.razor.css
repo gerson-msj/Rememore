@@ -1,0 +1,13 @@
+.pagina-cadastro { min-height: 100vh; }
+.pagina-cadastro__conteudo { width: min(100% - 2rem, 30rem); margin: 0 auto; padding: 2.5rem 0; }
+.pagina-cadastro__formulario { display: grid; gap: 1rem; }
+.pagina-cadastro__acoes { display: flex; justify-content: flex-end; margin-top: 1rem; }
+.pagina-cadastro__erros { display: grid; gap: .35rem; }
+.pagina-cadastro__erro { margin: .35rem 0 0; color: var(--cor-danger); }
+.pagina-cadastro__informacoes { display: grid; gap: .75rem; margin-top: .5rem; color: var(--cor-text-weak); font-size: .95rem; }
+.pagina-cadastro__informacoes p { margin: 0; }
+@media (max-width: 30rem) {
+    .pagina-cadastro__conteudo { padding-top: 1.5rem; }
+    .pagina-cadastro__acoes { justify-content: stretch; }
+    .pagina-cadastro__acoes > .button { width: 100%; }
+}

@@ -25,8 +25,5 @@
 .seletor-tema__radio:focus-visible + .seletor-tema__icone { outline: 3px solid var(--cor-link); outline-offset: 4px; border-radius: 0.2rem; }
 .seletor-tema__icone { display: grid; min-height: 1.1rem; place-items: center; }
 .seletor-tema__rotulo { font-size: 0.75rem; }
-.input, .select select, .textarea { border-color: var(--cor-border); background-color: var(--cor-main); color: var(--cor-text-strong); }
-.input::placeholder, .textarea::placeholder, .select select:invalid { color: var(--cor-text-weak); }
-.input:disabled, .textarea:disabled, .select select:disabled { border-color: var(--cor-border-weak); background-color: var(--cor-ter); color: var(--cor-text-weak); }
-:where(button, a, input, select, textarea, [tabindex]):focus-visible { outline: 3px solid var(--cor-link) !important; outline-offset: 3px; }
+.button { height: var(--bulma-control-height); padding-block: 0; }
 @media (max-width: 480px) { .seletor-tema__opcao { min-width: 2.5rem; padding-inline: 0.4rem; } .seletor-tema__rotulo { font-size: 0.67rem; } }

@@ -20,7 +20,7 @@
                 <CampoSenha Id="senha-login" Rotulo="Senha" Autocomplete="current-password" Valor="@senha" ValorChanged="SenhaAlterada" />
             </div>
             <div class="pagina-entrar__acoes">
-                <button class="button is-link is-medium" type="submit" disabled="@(!PodeEnviar)" aria-busy="@enviando">@(enviando ? "Entrando…" : "Entrar")</button>
+                <button class="button is-link" type="submit" disabled="@(!PodeEnviar)" aria-busy="@enviando">@(enviando ? "Entrando…" : "Entrar")</button>
                 <NavLink class="pagina-entrar__redefinir" href="redefinir-senha">Redefinir senha</NavLink>
             </div>
             <p class="pagina-entrar__erro" role="alert" aria-live="polite">@(erro ? MensagemErro : " ")</p>

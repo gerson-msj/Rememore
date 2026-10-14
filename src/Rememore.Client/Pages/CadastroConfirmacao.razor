@@ -1,0 +1,130 @@
+@page "/cadastro/confirmacao"
+@attribute [AllowAnonymous]
+@using System.Text.Json
+@inject IContextoChavePendente ContextoPendente
+@inject EstadoAutenticacaoProvider EstadoAutenticacao
+@inject NavigationManager Navegacao
+
+<PageTitle>Conta criada — Rememore</PageTitle>
+
+<div class="pagina-cadastro-confirmacao">
+    <CabecalhoPagina Titulo="Conta criada" Fixo="false" />
+    <main class="pagina-cadastro-confirmacao__conteudo">
+        @if (!restauracaoConcluida)
+        {
+            <div class="pagina-cadastro-confirmacao__carregando" aria-busy="true" aria-label="Restaurando confirmação"></div>
+        }
+        else if (contexto is not null)
+        {
+            <ConfirmacaoNovaChave MensagemContextual="@MensagemContextual"
+                                  MensagemApresentacaoUnica="@MensagemApresentacaoUnica"
+                                  Chave="@contexto.Chave" Disponivel="true" AoEntrar="AbrirConfirmacao" />
+            @if (erroEntrada)
+            {
+                <p class="pagina-cadastro-confirmacao__erro" role="alert">Não foi possível concluir a entrada. Tente novamente.</p>
+            }
+        }
+    </main>
+    <MensagemPopup IsOpen="popupAberto" Paragrafos="@MensagemGuardarChave" Cor="CorSemanticaPopup.Atencao"
+                   RotuloConfirmacao="Já guardei, entrar" RotuloCancelamento="Voltar e guardar" AoResponder="ResponderConfirmacaoAsync" />
+</div>
+
+@code {
+    private const string MensagemContextual = "Sua conta foi criada. Guarde esta chave: ela será necessária caso você precise redefinir sua senha no futuro.";
+    private const string MensagemApresentacaoUnica = "Esta chave será exibida somente agora. O Rememore não poderá mostrá-la novamente depois que você sair desta página.";
+    private static readonly IReadOnlyList<string> MensagemGuardarChave = ["Você já guardou sua chave de redefinição? Depois de entrar, ela não poderá ser exibida novamente."];
+    private ContextoChavePendente? contexto;
+    private bool restauracaoConcluida;
+    private bool popupAberto;
+    private bool confirmando;
+    private bool erroEntrada;
+
+    private void AbrirConfirmacao()
+    {
+        if (contexto is null || confirmando) return;
+        erroEntrada = false;
+        popupAberto = true;
+    }
+
+    private async Task ResponderConfirmacaoAsync(RespostaPopup resposta)
+    {
+        if (confirmando) return;
+
+        if (resposta == RespostaPopup.Cancelamento)
+        {
+            popupAberto = false;
+            return;
+        }
+
+        if (resposta != RespostaPopup.Confirmacao || !popupAberto || contexto is null) return;
+
+        confirmando = true;
+        erroEntrada = false;
+        var contextoAtual = contexto;
+        var contextoConsumido = false;
+        try
+        {
+            contextoConsumido = await ContextoPendente.ConsumirAsync(OrigemChavePendente.Cadastro, contextoAtual.IdentificadorContexto);
+            if (!contextoConsumido)
+            {
+                popupAberto = false;
+                contexto = null;
+                NavegarInicio();
+                return;
+            }
+
+            await EstadoAutenticacao.EstabelecerSessaoAsync();
+            popupAberto = false;
+            Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "principal").ToString(), replace: true);
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException or JsonException)
+        {
+            if (EstadoAutenticacao.Autenticado)
+            {
+                popupAberto = false;
+                Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "principal").ToString(), replace: true);
+                return;
+            }
+
+            var contextoRestaurado = !contextoConsumido;
+            if (contextoConsumido)
+            {
+                try
+                {
+                    await ContextoPendente.ReporAsync(contextoAtual);
+                    contextoRestaurado = true;
+                }
+                catch (Exception erro) when (erro is JSException or InvalidOperationException or JsonException or ArgumentException)
+                {
+                    contextoRestaurado = false;
+                }
+            }
+
+            popupAberto = false;
+            if (!contextoRestaurado)
+            {
+                contexto = null;
+                NavegarInicio();
+            }
+            else erroEntrada = true;
+        }
+        finally { confirmando = false; }
+    }
+
+    private void NavegarInicio() => Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "").ToString(), replace: true);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            contexto = await ContextoPendente.RestaurarAsync(OrigemChavePendente.Cadastro);
+            if (contexto is null)
+                Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "").ToString(), replace: true);
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException)
+        {
+            Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "").ToString(), replace: true);
+        }
+        finally { restauracaoConcluida = true; }
+    }
+}
