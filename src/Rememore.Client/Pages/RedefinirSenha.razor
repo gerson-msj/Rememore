@@ -1,0 +1,144 @@
+@page "/redefinir-senha"
+@attribute [AllowAnonymous]
+@using System.Text.Json
+@using Microsoft.JSInterop
+@inject IRedefinicaoSenha ServicoRedefinicao
+@inject IContextoChavePendente ContextoPendente
+@inject NavigationManager Navegacao
+
+<PageTitle>Redefinir senha — Rememore</PageTitle>
+
+<div class="pagina-redefinir-senha">
+    <CabecalhoPagina Titulo="Redefinir senha" MostrarRetorno="true" Fixo="false" AoRetornar="VoltarEntrar" />
+    <main class="pagina-redefinir-senha__conteudo">
+        <form class="pagina-redefinir-senha__formulario" @onsubmit="RedefinirAsync" @onsubmit:preventDefault="true">
+            <div class="field">
+                <label class="label" for="nome-usuario">Nome de usuário</label>
+                <div class="control">
+                    <input id="nome-usuario" class="input" type="text" autocomplete="username"
+                           value="@nomeUsuario" @oninput="NomeAlterado" />
+                </div>
+            </div>
+            <div class="field">
+                <label class="label" for="chave-redefinicao">Chave de redefinição</label>
+                <div class="control">
+                    <input id="chave-redefinicao" class="input" type="text" autocomplete="off"
+                           value="@chave" @oninput="ChaveAlterada" />
+                </div>
+            </div>
+            <div class="field">
+                <CampoSenha Id="nova-senha" Rotulo="Nova senha" Autocomplete="new-password"
+                            Valor="@novaSenha" ValorChanged="SenhaAlterada" ErroId="@(erroSenha ? "senha-erro" : null)" />
+                @if (erroSenha)
+                {
+                    <p class="pagina-redefinir-senha__erro" id="senha-erro" role="alert">@MensagemSenha</p>
+                }
+            </div>
+            <div class="pagina-redefinir-senha__acoes">
+                <button class="button is-link" type="submit" disabled="@(!PodeEnviar)" aria-busy="@enviando">
+                    @(enviando ? "Redefinindo…" : "Redefinir senha")
+                </button>
+            </div>
+            @if (erroConjunto)
+            {
+                <p class="pagina-redefinir-senha__erro" role="alert" aria-live="polite">@MensagemConjunto</p>
+            }
+            @if (erroPreparacao)
+            {
+                <p class="pagina-redefinir-senha__erro" role="alert">@MensagemPreparacao</p>
+            }
+        </form>
+    </main>
+</div>
+
+@code {
+    private const string MensagemSenha = "A senha deve ter pelo menos 6 caracteres.";
+    private const string MensagemConjunto = "Não foi possível redefinir a senha. Confira as informações e tente novamente.";
+    private const string MensagemPreparacao = "Não foi possível preparar a confirmação. Tente novamente.";
+
+    [SupplyParameterFromQuery(Name = "chave")]
+    private string? ChaveRecebida { get; set; }
+
+    private string nomeUsuario = "";
+    private string chave = "";
+    private string novaSenha = "";
+    private string? consultaAplicada;
+    private bool erroSenha;
+    private bool erroConjunto;
+    private bool erroPreparacao;
+    private bool enviando;
+    private bool PodeEnviar => !enviando
+        && !string.IsNullOrWhiteSpace(nomeUsuario)
+        && !string.IsNullOrWhiteSpace(chave)
+        && !string.IsNullOrWhiteSpace(novaSenha);
+
+    protected override void OnParametersSet()
+    {
+        if (ChaveRecebida == consultaAplicada) return;
+        consultaAplicada = ChaveRecebida;
+        chave = ChaveRecebida ?? "";
+    }
+
+    private void VoltarEntrar() => Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "entrar").ToString());
+
+    private void NomeAlterado(ChangeEventArgs args)
+    {
+        var novo = args.Value?.ToString() ?? "";
+        erroPreparacao = false;
+        if (novo != nomeUsuario)
+        {
+            erroConjunto = false;
+            nomeUsuario = novo;
+        }
+    }
+
+    private void ChaveAlterada(ChangeEventArgs args)
+    {
+        var nova = args.Value?.ToString() ?? "";
+        erroPreparacao = false;
+        if (nova != chave)
+        {
+            erroConjunto = false;
+            chave = nova;
+        }
+    }
+
+    private Task SenhaAlterada(string nova)
+    {
+        erroPreparacao = false;
+        if (nova != novaSenha)
+        {
+            erroSenha = false;
+            novaSenha = nova;
+        }
+        return Task.CompletedTask;
+    }
+
+    private async Task RedefinirAsync()
+    {
+        if (!PodeEnviar) return;
+        erroPreparacao = false;
+        erroSenha = novaSenha.Length < 6;
+        if (erroSenha) return;
+
+        enviando = true;
+        try
+        {
+            var nomeNormalizado = NormalizacaoNomeUsuario.Normalizar(nomeUsuario);
+            var resultado = await ServicoRedefinicao.RedefinirAsync(nomeNormalizado, chave, novaSenha);
+            if (!resultado.Aceita || resultado.NovaChave is null)
+            {
+                erroConjunto = true;
+                return;
+            }
+
+            await ContextoPendente.CriarAsync(OrigemChavePendente.RedefinicaoSenha, resultado.NovaChave);
+            Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "redefinir-senha/confirmacao").ToString());
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException or JsonException or ArgumentException)
+        {
+            erroPreparacao = true;
+        }
+        finally { enviando = false; }
+    }
+}

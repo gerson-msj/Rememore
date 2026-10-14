@@ -1,0 +1,106 @@
+@page "/redefinir-senha/confirmacao"
+@attribute [AllowAnonymous]
+@inject ConfirmacaoChavePendente ConfirmacaoPendente
+@inject NavigationManager Navegacao
+
+<PageTitle>Senha redefinida — Rememore</PageTitle>
+
+<div class="pagina-redefinir-confirmacao">
+    <CabecalhoPagina Titulo="Senha redefinida" Fixo="false" />
+    <main class="pagina-redefinir-confirmacao__conteudo">
+        @if (!restauracaoConcluida)
+        {
+            <div class="pagina-redefinir-confirmacao__carregando" aria-busy="true" aria-label="Restaurando confirmação"></div>
+        }
+        else if (contexto is not null)
+        {
+            <ConfirmacaoNovaChave MensagemContextual="@MensagemContextual"
+                                  MensagemApresentacaoUnica="@MensagemApresentacaoUnica"
+                                  Chave="@contexto.Chave" Disponivel="true" AoEntrar="AbrirConfirmacao" />
+            @if (erroEntrada)
+            {
+                <p class="pagina-redefinir-confirmacao__erro" role="alert">Não foi possível concluir a entrada. Tente novamente.</p>
+            }
+        }
+    </main>
+    <MensagemPopup IsOpen="popupAberto" Paragrafos="@MensagemGuardarChave" Cor="CorSemanticaPopup.Atencao"
+                   RotuloConfirmacao="Já guardei, entrar" RotuloCancelamento="Voltar e guardar" AoResponder="ResponderConfirmacaoAsync" />
+</div>
+
+@code {
+    private const string MensagemContextual = "Sua senha foi redefinida. Guarde esta nova chave: ela será necessária caso você precise redefinir sua senha novamente no futuro.";
+    private const string MensagemApresentacaoUnica = "Esta chave será exibida somente agora. O Rememore não poderá mostrá-la novamente depois que você sair desta página.";
+    private static readonly IReadOnlyList<string> MensagemGuardarChave = ["Você já guardou sua chave de redefinição? Depois de entrar, ela não poderá ser exibida novamente."];
+    private ContextoChavePendente? contexto;
+    private bool restauracaoConcluida;
+    private bool popupAberto;
+    private bool confirmando;
+    private bool erroEntrada;
+
+    private void AbrirConfirmacao()
+    {
+        if (contexto is null || confirmando) return;
+        erroEntrada = false;
+        popupAberto = true;
+    }
+
+    private async Task ResponderConfirmacaoAsync(RespostaPopup resposta)
+    {
+        if (confirmando) return;
+
+        if (resposta == RespostaPopup.Cancelamento)
+        {
+            popupAberto = false;
+            return;
+        }
+
+        if (resposta != RespostaPopup.Confirmacao || !popupAberto || contexto is null) return;
+
+        confirmando = true;
+        erroEntrada = false;
+        var contextoAtual = contexto;
+        try
+        {
+            var resultado = await ConfirmacaoPendente.ConfirmarEntradaAsync(OrigemChavePendente.RedefinicaoSenha, contextoAtual);
+            if (resultado == ResultadoConfirmacaoChave.ContextoInvalido)
+            {
+                popupAberto = false;
+                contexto = null;
+                NavegarInicio();
+                return;
+            }
+
+            if (resultado == ResultadoConfirmacaoChave.SessaoEstabelecida)
+            {
+                popupAberto = false;
+                Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "principal").ToString(), replace: true);
+                return;
+            }
+
+            popupAberto = false;
+            if (resultado == ResultadoConfirmacaoChave.FalhaSemContexto)
+            {
+                contexto = null;
+                NavegarInicio();
+            }
+            else erroEntrada = true;
+        }
+        finally { confirmando = false; }
+    }
+
+    private void NavegarInicio() => Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "").ToString(), replace: true);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            contexto = await ConfirmacaoPendente.RestaurarAsync(OrigemChavePendente.RedefinicaoSenha);
+            if (contexto is null) NavegarInicio();
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException)
+        {
+            NavegarInicio();
+        }
+        finally { restauracaoConcluida = true; }
+    }
+}

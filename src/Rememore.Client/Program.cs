@@ -19,7 +19,10 @@ builder.Services.AddScoped<EstadoTema>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<IAutenticador, AutenticadorSimulado>();
 builder.Services.AddScoped<ICadastroPorConvite, CadastroPorConviteSimulado>();
+builder.Services.AddScoped<IRedefinicaoSenha, RedefinicaoSenhaSimulada>();
 builder.Services.AddScoped<IContextoChavePendente, ContextoChavePendenteSessionStorage>();
+builder.Services.AddScoped<ConfirmacaoChavePendente>();
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<EstadoAutenticacaoProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(servicos => servicos.GetRequiredService<EstadoAutenticacaoProvider>());
 

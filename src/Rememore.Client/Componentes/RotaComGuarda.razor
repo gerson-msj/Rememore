@@ -2,7 +2,11 @@
 @inject EstadoAutenticacaoProvider Autenticacao
 @inject NavigationManager Navegacao
 
-@if (destinoRedirecionamento is null)
+@if (verificando || destinoRedirecionamento is not null)
+{
+    <main class="estado-inicializacao" aria-busy="true" aria-label="Verificando acesso"></main>
+}
+else
 {
     <AuthorizeRouteView RouteData="RouteData" DefaultLayout="@typeof(MainLayout)">
         <Authorizing><main class="estado-inicializacao" aria-busy="true" aria-label="Verificando acesso"></main></Authorizing>
@@ -12,15 +16,20 @@
 @code {
     [Parameter, EditorRequired] public RouteData RouteData { get; set; } = default!;
     private string? destinoRedirecionamento;
+    private bool verificando = true;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
+        verificando = true;
         destinoRedirecionamento = null;
+        await Autenticacao.VerificarSessaoAsync();
         var anonima = RouteData.PageType.GetCustomAttribute<AllowAnonymousAttribute>() is not null;
         var protegida = RouteData.PageType.GetCustomAttribute<AuthorizeAttribute>() is not null;
 
         if (anonima && Autenticacao.Autenticado) destinoRedirecionamento = "principal";
         else if (protegida && !Autenticacao.Autenticado) destinoRedirecionamento = "entrar";
+
+        verificando = false;
 
         if (destinoRedirecionamento is not null)
         {

@@ -1,0 +1,5 @@
+.pagina-redefinir-confirmacao { min-height: 100vh; }
+.pagina-redefinir-confirmacao__conteudo { width: min(100% - 2rem, 36rem); margin: 0 auto; padding: 2.5rem 0; }
+.pagina-redefinir-confirmacao__carregando { min-height: 12rem; }
+.pagina-redefinir-confirmacao__erro { margin: 1rem 0 0; color: var(--cor-danger); }
+@media (max-width: 30rem) { .pagina-redefinir-confirmacao__conteudo { padding-top: 1.5rem; } }
