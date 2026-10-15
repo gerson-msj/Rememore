@@ -1,0 +1,49 @@
+@page "/verificacao-capturar"
+@using Rememore.Client.Infraestrutura.Capturar
+@using Rememore.Client.Infraestrutura.OrientacaoProgressiva
+@using Rememore.Client.Infraestrutura.TrabalhoLocal
+@implements IDisposable
+@inject IJSRuntime JS
+@inject NavigationManager Navegacao
+@inject EstadoAutenticacaoProvider Autenticacao
+@inject FonteNivelOrientacaoSimulada FonteNivel
+@inject ComposicaoCapturaRemotaSimulada Remoto
+
+@* Andaime temporário de verificação; copiar para Pages e retirar antes do build final. *@
+@code {
+    private DotNetObjectReference<VerificacaoCapturar>? referencia;
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (!primeiroRender) return;
+        referencia = DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("registrarVerificacaoCapturar", referencia);
+    }
+
+    [JSInvokable] public void DefinirNivel(int nivel) => FonteNivel.NivelAtual = (NivelOrientacao)nivel;
+    [JSInvokable] public string? IdentidadeConta() => Autenticacao.IdentidadeConta;
+    [JSInvokable] public void NavegarSelecao() => Navegacao.NavigateTo("capturar");
+    [JSInvokable] public void NavegarCaptura(string data) => Navegacao.NavigateTo($"capturar/{data}");
+
+    [JSInvokable]
+    public void DefinirRemoto(string dataTexto, string estado, string? revisao = null)
+    {
+        var conta = Autenticacao.IdentidadeConta ?? throw new InvalidOperationException("Sessão ausente.");
+        var data = DateOnly.ParseExact(dataTexto, "yyyy-MM-dd");
+        var resposta = estado switch
+        {
+            "presente" => new ComposicaoCapturaRemota(EstadoComposicaoRemota.Presente, revisao,
+                [new MemoriaCapturaLocal("memoria-remota-teste", "Conteúdo remoto técnico", 0)]),
+            "ausente" => new ComposicaoCapturaRemota(EstadoComposicaoRemota.Ausente),
+            "falha" => new ComposicaoCapturaRemota(EstadoComposicaoRemota.Falha),
+            "inconclusiva" => new ComposicaoCapturaRemota(EstadoComposicaoRemota.Inconclusiva),
+            _ => throw new ArgumentException("Cenário remoto desconhecido.", nameof(estado))
+        };
+        Remoto.Definir(conta, data, resposta);
+    }
+
+    [JSInvokable] public int VerificacoesRemotas() => Remoto.Verificacoes;
+    [JSInvokable] public int LeiturasRemotas() => Remoto.LeiturasCompletas;
+
+    public void Dispose() => referencia?.Dispose();
+}

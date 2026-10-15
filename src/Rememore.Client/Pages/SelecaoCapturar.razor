@@ -1,0 +1,167 @@
+@page "/capturar"
+@attribute [Authorize]
+@implements IAsyncDisposable
+@using Rememore.Client.Infraestrutura.Capturar
+@using Rememore.Client.Infraestrutura.OrientacaoProgressiva
+@using Rememore.Client.Infraestrutura.TrabalhoLocal
+@inject NavigationManager Navegacao
+@inject IJSRuntime JS
+@inject EstadoAutenticacaoProvider EstadoAutenticacao
+@inject IOrientacaoProgressiva Orientacao
+@inject ICapturasLocais Capturas
+
+<PageTitle>Capturar</PageTitle>
+
+<main class="pagina-selecao-capturar">
+    <CabecalhoAmbiente Titulo="Capturar" MostrarRetorno AoRetornar="VoltarPrincipal" />
+    <div class="selecao-capturar__conteudo">
+        <h1>Escolha o dia que deseja capturar</h1>
+
+        @if (carregando)
+        {
+            <p aria-busy="true">Carregando seleção…</p>
+        }
+        else
+        {
+            @if (textoOrientacao is not null)
+            {
+                <p class="selecao-capturar__orientacao">@textoOrientacao</p>
+            }
+
+            <section class="selecao-capturar__escolha" aria-label="Seleção da data">
+                <SeletorData Valor="@valorData" Maximo="@hojeTexto" Invalido="@(!DataValida)" AoMudar="AtualizarData" />
+                <button class="button is-link selecao-capturar__acao" type="button" disabled="@(!DataValida)" @onclick="AbrirCaptura">Capturar</button>
+            </section>
+
+            @if (falhaConsulta)
+            {
+                <div class="selecao-capturar__falha" role="alert">
+                    <p>Não foi possível verificar as capturas pendentes neste dispositivo.</p>
+                    <button class="button" type="button" @onclick="CarregarPendenciasAsync">Tentar novamente</button>
+                </div>
+            }
+            else if (pendencias.Count > 0)
+            {
+                <section class="selecao-capturar__pendencias" aria-labelledby="titulo-pendencias">
+                    <h2 id="titulo-pendencias">Capturas pendentes</h2>
+                    <ul>
+                        @foreach (var pendencia in pendencias)
+                        {
+                            <li @key="pendencia.Data" class="selecao-capturar__pendencia">
+                                <a href="@($"capturar/{pendencia.Data:yyyy-MM-dd}")">@DatasCaptura.Apresentar(pendencia.Data)</a>
+                                <button class="selecao-capturar__apagar" type="button"
+                                        aria-label="@($"Apagar captura de {DatasCaptura.Apresentar(pendencia.Data)}")"
+                                        @onclick="() => SolicitarExclusao(pendencia)">
+                                    <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                </section>
+            }
+
+            @if (falhaRemocao)
+            {
+                <p class="selecao-capturar__falha" role="alert">Não foi possível apagar as alterações. Tente novamente.</p>
+            }
+        }
+    </div>
+
+    <MensagemPopup IsOpen="@popupAberto" Titulo="@TituloExclusao" Paragrafos="@MensagemExclusao"
+                   Cor="CorSemanticaPopup.Perigo" RotuloConfirmacao="Apagar" RotuloCancelamento="Cancelar"
+                   AoResponder="ResponderExclusaoAsync" />
+</main>
+
+@code {
+    private IJSObjectReference? moduloCalendario;
+    private DateOnly hoje;
+    private string hojeTexto = "";
+    private string valorData = "";
+    private string? textoOrientacao;
+    private IReadOnlyList<WorkspaceCapturaLocal> pendencias = [];
+    private WorkspaceCapturaLocal? pendenciaSelecionada;
+    private bool carregando = true;
+    private bool falhaConsulta;
+    private bool falhaRemocao;
+    private bool popupAberto;
+
+    private bool DataValida => DatasCaptura.TentarValidar(valorData, hoje, out _);
+    private string DataExclusao => pendenciaSelecionada is null ? "" : DatasCaptura.Apresentar(pendenciaSelecionada.Data);
+    private string TituloExclusao => pendenciaSelecionada?.Origem switch
+    {
+        OrigemCapturaLocal.Ausente => $"Apagar as memórias de {DataExclusao}?",
+        OrigemCapturaLocal.Presente => $"Apagar as alterações de {DataExclusao}?",
+        _ => $"Apagar o trabalho local de {DataExclusao}?"
+    };
+    private IReadOnlyList<string> MensagemExclusao => pendenciaSelecionada?.Origem switch
+    {
+        OrigemCapturaLocal.Ausente => ["As memórias desta captura ainda não foram preservadas e serão removidas."],
+        OrigemCapturaLocal.Presente => ["As alterações ainda não preservadas serão removidas. As memórias já preservadas desse dia serão mantidas."],
+        _ => ["O trabalho ainda não preservado desta captura será removido. Qualquer conteúdo já preservado será mantido."]
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        moduloCalendario = await JS.InvokeAsync<IJSObjectReference>("import", "./js/calendarioCaptura.js");
+        hojeTexto = await moduloCalendario.InvokeAsync<string>("hojeLocal");
+        hoje = DateOnly.ParseExact(hojeTexto, "yyyy-MM-dd");
+        valorData = hojeTexto;
+        textoOrientacao = await Orientacao.ObterTextoAsync(ContextosOrientacao.SelecaoCapturar);
+        await CarregarPendenciasAsync();
+        carregando = false;
+    }
+
+    private async Task CarregarPendenciasAsync()
+    {
+        var identidadeConta = EstadoAutenticacao.IdentidadeConta;
+        if (identidadeConta is null) { falhaConsulta = true; return; }
+
+        var resultado = await Capturas.ConsultarAsync(identidadeConta);
+        falhaConsulta = !resultado.Sucesso || resultado.Valor is null;
+        pendencias = falhaConsulta ? [] : resultado.Valor!
+            .Where(captura => captura.Alterado)
+            .OrderBy(captura => captura.Data)
+            .ToArray();
+    }
+
+    private void AtualizarData(string novoValor) => valorData = novoValor;
+
+    private void AbrirCaptura()
+    {
+        if (DatasCaptura.TentarValidar(valorData, hoje, out var data))
+            Navegacao.NavigateTo($"capturar/{data:yyyy-MM-dd}");
+    }
+
+    private void SolicitarExclusao(WorkspaceCapturaLocal pendencia)
+    {
+        falhaRemocao = false;
+        pendenciaSelecionada = pendencia;
+        popupAberto = true;
+    }
+
+    private async Task ResponderExclusaoAsync(RespostaPopup resposta)
+    {
+        popupAberto = false;
+        var selecionada = pendenciaSelecionada;
+        pendenciaSelecionada = null;
+        if (resposta != RespostaPopup.Confirmacao || selecionada is null) return;
+
+        var identidadeConta = EstadoAutenticacao.IdentidadeConta;
+        if (identidadeConta is null) { falhaRemocao = true; return; }
+        var remocao = await Capturas.RemoverSeAlteradoAsync(identidadeConta, selecionada.Data);
+        if (!remocao.Sucesso && remocao.Estado != EstadoOperacaoLocal.Ausente)
+        {
+            falhaRemocao = true;
+            return;
+        }
+
+        await CarregarPendenciasAsync();
+    }
+
+    private void VoltarPrincipal() => Navegacao.NavigateTo("principal");
+
+    public async ValueTask DisposeAsync()
+    {
+        if (moduloCalendario is not null) await moduloCalendario.DisposeAsync();
+    }
+}

@@ -28,6 +28,10 @@ function validarChave(identidadeConta, data) {
 function validarCaptura(captura) {
     validarChave(captura.identidadeConta, captura.data);
     if (typeof captura.alterado !== "boolean" || !Array.isArray(captura.memorias)) throw new TypeError("Composicao invalida.");
+    const origem = captura.origem ?? 0;
+    if (![0, 1, 2].includes(origem)
+        || (origem === 2 && (typeof captura.revisaoOrigem !== "string" || !captura.revisaoOrigem.trim()))
+        || (origem !== 2 && captura.revisaoOrigem != null)) throw new TypeError("Origem invalida.");
     const identidades = new Set();
     for (const memoria of captura.memorias) {
         if (typeof memoria.identidade !== "string" || !memoria.identidade.trim() || identidades.has(memoria.identidade)
@@ -45,7 +49,60 @@ function operacaoValidada(etapa, validar, executar) {
 export function gravar(captura) {
     return operacaoValidada("escrita", () => validarCaptura(captura), (banco) =>
         transacionar(banco, ["capturas"], "readwrite", "escrita", (transacao) => {
-            transacao.objectStore("capturas").put({ ...captura, memorias: [...captura.memorias].sort((a, b) => a.ordem - b.ordem) });
+            transacao.objectStore("capturas").put({ ...captura, origem: captura.origem ?? 0,
+                revisaoOrigem: captura.revisaoOrigem ?? null,
+                memorias: [...captura.memorias].sort((a, b) => a.ordem - b.ordem) });
+        }));
+}
+
+export function gravarSeLimpo(captura) {
+    return operacaoValidada("escrita", () => validarCaptura(captura), (banco) =>
+        transacionar(banco, ["capturas"], "readwrite", "escrita", (transacao, concluir) => {
+            const store = transacao.objectStore("capturas");
+            const pedido = store.get([captura.identidadeConta, captura.data]);
+            pedido.onsuccess = () => {
+                if (pedido.result?.alterado) {
+                    concluir(falha("escrita", { name: "CapturaAlterada" }));
+                    return;
+                }
+                try {
+                    store.put({ ...captura, origem: captura.origem ?? 0,
+                        revisaoOrigem: captura.revisaoOrigem ?? null,
+                        memorias: [...captura.memorias].sort((a, b) => a.ordem - b.ordem) });
+                } catch { transacao.abort(); }
+            };
+        }));
+}
+
+export function marcarAlterado(identidadeConta, data) {
+    return operacaoValidada("marcacao", () => validarChave(identidadeConta, data), (banco) =>
+        transacionar(banco, ["capturas"], "readwrite", "marcacao", (transacao, concluir) => {
+            const store = transacao.objectStore("capturas");
+            const pedido = store.get([identidadeConta, data]);
+            pedido.onsuccess = () => {
+                if (pedido.result === undefined) { concluir({ estado: "ausente" }); return; }
+                const captura = { ...pedido.result, alterado: true };
+                try {
+                    store.put(captura);
+                    concluir({ estado: "sucesso", valor: captura });
+                } catch { transacao.abort(); }
+            };
+        }));
+}
+
+export function removerSeAlterado(identidadeConta, data) {
+    return operacaoValidada("remocao", () => validarChave(identidadeConta, data), (banco) =>
+        transacionar(banco, ["capturas"], "readwrite", "remocao", (transacao, concluir) => {
+            const store = transacao.objectStore("capturas");
+            const pedido = store.get([identidadeConta, data]);
+            pedido.onsuccess = () => {
+                if (pedido.result === undefined || !pedido.result.alterado) {
+                    concluir({ estado: "ausente" });
+                    return;
+                }
+                try { store.delete([identidadeConta, data]); }
+                catch { transacao.abort(); }
+            };
         }));
 }
 

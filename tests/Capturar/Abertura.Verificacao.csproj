@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/Rememore.Client/Infraestrutura/TrabalhoLocal/ContratosTrabalhoLocal.cs" Link="ContratosTrabalhoLocal.cs" />
+    <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/AberturaCaptura.cs" Link="AberturaCaptura.cs" />
+    <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/ComposicaoCapturaRemota.cs" Link="ComposicaoCapturaRemota.cs" />
+    <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/DatasCaptura.cs" Link="DatasCaptura.cs" />
+  </ItemGroup>
+</Project>

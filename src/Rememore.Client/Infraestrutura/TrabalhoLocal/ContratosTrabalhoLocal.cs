@@ -11,8 +11,11 @@ public sealed record ResultadoLocal<T>(EstadoOperacaoLocal Estado, T? Valor = de
 
 public sealed record MemoriaCapturaLocal(string Identidade, string Conteudo, int Ordem);
 
+public enum OrigemCapturaLocal { Desconhecida, Ausente, Presente }
+
 public sealed record WorkspaceCapturaLocal(
-    string IdentidadeConta, DateOnly Data, bool Alterado, IReadOnlyList<MemoriaCapturaLocal> Memorias);
+    string IdentidadeConta, DateOnly Data, bool Alterado, IReadOnlyList<MemoriaCapturaLocal> Memorias,
+    OrigemCapturaLocal Origem = OrigemCapturaLocal.Desconhecida, string? RevisaoOrigem = null);
 
 public interface IDiagnosticoTrabalhoLocal
 {
@@ -26,4 +29,7 @@ public interface ICapturasLocais
     Task<ResultadoLocal<WorkspaceCapturaLocal>> RecuperarAsync(string identidadeConta, DateOnly data);
     Task<ResultadoLocal<bool>> RemoverAsync(string identidadeConta, DateOnly data);
     Task<ResultadoLocal<IReadOnlyList<WorkspaceCapturaLocal>>> ConsultarAsync(string identidadeConta);
+    Task<ResultadoLocal<bool>> GravarSeLimpoAsync(WorkspaceCapturaLocal captura);
+    Task<ResultadoLocal<WorkspaceCapturaLocal>> MarcarAlteradoAsync(string identidadeConta, DateOnly data);
+    Task<ResultadoLocal<bool>> RemoverSeAlteradoAsync(string identidadeConta, DateOnly data);
 }

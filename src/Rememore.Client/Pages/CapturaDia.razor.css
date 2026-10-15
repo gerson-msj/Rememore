@@ -1,0 +1,10 @@
+.pagina-captura-dia { min-height: 100vh; background: var(--cor-background); }
+.captura-dia__conteudo { display: grid; width: min(100%, 42rem); margin-inline: auto; padding: clamp(1.5rem, 5vw, 3.5rem) var(--rememore-espaco-lateral) 4rem; gap: 1.4rem; }
+.captura-dia__conteudo h1 { margin: 0; color: var(--cor-title); font-size: clamp(1.55rem, 4vw, 2.15rem); line-height: 1.2; }
+.captura-dia__conteudo > p { margin: 0; color: var(--cor-text-strong); line-height: 1.6; }
+.captura-dia__conteudo > .button { justify-self: start; min-height: 2.8rem; }
+.captura-dia__estado { display: flex; align-items: center; gap: 0.8rem; padding: 1rem 1.2rem; border: 1px solid var(--cor-border-weak); border-radius: 0.8rem; background: var(--cor-main); color: var(--cor-text-strong); font-weight: 600; }
+.captura-dia__estado-icone { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 50%; background: var(--cor-bis); color: var(--cor-link); }
+.captura-dia__controle { display: grid; justify-items: start; gap: 1rem; margin-top: 1rem; padding: 1.3rem; border: 1px dashed var(--cor-border); border-radius: 0.8rem; color: var(--cor-text-weak); }
+.captura-dia__controle h2 { margin: 0; color: var(--cor-text-strong); font-size: 0.98rem; font-weight: 600; }
+.captura-dia__controle p { margin: 0; color: var(--cor-danger); }

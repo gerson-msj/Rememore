@@ -1,3 +1,5 @@
+using Rememore.Client.Infraestrutura.TrabalhoLocal;
+
 namespace Rememore.Client.Infraestrutura;
 
 public sealed record CapacidadesPrincipal(
@@ -33,15 +35,5 @@ public sealed class CapacidadesAmbienteSimuladas : ICapacidadesAmbiente
 
 public interface IPendenciaCapturaLocal
 {
-    Task<bool> ExisteAsync(string identificadorConta);
-}
-
-public sealed class PendenciaCapturaLocalSimulada : IPendenciaCapturaLocal
-{
-    public string ContaAssociada { get; set; } = "usuario";
-    public bool AmbienteAtualPossuiPendencia { get; set; }
-
-    public Task<bool> ExisteAsync(string identificadorConta) => Task.FromResult(
-        AmbienteAtualPossuiPendencia
-        && string.Equals(identificadorConta, ContaAssociada, StringComparison.Ordinal));
+    Task<ResultadoLocal<bool>> ExisteAsync(string identidadeConta);
 }

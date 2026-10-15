@@ -32,6 +32,7 @@ async function cenario(nome, executar) {
 const contaA = '5e12a398-04f7-4e61-9c2d-6ad97c15b842';
 const contaB = '179beb1d-98cd-4224-bc19-6802c4793912';
 const captura = { identidadeConta: contaA, data: '2026-10-14', alterado: false,
+    origem: 0, revisaoOrigem: null,
     memorias: [{ identidade: '21c9e8bb-fd2f-409e-a88c-1dfc6e42aa70', conteudo: 'Primeira', ordem: 0 },
         { identidade: '643a3c38-e9e7-4ef7-ac89-884e244b6717', conteudo: 'Segunda', ordem: 1 }] };
 async function verificarCaptura(esperada = captura) {
@@ -90,6 +91,20 @@ async function verificarCaptura(esperada = captura) {
             assert.equal((await chamar('Gravar', alterada)).estado, 0);
             await verificarCaptura(alterada);
             assert.equal((await chamar('Consultar', contaA)).valor.length, 1);
+        });
+        await cenario('Marcação e descarte transacionais protegem Alterado', async () => {
+            const temporaria = { ...captura, data: '2026-10-12', memorias: [] };
+            assert.equal((await chamar('GravarSeLimpo', temporaria)).estado, 0);
+            assert.equal((await chamar('RemoverSeAlterado', contaA, temporaria.data)).estado, 1);
+            assert.equal((await chamar('Recuperar', contaA, temporaria.data)).estado, 0);
+            assert.equal((await chamar('MarcarAlterado', contaA, temporaria.data)).valor.alterado, true);
+            assert.equal((await chamar('MarcarAlterado', contaA, temporaria.data)).valor.alterado, true);
+            const substituicao = await chamar('GravarSeLimpo', { ...temporaria, alterado: false });
+            assert.equal(substituicao.estado, 3);
+            assert.equal(substituicao.falha.codigo, 'CapturaAlterada');
+            assert.equal((await chamar('Recuperar', contaA, temporaria.data)).valor.alterado, true);
+            assert.equal((await chamar('RemoverSeAlterado', contaA, temporaria.data)).estado, 0);
+            assert.equal((await chamar('Recuperar', contaA, temporaria.data)).estado, 1);
         });
         await cenario('Diagnóstico não modifica captura e não deixa resíduos', async () => {
             assert.equal((await chamar('Diagnosticar')).estado, 0);
@@ -185,28 +200,27 @@ async function verificarCaptura(esperada = captura) {
             assert.ok(respostas.every(r => r.estado === 3));
             await verificarCaptura(alterada);
         });
-        await cenario('Upgrade bloqueado, falha de migração e evolução não destrutiva', async () => {
+        await cenario('Upgrade bloqueado, falha de migração e preservação de Alterado legado', async () => {
             const r = await pagina.evaluate(async (captura) => {
                 const { abrirBanco, transacionar, migracoes } = await import('/js/bancoTrabalhoLocal.js');
                 const nome = 'rememore.verificacao.evolucao';
-                const banco = await abrirBanco(nome);
-                await transacionar(banco, ['capturas'], 'readwrite', 'teste', tx => tx.objectStore('capturas').put(captura));
+                const banco = await abrirBanco(nome, [migracoes[0]]);
+                const { origem, revisaoOrigem, ...legado } = captura;
+                await transacionar(banco, ['capturas'], 'readwrite', 'teste', tx => tx.objectStore('capturas').put(legado));
                 banco.onversionchange = () => {}; // Simula outra aba antiga mantendo conexão aberta.
-                const evolucoes = [...migracoes, (_, tx) => tx.objectStore('capturas').createIndex('porData', 'data')];
                 let bloqueado;
-                try { await abrirBanco(nome, evolucoes); }
+                try { await abrirBanco(nome); }
                 catch (erro) { bloqueado = erro.etapa; }
                 banco.close();
                 // A abertura abandonada deve abortar o upgrade quando a outra aba liberar.
-                const anterior = await abrirBanco(nome);
+                const anterior = await abrirBanco(nome, [migracoes[0]]);
                 const versaoAposBloqueio = anterior.version;
                 anterior.close();
                 let falhou;
-                try { await abrirBanco(nome, [...migracoes, db => db.createObjectStore('capturas')]); }
+                try { await abrirBanco(nome, [migracoes[0], db => db.createObjectStore('capturas')]); }
                 catch (erro) { falhou = erro.etapa; }
-                const novo = await abrirBanco(nome, evolucoes);
+                const novo = await abrirBanco(nome);
                 const versao = novo.version;
-                const indice = novo.transaction('capturas').objectStore('capturas').indexNames.contains('porData');
                 const leitura = await transacionar(novo, ['capturas'], 'readonly', 'teste', (tx, concluir) => {
                     const pedido = tx.objectStore('capturas').get([captura.identidadeConta, captura.data]);
                     pedido.onsuccess = () => concluir({ estado: 'sucesso', valor: pedido.result });
@@ -216,20 +230,19 @@ async function verificarCaptura(esperada = captura) {
                     const pedido = indexedDB.deleteDatabase(nome);
                     pedido.onsuccess = resolve; pedido.onerror = reject;
                 });
-                return { bloqueado, falhou, versaoAposBloqueio, versao, indice, leitura };
+                return { bloqueado, falhou, versaoAposBloqueio, versao, leitura };
             }, alterada);
             assert.equal(r.bloqueado, 'upgradeBloqueado');
             assert.equal(r.falhou, 'upgrade');
             assert.equal(r.versaoAposBloqueio, 1);
             assert.equal(r.versao, 2);
-            assert.equal(r.indice, true);
             assert.deepEqual(r.leitura.valor, alterada);
         });
-        await cenario('Principal e casca Capturar continuam disponíveis', async () => {
+        await cenario('Principal e Seleção de Capturar continuam disponíveis', async () => {
             await pagina.goto(`${origem}/principal`);
             await pagina.locator('h1.is-sr-only').filter({ hasText: 'Rememore' }).waitFor();
             await pagina.goto(`${origem}/capturar`);
-            await pagina.getByRole('heading', { name: 'Capturar', exact: true, level: 1 }).waitFor();
+            await pagina.getByRole('heading', { name: 'Escolha o dia que deseja capturar', level: 1 }).waitFor();
         });
         fs.writeFileSync(path.join(pasta, 'resultado.json'), JSON.stringify({ data: new Date().toISOString(), origem, perfil, resultados }, null, 2));
         console.log(`${resultados.length} cenários aprovados. Evidência: ${pasta}`);

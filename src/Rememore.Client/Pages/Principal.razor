@@ -40,6 +40,10 @@
             </section>
 
             <nav class="principal-acessos" aria-label="Continuidade, conta e sistema">
+                @if (falhaPendencias)
+                {
+                    <p class="principal-pendencias-erro" role="alert">Não foi possível verificar as capturas pendentes neste dispositivo.</p>
+                }
                 @if (pendenciaCaptura)
                 {
                     <a class="principal-acesso principal-acesso--pendente" href="capturar">
@@ -74,6 +78,7 @@
 @code {
     private CapacidadesPrincipal? capacidades;
     private bool pendenciaCaptura;
+    private bool falhaPendencias;
     private bool carregando = true;
     private bool popupAberto;
     private Jornada? jornadaSelecionada;
@@ -108,9 +113,16 @@
     protected override async Task OnInitializedAsync()
     {
         var estado = await EstadoAutenticacao.GetAuthenticationStateAsync();
-        var conta = estado.User.Identity?.Name ?? "";
-        capacidades = await ServicoCapacidades.ObterAsync(conta);
-        pendenciaCaptura = await ServicoPendencia.ExisteAsync(conta);
+        var nomeConta = estado.User.Identity?.Name ?? "";
+        capacidades = await ServicoCapacidades.ObterAsync(nomeConta);
+        var identidadeConta = EstadoAutenticacao.IdentidadeConta;
+        if (identidadeConta is not null)
+        {
+            var resultado = await ServicoPendencia.ExisteAsync(identidadeConta);
+            falhaPendencias = !resultado.Sucesso;
+            pendenciaCaptura = resultado.Sucesso && resultado.Valor == true;
+        }
+        else falhaPendencias = true;
         carregando = false;
     }
 

@@ -19,6 +19,9 @@
 
     [JSInvokable] public Task<ResultadoLocal<bool>> Diagnosticar() => Diagnostico.DiagnosticarAsync();
     [JSInvokable] public Task<ResultadoLocal<bool>> Gravar(WorkspaceCapturaLocal captura) => Capturas.GravarAsync(captura);
+    [JSInvokable] public Task<ResultadoLocal<bool>> GravarSeLimpo(WorkspaceCapturaLocal captura) => Capturas.GravarSeLimpoAsync(captura);
+    [JSInvokable] public Task<ResultadoLocal<WorkspaceCapturaLocal>> MarcarAlterado(string conta, string data) => Capturas.MarcarAlteradoAsync(conta, DateOnly.Parse(data));
+    [JSInvokable] public Task<ResultadoLocal<bool>> RemoverSeAlterado(string conta, string data) => Capturas.RemoverSeAlteradoAsync(conta, DateOnly.Parse(data));
     [JSInvokable] public Task<ResultadoLocal<WorkspaceCapturaLocal>> Recuperar(string conta, string data) => Capturas.RecuperarAsync(conta, DateOnly.Parse(data));
     [JSInvokable] public Task<ResultadoLocal<bool>> Remover(string conta, string data) => Capturas.RemoverAsync(conta, DateOnly.Parse(data));
     [JSInvokable] public Task<ResultadoLocal<IReadOnlyList<WorkspaceCapturaLocal>>> Consultar(string conta) => Capturas.ConsultarAsync(conta);

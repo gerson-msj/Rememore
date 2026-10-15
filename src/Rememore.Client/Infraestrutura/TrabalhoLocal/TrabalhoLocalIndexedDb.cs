@@ -15,6 +15,12 @@ public sealed class TrabalhoLocalIndexedDb(IJSRuntime js) : IDiagnosticoTrabalho
         InvocarAsync<bool>("remover", identidadeConta, data);
     public Task<ResultadoLocal<IReadOnlyList<WorkspaceCapturaLocal>>> ConsultarAsync(string identidadeConta) =>
         InvocarAsync<IReadOnlyList<WorkspaceCapturaLocal>>("consultar", identidadeConta);
+    public Task<ResultadoLocal<bool>> GravarSeLimpoAsync(WorkspaceCapturaLocal captura) =>
+        InvocarAsync<bool>("gravarSeLimpo", captura);
+    public Task<ResultadoLocal<WorkspaceCapturaLocal>> MarcarAlteradoAsync(string identidadeConta, DateOnly data) =>
+        InvocarAsync<WorkspaceCapturaLocal>("marcarAlterado", identidadeConta, data);
+    public Task<ResultadoLocal<bool>> RemoverSeAlteradoAsync(string identidadeConta, DateOnly data) =>
+        InvocarAsync<bool>("removerSeAlterado", identidadeConta, data);
 
     private async Task<ResultadoLocal<T>> InvocarAsync<T>(string operacao, params object?[] argumentos)
     {
