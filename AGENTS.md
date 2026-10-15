@@ -75,6 +75,10 @@ O cliente estático, seus artefatos WASM e qualquer arquivo distribuído são **
 
 `.docs/README.md` mantém o índice de leitura obrigatória e seletiva. `.docs/memoria-tecnica.md` é curta, atual e necessária na abertura. O programador pode criar referências temáticas quando houver conhecimento reutilizável: decisões não óbvias, contratos públicos, componentes compartilhados, limitações verificadas e caminhos relevantes. Registre **o resultado útil** do raciocínio, não um diário, catálogo de funções ou teoria genérica. Corrija ou remova conhecimento superado; decisões da Stack1 são históricas, não memória técnica atual da Stack2. Alterações em contratos compartilhados pedem atualização concomitante dessa memória.
 
+## Auditoria independente (somente sob solicitação)
+
+**Apenas quando o operador solicitar expressamente uma auditoria de Especificação** (por exemplo, “faça a auditoria da especificação 05.XX.YY”), leia integralmente `.docs/AUDITORIA.md` e siga esse procedimento para a unidade indicada. A auditoria é opcional, independente e posterior à implementação e ao Parecer final. **Não leia nem execute `AUDITORIA.md` automaticamente** no início das sessões, no desenvolvimento, em checkpoints, no encerramento habitual ou durante a reconciliação; uma mera menção à auditoria também não a aciona. Quando solicitada, siga as regras específicas de auditoria, em vez de iniciar novo ciclo de implementação: inspecione a entrega, registre o relatório após o Parecer final no mesmo Markdown, sem modificar o trabalho auditado, e deixe ao operador as decisões sobre os achados.
+
 ## Encerramento, Parecer e reconciliação
 
 **Somente o operador encerra ou cancela** a especificação. Quando ele determinar encerramento:
