@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Rememore.Client;
 using Rememore.Client.Infraestrutura;
+using Rememore.Client.Infraestrutura.OrientacaoProgressiva;
 using Rememore.Client.Infraestrutura.TrabalhoLocal;
 using Microsoft.AspNetCore.Components.Authorization;
 
@@ -17,6 +18,10 @@ builder.Services.AddScoped(_ => new HttpClient
     BaseAddress = new Uri(apiBaseUrl)
 });
 builder.Services.AddScoped<EstadoTema>();
+builder.Services.AddSingleton(CatalogoOrientacoes.CriarPadrao());
+builder.Services.AddScoped<FonteNivelOrientacaoSimulada>();
+builder.Services.AddScoped<IFonteNivelOrientacao>(servicos => servicos.GetRequiredService<FonteNivelOrientacaoSimulada>());
+builder.Services.AddScoped<IOrientacaoProgressiva, ResolvedorOrientacaoProgressiva>();
 builder.Services.AddScoped<TrabalhoLocalIndexedDb>();
 builder.Services.AddScoped<IDiagnosticoTrabalhoLocal>(servicos => servicos.GetRequiredService<TrabalhoLocalIndexedDb>());
 builder.Services.AddScoped<ICapturasLocais>(servicos => servicos.GetRequiredService<TrabalhoLocalIndexedDb>());

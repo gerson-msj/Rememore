@@ -30,6 +30,8 @@ Ao **concluir cada checkpoint**, registre imediatamente: o que foi implementado;
 
 Valide progressivamente com o operador quando isso evitar retrabalho. O programador executa verificações técnicas e, quando úteis, testes de regras e cenários determinísticos; o operador confirma experiência visual e funcional. Testes não têm meta artificial de cobertura; não apague testes úteis automaticamente, nem confunda testes contra mocks com testes do backend real.
 
+Ao entregar a última atividade de implementação prevista em uma Especificação, informe explicitamente ao operador que **toda a implementação prevista na Especificação foi concluída**. Comunique esse marco mesmo quando ainda houver testes, avaliação do operador, possíveis ajustes ou encerramento pendentes; registre cada etapa com seu estado próprio.
+
 ## Estratégia funcional e mocks
 
 Reconstrua primeiro o **frontend funcional real**: páginas, rotas, estados, interface e comportamento. Dependências de backend ainda não implementadas são simuladas **no projeto Blazor**, atrás de contratos C# explícitos e substituíveis via injeção de dependências. Simule a **dependência externa**, não a página. Mocks podem ser stateful quando o fluxo exigir (preservação, conflitos, sincronização), com dados determinísticos e somente o escopo necessário. Não misture estado remoto simulado e workspace local.
