@@ -30,6 +30,8 @@ Ao **concluir cada checkpoint**, registre imediatamente: o que foi implementado;
 
 Valide progressivamente com o operador quando isso evitar retrabalho. O programador executa verificações técnicas e, quando úteis, testes de regras e cenários determinísticos; o operador confirma experiência visual e funcional. Testes não têm meta artificial de cobertura; não apague testes úteis automaticamente, nem confunda testes contra mocks com testes do backend real.
 
+Ao interpretar a Especificação, identifique os requisitos funcionais, regras, estados, UX, garantias técnicas e critérios de aceite pertinentes. Planeje verificações que demonstrem seu cumprimento, contemplando situações normais, alternativas e falhas relevantes ao risco da unidade. Utilize testes automatizados, verificações técnicas ou validações no navegador conforme a necessidade concreta, sem criar estruturas de teste ou proteções desproporcionais. Registre o que foi efetivamente verificado e o que permanece sem comprovação.
+
 Ao entregar a última atividade de implementação prevista em uma Especificação, informe explicitamente ao operador que **toda a implementação prevista na Especificação foi concluída**. Comunique esse marco mesmo quando ainda houver testes, avaliação do operador, possíveis ajustes ou encerramento pendentes; registre cada etapa com seu estado próprio.
 
 ## Estratégia funcional e mocks
