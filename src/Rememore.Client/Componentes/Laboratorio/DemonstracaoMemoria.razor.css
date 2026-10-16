@@ -1,0 +1,19 @@
+.demonstracao-memoria { display: grid; gap: 1rem; }
+.memoria-controles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); align-items: end; gap: 0.85rem; }
+.memoria-controles .field { margin: 0; }
+.memoria-controles__manual { grid-column: 1 / -1; }
+.memoria-controles__manual textarea { min-height: 5rem; }
+.memoria-controles__inativa { display: flex; min-height: 2.75rem; align-items: center; gap: 0.5rem; color: var(--cor-text); }
+.memoria-amostra { display: grid; gap: 0.75rem; }
+.memoria-diagnostico { margin: 0; }
+.memoria-diagnostico p { margin: 0; }
+.memoria-diagnostico ul { display: flex; flex-wrap: wrap; gap: 0.25rem 0.85rem; margin: 0.25rem 0 0; padding: 0; list-style: none; }
+.demonstracao-memoria__secao-lista { display: grid; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--cor-border-weak); }
+.demonstracao-memoria__secao-lista h3 { margin: 0; color: var(--cor-title); font-size: 1.05rem; }
+.memoria-lista-controle { width: min(100%, 15rem); margin: 0; }
+.memoria-lista { display: grid; gap: 0.65rem; }
+.memoria-lista__ajuda { margin: 0; }
+
+@media (max-width: 480px) {
+    .memoria-controles { grid-template-columns: minmax(0, 1fr); }
+}
