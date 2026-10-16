@@ -1,7 +1,5 @@
-@page "/"
+@page "/inicio"
 @attribute [AllowAnonymous]
-@implements IDisposable
-@inject EstadoTema Tema
 
 <PageTitle>Rememore</PageTitle>
 
@@ -23,15 +21,3 @@
         </section>
     </main>
 </div>
-
-@code {
-    protected override void OnInitialized() => Tema.Alterado += Atualizar;
-
-    protected override async Task OnAfterRenderAsync(bool primeiroRender)
-    {
-        if (primeiroRender) await Tema.InicializarHomeAsync();
-    }
-
-    private void Atualizar() => _ = InvokeAsync(StateHasChanged);
-    public void Dispose() => Tema.Alterado -= Atualizar;
-}

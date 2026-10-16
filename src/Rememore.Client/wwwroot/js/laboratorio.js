@@ -6,13 +6,48 @@ export function sistemaEscuro() { return consultaSistema.matches; }
 export function aplicar(aparencia, cores) {
     const raiz = document.documentElement;
     raiz.dataset.aparencia = aparencia;
-    const nomes = ["main", "bis", "ter", "background", "text", "text-weak", "text-strong", "title", "border", "border-weak", "primary", "link", "info", "success", "warning", "danger"];
-    for (const nome of nomes) {
-        raiz.style.removeProperty(`--cor-${nome}`);
+    if (aparencia === "sistema") {
+        delete raiz.dataset.theme;
+        raiz.style.removeProperty("color-scheme");
+    } else {
+        raiz.dataset.theme = aparencia === "escuro" ? "dark" : "light";
+        raiz.style.colorScheme = aparencia === "escuro" ? "dark" : "light";
     }
-    if (cores) for (const [nome, valor] of Object.entries(cores)) raiz.style.setProperty(`--cor-${nome}`, valor);
-    const coresEfetivas = cores ?? Object.fromEntries(nomes.map(nome => [nome, getComputedStyle(raiz).getPropertyValue(`--cor-${nome}`).trim()]));
-    for (const token of ["primary", "link", "info", "success", "warning", "danger"]) {
+    const variaveisBulma = {
+        main: "scheme-main",
+        bis: "scheme-main-bis",
+        ter: "scheme-main-ter",
+        background: "background",
+        text: "text",
+        "text-weak": "text-weak",
+        "text-strong": "text-strong",
+        title: "title-color",
+        border: "border",
+        "border-weak": "border-weak",
+        primary: "primary",
+        link: "link",
+        info: "info",
+        success: "success",
+        warning: "warning",
+        danger: "danger",
+    };
+    for (const [nome, variavel] of Object.entries(variaveisBulma)) {
+        raiz.style.removeProperty(`--cor-${nome}`);
+        raiz.style.removeProperty(`--bulma-${variavel}`);
+    }
+    if (cores) {
+        for (const [nome, valor] of Object.entries(cores)) {
+            const variavel = variaveisBulma[nome];
+            if (!variavel) continue;
+            raiz.style.setProperty(`--cor-${nome}`, valor);
+            raiz.style.setProperty(`--bulma-${variavel}`, valor);
+        }
+    }
+    const coresEfetivas = cores ?? Object.fromEntries(Object.keys(variaveisBulma).map(nome => [nome, getComputedStyle(raiz).getPropertyValue(`--cor-${nome}`).trim()]));
+    for (const token of ["text", "primary", "link", "info", "success", "warning", "danger"]) {
+        raiz.style.removeProperty(`--bulma-${token}-h`);
+        raiz.style.removeProperty(`--bulma-${token}-s`);
+        raiz.style.removeProperty(`--bulma-${token}-l`);
         const valor = coresEfetivas[token];
         if (!valor || !/^#[0-9a-f]{6}$/i.test(valor)) continue;
         const [h, s, l] = paraHsl(valor);

@@ -1,0 +1,176 @@
+@inject EstadoTema Tema
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div class="field">
+    <label class="label">Paleta em edição</label>
+    <div class="buttons has-addons" role="group" aria-label="Tema da paleta">
+        <button class="button @(TemaEditado == PreferenciaTema.Claro ? "is-link" : string.Empty)" type="button" aria-pressed="@(TemaEditado == PreferenciaTema.Claro)" @onclick="() => SelecionarTema(PreferenciaTema.Claro)">Claro</button>
+        <button class="button @(TemaEditado == PreferenciaTema.Escuro ? "is-link" : string.Empty)" type="button" aria-pressed="@(TemaEditado == PreferenciaTema.Escuro)" @onclick="() => SelecionarTema(PreferenciaTema.Escuro)">Escuro</button>
+    </div>
+</div>
+
+<button class="button is-small mb-5" type="button" @onclick="RestaurarPaletaAsync">Restaurar paleta aprovada</button>
+
+@if (Tema.AvisoRascunhoNaoSalvo.Length > 0)
+{
+    <p class="help is-danger mb-4" role="status">@Tema.AvisoRascunhoNaoSalvo</p>
+}
+
+@foreach (var grupo in Grupos)
+{
+    <section class="mb-5">
+        <h3 class="title is-6">@grupo.Titulo</h3>
+        <div class="columns is-multiline">
+            @foreach (var cor in grupo.Cores)
+            {
+                var id = IdCor(cor.Chave);
+                <div class="column is-half-tablet is-one-third-desktop">
+                    <div class="field">
+                        <label class="label" for="@id">@cor.Rotulo <code>@PaletaAtual[cor.Chave]</code></label>
+                        <div class="control">
+                            <input class="input" id="@id" type="color" value="@PaletaAtual[cor.Chave]" aria-label="Escolher cor: @cor.Rotulo" @oninput="args => AlterarCorAsync(cor.Chave, args.Value?.ToString())" />
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+}
+
+<h3 class="title is-6">Prévia da paleta @NomeTema</h3>
+<div data-theme="@TemaCss" style="@EstiloPrevia">
+    <div class="box">
+        <h4 class="title is-5">Uma lembrança do dia</h4>
+        <p>Um texto de exemplo para observar a leitura nesta paleta.</p>
+        <p style="color: var(--bulma-text-weak);">Este é um texto secundário.</p>
+        <div class="buttons">
+            <button class="button is-primary" type="button">Primária</button>
+            <button class="button is-link" type="button">Link</button>
+            <button class="button is-info" type="button">Informação</button>
+            <button class="button is-success" type="button">Sucesso</button>
+            <button class="button is-warning" type="button">Aviso</button>
+            <button class="button is-danger" type="button">Erro</button>
+        </div>
+    </div>
+</div>
+
+<div class="field mt-5">
+    <label class="label" for="paleta-lab-exportacao">Paleta @NomeTema</label>
+    <div class="control">
+        <textarea class="textarea" id="paleta-lab-exportacao" rows="8" readonly value="@TextoExportado"></textarea>
+    </div>
+    <p class="help">Os rascunhos não alteram o CSS do projeto. Copie esta paleta para aplicar as cores aprovadas ao CSS fixo.</p>
+</div>
+<div class="buttons">
+    <button class="button is-link" type="button" @onclick="CopiarAsync">Copiar paleta @NomeTema</button>
+</div>
+<p class="help" role="status" aria-live="polite">@MensagemCopia</p>
+
+@code {
+    private PreferenciaTema TemaEditado { get; set; } = PreferenciaTema.Claro;
+    private IJSObjectReference? modulo;
+    private string MensagemCopia { get; set; } = "";
+
+    private static readonly (string Titulo, (string Chave, string Rotulo)[] Cores)[] Grupos =
+    [
+        ("Superfícies", [("main", "Fundo principal"), ("bis", "Superfície alternativa"), ("ter", "Superfície suave"), ("background", "Fundo secundário")]),
+        ("Texto e bordas", [("text", "Texto"), ("text-weak", "Texto secundário"), ("text-strong", "Texto forte"), ("title", "Títulos"), ("border", "Bordas"), ("border-weak", "Bordas sutis")]),
+        ("Cores semânticas", [("primary", "Primária"), ("link", "Link"), ("info", "Informação"), ("success", "Sucesso"), ("warning", "Aviso"), ("danger", "Erro")])
+    ];
+
+    private IReadOnlyDictionary<string, string> PaletaAtual => TemaEditado == PreferenciaTema.Escuro ? Tema.PaletaEscura : Tema.PaletaClara;
+    private string NomeTema => TemaEditado == PreferenciaTema.Escuro ? "escura" : "clara";
+    private string TemaCss => TemaEditado == PreferenciaTema.Escuro ? "dark" : "light";
+    private string TextoExportado => Tema.ExportarPaleta(TemaEditado);
+
+    private void SelecionarTema(PreferenciaTema tema)
+    {
+        TemaEditado = tema;
+        MensagemCopia = "";
+    }
+
+    private async Task CopiarAsync()
+    {
+        try
+        {
+            modulo ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/laboratorio.js");
+            var copiado = await modulo.InvokeAsync<bool>("copiar", TextoExportado);
+            MensagemCopia = copiado ? "Paleta copiada." : "Selecione e copie o texto no campo acima.";
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException)
+        {
+            MensagemCopia = "Selecione e copie o texto no campo acima.";
+        }
+    }
+
+    private Task AlterarCorAsync(string chave, string? valor) => valor is null
+        ? Task.CompletedTask
+        : Tema.AtualizarCorAsync(TemaEditado, chave, valor);
+
+    private Task RestaurarPaletaAsync() => Tema.RestaurarPaletaAsync(TemaEditado);
+
+    private string IdCor(string chave) => $"paleta-lab-{NomeTema}-{chave}";
+
+    private string EstiloPrevia
+    {
+        get
+        {
+            var declaracoes = new List<string>
+            {
+                Variavel("scheme-main", "main"),
+                Variavel("scheme-main-bis", "bis"),
+                Variavel("scheme-main-ter", "ter"),
+                Variavel("background", "background"),
+                Variavel("text", "text"),
+                Variavel("text-weak", "text-weak"),
+                Variavel("text-strong", "text-strong"),
+                Variavel("title-color", "title"),
+                Variavel("border", "border"),
+                Variavel("border-weak", "border-weak")
+            };
+
+            foreach (var nome in new[] { "text", "primary", "link", "info", "success", "warning", "danger" })
+            {
+                var (h, s, l) = ParaHsl(PaletaAtual[nome]);
+                declaracoes.Add(Variavel(nome, nome));
+                declaracoes.Add($"--bulma-{nome}-h: {h}deg");
+                declaracoes.Add($"--bulma-{nome}-s: {s}%");
+                declaracoes.Add($"--bulma-{nome}-l: {l}%");
+            }
+
+            return string.Join(";", declaracoes);
+        }
+    }
+
+    private string Variavel(string nome, string chave) => $"--bulma-{nome}: {PaletaAtual[chave]}";
+
+    private static (int Hue, int Saturation, int Lightness) ParaHsl(string hex)
+    {
+        var r = Convert.ToInt32(hex.Substring(1, 2), 16) / 255d;
+        var g = Convert.ToInt32(hex.Substring(3, 2), 16) / 255d;
+        var b = Convert.ToInt32(hex.Substring(5, 2), 16) / 255d;
+        var max = Math.Max(r, Math.Max(g, b));
+        var min = Math.Min(r, Math.Min(g, b));
+        var delta = max - min;
+        var lightness = (max + min) / 2;
+        var hue = 0d;
+        var saturation = 0d;
+
+        if (delta != 0)
+        {
+            saturation = delta / (1 - Math.Abs(2 * lightness - 1));
+            if (max == r) hue = 60 * (((g - b) / delta) % 6);
+            else if (max == g) hue = 60 * ((b - r) / delta + 2);
+            else hue = 60 * ((r - g) / delta + 4);
+            if (hue < 0) hue += 360;
+        }
+
+        return ((int)Math.Round(hue), (int)Math.Round(saturation * 100), (int)Math.Round(lightness * 100));
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (modulo is not null) await modulo.DisposeAsync();
+    }
+}

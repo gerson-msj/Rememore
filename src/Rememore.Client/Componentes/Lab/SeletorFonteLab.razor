@@ -1,0 +1,41 @@
+<div class="field">
+    <label class="label" for="lab-fonte-padrao">Fonte padrão</label>
+    <div class="control">
+        <div class="select is-fullwidth">
+            <select id="lab-fonte-padrao" value="@FonteSelecionada" @onchange="SelecionarFonteAsync">
+                @foreach (var fonte in Fontes)
+                {
+                    <option value="@fonte">@fonte</option>
+                }
+            </select>
+        </div>
+    </div>
+</div>
+
+@code {
+    private static readonly string[] Fontes =
+    [
+        "Chewy",
+        "Damion",
+        "Dekko",
+        "Dongle",
+        "Faculty Glyphic",
+        "Happy Monkey",
+        "Iansui",
+        "Kalam"
+    ];
+
+    [Parameter]
+    public string FonteSelecionada { get; set; } = "Faculty Glyphic";
+
+    [Parameter]
+    public EventCallback<string> FonteSelecionadaChanged { get; set; }
+
+    private Task SelecionarFonteAsync(ChangeEventArgs args)
+    {
+        var fonte = args.Value?.ToString();
+        return string.IsNullOrWhiteSpace(fonte)
+            ? Task.CompletedTask
+            : FonteSelecionadaChanged.InvokeAsync(fonte);
+    }
+}

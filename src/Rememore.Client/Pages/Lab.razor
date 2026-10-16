@@ -1,0 +1,43 @@
+@page "/lab"
+@using Rememore.Client.Componentes.Lab
+
+<main class="container is-max-desktop section" style="font-family: '@FonteSelecionada', sans-serif;">
+    <SeletorTema />
+
+    <div class="mt-5">
+        <BlocoLab Identificador="fonte-padrao" Titulo="Fonte padrão do sistema">
+            <SeletorFonteLab @bind-FonteSelecionada="FonteSelecionada" />
+        </BlocoLab>
+
+        <BlocoLab Identificador="paleta-cores" Titulo="Cores do sistema">
+            <EditorPaletaLab />
+        </BlocoLab>
+
+        <BlocoLab Identificador="componentes-html" Titulo="Componentes HTML Simples">
+        <h3 class="title is-4">Título</h3>
+
+        <p>Este é um parágrafo de exemplo com texto simples.</p>
+
+        <p><a href="https://bulma.io/documentation/">Link para a documentação do Bulma</a></p>
+
+        <ul>
+            <li>Primeiro item da lista</li>
+            <li>Segundo item da lista</li>
+            <li>Terceiro item da lista</li>
+        </ul>
+
+        <div class="field">
+            <label class="label" for="lab-caixa-texto">Caixa de texto</label>
+            <div class="control">
+                <input class="input" id="lab-caixa-texto" type="text" placeholder="Digite um texto" />
+            </div>
+        </div>
+
+        <button class="button is-link" type="button">Botão de exemplo</button>
+        </BlocoLab>
+    </div>
+</main>
+
+@code {
+    private string FonteSelecionada { get; set; } = "Faculty Glyphic";
+}

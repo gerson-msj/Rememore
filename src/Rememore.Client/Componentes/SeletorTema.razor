@@ -1,26 +1,17 @@
-<div class="seletor-tema" role="radiogroup" aria-label="Tema da aparência">
-    @foreach (var opcao in Opcoes)
-    {
-        <label class="seletor-tema__opcao" title="@opcao.Nome">
-            <input class="seletor-tema__radio" type="radio" name="@nomeGrupo" value="@opcao.Valor" checked="@(Preferencia == opcao.Valor)" aria-label="@opcao.Nome" @onchange="() => Selecionar(opcao.Valor)" />
-            <span class="seletor-tema__icone" aria-hidden="true"><i class="@opcao.Icone"></i></span>
-            <span class="seletor-tema__rotulo">@opcao.Nome</span>
-        </label>
-    }
+@inject EstadoTema Tema
+
+<div class="seletor-tema-lab buttons has-addons" role="group" aria-label="Preferência de tema">
+    <button class="button @(Tema.Preferencia == PreferenciaTema.Sistema ? "is-link" : string.Empty)" type="button" aria-label="Sistema" title="Sistema" aria-pressed="@(Tema.Preferencia == PreferenciaTema.Sistema)" @onclick="() => SelecionarAsync(PreferenciaTema.Sistema)">
+        <span class="icon" aria-hidden="true"><i class="fa-solid fa-display"></i></span>
+    </button>
+    <button class="button @(Tema.Preferencia == PreferenciaTema.Claro ? "is-link" : string.Empty)" type="button" aria-label="Claro" title="Claro" aria-pressed="@(Tema.Preferencia == PreferenciaTema.Claro)" @onclick="() => SelecionarAsync(PreferenciaTema.Claro)">
+        <span class="icon" aria-hidden="true"><i class="fa-solid fa-sun"></i></span>
+    </button>
+    <button class="button @(Tema.Preferencia == PreferenciaTema.Escuro ? "is-link" : string.Empty)" type="button" aria-label="Escuro" title="Escuro" aria-pressed="@(Tema.Preferencia == PreferenciaTema.Escuro)" @onclick="() => SelecionarAsync(PreferenciaTema.Escuro)">
+        <span class="icon" aria-hidden="true"><i class="fa-solid fa-moon"></i></span>
+    </button>
 </div>
 
 @code {
-    [Parameter] public PreferenciaTema Preferencia { get; set; } = PreferenciaTema.Sistema;
-    [Parameter] public EventCallback<PreferenciaTema> PreferenciaChanged { get; set; }
-    private readonly string nomeGrupo = $"tema-{Guid.NewGuid():N}";
-
-    private static readonly (PreferenciaTema Valor, string Nome, string Icone)[] Opcoes =
-    [
-        (PreferenciaTema.Sistema, "Sistema", "fa-solid fa-display"),
-        (PreferenciaTema.Claro, "Claro", "fa-solid fa-sun"),
-        (PreferenciaTema.Escuro, "Escuro", "fa-solid fa-moon")
-    ];
-
-    private Task Selecionar(PreferenciaTema valor) => PreferenciaChanged.InvokeAsync(valor);
-
+    private Task SelecionarAsync(PreferenciaTema preferencia) => Tema.SelecionarAsync(preferencia);
 }

@@ -1,4 +1,5 @@
 @inject EstadoAutenticacaoProvider Autenticacao
+@inject EstadoTema Tema
 
 @if (!Autenticacao.Inicializado)
 {
@@ -21,6 +22,7 @@ else
     {
         if (primeiroRender)
         {
+            await Tema.InicializarAsync();
             await Autenticacao.InicializarAsync();
             StateHasChanged();
         }

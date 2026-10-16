@@ -1,18 +1,51 @@
-@import url("fundacao.css?v=20261013-1");
-@import url("componentes.css?v=20261013-1");
-@import url("laboratorio.css?v=20261013-1");
-@import url("pagina-inicial.css?v=20261013-1");
-
-#blazor-error-ui {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    inset: auto 0 0;
-    padding: 0.85rem 1.25rem;
-    background: var(--cor-danger);
-    color: var(--cor-main);
-    box-shadow: 0 -2px 12px rgb(0 0 0 / 10%);
+/* Fonte principal do Bulma e do site. */
+:root {
+    --bulma-family-primary: "Faculty Glyphic", sans-serif;
+    --cor-main: var(--bulma-scheme-main);
+    --cor-bis: var(--bulma-scheme-main-bis);
+    --cor-ter: var(--bulma-scheme-main-ter);
+    --cor-background: var(--bulma-background);
+    --cor-text: var(--bulma-text);
+    --cor-text-weak: var(--bulma-text-weak);
+    --cor-text-strong: var(--bulma-text-strong);
+    --cor-title: var(--bulma-text-title);
+    --cor-border: var(--bulma-border);
+    --cor-border-weak: var(--bulma-border-weak);
+    --cor-primary: var(--bulma-primary);
+    --cor-link: var(--bulma-link);
+    --cor-info: var(--bulma-info);
+    --cor-success: var(--bulma-success);
+    --cor-warning: var(--bulma-warning);
+    --cor-danger: var(--bulma-danger);
 }
 
-#blazor-error-ui .reload { color: inherit; margin-inline: 0.5rem; text-decoration: underline; }
-#blazor-error-ui .dismiss { position: absolute; top: 0.55rem; right: 0.85rem; }
+.mensagem-carregamento {
+    margin: 3rem auto;
+    padding: 1rem 1.5rem;
+    text-align: center;
+}
+
+/* Estilos padrao da interface de erro do Blazor WebAssembly. */
+#blazor-error-ui {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgb(0 0 0 / 20%);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+#blazor-error-ui .reload {
+    color: inherit;
+    margin-left: 0.5rem;
+}

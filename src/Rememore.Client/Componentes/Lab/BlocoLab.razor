@@ -1,0 +1,56 @@
+@inject IJSRuntime JS
+
+<details class="box bloco-lab" open="@aberto">
+    <summary class="bloco-lab__titulo" @onclick="AlternarAsync" @onclick:preventDefault="true">@Titulo</summary>
+    <div class="content bloco-lab__conteudo">
+        @ChildContent
+    </div>
+</details>
+
+@code {
+    private bool aberto;
+
+    [Parameter, EditorRequired]
+    public string Identificador { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Titulo { get; set; } = string.Empty;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (!primeiroRender)
+        {
+            return;
+        }
+
+        try
+        {
+            var salvo = await JS.InvokeAsync<string?>("localStorage.getItem", ChaveEstado);
+            aberto = salvo == "true";
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException)
+        {
+            aberto = false;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task AlternarAsync()
+    {
+        aberto = !aberto;
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", ChaveEstado, aberto ? "true" : "false");
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException)
+        {
+            // O bloco continua operavel nesta sessao mesmo sem acesso ao armazenamento.
+        }
+    }
+
+    private string ChaveEstado => $"rememore.lab.bloco.{Identificador}.v1";
+}

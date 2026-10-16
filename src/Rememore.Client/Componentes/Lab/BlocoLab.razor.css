@@ -1,0 +1,54 @@
+.bloco-lab {
+    padding: 0;
+}
+
+.bloco-lab__titulo {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    font-weight: 600;
+    justify-content: space-between;
+    list-style: none;
+    padding: 1rem 1.25rem;
+}
+
+.bloco-lab__titulo::-webkit-details-marker {
+    display: none;
+}
+
+.bloco-lab__titulo::after {
+    border-bottom: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    content: "";
+    flex: 0 0 0.5rem;
+    height: 0.5rem;
+    margin-left: 1rem;
+    transform: rotate(45deg);
+    transition: transform 160ms ease;
+}
+
+.bloco-lab[open] > .bloco-lab__titulo::after {
+    transform: rotate(225deg);
+}
+
+.bloco-lab__titulo:focus-visible {
+    border-radius: 4px;
+    outline: 3px solid var(--bulma-link);
+    outline-offset: -4px;
+}
+
+.bloco-lab__conteudo {
+    border-top: 1px solid var(--bulma-border);
+    margin: 0;
+    padding: 1rem 1.25rem;
+}
+
+.bloco-lab__conteudo > :last-child {
+    margin-bottom: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bloco-lab__titulo::after {
+        transition: none;
+    }
+}
