@@ -1,0 +1,43 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div class="seletor-data">
+    <label class="seletor-data__rotulo" for="@id">Data da captura</label>
+    <div class="seletor-data__campo @(string.IsNullOrEmpty(Valor) ? "seletor-data__campo--vazio" : "") @(Invalido && !string.IsNullOrEmpty(Valor) ? "seletor-data__campo--invalido" : "")">
+        <input @ref="campo" id="@id" class="input seletor-data__entrada" type="date" value="@Valor"
+               max="@Maximo" required aria-invalid="@Invalido" aria-describedby="@($"{id}-ajuda")"
+               @oninput="AlterarAsync" @onchange="AlterarAsync" />
+        @if (string.IsNullOrEmpty(Valor))
+        {
+            <span class="seletor-data__placeholder" aria-hidden="true">DD/MM/AAAA</span>
+        }
+        <button class="seletor-data__calendario" type="button" aria-label="Abrir calendário" @onclick="AbrirAsync">
+            <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
+        </button>
+    </div>
+    <p class="seletor-data__ajuda" id="@($"{id}-ajuda")">Escolha uma data até hoje.</p>
+</div>
+
+@code {
+    private readonly string id = $"seletor-data-{Guid.NewGuid():N}";
+    private ElementReference campo;
+    private IJSObjectReference? modulo;
+
+    [Parameter] public string Valor { get; set; } = "";
+    [Parameter] public string Maximo { get; set; } = "";
+    [Parameter] public bool Invalido { get; set; }
+    [Parameter] public EventCallback<string> AoMudar { get; set; }
+
+    private Task AlterarAsync(ChangeEventArgs evento) => AoMudar.InvokeAsync(evento.Value?.ToString() ?? "");
+
+    private async Task AbrirAsync()
+    {
+        modulo ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/calendarioCaptura.js");
+        await modulo.InvokeVoidAsync("abrirSeletor", campo);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (modulo is not null) await modulo.DisposeAsync();
+    }
+}

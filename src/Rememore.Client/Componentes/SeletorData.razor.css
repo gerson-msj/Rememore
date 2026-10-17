@@ -1,13 +1,8 @@
-.seletor-data { display: grid; gap: 0.45rem; }
-.seletor-data__rotulo { color: var(--cor-title); font-weight: 600; }
-.seletor-data__campo { position: relative; display: flex; align-items: stretch; }
-.seletor-data__entrada { min-height: 3.3rem; padding-inline: 1rem 3.9rem; border-color: var(--cor-border); border-radius: 0.75rem; background: var(--cor-main); color: var(--cor-text-strong); font: inherit; }
-.seletor-data__entrada:focus-visible { outline: 3px solid var(--cor-link); outline-offset: 2px; }
-.seletor-data__campo--invalido .seletor-data__entrada { border-color: var(--cor-danger); }
-.seletor-data__entrada::-webkit-calendar-picker-indicator { width: 0; margin: 0; opacity: 0; }
-.seletor-data__campo--vazio .seletor-data__entrada:not(:focus) { color: transparent; }
-.seletor-data__placeholder { position: absolute; top: 50%; left: 1rem; transform: translateY(-50%); color: var(--cor-text-weak); pointer-events: none; }
-.seletor-data__campo:focus-within .seletor-data__placeholder { display: none; }
-.seletor-data__calendario { position: absolute; inset: 0 0 0 auto; width: 3.3rem; border: 0; border-left: 1px solid var(--cor-border-weak); border-radius: 0 0.75rem 0.75rem 0; background: var(--cor-bis); color: var(--cor-link); cursor: pointer; }
-.seletor-data__calendario:focus-visible { outline: 3px solid var(--cor-link); outline-offset: 2px; }
-.seletor-data__ajuda { margin: 0; color: var(--cor-text-weak); font-size: 0.88rem; }
+.seletor-data__entrada:invalid,
+.seletor-data__entrada.seletor-data__entrada--texto-provisorio {
+    color: var(--bulma-input-placeholder-color);
+}
+
+.seletor-data__entrada::-webkit-calendar-picker-indicator {
+    display: none;
+}

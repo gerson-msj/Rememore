@@ -6,11 +6,27 @@ export function hojeLocal() {
     return `${ano}-${mes}-${dia}`;
 }
 
-export function abrirSeletor(campo) {
-    try {
-        if (typeof campo.showPicker === "function") campo.showPicker();
-        else campo.focus();
-    } catch {
+const seletoresConectados = new WeakMap();
+
+export function conectarSeletor(campo, botao) {
+    const aoClicar = () => {
+        try {
+            if (typeof campo.showPicker === "function") {
+                campo.showPicker();
+                return;
+            }
+        } catch {
+        }
+
         campo.focus();
-    }
+    };
+
+    botao.addEventListener("click", aoClicar);
+    seletoresConectados.set(botao, aoClicar);
+}
+
+export function desconectarSeletor(botao) {
+    const aoClicar = seletoresConectados.get(botao);
+    if (aoClicar) botao.removeEventListener("click", aoClicar);
+    seletoresConectados.delete(botao);
 }

@@ -1,0 +1,83 @@
+@using System.Globalization
+
+<section aria-labelledby="cmp003-geral-titulo">
+    <h3 class="title is-5" id="cmp003-geral-titulo">Seletor reutilizável</h3>
+    <p class="mb-4">
+        Escolha um cenário ou altere o campo. A saída é atualizada pelo componente; datas futuras e valores vazios/incompletos são inválidos.
+    </p>
+
+    <div class="field">
+        <label class="label" for="cmp003-cenario">Cenário de entrada</label>
+        <div class="select is-fullwidth">
+            <select id="cmp003-cenario" value="@cenario" @onchange="SelecionarCenarioAsync">
+                <option value="vazio">Sem valor (vazio/incompleto)</option>
+                <option value="inicial">Data inicial fornecida pelo chamador</option>
+                <option value="hoje">Hoje</option>
+                <option value="passada">Data passada</option>
+                <option value="futura">Data futura (inválida)</option>
+            </select>
+        </div>
+    </div>
+
+    <SeletorData @key="versaoInstancia"
+                 ValorInicial="@valorInicial"
+                 AoMudarValor="RegistrarValor" />
+
+    <div class="content mt-4" aria-live="polite" aria-atomic="true">
+        <h4 class="title is-6">Diagnóstico do chamador</h4>
+        <p><strong>Valor inicial recebido:</strong> @FormatarData(valorInicial)</p>
+        <p><strong>Data válida emitida:</strong> @FormatarData(valorSelecionado)</p>
+        <p><strong>Data completa e válida:</strong> @(valorSelecionado is not null ? "Sim" : "Não")</p>
+        <button class="button is-light" type="button" @onclick="LimparAsync">Limpar seleção</button>
+    </div>
+</section>
+
+@code {
+    private readonly DateOnly hoje = DateOnly.FromDateTime(DateTime.Today);
+    private readonly string hojeIso = DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    private string cenario = "vazio";
+    private string? valorInicial;
+    private string? valorSelecionado;
+    private int versaoInstancia;
+
+    private Task RegistrarValor(string? valor)
+    {
+        valorSelecionado = valor;
+        return Task.CompletedTask;
+    }
+
+    private Task SelecionarCenarioAsync(ChangeEventArgs evento)
+    {
+        cenario = evento.Value?.ToString() ?? "vazio";
+        valorInicial = cenario switch
+        {
+            "inicial" => hoje.AddDays(-7).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            "hoje" => hojeIso,
+            "passada" => hoje.AddDays(-1).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            "futura" => hoje.AddDays(1).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            _ => null
+        };
+
+        valorSelecionado = null;
+        versaoInstancia++;
+        return Task.CompletedTask;
+    }
+
+    private Task LimparAsync()
+    {
+        cenario = "vazio";
+        valorInicial = null;
+        valorSelecionado = null;
+        versaoInstancia++;
+        return Task.CompletedTask;
+    }
+
+    private static string FormatarData(string? valor)
+    {
+        if (string.IsNullOrWhiteSpace(valor)) return "(sem data)";
+
+        return DateOnly.TryParseExact(valor, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var data)
+            ? data.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)
+            : "(valor incompleto ou inválido)";
+    }
+}

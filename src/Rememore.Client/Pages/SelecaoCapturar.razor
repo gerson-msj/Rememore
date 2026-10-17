@@ -29,7 +29,7 @@
             }
 
             <section class="selecao-capturar__escolha" aria-label="Seleção da data">
-                <SeletorData Valor="@valorData" Maximo="@hojeTexto" Invalido="@(!DataValida)" AoMudar="AtualizarData" />
+                <SeletorData_old Valor="@valorData" Maximo="@hojeTexto" Invalido="@(!DataValida)" AoMudar="AtualizarData" />
                 <button class="button is-link selecao-capturar__acao" type="button" disabled="@(!DataValida)" @onclick="AbrirCaptura">Capturar</button>
             </section>
 

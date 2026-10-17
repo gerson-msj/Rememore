@@ -1,43 +1,152 @@
 @implements IAsyncDisposable
+@using System.Globalization
 @inject IJSRuntime JS
 
-<div class="seletor-data">
-    <label class="seletor-data__rotulo" for="@id">Data da captura</label>
-    <div class="seletor-data__campo @(string.IsNullOrEmpty(Valor) ? "seletor-data__campo--vazio" : "") @(Invalido && !string.IsNullOrEmpty(Valor) ? "seletor-data__campo--invalido" : "")">
-        <input @ref="campo" id="@id" class="input seletor-data__entrada" type="date" value="@Valor"
-               max="@Maximo" required aria-invalid="@Invalido" aria-describedby="@($"{id}-ajuda")"
-               @oninput="AlterarAsync" @onchange="AlterarAsync" />
-        @if (string.IsNullOrEmpty(Valor))
-        {
-            <span class="seletor-data__placeholder" aria-hidden="true">DD/MM/AAAA</span>
-        }
-        <button class="seletor-data__calendario" type="button" aria-label="Abrir calendário" @onclick="AbrirAsync">
-            <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
+<div class="field">
+    <label class="label" for="@idCampo">Data</label>
+    <div class="control has-icons-right">
+        <input @ref="campo"
+               id="@idCampo"
+               class="input seletor-data__entrada @(!ValidadeAtual ? "seletor-data__entrada--texto-provisorio" : "")"
+               type="date"
+               value="@valorAtual"
+               max="@LimiteMaximoTexto"
+               aria-invalid="@(!ValidadeAtual ? "true" : "false")"
+               @oninput="AoEditarAsync" />
+        <button @ref="botaoCalendario"
+                class="button is-ghost icon is-right icone-controle-interativo"
+                type="button"
+                aria-label="Abrir calendário"
+                aria-controls="@idCampo">
+            <i class="fa-regular fa-calendar" aria-hidden="true"></i>
         </button>
     </div>
-    <p class="seletor-data__ajuda" id="@($"{id}-ajuda")">Escolha uma data até hoje.</p>
 </div>
 
 @code {
-    private readonly string id = $"seletor-data-{Guid.NewGuid():N}";
+    private static long proximoId;
+    private readonly string idCampo = $"cmp003-data-{Interlocked.Increment(ref proximoId)}";
     private ElementReference campo;
+    private ElementReference botaoCalendario;
     private IJSObjectReference? modulo;
+    private string hojeLocal = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    private string? valorAtual;
+    private string? valorInicialAnterior;
+    private string? ultimoValorEmitido;
+    private bool validadeAtual;
+    private bool parametrosInicializados;
+    private bool estadoEmitido;
+    private bool calendarioConfigurado;
 
-    [Parameter] public string Valor { get; set; } = "";
-    [Parameter] public string Maximo { get; set; } = "";
-    [Parameter] public bool Invalido { get; set; }
-    [Parameter] public EventCallback<string> AoMudar { get; set; }
+    [Parameter] public string? ValorInicial { get; set; }
+    [Parameter] public EventCallback<string?> AoMudarValor { get; set; }
 
-    private Task AlterarAsync(ChangeEventArgs evento) => AoMudar.InvokeAsync(evento.Value?.ToString() ?? "");
+    private string LimiteMaximoTexto => hojeLocal;
 
-    private async Task AbrirAsync()
+    private bool ValidadeAtual => validadeAtual;
+
+    protected override void OnParametersSet()
     {
-        modulo ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/calendarioCaptura.js");
-        await modulo.InvokeVoidAsync("abrirSeletor", campo);
+        if (!parametrosInicializados || ValorInicial != valorInicialAnterior)
+        {
+            valorAtual = NormalizarValor(ValorInicial);
+            valorInicialAnterior = ValorInicial;
+            parametrosInicializados = true;
+        }
+
+        RecalcularValidade();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            modulo = await JS.InvokeAsync<IJSObjectReference>("import", "./js/calendarioCaptura.js");
+            hojeLocal = await modulo.InvokeAsync<string>("hojeLocal");
+        }
+        catch (JSException)
+        {
+            // O relógio local do cliente mantém o limite máximo caso o módulo não carregue.
+        }
+        catch (InvalidOperationException)
+        {
+            // O campo continua limitado pelo relógio local disponível no cliente.
+        }
+
+        RecalcularValidade();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!calendarioConfigurado)
+        {
+            try
+            {
+                modulo ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/calendarioCaptura.js");
+                await modulo.InvokeVoidAsync("conectarSeletor", campo, botaoCalendario);
+                calendarioConfigurado = true;
+            }
+            catch (JSException)
+            {
+                // Sem o listener, o campo nativo continua acessível e utilizável diretamente.
+            }
+        }
+
+        var valorValidoEmitido = validadeAtual ? valorAtual : null;
+        if (!estadoEmitido || ultimoValorEmitido != valorValidoEmitido)
+        {
+            estadoEmitido = true;
+            ultimoValorEmitido = valorValidoEmitido;
+            await AoMudarValor.InvokeAsync(valorValidoEmitido);
+        }
+    }
+
+    private async Task AoEditarAsync(ChangeEventArgs evento)
+    {
+        valorAtual = NormalizarValor(evento.Value?.ToString());
+        RecalcularValidade();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private static string? NormalizarValor(string? valor)
+    {
+        return DateOnly.TryParseExact(valor, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var data)
+            ? data.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+            : null;
+    }
+
+    private void RecalcularValidade()
+    {
+        validadeAtual = false;
+
+        if (valorAtual is null || !DateOnly.TryParseExact(valorAtual, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var data))
+        {
+            return;
+        }
+
+        var hoje = DateOnly.ParseExact(hojeLocal, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+        validadeAtual = data <= hoje;
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (modulo is not null) await modulo.DisposeAsync();
+        if (modulo is not null)
+        {
+            try
+            {
+                if (calendarioConfigurado)
+                {
+                    await modulo.InvokeVoidAsync("desconectarSeletor", botaoCalendario);
+                }
+
+                await modulo.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+            catch (JSException)
+            {
+            }
+        }
     }
 }
