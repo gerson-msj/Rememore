@@ -1,0 +1,46 @@
+<div class="field">
+    <label class="label" for="lab-cmp002-modo-copia">Modo de demonstração da cópia</label>
+    <div class="control">
+        <div class="select">
+            <select id="lab-cmp002-modo-copia" @bind="ModoCopia">
+                <option value="real">Clipboard do navegador</option>
+                <option value="indisponivel">Simular API indisponível</option>
+                <option value="falha">Simular falha de permissão</option>
+            </select>
+        </div>
+    </div>
+    <p class="help">Clique no ícone do campo. A demonstração mostra o resultado recebido pelo chamador.</p>
+</div>
+
+<ConfirmacaoNovaChave Chave="@ChaveDemonstracao"
+                      AoCopiar="RegistrarResultadoCopia"
+                      TentativaCopiaAlternativaAsync="@TentativaCopiaAlternativaAsync" />
+
+@if (ResultadoCopia is bool sucesso)
+{
+    <p class="help @(sucesso ? "is-success" : "is-danger")" role="status" aria-live="polite">
+        @(sucesso
+            ? "O chamador recebeu: cópia concluída com sucesso."
+            : "O chamador recebeu: falha na cópia. A chave continua disponível para seleção manual.")
+    </p>
+}
+
+@code {
+    private const string ChaveDemonstracao = "123e4567-e89b-12d3-a456-426614174000";
+    private string ModoCopia { get; set; } = "real";
+    private bool? ResultadoCopia { get; set; }
+
+    private Func<string, Task<bool>>? TentativaCopiaAlternativaAsync => ModoCopia switch
+    {
+        "indisponivel" => ClipboardIndisponivelAsync,
+        "falha" => SimularFalhaPermissaoAsync,
+        _ => null
+    };
+
+    private void RegistrarResultadoCopia(bool sucesso) => ResultadoCopia = sucesso;
+
+    private static Task<bool> ClipboardIndisponivelAsync(string _) => Task.FromResult(false);
+
+    private static Task<bool> SimularFalhaPermissaoAsync(string _) =>
+        Task.FromException<bool>(new JSException("Falha de permissão simulada no laboratório."));
+}

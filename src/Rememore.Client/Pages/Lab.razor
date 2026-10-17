@@ -33,11 +33,28 @@
             </div>
         </div>
 
+        <div class="field">
+            <label class="label" for="lab-caixa-texto-erro">Caixa de texto em estado de erro</label>
+            <div class="control">
+                <input class="input is-danger"
+                       id="lab-caixa-texto-erro"
+                       type="text"
+                       placeholder="Digite um texto"
+                       aria-invalid="true"
+                       aria-describedby="lab-caixa-texto-erro-mensagem" />
+            </div>
+            <p class="help is-danger" id="lab-caixa-texto-erro-mensagem">Mensagem de erro de exemplo.</p>
+        </div>
+
         <button class="button is-link" type="button">Botão de exemplo</button>
         </BlocoLab>
 
         <BlocoLab Identificador="cmp-001-senha" Titulo="CMP-001 - Senha">
             <DemonstracaoCampoSenha />
+        </BlocoLab>
+
+        <BlocoLab Identificador="cmp-002-chave-redefinicao" Titulo="CMP-002 - Chave de redefinição">
+            <DemonstracaoConfirmacaoNovaChave />
         </BlocoLab>
     </div>
 </main>

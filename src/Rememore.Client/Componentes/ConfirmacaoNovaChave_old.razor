@@ -1,0 +1,89 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<section class="confirmacao-nova-chave" aria-busy="@(!Disponivel)">
+    @if (Disponivel)
+    {
+        <p class="confirmacao-nova-chave__contexto">@MensagemContextual</p>
+        <div class="field confirmacao-nova-chave__campo">
+            <label class="label" for="@idCampo">Chave de redefinição</label>
+            <div class="control">
+                <input id="@idCampo" class="input" type="text" value="@Chave" readonly aria-label="Chave de redefinição" />
+            </div>
+            @if (mensagemCopia)
+            {
+                <p class="confirmacao-nova-chave__feedback" role="status" aria-live="polite">Chave copiada. Guarde-a em um local seguro.</p>
+            }
+            <div class="confirmacao-nova-chave__copiar">
+                <button class="button" type="button" @onclick="CopiarAsync">
+                    <span class="icon" aria-hidden="true"><i class="fa-solid fa-copy"></i></span>
+                    <span>Copiar chave</span>
+                </button>
+            </div>
+        </div>
+        <p class="confirmacao-nova-chave__unica">@MensagemApresentacaoUnica</p>
+        <div class="confirmacao-nova-chave__acoes">
+            <button class="button is-link" type="button" @onclick="AoEntrar">Entrar</button>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(MensagemEstado))
+    {
+        <p class="confirmacao-nova-chave__estado" role="status">@MensagemEstado</p>
+    }
+</section>
+
+@code {
+    private static long proximoId;
+    private readonly string idCampo = $"chave-redefinicao-{Interlocked.Increment(ref proximoId)}";
+    private IJSObjectReference? modulo;
+    private CancellationTokenSource? temporizador;
+    private bool mensagemCopia;
+
+    [Parameter, EditorRequired] public string MensagemContextual { get; set; } = "";
+    [Parameter, EditorRequired] public string MensagemApresentacaoUnica { get; set; } = "";
+    [Parameter] public string Chave { get; set; } = "";
+    [Parameter] public string? MensagemEstado { get; set; }
+    [Parameter] public bool Disponivel { get; set; }
+    [Parameter] public EventCallback AoEntrar { get; set; }
+
+    private async Task CopiarAsync()
+    {
+        try
+        {
+            modulo ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/chaveClipboard.js");
+            if (!await modulo.InvokeAsync<bool>("copiar", Chave)) return;
+
+            temporizador?.Cancel();
+            temporizador?.Dispose();
+            temporizador = new CancellationTokenSource();
+            mensagemCopia = true;
+            StateHasChanged();
+            _ = OcultarFeedbackAsync(temporizador.Token);
+        }
+        catch (JSException) { }
+        catch (InvalidOperationException) { }
+    }
+
+    private async Task OcultarFeedbackAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(4), token);
+            await InvokeAsync(() => { mensagemCopia = false; StateHasChanged(); });
+        }
+        catch (OperationCanceledException) { }
+        catch (ObjectDisposedException) { }
+        catch (InvalidOperationException) { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        temporizador?.Cancel();
+        temporizador?.Dispose();
+        if (modulo is not null)
+        {
+            try { await modulo.DisposeAsync(); }
+            catch (JSDisconnectedException) { }
+        }
+    }
+}

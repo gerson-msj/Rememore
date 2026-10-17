@@ -1,0 +1,10 @@
+.control.has-icons-right .icone-controle-interativo {
+    pointer-events: auto;
+    color: var(--bulma-text);
+    text-decoration: none;
+}
+
+.control.has-icons-right .icone-controle-interativo:hover,
+.control.has-icons-right .icone-controle-interativo:focus-visible {
+    color: var(--bulma-link);
+}

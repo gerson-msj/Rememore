@@ -14,9 +14,9 @@
         }
         else if (contexto is not null)
         {
-            <ConfirmacaoNovaChave MensagemContextual="@MensagemContextual"
-                                  MensagemApresentacaoUnica="@MensagemApresentacaoUnica"
-                                  Chave="@contexto.Chave" Disponivel="true" AoEntrar="AbrirConfirmacao" />
+            <ConfirmacaoNovaChave_old MensagemContextual="@MensagemContextual"
+                                      MensagemApresentacaoUnica="@MensagemApresentacaoUnica"
+                                      Chave="@contexto.Chave" Disponivel="true" AoEntrar="AbrirConfirmacao" />
             @if (erroEntrada)
             {
                 <p class="pagina-cadastro-confirmacao__erro" role="alert">Não foi possível concluir a entrada. Tente novamente.</p>

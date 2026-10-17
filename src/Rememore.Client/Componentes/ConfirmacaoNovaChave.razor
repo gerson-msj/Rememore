@@ -1,89 +1,74 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 
-<section class="confirmacao-nova-chave" aria-busy="@(!Disponivel)">
-    @if (Disponivel)
-    {
-        <p class="confirmacao-nova-chave__contexto">@MensagemContextual</p>
-        <div class="field confirmacao-nova-chave__campo">
-            <label class="label" for="@idCampo">Chave de redefinição</label>
-            <div class="control">
-                <input id="@idCampo" class="input" type="text" value="@Chave" readonly aria-label="Chave de redefinição" />
-            </div>
-            @if (mensagemCopia)
-            {
-                <p class="confirmacao-nova-chave__feedback" role="status" aria-live="polite">Chave copiada. Guarde-a em um local seguro.</p>
-            }
-            <div class="confirmacao-nova-chave__copiar">
-                <button class="button" type="button" @onclick="CopiarAsync">
-                    <span class="icon" aria-hidden="true"><i class="fa-solid fa-copy"></i></span>
-                    <span>Copiar chave</span>
-                </button>
-            </div>
-        </div>
-        <p class="confirmacao-nova-chave__unica">@MensagemApresentacaoUnica</p>
-        <div class="confirmacao-nova-chave__acoes">
-            <button class="button is-link" type="button" @onclick="AoEntrar">Entrar</button>
-        </div>
-    }
-    else if (!string.IsNullOrWhiteSpace(MensagemEstado))
-    {
-        <p class="confirmacao-nova-chave__estado" role="status">@MensagemEstado</p>
-    }
-</section>
+<div class="field confirmacao-nova-chave">
+    <label class="label" for="@idCampo">Chave de redefinição</label>
+    <div class="control has-icons-right">
+        <input id="@idCampo"
+               class="input"
+               type="text"
+               value="@Chave"
+               readonly />
+        <button class="button is-ghost icon is-right icone-controle-interativo"
+                type="button"
+                aria-label="Copiar chave"
+                aria-controls="@idCampo"
+                @onclick="CopiarChaveAsync">
+            <i class="fa-solid @(copiaConcluida ? "fa-check" : "fa-copy")" aria-hidden="true"></i>
+        </button>
+    </div>
+</div>
 
 @code {
     private static long proximoId;
-    private readonly string idCampo = $"chave-redefinicao-{Interlocked.Increment(ref proximoId)}";
+    private readonly string idCampo = $"cmp002-chave-{Interlocked.Increment(ref proximoId)}";
     private IJSObjectReference? modulo;
-    private CancellationTokenSource? temporizador;
-    private bool mensagemCopia;
+    private bool copiaConcluida;
 
-    [Parameter, EditorRequired] public string MensagemContextual { get; set; } = "";
-    [Parameter, EditorRequired] public string MensagemApresentacaoUnica { get; set; } = "";
-    [Parameter] public string Chave { get; set; } = "";
-    [Parameter] public string? MensagemEstado { get; set; }
-    [Parameter] public bool Disponivel { get; set; }
-    [Parameter] public EventCallback AoEntrar { get; set; }
+    [Parameter, EditorRequired] public string Chave { get; set; } = string.Empty;
+    [Parameter] public EventCallback<bool> AoCopiar { get; set; }
+    [Parameter] public Func<string, Task<bool>>? TentativaCopiaAlternativaAsync { get; set; }
 
-    private async Task CopiarAsync()
+    private async Task CopiarChaveAsync()
     {
+        var sucesso = false;
+
         try
         {
-            modulo ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/chaveClipboard.js");
-            if (!await modulo.InvokeAsync<bool>("copiar", Chave)) return;
-
-            temporizador?.Cancel();
-            temporizador?.Dispose();
-            temporizador = new CancellationTokenSource();
-            mensagemCopia = true;
-            StateHasChanged();
-            _ = OcultarFeedbackAsync(temporizador.Token);
+            if (TentativaCopiaAlternativaAsync is not null)
+            {
+                sucesso = await TentativaCopiaAlternativaAsync(Chave);
+            }
+            else
+            {
+                modulo ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/chaveClipboard.js");
+                sucesso = await modulo.InvokeAsync<bool>("copiar", Chave);
+            }
         }
-        catch (JSException) { }
-        catch (InvalidOperationException) { }
-    }
-
-    private async Task OcultarFeedbackAsync(CancellationToken token)
-    {
-        try
+        catch (JSException)
         {
-            await Task.Delay(TimeSpan.FromSeconds(4), token);
-            await InvokeAsync(() => { mensagemCopia = false; StateHasChanged(); });
+            // Recusa ou indisponibilidade do clipboard são reportadas como falha ao chamador.
         }
-        catch (OperationCanceledException) { }
-        catch (ObjectDisposedException) { }
-        catch (InvalidOperationException) { }
+        catch (InvalidOperationException)
+        {
+            // A falha de interop não deve bloquear o campo selecionável.
+        }
+
+        copiaConcluida |= sucesso;
+        await AoCopiar.InvokeAsync(sucesso);
     }
 
     public async ValueTask DisposeAsync()
     {
-        temporizador?.Cancel();
-        temporizador?.Dispose();
         if (modulo is not null)
         {
-            try { await modulo.DisposeAsync(); }
-            catch (JSDisconnectedException) { }
+            try
+            {
+                await modulo.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
         }
     }
 }

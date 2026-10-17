@@ -1,3 +1,5 @@
+@import url("components.css");
+
 /* Fonte principal do Bulma e do site. */
 :root {
     --bulma-family-primary: "Faculty Glyphic", sans-serif;
