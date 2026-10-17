@@ -1,8 +1,10 @@
-.campo-senha__controle { position: relative; display: flex; align-items: center; }
-.campo-senha__controle input { padding-right: 3.25rem; }
-.campo-senha__alternar {
-    position: absolute; inset-inline-end: .35rem; min-width: 2.5rem; min-height: 2.5rem;
-    border: 0; border-radius: .375rem; color: var(--cor-text-weak); background: transparent;
+.campo-senha .control.has-icons-right .campo-senha__alternar {
+    pointer-events: auto;
+    color: var(--bulma-text);
+    text-decoration: none;
 }
-.campo-senha__alternar:hover { color: var(--cor-text); }
-.campo-senha__alternar:focus-visible { outline: 2px solid var(--cor-link); outline-offset: 1px; }
+
+.campo-senha .control.has-icons-right .campo-senha__alternar:hover,
+.campo-senha .control.has-icons-right .campo-senha__alternar:focus-visible {
+    color: var(--bulma-link);
+}
