@@ -1,0 +1,30 @@
+<div class="modal @(Aberto ? "is-active" : string.Empty)"
+     role="dialog"
+     aria-modal="true"
+     aria-label="Mensagem em popup">
+    <div class="modal-background" @onclick="FecharAsync"></div>
+
+    <div class="modal-content">
+        <div class="box">
+            <p>@Mensagem</p>
+        </div>
+    </div>
+
+    <button class="modal-close is-large"
+            type="button"
+            aria-label="Fechar popup"
+            @onclick="FecharAsync"></button>
+</div>
+
+@code {
+    [Parameter]
+    public bool Aberto { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> AbertoChanged { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Mensagem { get; set; } = string.Empty;
+
+    private Task FecharAsync() => AbertoChanged.InvokeAsync(false);
+}

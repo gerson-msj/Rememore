@@ -1,0 +1,148 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div @ref="modal" class="modal modal--popup-topo @(Aberto ? "is-active" : string.Empty)"
+     role="dialog"
+     aria-modal="true"
+     aria-label="Mensagem em popup"
+     aria-describedby="@($"{IdBase}-descricao")">
+    <div class="modal-background" @onclick="() => ResponderAsync(RespostaPopup.Cancelamento)"></div>
+
+    <div class="modal-card @ClassePopup @(string.IsNullOrWhiteSpace(Titulo) ? "modal-card--sem-titulo" : string.Empty) @(!TemBotaoCancelar && !TemBotaoConfirmar ? "modal-card--sem-rodape" : string.Empty)">
+        @if (!string.IsNullOrWhiteSpace(Titulo))
+        {
+            <header class="modal-card-head">
+                <p class="modal-card-title">@Titulo</p>
+            </header>
+        }
+
+        <section id="@($"{IdBase}-descricao")" class="modal-card-body">
+            <article class="media">
+                @if (!string.IsNullOrWhiteSpace(Icone))
+                {
+                    <div class="media-left">
+                        <span class="icon" aria-hidden="true">
+                            <i class="@Icone"></i>
+                        </span>
+                    </div>
+                }
+                <div class="media-content">
+                    <div class="content">
+                        @foreach (var paragrafo in Paragrafos)
+                        {
+                            <p>@paragrafo</p>
+                        }
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        @if (TemBotaoCancelar || TemBotaoConfirmar)
+        {
+            <footer class="modal-card-foot">
+                <div class="buttons">
+                    @if (TemBotaoConfirmar)
+                    {
+                        <button class="button is-small @ClasseBotaoConfirmar" type="button" @onclick="() => ResponderAsync(RespostaPopup.Confirmacao)">@TextoConfirmar</button>
+                    }
+                    @if (TemBotaoCancelar)
+                    {
+                        <button class="button is-small @ClasseBotaoCancelar" type="button" @onclick="() => ResponderAsync(RespostaPopup.Cancelamento)">@TextoCancelar</button>
+                    }
+                </div>
+            </footer>
+        }
+    </div>
+</div>
+
+@code {
+    private static long proximoId;
+    private readonly string idBase = $"popup-{Interlocked.Increment(ref proximoId)}";
+
+    [Parameter]
+    public bool Aberto { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Mensagem { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Titulo { get; set; }
+
+    [Parameter]
+    public string? Icone { get; set; }
+
+    [Parameter]
+    public string? ClassePopup { get; set; }
+
+    [Parameter]
+    public string? TextoConfirmar { get; set; }
+
+    [Parameter]
+    public string? TextoCancelar { get; set; }
+
+    [Parameter]
+    public string? ClasseBotaoConfirmar { get; set; }
+
+    [Parameter]
+    public string? ClasseBotaoCancelar { get; set; }
+
+    [Parameter]
+    public EventCallback<RespostaPopup> AoResponder { get; set; }
+
+    private ElementReference modal;
+    private IJSObjectReference? modulo;
+    private DotNetObjectReference<Popup>? referenciaJs;
+    private bool escRegistrado;
+
+    private string[] Paragrafos => Mensagem.Split(
+        new[] { "\r\n\r\n", "\n\n" },
+        StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private bool TemBotaoConfirmar => !string.IsNullOrWhiteSpace(TextoConfirmar);
+
+    private bool TemBotaoCancelar => !string.IsNullOrWhiteSpace(TextoCancelar);
+
+    private string IdBase => idBase;
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (primeiroRender)
+        {
+            modulo = await JS.InvokeAsync<IJSObjectReference>("import", "./js/popup.js");
+            referenciaJs = DotNetObjectReference.Create(this);
+        }
+
+        if (modulo is null || escRegistrado == Aberto) return;
+
+        if (Aberto)
+        {
+            await modulo.InvokeVoidAsync("registrarEscape", modal, referenciaJs);
+        }
+        else
+        {
+            await modulo.InvokeVoidAsync("removerEscape", modal);
+        }
+
+        escRegistrado = Aberto;
+    }
+
+    private Task ResponderAsync(RespostaPopup resposta) => AoResponder.InvokeAsync(resposta);
+
+    [JSInvokable]
+    public Task AoCancelarPorEsc() => ResponderAsync(RespostaPopup.Cancelamento);
+
+    public async ValueTask DisposeAsync()
+    {
+        referenciaJs?.Dispose();
+        if (modulo is null) return;
+
+        try
+        {
+            await modulo.InvokeVoidAsync("removerEscape", modal);
+            await modulo.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+    }
+}
