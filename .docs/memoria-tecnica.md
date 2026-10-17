@@ -43,6 +43,9 @@
 - O operador considerou o componente concluído e aprovou sua apresentação, incluindo posicionamento, backdrop, estilização e transições de entrada/saída. Em 17/10/2026, `dotnet build src/Rememore.Client/Rememore.Client.csproj --no-restore` passou sem avisos/erros. A verificação manual anterior confirmou respostas por botão, backdrop e Esc, variações sem título/ícone/botões e que o chamador pode manter o diálogo aberto após uma resposta. `dotnet watch` não pôde restaurar pacotes por bloqueio de rede (`NU1301`); a aplicação foi servida com `dotnet run --no-restore` nessa verificação. A revisão final do código não executou build nem testes, conforme orientação do operador.
 - Pendência em relação à definição do analista: o componente ainda não contém nem restaura o foco. `aria-describedby` agora associa o diálogo ao corpo textual, usando ID único por instância; `prefers-reduced-motion` desativa as transições. A contenção/restauração do foco deve ser tratada antes de considerar atendidos todos os requisitos de acessibilidade da definição, sem invalidar o aceite visual do componente no Lab. CMP-028 permanece sem integração às páginas reais, que é uma unidade própria após validação no Lab. Não foi localizado Markdown operacional CMP-028 em `.docs/especificacoes/` para Parecer final ou arquivamento.
 
+## Foco após navegação
+
+- `App.razor` usa `FocusOnNavigate` com `Selector="h1"`. Após navegar entre rotas, Blazor pode focar programaticamente o primeiro `h1`, adicionando `tabindex="-1"`; o navegador mostra o outline de foco padrão. Esse contorno não é seleção de texto. Preserve o foco de navegação e não remova o outline global sem uma decisão de acessibilidade. O comportamento foi confirmado no DOM ao diagnosticar o CMP-027.
 ## Validações registradas
 
 - Em 12/10/2026, o operador compilou `Rememore.Client.csproj` com `--no-restore` no PowerShell do Windows; o manifesto de static web assets incluiu CSS e fontes locais.

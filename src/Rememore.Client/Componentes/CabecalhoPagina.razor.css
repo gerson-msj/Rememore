@@ -1,0 +1,22 @@
+.cabecalho-pagina {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    min-height: 4rem;
+    background: var(--cor-main);
+    color: var(--cor-text);
+    border-bottom: 1px solid var(--cor-border);
+    box-shadow: 0 0.6rem 0.4rem -0.5rem var(--cor-background);
+}
+
+.cabecalho-pagina__colunas > .column {
+    min-width: 0;
+}
+
+.cabecalho-pagina__titulo {
+    margin: 0;
+    white-space: nowrap;
+    line-height: 1.5;
+}

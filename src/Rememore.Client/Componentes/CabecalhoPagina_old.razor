@@ -1,0 +1,37 @@
+<header class="cabecalho-pagina @(Fixo ? "" : "cabecalho-pagina--demonstracao")">
+    <div class="cabecalho-pagina__conteudo">
+        <div class="cabecalho-pagina__regiao cabecalho-pagina__regiao--esquerda">
+            @if (MostrarRetorno)
+            {
+                <button class="cabecalho-pagina__acao" type="button" aria-label="Voltar" @onclick="AcionarRetorno">
+                    <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                </button>
+            }
+            else
+            {
+                <span class="cabecalho-pagina__icone" aria-hidden="true"><i class="fa-solid fa-book-open"></i></span>
+            }
+        </div>
+        <h2 class="cabecalho-pagina__titulo">@Titulo</h2>
+        <div class="cabecalho-pagina__regiao cabecalho-pagina__regiao--direita">
+            @if (MostrarSaida)
+            {
+                <button class="cabecalho-pagina__acao" type="button" aria-label="Sair" @onclick="AcionarSaida">
+                    <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                </button>
+            }
+        </div>
+    </div>
+</header>
+
+@code {
+    [Parameter, EditorRequired] public string Titulo { get; set; } = "";
+    [Parameter] public bool MostrarRetorno { get; set; }
+    [Parameter] public bool MostrarSaida { get; set; }
+    [Parameter] public bool Fixo { get; set; } = true;
+    [Parameter] public EventCallback AoRetornar { get; set; }
+    [Parameter] public EventCallback AoSair { get; set; }
+
+    private Task AcionarRetorno() => AoRetornar.InvokeAsync();
+    private Task AcionarSaida() => AoSair.InvokeAsync();
+}

@@ -1,9 +1,20 @@
 @page "/lab"
 @using Rememore.Client.Componentes.Lab
 
-<main class="container is-max-desktop section" style="font-family: '@FonteSelecionada', sans-serif;">
-    <SeletorTema />
+<CabecalhoPagina Titulo="@TituloCabecalho"
+                 MostrarVoltar="@MostrarVoltar"
+                 IconeEsquerdo="@IconeEsquerdo"
+                 MostrarSair="@MostrarSair"
+                 AoRetornar="ReceberRetorno"
+                 AoSair="ReceberSaida" />
 
+<div class="is-flex is-justify-content-center lab-tema-fixo m-3">
+    <div class="container is-max-desktop section py-2 is-flex is-justify-content-flex-end">
+        <Rememore.Client.Componentes.Lab.SeletorTema />
+    </div>
+</div>
+
+<main class="container is-max-desktop section lab-pagina-conteudo" style="font-family: '@FonteSelecionada', sans-serif;">
     <div class="mt-5">
         <BlocoLab Identificador="fonte-padrao" Titulo="Fonte padrão do sistema">
             <SeletorFonteLab @bind-FonteSelecionada="FonteSelecionada" />
@@ -61,6 +72,58 @@
             <DemonstracaoSeletorData />
         </BlocoLab>
 
+        <BlocoLab Identificador="cmp-027-cabecalho-pagina" Titulo="CMP-027 — Cabeçalho de Página">
+            <div class="columns is-multiline">
+                <div class="column is-12">
+                    <div class="field">
+                        <label class="label" for="cmp-027-titulo">Título obrigatório</label>
+                        <div class="control">
+                            <input class="input" id="cmp-027-titulo" type="text" @bind="TituloCabecalho" @bind:event="oninput" required />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-6">
+                    <div class="field">
+                        <label class="label" for="cmp-027-esquerda">Região esquerda</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                                <select id="cmp-027-esquerda" @bind="ModoEsquerda">
+                                    <option value="icone">Exibir ícone</option>
+                                    <option value="voltar">Exibir voltar</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (ModoEsquerda == "icone")
+                {
+                    <div class="column is-6">
+                        <div class="field">
+                            <label class="label" for="cmp-027-icone">Ícone Font Awesome</label>
+                            <div class="control">
+                                <input class="input" id="cmp-027-icone" type="text" @bind="IconeEsquerdo" @bind:event="oninput" required />
+                            </div>
+                            <p class="help">Informe a classe do ícone, por exemplo: fa-book-open.</p>
+                        </div>
+                    </div>
+                }
+
+                <div class="column is-12">
+                    <label class="checkbox">
+                        <input type="checkbox" @bind="MostrarSair" />
+                        Exibir ação de saída
+                    </label>
+                </div>
+            </div>
+
+            <div class="notification is-light mt-4" aria-live="polite">
+                <p><strong>Retorno:</strong> @ResultadoRetorno</p>
+                <p><strong>Saída:</strong> @ResultadoSaida</p>
+            </div>
+        </BlocoLab>
+
         <BlocoLab Identificador="cmp-028-popup" Titulo="CMP-028 - Mensagem em Popup">
             <DemonstracaoPopup />
         </BlocoLab>
@@ -69,4 +132,23 @@
 
 @code {
     private string FonteSelecionada { get; set; } = "Faculty Glyphic";
+    private string TituloCabecalho { get; set; } = "Título da página";
+    private string ModoEsquerda { get; set; } = "icone";
+    private string IconeEsquerdo { get; set; } = "fa-book-open";
+    private bool MostrarVoltar => ModoEsquerda == "voltar";
+    private bool MostrarSair { get; set; } = true;
+    private int acionamentosRetorno;
+    private int acionamentosSaida;
+
+    private string ResultadoRetorno => acionamentosRetorno == 0
+        ? "Nenhum acionamento recebido."
+        : $"Acionamento recebido pelo chamador ({acionamentosRetorno}).";
+
+    private string ResultadoSaida => acionamentosSaida == 0
+        ? "Nenhum acionamento recebido."
+        : $"Acionamento recebido pelo chamador ({acionamentosSaida}).";
+
+    private void ReceberRetorno() => acionamentosRetorno++;
+
+    private void ReceberSaida() => acionamentosSaida++;
 }

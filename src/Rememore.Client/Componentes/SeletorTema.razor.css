@@ -1,6 +1,3 @@
 .seletor-tema-lab {
-    position: fixed;
-    right: max(3rem, calc((100vw - 960px) / 2 + 1.5rem));
-    top: 1rem;
-    z-index: 30;
+    margin-left: auto;
 }

@@ -1,37 +1,55 @@
-<header class="cabecalho-pagina @(Fixo ? "" : "cabecalho-pagina--demonstracao")">
-    <div class="cabecalho-pagina__conteudo">
-        <div class="cabecalho-pagina__regiao cabecalho-pagina__regiao--esquerda">
-            @if (MostrarRetorno)
-            {
-                <button class="cabecalho-pagina__acao" type="button" aria-label="Voltar" @onclick="AcionarRetorno">
-                    <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
-                </button>
-            }
-            else
-            {
-                <span class="cabecalho-pagina__icone" aria-hidden="true"><i class="fa-solid fa-book-open"></i></span>
-            }
-        </div>
-        <h2 class="cabecalho-pagina__titulo">@Titulo</h2>
-        <div class="cabecalho-pagina__regiao cabecalho-pagina__regiao--direita">
-            @if (MostrarSaida)
-            {
-                <button class="cabecalho-pagina__acao" type="button" aria-label="Sair" @onclick="AcionarSaida">
-                    <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
-                </button>
-            }
+<header class="container is-max-desktop cabecalho-pagina" aria-label="Cabeçalho de página">
+    <div class="section py-2">
+        <div class="columns is-mobile mt-2 is-gapless is-vcentered cabecalho-pagina__colunas">
+            <div class="column is-1 is-flex is-align-items-center">
+                @if (MostrarVoltar)
+                {
+                    <button class="is-flex is-align-items-center is-justify-content-center has-text-primary-35 p-0" type="button" aria-label="Voltar" @onclick="AoRetornar">
+                        <span class="icon is-size-4 p-1" aria-hidden="true">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </span>
+                    </button>
+                }
+                else
+                {
+                    <span class="icon is-size-4 p-1 has-text-info-35" aria-hidden="true">
+                        <i class="fa-solid @IconeEsquerdo"></i>
+                    </span>
+                }
+            </div>
+            <div class="column is-10 has-text-left">
+                <h1 class="title is-5 is-unselectable cabecalho-pagina__titulo">@Titulo</h1>
+            </div>
+            <div class="column is-1 has-text-right">
+                @if (MostrarSair)
+                {
+                    <button class="is-inline-flex is-align-items-center is-justify-content-center p-0 has-text-danger-75 pl-1" type="button" aria-label="Sair" @onclick="AoSair">
+                        <span class="icon is-medium" aria-hidden="true">
+                            <i class="fa-solid fa-arrow-right-from-bracket fa-lg"></i>
+                        </span>
+                    </button>
+                }
+            </div>
         </div>
     </div>
 </header>
 
 @code {
-    [Parameter, EditorRequired] public string Titulo { get; set; } = "";
-    [Parameter] public bool MostrarRetorno { get; set; }
-    [Parameter] public bool MostrarSaida { get; set; }
-    [Parameter] public bool Fixo { get; set; } = true;
-    [Parameter] public EventCallback AoRetornar { get; set; }
-    [Parameter] public EventCallback AoSair { get; set; }
+    [Parameter, EditorRequired]
+    public string Titulo { get; set; } = string.Empty;
 
-    private Task AcionarRetorno() => AoRetornar.InvokeAsync();
-    private Task AcionarSaida() => AoSair.InvokeAsync();
+    [Parameter]
+    public bool MostrarVoltar { get; set; }
+
+    [Parameter]
+    public string IconeEsquerdo { get; set; } = "fa-book-open";
+
+    [Parameter]
+    public bool MostrarSair { get; set; }
+
+    [Parameter]
+    public EventCallback AoRetornar { get; set; }
+
+    [Parameter]
+    public EventCallback AoSair { get; set; }
 }

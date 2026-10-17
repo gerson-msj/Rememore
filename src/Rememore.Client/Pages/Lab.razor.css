@@ -1,0 +1,12 @@
+.lab-tema-fixo {
+    position: fixed;
+    top: 4rem;
+    right: 0;
+    left: 0;
+    z-index: 31;
+    width: 100%;
+}
+
+.lab-pagina-conteudo {
+    padding-top: 7.5rem;
+}
