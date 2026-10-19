@@ -1,0 +1,152 @@
+@using Rememore.Client.Infraestrutura
+
+<section aria-labelledby="cmp006-demonstracao-titulo">
+    <h3 class="title is-5" id="cmp006-demonstracao-titulo">Demonstração do seletor</h3>
+    <p class="mb-4">Altere o cenário e interaja com as categorias; as respostas são locais e não são persistidas.</p>
+
+    <div class="columns is-multiline">
+        <div class="column is-half">
+            <div class="field">
+                <label class="label" for="cmp006-cenario">Cenário de categorias</label>
+                <div class="control">
+                    <div class="select is-fullwidth">
+                        <select id="cmp006-cenario" value="@cenario" @onchange="MudarCenario">
+                            <option value="vazio">Nenhuma categoria</option>
+                            <option value="uma">Uma categoria</option>
+                            <option value="duas">Duas categorias</option>
+                            <option value="muitas">Muitas categorias e nomes longos</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="column is-half">
+            <div class="field">
+                <label class="checkbox">
+                    <input type="checkbox" checked="@somenteLeitura" @onchange="MudarSomenteLeitura" /> Modo somente leitura
+                </label>
+            </div>
+            <div class="field">
+                <label class="checkbox">
+                    <input type="checkbox" checked="@popupAberto" disabled="@somenteLeitura" @onchange="MudarPopupAberto" /> Exibir estrutura do popup
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <SeletorCategoria Categorias="categoriasAssociadas"
+                      CategoriasDisponiveis="categoriasDisponiveis"
+                      SomenteLeitura="somenteLeitura"
+                      PopupAberto="popupAberto"
+                      PopupAbertoChanged="AtualizarPopupAberto"
+                      AoAdicionarCategoria="AdicionarCategoriaAsync"
+                      AoCriarCategoria="CriarCategoriaAsync"
+                      AoRemoverCategoria="RemoverCategoriaAsync" />
+
+    <p class="help mt-3" role="status" aria-live="polite">@ultimoPedido</p>
+</section>
+
+@code {
+    private string cenario = "uma";
+    private bool somenteLeitura;
+    private bool popupAberto;
+    private List<string> categoriasAssociadas = ["Família"];
+    private readonly List<string> categoriasDisponiveis =
+    [
+        "Amizades", "Aprendizado", "Família", "Leitura", "Natureza", "Projetos",
+        "Saúde", "Trabalho", "Viagens"
+    ];
+    private string ultimoPedido = "Inclusões, criações e remoções aparecem aqui como respostas demonstrativas.";
+
+    private Task MudarCenario(ChangeEventArgs args)
+    {
+        cenario = args.Value?.ToString() ?? "vazio";
+        popupAberto = false;
+        categoriasAssociadas = cenario switch
+        {
+            "uma" => ["Família"],
+            "duas" => ["Família", "Trabalho"],
+            "muitas" =>
+            [
+                "Amizades", "Aprendizado", "Família", "Trabalho", "Viagens",
+                "Encontros e descobertas que quero guardar para os próximos anos",
+                "Leitura", "Natureza", "Saúde", "Projetos pessoais", "Momentos importantes",
+                "Lugares que quero visitar", "Conversas que me inspiraram", "Conquistas",
+                "Bem-estar", "Cultura", "Tradições de família", "Pessoas especiais",
+                "Novas experiências", "Ideias para o futuro", "Pequenas alegrias",
+                "Histórias de infância", "Reflexões", "Comunidade"
+            ],
+            _ => []
+        };
+        ultimoPedido = "Cenário carregado com dados fictícios.";
+        return Task.CompletedTask;
+    }
+
+    private Task MudarSomenteLeitura(ChangeEventArgs args)
+    {
+        somenteLeitura = args.Value is bool valor && valor;
+        if (somenteLeitura)
+        {
+            popupAberto = false;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task MudarPopupAberto(ChangeEventArgs args)
+    {
+        popupAberto = !somenteLeitura && args.Value is bool valor && valor;
+        return Task.CompletedTask;
+    }
+
+    private Task AtualizarPopupAberto(bool aberto)
+    {
+        popupAberto = !somenteLeitura && aberto;
+        return Task.CompletedTask;
+    }
+
+    private Task AdicionarCategoriaAsync(string categoria)
+    {
+        if (categoriasAssociadas.Any(atual => Equivalentes(atual, categoria)))
+        {
+            ultimoPedido = $"{categoria} já está associada.";
+        }
+        else
+        {
+            categoriasAssociadas.Add(categoria);
+            ultimoPedido = $"Inclusão demonstrativa de {categoria}.";
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task CriarCategoriaAsync(string categoria)
+    {
+        var nome = categoria.Trim();
+        if (string.IsNullOrWhiteSpace(nome) || categoriasDisponiveis.Concat(categoriasAssociadas).Any(atual => Equivalentes(atual, nome)))
+        {
+            ultimoPedido = "A criação foi recusada porque o nome está vazio ou já existe.";
+            return Task.CompletedTask;
+        }
+
+        categoriasDisponiveis.Add(nome);
+        categoriasAssociadas.Add(nome);
+        ultimoPedido = $"Criação e associação demonstrativas de {nome}; nada foi persistido.";
+        return Task.CompletedTask;
+    }
+
+    private Task RemoverCategoriaAsync(string categoria)
+    {
+        var indice = categoriasAssociadas.FindIndex(atual => string.Equals(atual, categoria, StringComparison.Ordinal));
+        if (indice >= 0)
+        {
+            categoriasAssociadas.RemoveAt(indice);
+            ultimoPedido = $"Remoção demonstrativa de {categoria}.";
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private static bool Equivalentes(string primeira, string segunda) =>
+        string.Equals(PesquisaCategorias.Normalizar(primeira), PesquisaCategorias.Normalizar(segunda), StringComparison.Ordinal);
+}

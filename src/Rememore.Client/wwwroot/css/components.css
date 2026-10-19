@@ -8,3 +8,101 @@
 .control.has-icons-right .icone-controle-interativo:focus-visible {
     color: var(--bulma-link);
 }
+
+.modal.modal--popup-compartilhado {
+    display: flex;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 180ms ease, visibility 180ms ease;
+    --popup-backdrop-opacidade-clara: 30%;
+    --popup-backdrop-opacidade-escura: 30%;
+    --popup-backdrop-desfoque: 2px;
+}
+
+.modal.modal--popup-compartilhado.is-active {
+    justify-content: flex-start;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.modal.modal--popup-compartilhado > .modal-background {
+    /* Mantem o tom do overlay durante o fade-out apos remover is-active. */
+    background-color: rgb(255 255 255 / var(--popup-backdrop-opacidade-clara));
+    backdrop-filter: blur(0);
+    -webkit-backdrop-filter: blur(0);
+    transition: backdrop-filter 180ms ease;
+}
+
+.modal.modal--popup-compartilhado.is-active > .modal-background {
+    backdrop-filter: blur(var(--popup-backdrop-desfoque));
+    -webkit-backdrop-filter: blur(var(--popup-backdrop-desfoque));
+}
+
+:root[data-theme="dark"] .modal.modal--popup-compartilhado > .modal-background {
+    background-color: rgb(0 0 0 / var(--popup-backdrop-opacidade-escura));
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .modal.modal--popup-compartilhado > .modal-background {
+        background-color: rgb(0 0 0 / var(--popup-backdrop-opacidade-escura));
+    }
+}
+
+.modal.modal--popup-compartilhado > .modal-card {
+    overflow: hidden;
+    border-radius: var(--bulma-modal-card-head-radius);
+    border: 1px solid var(--bulma-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--bulma-primary) 40%, transparent);
+    margin-top: 25vh;
+    max-height: calc(75vh - var(--bulma-modal-content-spacing-mobile));
+    transform: translateY(-0.5rem) scale(0.98);
+    transition: transform 180ms ease;
+}
+
+.modal.modal--popup-compartilhado.is-active > .modal-card {
+    transform: translateY(0) scale(1);
+}
+
+.modal.modal--popup-compartilhado .modal-card-head .modal-card-title {
+    text-align: left;
+}
+
+.modal.modal--popup-compartilhado .modal-card-head {
+    box-shadow: 0 0.25rem 0.5rem -0.125rem hsla(var(--bulma-shadow-h), var(--bulma-shadow-s), var(--bulma-shadow-l), 0.1),
+        0 0 0 1px hsla(var(--bulma-shadow-h), var(--bulma-shadow-s), var(--bulma-shadow-l), 0.02);
+}
+
+.modal.modal--popup-compartilhado > .modal-card > .modal-card-body {
+    box-shadow: inset 0 -0.25rem 0.5rem -0.25rem color-mix(in srgb, var(--bulma-text-strong) 16%, transparent);
+}
+
+.modal.modal--popup-compartilhado > .modal-card[class*="has-background-"] {
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.modal.modal--popup-compartilhado .modal-card--sem-titulo > .modal-card-body {
+    border-top-left-radius: var(--bulma-modal-card-head-radius);
+    border-top-right-radius: var(--bulma-modal-card-head-radius);
+}
+
+.modal.modal--popup-compartilhado .modal-card--sem-rodape > .modal-card-body {
+    border-bottom-left-radius: var(--bulma-modal-card-foot-radius);
+    border-bottom-right-radius: var(--bulma-modal-card-foot-radius);
+}
+
+@media screen and (min-width: 769px) {
+    .modal.modal--popup-compartilhado > .modal-card {
+        max-height: calc(75vh - var(--bulma-modal-content-spacing-tablet));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .modal.modal--popup-compartilhado,
+    .modal.modal--popup-compartilhado > .modal-background,
+    .modal.modal--popup-compartilhado > .modal-card {
+        transition: none;
+    }
+}

@@ -1,63 +1,3 @@
-.modal.modal--popup-topo {
-    display: flex;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition: opacity 180ms ease, visibility 180ms ease;
-    --popup-backdrop-opacidade-clara: 30%;
-    --popup-backdrop-opacidade-escura: 30%;
-    --popup-backdrop-desfoque: 2px;
-}
-
-.modal.modal--popup-topo.is-active {
-    justify-content: flex-start;
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-}
-
-.modal.modal--popup-topo > .modal-background {
-    /* Mantem o tom do overlay durante o fade-out apos remover is-active. */
-    background-color: rgb(255 255 255 / var(--popup-backdrop-opacidade-clara));
-    backdrop-filter: blur(0);
-    -webkit-backdrop-filter: blur(0);
-    transition: backdrop-filter 180ms ease;
-}
-
-.modal.modal--popup-topo.is-active > .modal-background {
-    backdrop-filter: blur(var(--popup-backdrop-desfoque));
-    -webkit-backdrop-filter: blur(var(--popup-backdrop-desfoque));
-}
-
-.modal.modal--popup-topo > .modal-card {
-    transform: translateY(-0.5rem) scale(0.98);
-    transition: transform 180ms ease;
-}
-
-.modal.modal--popup-topo.is-active > .modal-card {
-    transform: translateY(0) scale(1);
-}
-
-:root[data-theme="dark"] .modal.modal--popup-topo > .modal-background {
-    background-color: rgb(0 0 0 / var(--popup-backdrop-opacidade-escura));
-}
-
-@media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .modal.modal--popup-topo > .modal-background {
-        background-color: rgb(0 0 0 / var(--popup-backdrop-opacidade-escura));
-    }
-}
-
-.modal-card--sem-titulo > .modal-card-body {
-    border-top-left-radius: var(--bulma-modal-card-head-radius);
-    border-top-right-radius: var(--bulma-modal-card-head-radius);
-}
-
-.modal-card--sem-rodape > .modal-card-body {
-    border-bottom-left-radius: var(--bulma-modal-card-foot-radius);
-    border-bottom-right-radius: var(--bulma-modal-card-foot-radius);
-}
-
 .modal.modal--popup-topo .modal-card-foot .buttons {
     justify-content: flex-end;
     width: 100%;
@@ -67,36 +7,32 @@
     width: 7rem;
 }
 
-.modal.modal--popup-topo .modal-card {
-    margin-top: 25vh;
-    max-height: calc(75vh - var(--bulma-modal-content-spacing-mobile));
+.modal.modal--popup-topo .modal-card.popup--sombra-primary {
+    border: 1px solid color-mix(in srgb, var(--bulma-primary) 75%, transparent);
+    box-shadow: 0 0 0.5rem color-mix(in srgb, var(--bulma-primary) 75%, transparent);
 }
 
-.modal.modal--popup-topo .modal-card[class*="has-background-"] > .modal-card-head,
-.modal.modal--popup-topo .modal-card[class*="has-background-"] > .modal-card-body,
-.modal.modal--popup-topo .modal-card[class*="has-background-"] > .modal-card-foot {
-    background-color: inherit;
+.modal.modal--popup-topo .modal-card.popup--sombra-link {
+    border: 1px solid color-mix(in srgb, var(--bulma-link) 75%, transparent);
+    box-shadow: 0 0 0.5rem color-mix(in srgb, var(--bulma-link) 75%, transparent);
 }
 
-.modal.modal--popup-topo .modal-card[class*="has-text-"] > .modal-card-head .modal-card-title,
-.modal.modal--popup-topo .modal-card[class*="has-text-"] > .modal-card-body .content {
-    color: inherit;
+.modal.modal--popup-topo .modal-card.popup--sombra-info {
+    border: 1px solid color-mix(in srgb, var(--bulma-info) 75%, transparent);
+    box-shadow: 0 0 0.5rem color-mix(in srgb, var(--bulma-info) 75%, transparent);
+}
+
+.modal.modal--popup-topo .modal-card.popup--sombra-success {
+    border: 1px solid color-mix(in srgb, var(--bulma-success) 75%, transparent);
+    box-shadow: 0 0 0.5rem color-mix(in srgb, var(--bulma-success) 75%, transparent);
+}
+
+.modal.modal--popup-topo .modal-card.popup--sombra-warning {
+    border: 1px solid color-mix(in srgb, var(--bulma-warning) 75%, transparent);
+    box-shadow: 0 0 0.5rem color-mix(in srgb, var(--bulma-warning) 75%, transparent);
 }
 
 .modal.modal--popup-topo .modal-card.popup--sombra-danger {
-    box-shadow: 0 0.5rem 1.25rem color-mix(in srgb, var(--bulma-danger) 24%, transparent);
-}
-
-@media screen and (min-width: 769px) {
-    .modal.modal--popup-topo .modal-card {
-        max-height: calc(75vh - var(--bulma-modal-content-spacing-tablet));
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .modal.modal--popup-topo,
-    .modal.modal--popup-topo > .modal-background,
-    .modal.modal--popup-topo > .modal-card {
-        transition: none;
-    }
+    border: 1px solid color-mix(in srgb, var(--bulma-danger) 75%, transparent);
+    box-shadow: 0 0 0.5rem color-mix(in srgb, var(--bulma-danger) 75%, transparent);
 }

@@ -37,9 +37,19 @@
         <div class="field">
             <label class="label" for="popup-classe">Classes do popup</label>
             <div class="control">
-                <input class="input" id="popup-classe" @bind="classePopup" @bind:event="oninput" placeholder="Vazio: estilo padrão" />
+                <div class="select is-fullwidth">
+                    <select id="popup-classe" @bind="classePopup">
+                        <option value="">Padrão (contorno primário)</option>
+                        <option value="popup--sombra-primary">popup--sombra-primary</option>
+                        <option value="popup--sombra-link">popup--sombra-link</option>
+                        <option value="popup--sombra-info">popup--sombra-info</option>
+                        <option value="popup--sombra-success">popup--sombra-success</option>
+                        <option value="popup--sombra-warning">popup--sombra-warning</option>
+                        <option value="popup--sombra-danger">popup--sombra-danger</option>
+                    </select>
+                </div>
             </div>
-            <p class="help">Teste de sombra danger sem borda: popup--sombra-danger</p>
+            <p class="help">As opções alteram somente a cor da sombra externa do popup.</p>
         </div>
     </div>
 
@@ -53,7 +63,14 @@
         <div class="field">
             <label class="label" for="popup-classe-confirmar">Classes do botão de confirmação</label>
             <div class="control">
-                <input class="input" id="popup-classe-confirmar" @bind="classeBotaoConfirmar" @bind:event="oninput" placeholder="is-primary" />
+                <div class="select is-fullwidth">
+                    <select id="popup-classe-confirmar" @bind="classeBotaoConfirmar">
+                        @foreach (var opcao in OpcoesClasseBotao)
+                        {
+                            <option value="@opcao.Classe">@opcao.Rotulo</option>
+                        }
+                    </select>
+                </div>
             </div>
         </div>
     </div>
@@ -68,7 +85,14 @@
         <div class="field">
             <label class="label" for="popup-classe-cancelar">Classes do botão de cancelamento</label>
             <div class="control">
-                <input class="input" id="popup-classe-cancelar" @bind="classeBotaoCancelar" @bind:event="oninput" placeholder="is-danger" />
+                <div class="select is-fullwidth">
+                    <select id="popup-classe-cancelar" @bind="classeBotaoCancelar">
+                        @foreach (var opcao in OpcoesClasseBotao)
+                        {
+                            <option value="@opcao.Classe">@opcao.Rotulo</option>
+                        }
+                    </select>
+                </div>
             </div>
         </div>
     </div>
@@ -106,13 +130,36 @@
     private string icone = "fa-solid fa-circle-info";
     private string textoConfirmar = "OK";
     private string textoCancelar = "Cancelar";
-    private string classePopup = "popup--sombra-danger";
+    private string classePopup = string.Empty;
     private string classeBotaoConfirmar = string.Empty;
     private string classeBotaoCancelar = string.Empty;
     private bool passarTitulo = true;
     private bool passarIcone = true;
     private bool aberto;
     private string? ultimaResposta;
+
+    private static readonly (string Classe, string Rotulo)[] OpcoesClasseBotao =
+    [
+        ("", "Padrão"),
+        ("is-primary", "is-primary"),
+        ("is-link", "is-link"),
+        ("is-info", "is-info"),
+        ("is-success", "is-success"),
+        ("is-warning", "is-warning"),
+        ("is-danger", "is-danger"),
+        ("is-light", "is-light"),
+        ("is-dark", "is-dark"),
+        ("is-white", "is-white"),
+        ("is-black", "is-black"),
+        ("is-text", "is-text"),
+        ("is-ghost", "is-ghost"),
+        ("is-primary is-light", "is-primary is-light"),
+        ("is-link is-light", "is-link is-light"),
+        ("is-info is-light", "is-info is-light"),
+        ("is-success is-light", "is-success is-light"),
+        ("is-warning is-light", "is-warning is-light"),
+        ("is-danger is-light", "is-danger is-light")
+    ];
 
     private static string? ValorOpcional(string valor) => string.IsNullOrWhiteSpace(valor) ? null : valor;
 

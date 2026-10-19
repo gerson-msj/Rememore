@@ -1,0 +1,313 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<section aria-labelledby="@IdTitulo">
+    <h3 class="title is-5" id="@IdTitulo">Categorias associadas</h3>
+
+    <div class="control has-icons-right seletor-categoria__campo" @onclick="AbrirPopupAsync">
+        <div class="seletor-categoria__categorias">
+            @if (Categorias.Count == 0)
+            {
+                <span class="seletor-categoria__vazia">Adicione uma categoria</span>
+            }
+            else
+            {
+                @foreach (var categoria in Categorias)
+                {
+                    <span class="tag seletor-categoria__etiqueta" title="@categoria" @key="categoria">
+                        <span class="seletor-categoria__nome">@categoria</span>
+                        @if (!SomenteLeitura)
+                        {
+                            <button class="delete seletor-categoria__remover"
+                                    type="button"
+                                    aria-label="Remover categoria @categoria"
+                                    @onclick="() => RemoverCategoriaAsync(categoria)"
+                                    @onclick:stopPropagation="true"></button>
+                        }
+                    </span>
+                }
+            }
+        </div>
+
+        @if (!SomenteLeitura)
+        {
+            <button @ref="botaoAdicionar"
+                    class="button is-ghost icon is-right icone-controle-interativo seletor-categoria__adicionar"
+                    type="button"
+                    aria-label="Adicionar ou pesquisar categoria"
+                    @onclick="AbrirPopupAsync"
+                    @onclick:stopPropagation="true">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            </button>
+        }
+    </div>
+
+    @if (PopupAberto && !SomenteLeitura)
+    {
+        <div class="modal modal--popup-compartilhado is-active">
+            <div class="modal-background" @onclick="FecharPopupAsync"></div>
+            <div @ref="cartaoPopup"
+                 class="modal-card modal-card--sem-rodape"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="@IdTituloPopup"
+                 tabindex="-1"
+                 @onkeydown="TratarTeclaPopupAsync">
+                <header class="modal-card-head">
+                    <p class="modal-card-title" id="@IdTituloPopup">Pesquisar categoria</p>
+                </header>
+                <section class="modal-card-body seletor-categoria__popup-conteudo">
+                    <div class="field seletor-categoria__popup-pesquisa">
+                        <label class="is-sr-only" for="@IdPesquisa">Pesquisar categoria</label>
+                        <div class="control has-icons-left">
+                            <input @ref="campoPesquisa"
+                                   class="input"
+                                   id="@IdPesquisa"
+                                   type="search"
+                                   autocomplete="off"
+                                   placeholder="Digite para pesquisar"
+                                   value="@textoPesquisa"
+                                   @oninput="AlterarPesquisaAsync" />
+                            <span class="icon is-left" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        </div>
+                    </div>
+
+                    <p class="is-sr-only" role="status" aria-live="polite">@DescricaoResultados</p>
+
+                    @if (ResultadosPesquisa.Count > 0 || PodeCriarCategoria)
+                    {
+                        <div class="seletor-categoria__resultados-moldura">
+                            <ul class="seletor-categoria__resultados" id="@IdResultados" aria-label="Categorias disponíveis">
+                                @if (PodeCriarCategoria)
+                                {
+                                    <li>
+                                        <button class="button is-fullwidth seletor-categoria__resultado"
+                                                type="button"
+                                                @onclick="CriarCategoriaAsync">
+                                            <span>Criar “@NomeParaCriar”</span>
+                                            <span class="tag seletor-categoria__indicador">Nova categoria</span>
+                                        </button>
+                                    </li>
+                                }
+                                @foreach (var categoria in ResultadosPesquisa)
+                                {
+                                    var associada = CategoriasNormalizadas.Contains(PesquisaCategorias.Normalizar(categoria));
+                                    <li @key="categoria">
+                                        <button class="button is-fullwidth seletor-categoria__resultado @(associada ? "seletor-categoria__resultado--associada" : string.Empty)"
+                                                type="button"
+                                                disabled="@associada"
+                                                aria-label="@(associada ? $"{categoria}, já associada" : categoria)"
+                                                @onclick="() => AdicionarCategoriaAsync(categoria)">
+                                            <span>@categoria</span>
+                                            @if (associada)
+                                            {
+                                                <span class="tag seletor-categoria__indicador" aria-hidden="true">Já associada</span>
+                                            }
+                                        </button>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    else if (ConsultaJaAssociada)
+                    {
+                        <p class="help">Esta categoria já está associada.</p>
+                    }
+                    else
+                    {
+                        <p class="help">Nenhuma categoria disponível.</p>
+                    }
+                </section>
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    private static long proximoId;
+    private readonly string idBase = $"seletor-categoria-{Interlocked.Increment(ref proximoId)}";
+    private readonly HashSet<string> categoriasNormalizadas = new(StringComparer.Ordinal);
+    private ElementReference botaoAdicionar;
+    private ElementReference campoPesquisa;
+    private ElementReference cartaoPopup;
+    private IJSObjectReference? modulo;
+    private CancellationTokenSource? debouncePesquisa;
+    private string textoPesquisa = string.Empty;
+    private string consultaAplicada = string.Empty;
+    private bool popupEstavaAberto;
+    private bool contencaoFocoAtiva;
+
+    [Parameter] public IReadOnlyList<string> Categorias { get; set; } = Array.Empty<string>();
+    [Parameter] public IReadOnlyList<string> CategoriasDisponiveis { get; set; } = Array.Empty<string>();
+    [Parameter] public bool SomenteLeitura { get; set; }
+    [Parameter] public bool PopupAberto { get; set; }
+    [Parameter] public EventCallback<bool> PopupAbertoChanged { get; set; }
+    [Parameter] public EventCallback<string> AoAdicionarCategoria { get; set; }
+    [Parameter] public EventCallback<string> AoCriarCategoria { get; set; }
+    [Parameter] public EventCallback<string> AoRemoverCategoria { get; set; }
+
+    private string IdTitulo => $"{idBase}-titulo";
+    private string IdTituloPopup => $"{idBase}-titulo-popup";
+    private string IdPesquisa => $"{idBase}-pesquisa";
+    private string IdResultados => $"{idBase}-resultados";
+    private string NomeParaCriar => textoPesquisa.Trim();
+    private bool ConsultaJaAssociada => !string.IsNullOrWhiteSpace(consultaAplicada)
+        && Categorias.Any(categoria => string.Equals(
+            PesquisaCategorias.Normalizar(categoria),
+            PesquisaCategorias.Normalizar(consultaAplicada),
+            StringComparison.Ordinal));
+    private bool PodeCriarCategoria => !string.IsNullOrWhiteSpace(NomeParaCriar)
+        && !PesquisaCategorias.TemCorrespondenciaSimples(CategoriasDisponiveis, consultaAplicada)
+        && !Categorias.Concat(CategoriasDisponiveis).Any(categoria => string.Equals(
+            PesquisaCategorias.Normalizar(categoria),
+            PesquisaCategorias.Normalizar(NomeParaCriar),
+            StringComparison.Ordinal));
+    private IReadOnlyList<string> ResultadosPesquisa => PesquisaCategorias
+        .EncontrarCorrespondencias(CategoriasDisponiveis, consultaAplicada)
+        .DistinctBy(PesquisaCategorias.Normalizar)
+        .ToArray();
+    private string DescricaoResultados => PodeCriarCategoria
+        ? $"Opção para criar {NomeParaCriar} e {ResultadosPesquisa.Count} {Pluralizar(ResultadosPesquisa.Count, "sugestão aproximada", "sugestões aproximadas")}."
+        : $"{ResultadosPesquisa.Count} {Pluralizar(ResultadosPesquisa.Count, "categoria disponível", "categorias disponíveis")}.";
+    private HashSet<string> CategoriasNormalizadas => categoriasNormalizadas;
+    private bool PopupVisivel => PopupAberto && !SomenteLeitura;
+
+    protected override void OnParametersSet()
+    {
+        categoriasNormalizadas.Clear();
+        foreach (var categoria in Categorias)
+        {
+            categoriasNormalizadas.Add(PesquisaCategorias.Normalizar(categoria));
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (primeiroRender)
+        {
+            modulo = await JS.InvokeAsync<IJSObjectReference>("import", "./js/seletorCategoria.js");
+        }
+
+        if (PopupVisivel && !popupEstavaAberto)
+        {
+            if (modulo is not null)
+            {
+                await modulo.InvokeVoidAsync("registrarContencaoFoco", cartaoPopup);
+                contencaoFocoAtiva = true;
+            }
+
+            await campoPesquisa.FocusAsync();
+        }
+        else if (!PopupVisivel && popupEstavaAberto && contencaoFocoAtiva && modulo is not null)
+        {
+            await modulo.InvokeVoidAsync("removerContencaoFoco", cartaoPopup);
+            contencaoFocoAtiva = false;
+        }
+
+        popupEstavaAberto = PopupVisivel;
+    }
+
+    private Task AbrirPopupAsync()
+    {
+        if (SomenteLeitura) return Task.CompletedTask;
+
+        textoPesquisa = string.Empty;
+        consultaAplicada = string.Empty;
+        return PopupAbertoChanged.InvokeAsync(true);
+    }
+
+    private async Task FecharPopupAsync()
+    {
+        if (!PopupAberto) return;
+
+        CancelarDebounce();
+        await PopupAbertoChanged.InvokeAsync(false);
+        await Task.Yield();
+        if (!SomenteLeitura)
+        {
+            await botaoAdicionar.FocusAsync();
+        }
+    }
+
+    private async Task AdicionarCategoriaAsync(string categoria)
+    {
+        if (SomenteLeitura || categoriasNormalizadas.Contains(PesquisaCategorias.Normalizar(categoria))) return;
+
+        await AoAdicionarCategoria.InvokeAsync(categoria);
+        await FecharPopupAsync();
+    }
+
+    private async Task CriarCategoriaAsync()
+    {
+        var nome = NomeParaCriar;
+        if (SomenteLeitura || string.IsNullOrWhiteSpace(nome) || !PodeCriarCategoria) return;
+
+        await AoCriarCategoria.InvokeAsync(nome);
+        await FecharPopupAsync();
+    }
+
+    private Task RemoverCategoriaAsync(string categoria)
+    {
+        if (SomenteLeitura || !Categorias.Contains(categoria)) return Task.CompletedTask;
+        return AoRemoverCategoria.InvokeAsync(categoria);
+    }
+
+    private async Task AlterarPesquisaAsync(ChangeEventArgs args)
+    {
+        textoPesquisa = args.Value?.ToString() ?? string.Empty;
+        CancelarDebounce();
+
+        var fonte = new CancellationTokenSource();
+        debouncePesquisa = fonte;
+
+        try
+        {
+            await Task.Delay(180, fonte.Token);
+            if (!ReferenceEquals(debouncePesquisa, fonte)) return;
+
+            consultaAplicada = textoPesquisa;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private Task TratarTeclaPopupAsync(KeyboardEventArgs args) =>
+        args.Key == "Escape" ? FecharPopupAsync() : Task.CompletedTask;
+
+    private static string Pluralizar(int quantidade, string singular, string plural) =>
+        quantidade == 1 ? singular : plural;
+
+    private void CancelarDebounce()
+    {
+        debouncePesquisa?.Cancel();
+        debouncePesquisa?.Dispose();
+        debouncePesquisa = null;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        CancelarDebounce();
+        if (modulo is null) return;
+
+        if (contencaoFocoAtiva)
+        {
+            try
+            {
+                await modulo.InvokeVoidAsync("removerContencaoFoco", cartaoPopup);
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+
+        try
+        {
+            await modulo.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+    }
+}

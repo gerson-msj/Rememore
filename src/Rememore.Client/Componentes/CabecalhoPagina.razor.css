@@ -20,3 +20,7 @@
     white-space: nowrap;
     line-height: 1.5;
 }
+
+.cabecalho-pagina__titulo:focus {
+    outline: none;
+}
