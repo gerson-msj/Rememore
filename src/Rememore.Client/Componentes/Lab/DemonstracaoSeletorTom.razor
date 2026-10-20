@@ -1,0 +1,393 @@
+@implements IDisposable
+@inject EstadoTema EstadoTema
+@using System.Globalization
+@using Rememore.Client.Infraestrutura
+
+<div class="content demonstracao-seletor-tom" style="@EstiloCoresEfetivas">
+    <p>O seletor desta amostra é demonstrativo: alterações não são persistidas.</p>
+
+    <div class="field">
+        <label class="label" for="cmp007-largura-seletor">Largura do seletor: @LarguraSeletorFormatada%</label>
+        <div class="control demonstracao-seletor-tom__controle-largura">
+            <input class="demonstracao-seletor-tom__entrada-largura"
+                   id="cmp007-largura-seletor"
+                   type="range"
+                   min="30"
+                   max="100"
+                   step="any"
+                   @bind="LarguraSeletor"
+                   @bind:event="oninput"
+                   @bind:culture="CultureInfo.InvariantCulture" />
+        </div>
+        <p class="help">Ajuste a largura para comparar o seletor em espaço reduzido ou total.</p>
+    </div>
+
+    <SeletorTom @ref="Seletor"
+                Id="cmp007-escala-tom"
+                Valor="@Tom"
+                LarguraPercentual="@LarguraSeletor"
+                AtrasoMs="@AtrasoMs"
+                AtrasoSetasMs="@AtrasoSetasMs"
+                Curva="@Curva"
+                CurvaSetas="@CurvaSetas"
+                CurvaClique="@CurvaClique"
+                CurvaArraste="@CurvaArraste"
+                Desabilitado="@Desabilitado"
+                AoAlterar="AoAlterarTom"
+                AoAlvoAlterado="AoAlterarAlvo"
+                AoConcluir="AoConcluirTom"
+                AoSolicitarDesativacao="DesativarTom" />
+
+    <div class="field">
+        <label class="checkbox">
+            <input type="checkbox" @bind="Desabilitado" />
+            Desabilitar o seletor (teste)
+        </label>
+    </div>
+
+    <div class="field">
+        <label class="label" for="cmp007-atraso">Atraso de Page Up/Down e mouse: @AtrasoMs.ToString("N0", CultureInfo.GetCultureInfo("pt-BR")) ms</label>
+        <div class="control">
+            <input id="cmp007-atraso" type="range" min="0" max="1200" step="50"
+                   @bind="AtrasoMs" @bind:event="oninput" />
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label" for="cmp007-atraso-setas">Atraso das setas: @AtrasoSetasMs.ToString("N0", CultureInfo.GetCultureInfo("pt-BR")) ms</label>
+        <div class="control">
+            <input id="cmp007-atraso-setas" type="range" min="0" max="1200" step="50"
+                   @bind="AtrasoSetasMs" @bind:event="oninput" />
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label" for="cmp007-curva-clique">Curva ao clicar na trilha</label>
+        <div class="control">
+            <div class="select">
+                <select id="cmp007-curva-clique" @bind="CurvaClique">
+                    <option value="Linear">Linear</option>
+                    <option value="EaseIn">Acelera ao longo do movimento</option>
+                    <option value="EaseOut">Desacelera ao se aproximar</option>
+                    <option value="EaseInOut">Acelera e depois desacelera</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label" for="cmp007-curva-arraste">Curva ao clicar e arrastar</label>
+        <div class="control">
+            <div class="select">
+                <select id="cmp007-curva-arraste" @bind="CurvaArraste">
+                    <option value="Linear">Linear</option>
+                    <option value="EaseIn">Acelera ao longo do movimento</option>
+                    <option value="EaseOut">Desacelera ao se aproximar</option>
+                    <option value="EaseInOut">Acelera e depois desacelera</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label" for="cmp007-curva-teclado">Curva de Page Up/Down e cenários</label>
+        <div class="control">
+            <div class="select">
+                <select id="cmp007-curva-teclado" @bind="Curva">
+                    <option value="Linear">Linear</option>
+                    <option value="EaseIn">Acelera ao longo do movimento</option>
+                    <option value="EaseOut">Desacelera ao se aproximar</option>
+                    <option value="EaseInOut">Acelera e depois desacelera</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label" for="cmp007-curva-setas">Curva das setas</label>
+        <div class="control">
+            <div class="select">
+                <select id="cmp007-curva-setas" @bind="CurvaSetas">
+                    <option value="Linear">Linear</option>
+                    <option value="EaseIn">Acelera ao longo do movimento</option>
+                    <option value="EaseOut">Desacelera ao se aproximar</option>
+                    <option value="EaseInOut">Acelera e depois desacelera</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <fieldset class="field">
+        <legend class="label">Cenários de Tom</legend>
+        <div class="field is-grouped is-grouped-multiline">
+            @foreach (var (rotulo, valor) in Cenarios)
+            {
+                <div class="control" @key="valor">
+                    <button class="button" type="button" disabled="@Desabilitado" @onclick="() => DefinirCenarioAsync(valor)">@rotulo</button>
+                </div>
+            }
+        </div>
+    </fieldset>
+
+    <div class="field">
+        <label class="label" for="cmp007-texto-memoria">Texto de exemplo da memória</label>
+        <div class="control">
+            <textarea class="textarea" id="cmp007-texto-memoria" rows="5"
+                      @bind="TextoMemoria" @bind:event="oninput"></textarea>
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label" for="cmp007-categoria">Categoria</label>
+        <div class="control">
+            <input class="input" id="cmp007-categoria" type="text"
+                   @bind="Categoria" @bind:event="oninput" />
+        </div>
+    </div>
+
+    <AmostraMemoriaTom Tom="@Tom" Categoria="@Categoria" Conteudo="@TextoMemoria" />
+
+    <fieldset class="field">
+        <legend class="label">Calibração cromática do laboratório</legend>
+        <p class="help">As cores abaixo afetam somente as amostras deste bloco. Tema visual efetivo: @(TemaEfetivo == PreferenciaTema.Escuro ? "Escuro" : "Claro").</p>
+
+        <div class="field">
+            <label class="label" for="cmp007-tema-calibracao">Tema sendo editado</label>
+            <div class="control">
+                <div class="select">
+                    <select id="cmp007-tema-calibracao" @bind="TemaEdicao">
+                        <option value="Claro">Claro</option>
+                        <option value="Escuro">Escuro</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="label" for="cmp007-preset">Combinação cromática sugerida</label>
+            <div class="control">
+                <div class="select">
+                    <select id="cmp007-preset" value="@PresetAtual" @onchange="SelecionarPreset">
+                        @foreach (var preset in Presets)
+                        {
+                            <option value="@preset.Chave">@preset.Nome</option>
+                        }
+                        <option value="personalizada">Personalizada</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="field">
+            <div class="control">
+                <button class="button" type="button" @onclick="RestaurarPadraoLaboratorio">Restaurar padrão do laboratório</button>
+            </div>
+        </div>
+
+        <div class="columns is-multiline">
+            <div class="column is-half">
+                <label class="label" for="cmp007-cor-negativa">@NomeTemaEdicao — extremo negativo · @CoresEdicao.Negativa</label>
+                <div class="control">
+                    <input id="cmp007-cor-negativa" type="color" value="@CoresEdicao.Negativa" @oninput="AlterarCorNegativa" />
+                </div>
+            </div>
+            <div class="column is-half">
+                <label class="label" for="cmp007-cor-positiva">@NomeTemaEdicao — extremo positivo · @CoresEdicao.Positiva</label>
+                <div class="control">
+                    <input id="cmp007-cor-positiva" type="color" value="@CoresEdicao.Positiva" @oninput="AlterarCorPositiva" />
+                </div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="field">
+        <legend class="label">Experimento da curva cromática</legend>
+        <div class="field">
+            <label class="label" for="cmp007-tom-teste">Tom de teste: @FormatarTom(TomTeste)</label>
+            <div class="control">
+                <input id="cmp007-tom-teste" type="range" min="-100" max="100" step="1"
+                       @bind="TomTeste" @bind:event="oninput" />
+            </div>
+        </div>
+        <div class="field">
+            <label class="label" for="cmp007-limiar">Limiar · @Limiar</label>
+            <div class="control">
+                <input id="cmp007-limiar" type="range" min="1" max="99" step="1"
+                       @bind="Limiar" @bind:event="oninput" />
+            </div>
+        </div>
+        <div class="field">
+            <label class="label" for="cmp007-intensidade">Intensidade no limiar · @IntensidadeNoLimiar%</label>
+            <div class="control">
+                <input id="cmp007-intensidade" type="range" min="0" max="100" step="1"
+                       @bind="IntensidadeNoLimiar" @bind:event="oninput" />
+            </div>
+        </div>
+        <AmostraMemoriaTom Tom="@TomTeste" Categoria="Amostra de teste experimental"
+                          Conteudo="Esta amostra usa somente os parâmetros experimentais da curva."
+                          Limiar="@Limiar" IntensidadeNoLimiar="@IntensidadeNoLimiar" />
+        <div class="columns is-multiline">
+            <div class="column is-half">
+                <p class="label">Linear</p>
+                <div class="demonstracao-seletor-tom__comparacao">
+                    @foreach (var tom in TonsReferencia)
+                    {
+                        var aparencia = AparenciaTom.ObterLinear(tom);
+                        <span class="demonstracao-seletor-tom__amostra-comparativa @aparencia.Classes" style="@aparencia.Estilo">@FormatarTom(tom)</span>
+                    }
+                </div>
+                <span class="demonstracao-seletor-tom__amostra-comparativa aparencia-tom">Sem Tom</span>
+            </div>
+            <div class="column is-half">
+                <p class="label">Experimental · @Limiar/@IntensidadeNoLimiar</p>
+                <div class="demonstracao-seletor-tom__comparacao">
+                    @foreach (var tom in TonsReferencia)
+                    {
+                        var aparencia = AparenciaTom.Obter(tom, Limiar, IntensidadeNoLimiar);
+                        <span class="demonstracao-seletor-tom__amostra-comparativa @aparencia.Classes" style="@aparencia.Estilo">@FormatarTom(tom)</span>
+                    }
+                </div>
+                <span class="demonstracao-seletor-tom__amostra-comparativa aparencia-tom">Sem Tom</span>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="field">
+        <legend class="label">Diagnóstico demonstrativo</legend>
+        <p aria-live="polite">Último AoAlterar: @UltimoAoAlterar</p>
+        <p aria-live="polite">Último AoConcluir: @UltimoAoConcluir</p>
+        <p>Valor efetivo: @FormatarTom(Tom) · Alvo: @FormatarTom(AlvoTom).</p>
+    </fieldset>
+</div>
+
+@code {
+    private static readonly (string Rotulo, int Valor)[] Cenarios =
+    [
+        ("Extremo negativo", -100), ("Negativo moderado", -55), ("Negativo próximo do centro", -2),
+        ("Neutro", 0), ("Positivo próximo do centro", 2), ("Positivo moderado", 55), ("Extremo positivo", 100)
+    ];
+    private static readonly int?[] TonsReferencia = [100, 80, 60, 40, 20, 10, 0, -10, -20, -40, -60, -80, -100];
+    private static readonly (string Chave, string Nome, CoresTom Clara, CoresTom Escura)[] Presets =
+    [
+        ("escolha-inicial", "Escolha inicial", new("#007BFF", "#00FFAA"), new("#CC0000", "#FFEA00")),
+        ("ameixa-jade", "Ameixa e jade", new("#945078", "#25836F"), new("#D99AC3", "#79D5B7")),
+        ("ardosia-mel", "Ardósia e mel", new("#586D94", "#B17B22"), new("#99B1DF", "#EBC779")),
+        ("terracota-petroleo", "Terracota e petróleo (padrão)", new("#B45F4D", "#237F88"), new("#E99E89", "#79CBD1")),
+        ("indigo-damasco", "Índigo e damasco", new("#6B5CA5", "#C27A3D"), new("#B4A1EB", "#F1BF8F")),
+        ("rosa-oliva", "Rosa antigo e oliva", new("#A45F77", "#75833C"), new("#DFA3B8", "#BECE87")),
+        ("orquidea-turquesa", "Orquídea e turquesa", new("#AD469C", "#008B88"), new("#E48AD3", "#5EDBCB"))
+    ];
+    private readonly Dictionary<PreferenciaTema, CoresTom> coresLaboratorio = new()
+    {
+        [PreferenciaTema.Claro] = new("#B45F4D", "#237F88"),
+        [PreferenciaTema.Escuro] = new("#E99E89", "#79CBD1")
+    };
+
+    private SeletorTom? Seletor;
+    private int? Tom = 65;
+    private int? AlvoTom = 65;
+    private int? TomTeste = 60;
+    private int AtrasoMs = RespostaSeletor.PadraoTom.AtrasoMs;
+    private int AtrasoSetasMs = 1000;
+    private int Limiar = AparenciaTom.LimiarPadrao;
+    private int IntensidadeNoLimiar = AparenciaTom.IntensidadePadrao;
+    private double LarguraSeletor = 100;
+    private CurvaRespostaSeletor Curva = RespostaSeletor.PadraoTom.Curva;
+    private CurvaRespostaSeletor CurvaSetas = CurvaRespostaSeletor.Linear;
+    private CurvaRespostaSeletor CurvaClique = CurvaRespostaSeletor.EaseIn;
+    private CurvaRespostaSeletor CurvaArraste = CurvaRespostaSeletor.EaseInOut;
+    private PreferenciaTema TemaEdicao = PreferenciaTema.Claro;
+    private bool Desabilitado;
+    private string Categoria = "Caminhadas e reflexões";
+    private string TextoMemoria = "Durante uma caminhada longa, percebi como pequenos momentos podem se transformar em lembranças importantes.\n\nQuero guardar esta reflexão para reler com calma e observar como o Tom altera gradualmente a superfície e mantém o texto confortável para leitura, mesmo em parágrafos maiores.";
+    private string UltimoAoAlterar = "não recebido";
+    private string UltimoAoConcluir = "não recebido";
+
+    private PreferenciaTema TemaEfetivo => EstadoTema.AparenciaEscura ? PreferenciaTema.Escuro : PreferenciaTema.Claro;
+    private CoresTom CoresEdicao => coresLaboratorio[TemaEdicao];
+    private string NomeTemaEdicao => TemaEdicao == PreferenciaTema.Escuro ? "Escuro" : "Claro";
+    private string LarguraSeletorFormatada => LarguraSeletor.ToString("0.#", CultureInfo.InvariantCulture);
+    private string PresetAtual => IdentificarPreset(TemaEdicao);
+    private string EstiloCoresEfetivas => $"--tom-negativo:{coresLaboratorio[TemaEfetivo].Negativa};--tom-positivo:{coresLaboratorio[TemaEfetivo].Positiva}";
+
+    protected override void OnInitialized() => EstadoTema.Alterado += AoAlterarTema;
+
+    private void AoAlterarTema()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private Task AoAlterarTom(int? valor)
+    {
+        Tom = valor;
+        UltimoAoAlterar = FormatarTom(valor);
+        return Task.CompletedTask;
+    }
+
+    private void AoAlterarAlvo(int? valor) => AlvoTom = valor;
+
+    private Task AoConcluirTom(int? valor)
+    {
+        UltimoAoConcluir = FormatarTom(valor);
+        return Task.CompletedTask;
+    }
+
+    private Task DesativarTom()
+    {
+        Tom = null;
+        AlvoTom = null;
+        return Task.CompletedTask;
+    }
+
+    private async Task DefinirCenarioAsync(int valor)
+    {
+        if (Seletor is not null) await Seletor.DefinirAlvoAsync(valor);
+    }
+
+    private string IdentificarPreset(PreferenciaTema tema)
+    {
+        var atual = coresLaboratorio[tema];
+        foreach (var preset in Presets)
+        {
+            var par = tema == PreferenciaTema.Escuro ? preset.Escura : preset.Clara;
+            if (atual == par) return preset.Chave;
+        }
+        return "personalizada";
+    }
+
+    private void SelecionarPreset(ChangeEventArgs evento)
+    {
+        var chave = evento.Value?.ToString();
+        var preset = Presets.FirstOrDefault(item => item.Chave == chave);
+        if (preset == default) return;
+        coresLaboratorio[TemaEdicao] = TemaEdicao == PreferenciaTema.Escuro ? preset.Escura : preset.Clara;
+    }
+
+    private void AlterarCorNegativa(ChangeEventArgs evento)
+    {
+        var valor = evento.Value?.ToString();
+        if (CorValida(valor)) coresLaboratorio[TemaEdicao] = CoresEdicao with { Negativa = valor!.ToUpperInvariant() };
+    }
+
+    private void AlterarCorPositiva(ChangeEventArgs evento)
+    {
+        var valor = evento.Value?.ToString();
+        if (CorValida(valor)) coresLaboratorio[TemaEdicao] = CoresEdicao with { Positiva = valor!.ToUpperInvariant() };
+    }
+
+    private void RestaurarPadraoLaboratorio()
+    {
+        coresLaboratorio[PreferenciaTema.Claro] = new("#B45F4D", "#237F88");
+        coresLaboratorio[PreferenciaTema.Escuro] = new("#E99E89", "#79CBD1");
+        Limiar = AparenciaTom.LimiarPadrao;
+        IntensidadeNoLimiar = AparenciaTom.IntensidadePadrao;
+    }
+
+    private static bool CorValida(string? valor) => valor is not null
+        && System.Text.RegularExpressions.Regex.IsMatch(valor, "^#[0-9A-Fa-f]{6}$");
+
+    private static string FormatarTom(int? valor) => valor.HasValue ? (valor.Value > 0 ? $"+{valor.Value}" : valor.Value.ToString(CultureInfo.InvariantCulture)) : "Sem Tom";
+
+    public void Dispose() => EstadoTema.Alterado -= AoAlterarTema;
+
+    private sealed record CoresTom(string Negativa, string Positiva);
+}

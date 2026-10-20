@@ -1,0 +1,57 @@
+.amostra-memoria-tom {
+    margin-block-end: 1.5rem;
+    min-width: 0;
+    color: var(--tom-texto);
+}
+
+.amostra-memoria-tom__moldura {
+    position: relative;
+    min-width: 0;
+    margin: 0;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--tom-borda);
+    border-radius: 0.6rem;
+    background: var(--tom-fundo);
+    box-shadow: 0 3px 9px var(--tom-sombra);
+}
+
+.amostra-memoria-tom__categoria {
+    max-width: calc(100% - 0.75rem);
+    padding: 0.1rem 0.55rem;
+    border: 1px solid var(--tom-borda);
+    border-radius: 0.65rem;
+    background: var(--tom-fundo);
+    color: var(--tom-categoria);
+    font-size: 1.05em;
+    font-weight: 600;
+}
+
+.amostra-memoria-tom__nome-categoria {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.amostra-memoria-tom__texto {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    height: 4.5em;
+    align-items: center;
+    overflow: hidden;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.amostra-memoria-tom__texto > div {
+    max-height: 100%;
+    overflow: hidden;
+}
+
+.amostra-memoria-tom__texto::after {
+    position: absolute;
+    inset: 55% 0 0;
+    background: linear-gradient(transparent, var(--tom-fundo));
+    content: "";
+    pointer-events: none;
+}

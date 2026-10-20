@@ -3,4 +3,7 @@
     <Project Path="src/Rememore.Api/Rememore.Api.csproj" />
     <Project Path="src/Rememore.Client/Rememore.Client.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Rememore.Client.Tests/Rememore.Client.Tests.csproj" />
+  </Folder>
 </Solution>

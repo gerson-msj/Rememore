@@ -1,0 +1,246 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+@using System.Globalization
+@using Microsoft.JSInterop
+@using Rememore.Client.Infraestrutura
+
+<fieldset @ref="raiz" class="seletor-tom" style="@EstiloEscala">
+    <legend class="label">Tom</legend>
+
+    <div class="field">
+        <div class="control">
+            <label class="checkbox seletor-tom__ativacao">
+                <input id="@($"{IdControle}-registrar")"
+                       type="checkbox"
+                       role="switch"
+                       checked="@Valor.HasValue"
+                       disabled="@Desabilitado"
+                       aria-describedby="@($"{IdControle}-estado")"
+                       @onchange="AlterarAtivacaoAsync" />
+                <span class="seletor-tom__interruptor" aria-hidden="true"></span>
+                Registrar Tom
+            </label>
+        </div>
+        <p class="help" id="@($"{IdControle}-estado")">@(Valor.HasValue ? "Tom informado" : "Sem Tom")</p>
+    </div>
+
+    <div class="field">
+        <label class="is-sr-only" for="@IdControle">Tom: Negativo, Neutro ou Positivo</label>
+        <div class="seletor-tom__controle-visual @(EscalaDesabilitada ? "seletor-tom__controle-visual--inativo" : string.Empty)">
+            <div class="seletor-tom__trilha" aria-hidden="true">
+                <span class="seletor-tom__revelado"></span>
+                <span class="seletor-tom__centro"></span>
+            </div>
+            <input @ref="entrada"
+                   id="@IdControle"
+                   class="seletor-tom__entrada"
+                   type="range"
+                   min="-100"
+                   max="100"
+                   step="1"
+                   value="@ValorVisual"
+                   disabled="@EscalaDesabilitada"
+                   aria-valuenow="@ValorVisual"
+                   aria-valuetext="@DescricaoTom" />
+            <span class="seletor-tom__alcas" aria-hidden="true">
+                <span class="seletor-tom__alca"></span>
+            </span>
+            <span class="seletor-tom__superficie-ponteiro" aria-hidden="true"></span>
+            <div class="seletor-tom__referencias" aria-hidden="true">
+                <span>Negativo</span>
+                <span>Neutro</span>
+                <span>Positivo</span>
+            </div>
+        </div>
+    </div>
+</fieldset>
+
+@code {
+    private static long proximoId;
+    private readonly string idInstancia = $"seletor-tom-{Interlocked.Increment(ref proximoId)}";
+    private ElementReference raiz;
+    private ElementReference entrada;
+    private DotNetObjectReference<SeletorTom>? referencia;
+    private IJSObjectReference? modulo;
+    private IJSObjectReference? controlador;
+    private int valorVisual;
+    private int valorPublicado;
+    private int? valorPaiAnterior;
+    private bool? escalaDesabilitadaAnterior;
+    private bool inicializado;
+    private bool valorExternoPendente;
+
+    [Parameter] public string? Id { get; set; }
+    [Parameter] public int? Valor { get; set; } = 65;
+    [Parameter] public bool Desabilitado { get; set; }
+    [Parameter] public int AtrasoMs { get; set; } = RespostaSeletor.PadraoTom.AtrasoMs;
+    [Parameter] public int AtrasoSetasMs { get; set; } = 1000;
+    [Parameter] public CurvaRespostaSeletor Curva { get; set; } = RespostaSeletor.PadraoTom.Curva;
+    [Parameter] public CurvaRespostaSeletor CurvaSetas { get; set; } = CurvaRespostaSeletor.Linear;
+    [Parameter] public CurvaRespostaSeletor CurvaClique { get; set; } = RespostaSeletor.PadraoTom.CurvaClique;
+    [Parameter] public CurvaRespostaSeletor CurvaArraste { get; set; } = RespostaSeletor.PadraoTom.CurvaArraste;
+    [Parameter] public double LarguraPercentual { get; set; } = 100;
+    [Parameter] public EventCallback<int?> AoAlterar { get; set; }
+    [Parameter] public EventCallback<int?> AoConcluir { get; set; }
+    [Parameter] public EventCallback<int?> AoAlvoAlterado { get; set; }
+    [Parameter] public EventCallback AoSolicitarDesativacao { get; set; }
+
+    private string IdControle => string.IsNullOrWhiteSpace(Id) ? idInstancia : Id;
+    private bool EscalaDesabilitada => Desabilitado || !Valor.HasValue;
+    private int ValorVisual => Math.Clamp(valorVisual, -100, 100);
+    private string DescricaoTom => !Valor.HasValue
+        ? "Sem Tom"
+        : ValorVisual == 0 ? "Neutro" : ValorVisual < 0 ? "Negativo" : "Positivo";
+
+    protected override void OnParametersSet()
+    {
+        var valorNormalizado = Valor.HasValue ? Math.Clamp(Valor.Value, -100, 100) : 0;
+        if (!inicializado)
+        {
+            valorVisual = valorNormalizado;
+            valorPublicado = valorNormalizado;
+            valorPaiAnterior = Valor;
+            escalaDesabilitadaAnterior = EscalaDesabilitada;
+            inicializado = true;
+            return;
+        }
+
+        if (Valor != valorPaiAnterior)
+        {
+            valorPaiAnterior = Valor;
+            if (valorNormalizado != valorPublicado || !Valor.HasValue)
+            {
+                valorVisual = valorNormalizado;
+                valorPublicado = valorNormalizado;
+                valorExternoPendente = true;
+            }
+        }
+        if (EscalaDesabilitada != escalaDesabilitadaAnterior)
+        {
+            escalaDesabilitadaAnterior = EscalaDesabilitada;
+            valorExternoPendente = true;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (primeiroRender)
+        {
+            modulo = await JS.InvokeAsync<IJSObjectReference>("import", "./js/seletorTom.js");
+            referencia = DotNetObjectReference.Create(this);
+            controlador = await modulo.InvokeAsync<IJSObjectReference>(
+                "conectarSeletorTom", raiz, entrada, referencia, ValorVisual, AtrasoMs,
+                NomeCurva, NomeCurvaClique, NomeCurvaArraste, AtrasoSetasMs, NomeCurvaSetas, EscalaDesabilitada);
+            return;
+        }
+
+        if (controlador is null) return;
+        await controlador.InvokeVoidAsync("definirResposta", Math.Max(0, AtrasoMs),
+            NomeCurva, NomeCurvaClique, NomeCurvaArraste, Math.Max(0, AtrasoSetasMs), NomeCurvaSetas);
+        if (valorExternoPendente)
+        {
+            valorExternoPendente = false;
+            await controlador.InvokeVoidAsync("definirValorExterno", Valor, EscalaDesabilitada);
+        }
+    }
+
+    private string NomeCurva => Curva switch
+    {
+        CurvaRespostaSeletor.Linear => "linear",
+        CurvaRespostaSeletor.EaseIn => "ease-in",
+        CurvaRespostaSeletor.EaseOut => "ease-out",
+        CurvaRespostaSeletor.EaseInOut => "ease-in-out",
+        _ => "ease-out"
+    };
+
+    private string NomeCurvaClique => NomeCurvaDe(CurvaClique);
+    private string NomeCurvaArraste => NomeCurvaDe(CurvaArraste);
+    private string NomeCurvaSetas => NomeCurvaDe(CurvaSetas);
+
+    private static string NomeCurvaDe(CurvaRespostaSeletor curva) => curva switch
+    {
+        CurvaRespostaSeletor.Linear => "linear",
+        CurvaRespostaSeletor.EaseIn => "ease-in",
+        CurvaRespostaSeletor.EaseOut => "ease-out",
+        CurvaRespostaSeletor.EaseInOut => "ease-in-out",
+        _ => "ease-out"
+    };
+
+    private string EstiloEscala
+    {
+        get
+        {
+            var tom = Valor.HasValue ? ValorVisual : 0;
+            var intensidade = Math.Abs(tom);
+            var largura = (intensidade / 2d).ToString("0.##", CultureInfo.InvariantCulture) + "%";
+            var posicao = ((tom + 100) / 2d).ToString("0.##", CultureInfo.InvariantCulture) + "%";
+            var inicio = tom < 0 ? $"calc(50% - {largura})" : "50%";
+            var extremo = tom < 0 ? "negativo" : "positivo";
+            var alca = tom == 0
+                ? "var(--bulma-text-strong)"
+                : $"color-mix(in oklab, var(--tom-{extremo}) {intensidade}%, var(--bulma-text-weak))";
+            var corInicial = tom < 0
+                ? $"color-mix(in oklab, var(--tom-negativo) {intensidade}%, var(--bulma-text-weak))"
+                : "var(--bulma-text-weak)";
+            var corFinal = tom > 0
+                ? $"color-mix(in oklab, var(--tom-positivo) {intensidade}%, var(--bulma-text-weak))"
+                : "var(--bulma-text-weak)";
+            var larguraComponente = Math.Clamp(LarguraPercentual, 30d, 100d)
+                .ToString("0.##", CultureInfo.InvariantCulture);
+
+            return $"--seletor-tom-largura-componente:{larguraComponente}%;--seletor-tom-largura:{largura};--seletor-tom-inicio:{inicio};--seletor-tom-posicao:{posicao};--seletor-tom-alca:{alca};--seletor-tom-cor-inicial:{corInicial};--seletor-tom-cor-final:{corFinal}";
+        }
+    }
+
+    private async Task AlterarAtivacaoAsync(ChangeEventArgs evento)
+    {
+        if (Desabilitado || !bool.TryParse(evento.Value?.ToString(), out var ativado)) return;
+        if (ativado && !Valor.HasValue)
+        {
+            valorVisual = 0;
+            valorPublicado = 0;
+            valorExternoPendente = true;
+            await AoAlterar.InvokeAsync(0);
+            await AoConcluir.InvokeAsync(0);
+        }
+        else if (!ativado && Valor.HasValue)
+        {
+            await AoSolicitarDesativacao.InvokeAsync();
+        }
+    }
+
+    [JSInvokable]
+    public async Task AoAlterarValorVisual(int valor)
+    {
+        if (EscalaDesabilitada) return;
+        var normalizado = Math.Clamp(valor, -100, 100);
+        if (normalizado == valorVisual) return;
+        valorVisual = normalizado;
+        valorPublicado = normalizado;
+        await AoAlterar.InvokeAsync(normalizado);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public Task AoConcluirInteracao(int valor) => AoConcluir.InvokeAsync((int?)Math.Clamp(valor, -100, 100));
+
+    [JSInvokable]
+    public Task AoDefinirAlvo(int valor) => AoAlvoAlterado.InvokeAsync((int?)Math.Clamp(valor, -100, 100));
+
+    public Task DefinirAlvoAsync(int valor) => controlador is null
+        ? Task.CompletedTask
+        : controlador.InvokeVoidAsync("definirAlvo", Math.Clamp(valor, -100, 100), true, true).AsTask();
+
+    public async ValueTask DisposeAsync()
+    {
+        if (controlador is not null)
+        {
+            try { await controlador.InvokeVoidAsync("dispose"); }
+            catch (JSDisconnectedException) { }
+            await controlador.DisposeAsync();
+        }
+        if (modulo is not null) await modulo.DisposeAsync();
+        referencia?.Dispose();
+    }
+}

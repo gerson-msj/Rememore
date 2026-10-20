@@ -1,0 +1,39 @@
+@using Rememore.Client.Infraestrutura
+
+@{
+    var aparencia = Linear ? AparenciaTom.ObterLinear(Tom) : AparenciaTom.Obter(Tom, Limiar, IntensidadeNoLimiar);
+}
+
+<article class="amostra-memoria-tom @aparencia.Classes" style="@aparencia.Estilo">
+    <fieldset class="amostra-memoria-tom__moldura">
+        @if (!string.IsNullOrWhiteSpace(Categoria))
+        {
+            <legend class="amostra-memoria-tom__categoria">
+                <span class="amostra-memoria-tom__nome-categoria">@Categoria</span>
+            </legend>
+        }
+        <div class="amostra-memoria-tom__texto">
+            <div>@Conteudo</div>
+        </div>
+    </fieldset>
+</article>
+
+@code {
+    [Parameter]
+    public int? Tom { get; set; }
+
+    [Parameter]
+    public string Categoria { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Conteudo { get; set; } = string.Empty;
+
+    [Parameter]
+    public int Limiar { get; set; } = AparenciaTom.LimiarPadrao;
+
+    [Parameter]
+    public int IntensidadeNoLimiar { get; set; } = AparenciaTom.IntensidadePadrao;
+
+    [Parameter]
+    public bool Linear { get; set; }
+}

@@ -1,0 +1,202 @@
+.seletor-tom {
+    border: 0;
+    inline-size: min(100%, var(--seletor-tom-largura-componente, 100%));
+    margin-block-end: 1rem;
+    min-inline-size: 0;
+    padding: 0;
+}
+
+.seletor-tom__ativacao {
+    align-items: center;
+    cursor: pointer;
+    display: inline-flex;
+    gap: 0.55rem;
+    position: relative;
+}
+
+.seletor-tom__ativacao input {
+    block-size: 1px;
+    inline-size: 1px;
+    opacity: 0;
+    position: absolute;
+}
+
+.seletor-tom__interruptor {
+    background: var(--bulma-border-weak, var(--bulma-border));
+    border: 1px solid var(--bulma-border);
+    border-radius: 999px;
+    flex: 0 0 2.7rem;
+    block-size: 1.5rem;
+    position: relative;
+    transition: background-color 120ms ease;
+}
+
+.seletor-tom__interruptor::after {
+    background: var(--bulma-scheme-main);
+    border-radius: 50%;
+    block-size: 1.1rem;
+    content: "";
+    inset-block-start: 0.15rem;
+    inset-inline-start: 0.15rem;
+    position: absolute;
+    transition: transform 120ms ease;
+    inline-size: 1.1rem;
+}
+
+.seletor-tom__ativacao input:checked + .seletor-tom__interruptor {
+    background: var(--bulma-primary);
+}
+
+.seletor-tom__ativacao input:checked + .seletor-tom__interruptor::after {
+    transform: translateX(1.2rem);
+}
+
+.seletor-tom__ativacao input:focus-visible + .seletor-tom__interruptor {
+    outline: 2px solid var(--bulma-link);
+    outline-offset: 2px;
+}
+
+.seletor-tom__ativacao input:disabled + .seletor-tom__interruptor {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.seletor-tom__controle-visual {
+    block-size: 2.9rem;
+    inline-size: 100%;
+    margin-block: 0.35rem 0.2rem;
+    position: relative;
+}
+
+.seletor-tom__trilha {
+    background: var(--seletor-tom-neutro, var(--bulma-border-weak, var(--bulma-border)));
+    block-size: 0.45rem;
+    border-radius: 999px;
+    inset: 1rem 0.575rem auto;
+    pointer-events: none;
+    position: absolute;
+}
+
+.seletor-tom__revelado {
+    background: linear-gradient(90deg, var(--seletor-tom-cor-inicial), var(--seletor-tom-cor-final));
+    block-size: 100%;
+    border-radius: inherit;
+    inset-block: 0;
+    left: var(--seletor-tom-inicio);
+    position: absolute;
+    inline-size: var(--seletor-tom-largura);
+}
+
+.seletor-tom__centro {
+    block-size: 0.85rem;
+    border-left: 1px solid var(--bulma-text-weak);
+    inset-block-start: -0.2rem;
+    left: 50%;
+    position: absolute;
+}
+
+.seletor-tom__alcas {
+    inset: 0 0.575rem;
+    pointer-events: none;
+    position: absolute;
+}
+
+.seletor-tom__alca {
+    background: var(--seletor-tom-alca);
+    border: 2px solid var(--bulma-scheme-main);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--bulma-text-weak);
+    block-size: 1.15rem;
+    inset-block-start: calc(0.65rem - 2px);
+    left: var(--seletor-tom-posicao);
+    position: absolute;
+    transform: translateX(-50%);
+    z-index: 1;
+    inline-size: 1.15rem;
+}
+
+.seletor-tom__entrada {
+    appearance: none;
+    background: transparent;
+    block-size: 2.4rem;
+    inset: 0;
+    margin: 0;
+    position: absolute;
+    inline-size: 100%;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.seletor-tom__entrada::-webkit-slider-runnable-track {
+    background: transparent;
+    block-size: 2.4rem;
+}
+
+.seletor-tom__entrada::-moz-range-track {
+    background: transparent;
+    block-size: 2.4rem;
+}
+
+.seletor-tom__entrada::-webkit-slider-thumb {
+    appearance: none;
+    background: transparent;
+    border: 2px solid var(--bulma-scheme-main);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--bulma-text-weak);
+    block-size: 1.15rem;
+    inline-size: 1.15rem;
+    margin-top: -0.35rem;
+    opacity: 0;
+}
+
+.seletor-tom__entrada::-moz-range-thumb {
+    background: var(--seletor-tom-alca);
+    border: 2px solid var(--bulma-scheme-main);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--bulma-text-weak);
+    block-size: 0.9rem;
+    inline-size: 0.9rem;
+    opacity: 0;
+}
+
+.seletor-tom:not(.seletor-tom--foco-ponteiro) .seletor-tom__entrada:focus-visible ~ .seletor-tom__alcas .seletor-tom__alca {
+    outline: none;
+    box-shadow: 0 0 0 1px var(--bulma-link);
+}
+
+.seletor-tom__entrada:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.seletor-tom__superficie-ponteiro {
+    block-size: 1.6rem;
+    cursor: ew-resize;
+    inset: 0.4rem 0.575rem auto;
+    position: absolute;
+    touch-action: none;
+    z-index: 3;
+}
+
+.seletor-tom__controle-visual--inativo .seletor-tom__superficie-ponteiro {
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.seletor-tom__referencias {
+    color: var(--bulma-text-weak);
+    display: flex;
+    font-size: 0.8rem;
+    justify-content: space-between;
+    inset: 0;
+    padding-top: 2.4rem;
+    position: absolute;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .seletor-tom__interruptor,
+    .seletor-tom__interruptor::after {
+        transition: none;
+    }
+}
