@@ -1,34 +1,114 @@
-<article class="memoria @(Inativa ? "memoria--inativa" : "")" data-modo="@Modo">
-    <button class="memoria__principal" type="button" disabled="@Inativa"
-            aria-label="Acionar memória @Identificador"
-            @onclick="() => AoAcionar.InvokeAsync(Identificador)">
-        <span class="memoria__texto">
-            <span class="memoria__conteudo">@Conteudo</span>
-            <span class="memoria__esmaecimento" aria-hidden="true"></span>
-        </span>
-    </button>
-    <div class="memoria__acoes" aria-label="Ordenação da memória @Identificador">
-        <button class="memoria__acao" type="button" aria-label="Elevar memória @Identificador"
-                title="Elevar" disabled="@(Inativa || Primeira)"
-                @onclick="() => AoElevar.InvokeAsync(Identificador)">
-            <i class="fa-solid fa-chevron-up" aria-hidden="true"></i>
-        </button>
-        <button class="memoria__acao" type="button" aria-label="Rebaixar memória @Identificador"
-                title="Rebaixar" disabled="@(Inativa || Ultima)"
-                @onclick="() => AoRebaixar.InvokeAsync(Identificador)">
-            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
-        </button>
-    </div>
+@using Rememore.Client.Infraestrutura
+
+@{
+    var aparencia = AparenciaTom.Obter(Tom);
+}
+
+<article class="memoria @aparencia.Classes @(Inativa ? "memoria--inativa" : string.Empty)"
+         style="@aparencia.Estilo" data-modo="@Modo"
+         data-tem-categoria="@ExibirCategoria.ToString().ToLowerInvariant()"
+         data-simular-movel="@SimularMovel.ToString().ToLowerInvariant()">
+    <fieldset class="box memoria__moldura">
+        @if (ExibirCategoria)
+        {
+            <legend class="memoria__categoria @(Modo == ModoMemoria.Revisar ? "memoria__categoria--integral" : string.Empty)"
+                    title="@TextoCategoriaCompleto">
+                @if (Modo == ModoMemoria.Revisar && Categorias.Count > 0)
+                {
+                    @string.Join(", ", Categorias)
+                }
+                else if (Categorias.Count == 0)
+                {
+                    <span class="memoria__categoria-vazia @(CategoriaEmAtencao && Modo == ModoMemoria.Revisar ? "memoria__categoria-vazia--atencao" : string.Empty)">
+                        Sem categoria
+                    </span>
+                }
+                else
+                {
+                    <span class="memoria__categoria-nome">@Categorias[0]</span>
+                    @if (Categorias.Count > 1)
+                    {
+                        <span class="memoria__categoria-contagem">e +@(Categorias.Count - 1)</span>
+                    }
+                }
+            </legend>
+        }
+
+        <div class="memoria__linha">
+            @if (PodeAcionar)
+            {
+                <button class="button is-ghost is-fullwidth memoria__principal" type="button" disabled="@Inativa"
+                        @onclick="() => AoAcionar.InvokeAsync(Identificador)">
+                    <span class="memoria__texto @(Modo == ModoMemoria.Revisar ? "memoria__texto--integral" : string.Empty)">
+                        <span class="memoria__conteudo">@Conteudo</span>
+                    </span>
+                </button>
+            }
+            else
+            {
+                <div class="memoria__principal memoria__principal--leitura">
+                    <span class="memoria__texto @(Modo == ModoMemoria.Revisar ? "memoria__texto--integral" : string.Empty)">
+                        <span class="memoria__conteudo">@Conteudo</span>
+                    </span>
+                </div>
+            }
+
+            @if (Modo == ModoMemoria.Memorar)
+            {
+                <div class="memoria__acoes" role="group" aria-label="Ordenação da memória @Identificador">
+                    <button class="button is-small is-ghost memoria__acao" type="button" title="Elevar"
+                            aria-label="Elevar memória @Identificador" disabled="@(Inativa || Primeira)"
+                            @ref="_botaoElevar"
+                            @onclick="() => AoElevar.InvokeAsync(Identificador)">
+                        <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-chevron-up"></i></span>
+                    </button>
+                    <button class="button is-small is-ghost memoria__acao" type="button" title="Rebaixar"
+                            aria-label="Rebaixar memória @Identificador" disabled="@(Inativa || Ultima)"
+                            @ref="_botaoRebaixar"
+                            @onclick="() => AoRebaixar.InvokeAsync(Identificador)">
+                        <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+                    </button>
+                </div>
+            }
+        </div>
+    </fieldset>
 </article>
 
 @code {
-    [Parameter, EditorRequired] public string Identificador { get; set; } = "";
-    [Parameter] public string Conteudo { get; set; } = "";
+    private ElementReference _botaoElevar;
+    private ElementReference _botaoRebaixar;
+
+    [Parameter, EditorRequired] public string Identificador { get; set; } = string.Empty;
+    [Parameter] public string Conteudo { get; set; } = string.Empty;
+    [Parameter] public IReadOnlyList<string> Categorias { get; set; } = Array.Empty<string>();
+    [Parameter] public int? Tom { get; set; }
     [Parameter] public ModoMemoria Modo { get; set; } = ModoMemoria.Memorar;
     [Parameter] public bool Primeira { get; set; }
     [Parameter] public bool Ultima { get; set; }
     [Parameter] public bool Inativa { get; set; }
+    [Parameter] public bool CategoriaEmAtencao { get; set; }
+    [Parameter] public bool SimularMovel { get; set; }
     [Parameter] public EventCallback<string> AoAcionar { get; set; }
     [Parameter] public EventCallback<string> AoElevar { get; set; }
     [Parameter] public EventCallback<string> AoRebaixar { get; set; }
+
+    public ValueTask FocarAcaoAsync(bool elevar) =>
+        (elevar ? _botaoElevar : _botaoRebaixar).FocusAsync(preventScroll: true);
+
+    private bool ExibirCategoria => Modo switch
+    {
+        ModoMemoria.Memorar => Categorias.Count > 0,
+        ModoMemoria.Categorizar or ModoMemoria.Revisar => true,
+        _ => false
+    };
+
+    private bool PodeAcionar => Modo is ModoMemoria.Memorar or ModoMemoria.Categorizar or ModoMemoria.Revisar;
+
+    private string TextoCategoriaCompleto => Categorias.Count == 0
+        ? "Sem categoria"
+        : Modo == ModoMemoria.Revisar
+            ? string.Join(", ", Categorias)
+            : Categorias.Count == 1
+                ? Categorias[0]
+                : $"{Categorias[0]} e +{Categorias.Count - 1}";
 }

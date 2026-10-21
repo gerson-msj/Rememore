@@ -1,0 +1,154 @@
+@using System.Globalization
+
+<section aria-labelledby="cmp030-memoria-titulo">
+    <h3 class="title is-5" id="cmp030-memoria-titulo">Memórias demonstrativas</h3>
+
+    <SeletorTom Id="cmp030-tom" Valor="@Tom" AoAlterar="AlterarTom" AoSolicitarDesativacao="DesativarTom" />
+
+    <div class="field">
+        <label class="label" for="cmp030-largura-lista">Largura da lista: @LarguraLista.ToString(CultureInfo.InvariantCulture) px</label>
+        <div class="control">
+            <input id="cmp030-largura-lista" type="range" min="220" max="900" step="10"
+                   @bind="LarguraLista" @bind:event="oninput" />
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label" for="cmp030-contexto">Contexto</label>
+        <div class="control">
+            <div class="select">
+                <select id="cmp030-contexto" @bind="Modo">
+                    <option value="@ModoMemoria.Memorar">Memorar</option>
+                    <option value="@ModoMemoria.Categorizar">Categorizar</option>
+                    <option value="@ModoMemoria.Revisar">Revisar</option>
+                    <option value="@ModoMemoria.RememorarDetalheCategoria">Rememorar — Detalhe da Categoria</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="checkbox">
+            <input type="checkbox" @bind="SimularMovel" />
+            Simular dispositivo móvel (duas linhas)
+        </label>
+    </div>
+
+    <div class="field">
+        <label class="checkbox">
+            <input type="checkbox" @bind="MemoriaDInativa" />
+            Desativar temporariamente a memória D
+        </label>
+    </div>
+
+    <div class="memoria__lista" role="list" aria-label="Cinco memórias demonstrativas" style="@EstiloLarguraLista">
+        @for (var indice = 0; indice < memorias.Count; indice++)
+        {
+            var memoria = memorias[indice];
+            <div role="listitem" @key="memoria.Identificador">
+                <Memoria @ref="referenciasMemoria[memoria.Identificador]"
+                         Identificador="@memoria.Identificador" Conteudo="@memoria.Conteudo"
+                         Categorias="@memoria.Categorias" Tom="@Tom" Modo="@Modo"
+                         Primeira="@(indice == 0)" Ultima="@(indice == memorias.Count - 1)"
+                         Inativa="@(memoria.Identificador == "D" && MemoriaDInativa)"
+                         CategoriaEmAtencao="@(Modo == ModoMemoria.Revisar && memoria.Categorias.Count == 0)"
+                         SimularMovel="@SimularMovel"
+                         AoAcionar="RegistrarAcionamento"
+                         AoElevar="ElevarMemoria"
+                         AoRebaixar="RebaixarMemoria" />
+            </div>
+        }
+    </div>
+
+    <aside aria-label="Eventos emitidos pela demonstração" aria-live="polite" aria-atomic="true">
+        <p>Eventos: @QuantidadeEventos</p>
+        <p>Último acionamento: @UltimoAcionamento</p>
+    </aside>
+</section>
+
+@code {
+    private int? Tom = 65;
+    private int LarguraLista = 640;
+    private ModoMemoria Modo = ModoMemoria.Memorar;
+    private bool SimularMovel;
+    private bool MemoriaDInativa;
+    private int QuantidadeEventos;
+    private string UltimoAcionamento = "nenhum";
+    private readonly Dictionary<string, Memoria> referenciasMemoria = [];
+    private string? memoriaComFocoPendente;
+    private bool focarElevar;
+
+    private string EstiloLarguraLista => $"width: {LarguraLista}px; max-width: 100%;";
+
+    private readonly List<MemoriaDemonstrativa> memorias =
+    [
+        new("A", "Guardei um instante simples que quero recordar.", ["Família"]),
+        new("B", "Depois do trabalho, caminhamos até a praça.\nConversamos sobre os planos para o fim de semana.", ["Trabalho", "Projetos"]),
+        new("C", "Uma lembrança curta e importante.", ["Aprendizados e acontecimentos importantes de muitos anos de convivência"]),
+        new("D", "No começo da manhã, abri a janela e senti o ar fresco. ☀️\n\nMais tarde, preparei um café e organizei as ideias para o dia, lembrando da extraordinariamentelongaconversa que tivemos.\n\nQuero guardar este momento com carinho: ação, coração e memória. 📚💙", ["Família", "Trabalho", "Viagens", "Amigos", "Estudos", "Saúde", "Projetos", "Celebrações"]),
+        new("E", "Quero guardar esta lembrança antes de escolher uma categoria.", [])
+    ];
+
+    private Task AlterarTom(int? valor)
+    {
+        Tom = valor;
+        return Task.CompletedTask;
+    }
+
+    private Task DesativarTom()
+    {
+        Tom = null;
+        return Task.CompletedTask;
+    }
+
+    private Task RegistrarAcionamento(string identificador)
+    {
+        RegistrarEvento($"Acionou memória {identificador}");
+        return Task.CompletedTask;
+    }
+
+    private Task ElevarMemoria(string identificador) => MoverMemoria(identificador, -1, "Elevou");
+
+    private Task RebaixarMemoria(string identificador) => MoverMemoria(identificador, 1, "Rebaixou");
+
+    private async Task MoverMemoria(string identificador, int deslocamento, string acao)
+    {
+        if (Modo != ModoMemoria.Memorar || (identificador == "D" && MemoriaDInativa))
+        {
+            return;
+        }
+
+        var indice = memorias.FindIndex(memoria => memoria.Identificador == identificador);
+        if (!MovimentacaoListaDemonstrativa.MoverUmaPosicao(memorias, indice, deslocamento))
+        {
+            return;
+        }
+
+        memoriaComFocoPendente = identificador;
+        focarElevar = deslocamento < 0;
+        RegistrarEvento($"{acao} memória {identificador}");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (memoriaComFocoPendente is not { } identificador ||
+            !referenciasMemoria.TryGetValue(identificador, out var componente))
+        {
+            return;
+        }
+
+        memoriaComFocoPendente = null;
+        var indice = memorias.FindIndex(memoria => memoria.Identificador == identificador);
+        var ultima = indice == memorias.Count - 1;
+        var direcaoDisponivel = focarElevar ? indice > 0 : !ultima;
+        await componente.FocarAcaoAsync(direcaoDisponivel ? focarElevar : !focarElevar);
+    }
+
+    private void RegistrarEvento(string descricao)
+    {
+        QuantidadeEventos++;
+        UltimoAcionamento = descricao;
+    }
+
+    private sealed record MemoriaDemonstrativa(string Identificador, string Conteudo, IReadOnlyList<string> Categorias);
+}

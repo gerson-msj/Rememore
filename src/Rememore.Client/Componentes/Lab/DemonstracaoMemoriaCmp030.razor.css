@@ -1,0 +1,7 @@
+.memoria__lista + aside {
+    padding-top: var(--bulma-block-spacing);
+}
+
+.memoria__lista > [role="listitem"] + [role="listitem"] {
+    margin-top: var(--bulma-block-spacing);
+}

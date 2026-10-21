@@ -14,5 +14,6 @@
   <ItemGroup>
     <Compile Include="../../src/Rememore.Client/Infraestrutura/AparenciaTom.cs" Link="Infraestrutura/AparenciaTom.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/RespostaSeletor.cs" Link="Infraestrutura/RespostaSeletor.cs" />
+    <Compile Include="../../src/Rememore.Client/Componentes/Lab/MovimentacaoListaDemonstrativa.cs" Link="Componentes/Lab/MovimentacaoListaDemonstrativa.cs" />
   </ItemGroup>
 </Project>

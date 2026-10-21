@@ -2,5 +2,8 @@ namespace Rememore.Client.Componentes;
 
 public enum ModoMemoria
 {
-    Memorar
+    Memorar,
+    Categorizar,
+    Revisar,
+    RememorarDetalheCategoria
 }

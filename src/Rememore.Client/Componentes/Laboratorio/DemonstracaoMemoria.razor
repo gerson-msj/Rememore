@@ -40,7 +40,7 @@
     </div>
 
     <div class="memoria-amostra">
-        <Memoria Identificador="amostra-cmp030" Conteudo="@ConteudoAtual" Primeira="@(posicao is "unica" or "primeira")"
+        <Memoria_old Identificador="amostra-cmp030" Conteudo="@ConteudoAtual" Primeira="@(posicao is "unica" or "primeira")"
                  Ultima="@(posicao is "unica" or "ultima")" Inativa="inativa" AoAcionar="RegistrarAcionamento"
                  AoElevar="RegistrarElevacao" AoRebaixar="RegistrarRebaixamento" />
     </div>
@@ -82,7 +82,7 @@
             {
                 var memoria = memorias[indice];
                 <div role="listitem" @key="memoria.Identificador">
-                    <Memoria Identificador="@memoria.Identificador" Conteudo="@memoria.Conteudo"
+                    <Memoria_old Identificador="@memoria.Identificador" Conteudo="@memoria.Conteudo"
                              Primeira="@(indice == 0)" Ultima="@(indice == memorias.Count - 1)" Inativa="@memoria.Inativa"
                              AoAcionar="RegistrarAcionamento" AoElevar="ElevarNaLista" AoRebaixar="RebaixarNaLista" />
                 </div>
