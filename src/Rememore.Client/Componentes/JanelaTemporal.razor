@@ -1,0 +1,195 @@
+@using System.Globalization
+@using Rememore.Client.Infraestrutura
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+@{
+    var estado = Modelo.Estado;
+    var aparenciaTom = AparenciaTom.Obter(Tom);
+}
+
+<section @ref="raiz"
+         class="janela-temporal @aparenciaTom.Classes"
+         aria-label="Janela Temporal"
+         data-tom-estado="@EstadoTom"
+         data-movimento-reduzido="@SimularMovimentoReduzido.ToString().ToLowerInvariant()"
+         data-resposta-movimento-ms="@RespostaMovimento.AtrasoMs"
+         data-curva-movimento="@NomeCurva(RespostaMovimento.Curva)"
+         data-quantidade-dias="@estado.QuantidadeDiasPreservados"
+         data-invalida="@estado.Invalida.ToString().ToLowerInvariant()"
+         style="@aparenciaTom.Estilo">
+    <p class="janela-temporal__rotulo"><strong>Período</strong></p>
+
+    <div class="janela-temporal__selecao">
+        <div class="janela-temporal__trilho" role="group" aria-label="Seleção de intervalo simulado">
+            <div @ref="area"
+                 class="janela-temporal__area"
+                 data-posicao-inicio="@FormatarPosicao(estado.PosicaoInicio)"
+                 data-posicao-fim="@FormatarPosicao(estado.PosicaoFim)"
+                 style="@EstiloPosicoes(estado)">
+                <span class="janela-temporal__eixo" aria-hidden="true"></span>
+                <span class="janela-temporal__faixa" data-faixa aria-hidden="true"></span>
+                @if (MarcadoresVisiveis(estado))
+                {
+                    @foreach (var posicao in PosicoesMarcadores(estado))
+                    {
+                        <span class="janela-temporal__marcador-dia"
+                              style="inset-inline-start: @posicao.ToString("0.####", CultureInfo.InvariantCulture)%"
+                              aria-hidden="true"></span>
+                    }
+                }
+                <span class="janela-temporal__alca janela-temporal__alca--inicio"
+                      data-alca="inicio"
+                      role="slider"
+                      aria-label="Início do período"
+                      aria-orientation="horizontal"
+                      aria-valuemin="0"
+                      aria-valuemax="@estado.IndiceFim"
+                      aria-valuenow="@estado.IndiceInicio"
+                      aria-valuetext="@FormatarData(estado.DiasPreservados[estado.IndiceInicio])"
+                      aria-invalid="@estado.Invalida.ToString().ToLowerInvariant()">
+                    <span class="janela-temporal__marcador" aria-hidden="true"></span>
+                    <span class="is-sr-only">Início</span>
+                </span>
+                <span class="janela-temporal__alca janela-temporal__alca--fim"
+                      data-alca="fim"
+                      role="slider"
+                      aria-label="Fim do período"
+                      aria-orientation="horizontal"
+                      aria-valuemin="@estado.IndiceInicio"
+                      aria-valuemax="@(estado.QuantidadeDiasPreservados - 1)"
+                      aria-valuenow="@estado.IndiceFim"
+                      aria-valuetext="@FormatarData(estado.DiasPreservados[estado.IndiceFim])"
+                      aria-invalid="@estado.Invalida.ToString().ToLowerInvariant()">
+                    <span class="janela-temporal__marcador" aria-hidden="true"></span>
+                    <span class="is-sr-only">Fim</span>
+                </span>
+            </div>
+        </div>
+
+        @if (estado.Invalida)
+        {
+            <p class="janela-temporal__orientacao" role="status" aria-live="polite">Inclua pelo menos dois dias no período.</p>
+        }
+        else
+        {
+            <p class="janela-temporal__datas">
+                <time datetime="@estado.IntervaloValidoAtual!.DataInicio.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">@FormatarData(estado.IntervaloValidoAtual.DataInicio)</time>
+                <time datetime="@estado.IntervaloValidoAtual!.DataFim.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">@FormatarData(estado.IntervaloValidoAtual.DataFim)</time>
+            </p>
+        }
+    </div>
+</section>
+
+@code {
+    private ElementReference raiz;
+    private ElementReference area;
+    private DotNetObjectReference<JanelaTemporal>? referencia;
+    private IJSObjectReference? modulo;
+    private IJSObjectReference? controlador;
+    private ModeloJanelaTemporal? modeloControlador;
+
+    [Parameter, EditorRequired]
+    public ModeloJanelaTemporal Modelo { get; set; } = default!;
+
+    [Parameter]
+    public int? Tom { get; set; }
+
+    [Parameter]
+    public int LarguraDisponivel { get; set; } = 640;
+
+    [Parameter]
+    public int DensidadeMaximaMarcadores { get; set; } = 7;
+
+    [Parameter]
+    public bool SimularMovimentoReduzido { get; set; }
+
+    [Parameter]
+    public RespostaSeletor RespostaMovimento { get; set; } = new(1000, CurvaRespostaSeletor.EaseInOut);
+
+    [Parameter]
+    public EventCallback AoAtualizar { get; set; }
+
+    private EstadoJanelaTemporal Estado => Modelo.Estado;
+
+    private string EstadoTom => Tom switch
+    {
+        null => "nulo",
+        0 => "zero",
+        < 0 => "negativo",
+        _ => "positivo"
+    };
+
+    private bool MarcadoresVisiveis(EstadoJanelaTemporal estado) => estado.QuantidadeDiasPreservados >= 2
+        && LarguraDisponivel > 0
+        && estado.QuantidadeDiasPreservados / (LarguraDisponivel / 100d) <= Math.Max(1, DensidadeMaximaMarcadores);
+
+    private IEnumerable<double> PosicoesMarcadores(EstadoJanelaTemporal estado) => MarcadoresVisiveis(estado)
+        ? Enumerable.Range(0, estado.QuantidadeDiasPreservados - 1)
+            .Select(indice => (indice + 0.5d) / (estado.QuantidadeDiasPreservados - 1) * 100d)
+        : Enumerable.Empty<double>();
+
+    private string EstiloPosicoes(EstadoJanelaTemporal estado) => string.Create(
+        CultureInfo.InvariantCulture,
+        $"--posicao-inicio:{estado.PosicaoInicio * 100d:0.####}%;--posicao-fim:{estado.PosicaoFim * 100d:0.####}%");
+
+    private static string FormatarPosicao(double posicao) => posicao.ToString("0.########", CultureInfo.InvariantCulture);
+
+    private static string FormatarData(DateOnly data) => data.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (primeiroRender)
+        {
+            modulo = await JS.InvokeAsync<IJSObjectReference>("import", "./js/janelaTemporal.js?cmp008=4");
+            referencia = DotNetObjectReference.Create(this);
+            controlador = await modulo.InvokeAsync<IJSObjectReference>("conectarJanelaTemporal", raiz, area, referencia);
+            modeloControlador = Modelo;
+            return;
+        }
+
+        if (controlador is not null && !ReferenceEquals(modeloControlador, Modelo))
+        {
+            modeloControlador = Modelo;
+            await controlador.InvokeVoidAsync("sincronizarEstadoChamador");
+        }
+    }
+
+    [JSInvokable]
+    public async Task AtualizarPosicoesEfetivas(double posicaoInicio, double posicaoFim)
+    {
+        var estadoAnterior = Estado;
+        Modelo.AtualizarPosicoes(posicaoInicio, posicaoFim);
+        if (Estado != estadoAnterior)
+            await AoAtualizar.InvokeAsync();
+    }
+
+    [JSInvokable]
+    public async Task ConcluirArraste(double posicaoInicio, double posicaoFim)
+    {
+        Modelo.AtualizarPosicoes(posicaoInicio, posicaoFim);
+        Modelo.ConcluirOperacao();
+        await AoAtualizar.InvokeAsync();
+    }
+
+    private static string NomeCurva(CurvaRespostaSeletor curva) => curva switch
+    {
+        CurvaRespostaSeletor.EaseIn => "ease-in",
+        CurvaRespostaSeletor.EaseOut => "ease-out",
+        CurvaRespostaSeletor.EaseInOut => "ease-in-out",
+        _ => "linear"
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        if (controlador is not null)
+        {
+            try { await controlador.InvokeVoidAsync("dispose"); }
+            catch (JSDisconnectedException) { }
+            await controlador.DisposeAsync();
+        }
+        if (modulo is not null) await modulo.DisposeAsync();
+        referencia?.Dispose();
+    }
+}

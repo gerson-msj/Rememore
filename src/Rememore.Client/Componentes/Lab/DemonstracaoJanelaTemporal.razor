@@ -1,0 +1,423 @@
+@using System.Globalization
+@using Rememore.Client.Componentes
+@using Rememore.Client.Infraestrutura
+
+<div class="content demonstracao-janela-temporal">
+    <p>Calibração do CMP-008 com dias determinísticos. Arraste as alças para ajustar o período ou arraste a faixa para transladá-lo.</p>
+
+    <div class="columns is-mobile is-multiline">
+        <div class="column is-12">
+            <fieldset class="field">
+                <legend class="label">Conjunto de dias</legend>
+                <div class="columns is-mobile is-multiline">
+                    <div class="column is-half-mobile is-half-tablet is-one-third-desktop">
+                        <div class="field">
+                            <label class="label" for="cmp008-quantidade">Quantidade de dias preservados</label>
+                            <div class="control">
+                                <input class="input" id="cmp008-quantidade" type="text" inputmode="numeric"
+                                       value="@QuantidadeDiasTexto" @oninput="AtualizarQuantidadeDiasDigitada"
+                                       @onchange="FinalizarEdicaoQuantidadeDias" />
+                            </div>
+                            <p class="help">De 2 a 1.500; a amostra usa datas determinísticas conforme a distribuição escolhida.</p>
+                        </div>
+                    </div>
+                    <div class="column is-half-mobile is-half-tablet is-one-third-desktop">
+                        <div class="field">
+                            <label class="label" for="cmp008-distribuicao">Distribuição das datas</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    <select id="cmp008-distribuicao" @bind="Distribuicao">
+                                        <option value="consecutivas">Consecutivas</option>
+                                        <option value="espacadas">Muito espaçadas</option>
+                                        <option value="irregulares">Irregulares</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-half-mobile is-half-tablet is-one-third-desktop">
+                        <div class="field">
+                            <label class="label" for="cmp008-largura">Largura disponível: @LarguraDisponivel px</label>
+                            <div class="control">
+                                <input id="cmp008-largura" type="range" min="240" max="960" step="10"
+                                       @bind="LarguraDisponivel" @bind:event="oninput" />
+                            </div>
+                            <p class="help">A largura limita a amostra abaixo; o trilho também se adapta ao espaço disponível.</p>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+
+        <div class="column is-half-mobile is-half-tablet is-one-third-desktop">
+            <fieldset class="field">
+                <legend class="label">Tom médio da vista</legend>
+                <p class="help">CMP-007 real, controlado por esta demonstração. Tom nulo permanece diferente de zero.</p>
+                <SeletorTom Id="cmp008-tom" Valor="@Tom" AoAlterar="AlterarTom" AoSolicitarDesativacao="RemoverTom" />
+            </fieldset>
+        </div>
+
+        <div class="column is-half-mobile is-half-tablet is-one-third-desktop">
+            <fieldset class="field">
+                <legend class="label">Marcadores e movimento</legend>
+                <div class="columns is-mobile is-multiline">
+                    <div class="column is-12">
+                        <div class="field">
+                            <label class="label" for="cmp008-densidade">Limiar de densidade: @DensidadeMaximaMarcadores dias por 100 px</label>
+                            <div class="control">
+                                <input id="cmp008-densidade" type="range" min="1" max="30" step="1"
+                                       @bind="DensidadeMaximaMarcadores" @bind:event="oninput" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-12">
+                        <div class="field">
+                            <label class="checkbox">
+                                <input type="checkbox" @bind="SimularMovimentoReduzido" />
+                                Simular movimento reduzido
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+
+        <div class="column is-half-mobile is-half-tablet is-one-third-desktop">
+            <fieldset class="field">
+                <legend class="label">Geometria da seleção</legend>
+                <div class="columns is-mobile is-multiline">
+                    <div class="column is-12">
+                        <div class="field">
+                            <label class="label" for="cmp008-proximidade">Distância visual entre as alças</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    <select id="cmp008-proximidade" @bind="ProximidadeVisual">
+                                        <option value="afastada">Afastadas</option>
+                                        <option value="proxima">Próximas</option>
+                                        <option value="encostada">Encostadas pelas bordas internas</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <p class="help">A colisão impede que os círculos visíveis se cruzem; a área de toque ampliada não altera a seleção temporal.</p>
+                        </div>
+                    </div>
+                    <div class="column is-12">
+                        <div class="field">
+                            <label class="checkbox">
+                                <input type="checkbox" @bind="SimularGeometriaInvalida" />
+                                Simular geometria temporariamente inválida
+                            </label>
+                            <p class="help">Simula alças que representam menos de dois dias; o intervalo válido anterior é preservado enquanto a seleção está inválida.</p>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <div class="column is-12">
+            <fieldset class="field">
+                <legend class="label">Resposta temporal do mouse e toque</legend>
+                <p class="help">O mesmo atraso e a mesma curva se aplicam ao movimento das alças e à translação da faixa.</p>
+                <div class="columns is-mobile is-multiline">
+                    <div class="column is-half-mobile is-half-tablet is-half-desktop">
+                        <div class="field">
+                            <label class="label" for="cmp008-atraso-movimento">Atraso do mouse/toque: @AtrasoMovimentoMs ms</label>
+                            <div class="control">
+                                <input id="cmp008-atraso-movimento" type="range" min="0" max="1500" step="50"
+                                       @bind="AtrasoMovimentoMs" @bind:event="oninput" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-half-mobile is-half-tablet is-half-desktop">
+                        <div class="field">
+                            <label class="label" for="cmp008-curva-movimento">Curva do mouse/toque</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    <select id="cmp008-curva-movimento" @bind="CurvaMovimento">
+                                        @foreach (var curva in Enum.GetValues<CurvaRespostaSeletor>())
+                                        {
+                                            <option value="@curva">@NomeCurva(curva)</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+
+    </div>
+
+    <div class="field">
+        <div class="demonstracao-janela-temporal__amostra" style="@EstiloLarguraAmostra">
+            <JanelaTemporal Modelo="@Modelo"
+                            Tom="@Tom"
+                            LarguraDisponivel="@LarguraDisponivel"
+                            DensidadeMaximaMarcadores="@DensidadeMaximaMarcadores"
+                            SimularMovimentoReduzido="@SimularMovimentoReduzido"
+                            RespostaMovimento="@RespostaMovimento"
+                            AoAtualizar="AtualizarJanela" />
+        </div>
+    </div>
+
+    <fieldset class="field">
+        <legend class="label">Diagnóstico de preparação</legend>
+        <p>Quantidade configurada: @QuantidadeDias · distribuição: @NomeDistribuicao · largura disponível: @LarguraDisponivel px.</p>
+        <p>Posições normalizadas: início @FormatarPosicao(Modelo.Estado.PosicaoInicio) · fim @FormatarPosicao(Modelo.Estado.PosicaoFim).</p>
+        <p>Índices discretos: início @Modelo.Estado.IndiceInicio · fim @Modelo.Estado.IndiceFim · dias selecionados: @(Modelo.Estado.IntervaloValidoAtual?.QuantidadeDias.ToString(CultureInfo.InvariantCulture) ?? "período inválido").</p>
+        <p>Intervalo válido atual: @FormatarIntervalo(Modelo.Estado.IntervaloValidoAtual) · último intervalo válido: @FormatarIntervalo(Modelo.Estado.UltimoIntervaloValido).</p>
+        <p>Tom encaminhado: @FormatarTom(Tom) · densidade: @DensidadeMaximaMarcadores dias/100 px · marcadores: @(MarcadoresVisiveis ? "visíveis e esmaecidos" : "ocultos por densidade") · movimento reduzido: @(SimularMovimentoReduzido ? "simulado" : "desativado").</p>
+        <p>Resposta configurada: @AtrasoMovimentoMs ms/@NomeCurva(CurvaMovimento) para alças e faixa.</p>
+        <div aria-label="Eventos da janela temporal" aria-live="polite" aria-relevant="additions text">
+            <p>Eventos recentes:</p>
+            @if (eventosRecentes.Count == 0)
+            {
+                <p>Nenhum evento de posição, intervalo ou conclusão.</p>
+            }
+            else
+            {
+                <ul>
+                    @foreach (var evento in eventosRecentes)
+                    {
+                        <li>@evento</li>
+                    }
+                </ul>
+            }
+        </div>
+        <p class="help">A amostra calcula índices e intervalos sem persistência. Os marcadores representam fronteiras de arredondamento entre dias preservados.</p>
+    </fieldset>
+</div>
+
+@code {
+    private const int QuantidadeDiasMinima = 2;
+    private const int QuantidadeDiasMaxima = 1500;
+    private const double DiametroMarcadorPixels = 1.15d * 16d;
+    private const double DistanciaProximidadePixels = 6d * 16d;
+
+    private int quantidadeDias = 7;
+    private string quantidadeDiasTexto = "7";
+    private string distribuicao = "consecutivas";
+    private string proximidadeVisual = "afastada";
+    private bool simularGeometriaInvalida;
+    private ModeloJanelaTemporal? modelo;
+    private readonly List<string> eventosRecentes = [];
+
+    private int QuantidadeDias
+    {
+        get => quantidadeDias;
+        set
+        {
+            var novaQuantidade = Math.Clamp(value, QuantidadeDiasMinima, QuantidadeDiasMaxima);
+            if (quantidadeDias == novaQuantidade) return;
+            quantidadeDias = novaQuantidade;
+            RecriarModelo();
+        }
+    }
+
+    private string QuantidadeDiasTexto => quantidadeDiasTexto;
+
+    private void AtualizarQuantidadeDiasDigitada(ChangeEventArgs args)
+    {
+        quantidadeDiasTexto = args.Value?.ToString() ?? string.Empty;
+        if (int.TryParse(quantidadeDiasTexto, NumberStyles.None, CultureInfo.InvariantCulture, out var quantidade)
+            && quantidade is >= QuantidadeDiasMinima and <= QuantidadeDiasMaxima)
+        {
+            QuantidadeDias = quantidade;
+        }
+    }
+
+    private void FinalizarEdicaoQuantidadeDias(ChangeEventArgs args)
+    {
+        AtualizarQuantidadeDiasDigitada(args);
+        if (!int.TryParse(quantidadeDiasTexto, NumberStyles.None, CultureInfo.InvariantCulture, out var quantidade)
+            || quantidade is < QuantidadeDiasMinima or > QuantidadeDiasMaxima)
+        {
+            quantidadeDiasTexto = QuantidadeDias.ToString(CultureInfo.InvariantCulture);
+        }
+    }
+
+    private string Distribuicao
+    {
+        get => distribuicao;
+        set
+        {
+            var novaDistribuicao = value is "espacadas" or "irregulares" ? value : "consecutivas";
+            if (distribuicao == novaDistribuicao) return;
+            distribuicao = novaDistribuicao;
+            RecriarModelo();
+        }
+    }
+
+    private int LarguraDisponivel { get; set; } = 640;
+    private int? Tom { get; set; } = 65;
+    private int DensidadeMaximaMarcadores { get; set; } = 7;
+    private bool SimularMovimentoReduzido { get; set; }
+    private int AtrasoMovimentoMs { get; set; } = 1000;
+    private CurvaRespostaSeletor CurvaMovimento { get; set; } = CurvaRespostaSeletor.EaseInOut;
+    private RespostaSeletor RespostaMovimento => new(AtrasoMovimentoMs, CurvaMovimento);
+    private bool SimularGeometriaInvalida
+    {
+        get => simularGeometriaInvalida;
+        set
+        {
+            if (simularGeometriaInvalida == value) return;
+            simularGeometriaInvalida = value;
+            if (modelo is null) return;
+
+            if (value)
+            {
+                var centro = (Modelo.Estado.PosicaoInicio + Modelo.Estado.PosicaoFim) / 2d;
+                Modelo.AtualizarPosicoes(centro, centro);
+            }
+            else
+            {
+                var posicoes = ObterPosicoesProximidade();
+                Modelo.AtualizarPosicoes(posicoes.Inicio, posicoes.Fim);
+            }
+
+            Modelo.ConcluirOperacao();
+        }
+    }
+
+    private string ProximidadeVisual
+    {
+        get => proximidadeVisual;
+        set
+        {
+            var novaProximidade = value is "proxima" or "encostada" ? value : "afastada";
+            if (proximidadeVisual == novaProximidade) return;
+            proximidadeVisual = novaProximidade;
+            if (modelo is null) return;
+
+            if (SimularGeometriaInvalida)
+            {
+                return;
+            }
+
+            var posicoes = ObterPosicoesProximidade();
+            Modelo.AtualizarPosicoes(posicoes.Inicio, posicoes.Fim);
+            Modelo.ConcluirOperacao();
+        }
+    }
+
+    private ModeloJanelaTemporal Modelo => modelo ??= CriarModelo();
+    private bool MarcadoresVisiveis => QuantidadeDias >= 2
+        && LarguraDisponivel > 0
+        && QuantidadeDias / (LarguraDisponivel / 100d) <= Math.Max(1, DensidadeMaximaMarcadores);
+
+    private string NomeDistribuicao => Distribuicao switch
+    {
+        "espacadas" => "muito espaçadas",
+        "irregulares" => "irregulares",
+        _ => "consecutivas"
+    };
+
+    private string EstiloLarguraAmostra => $"--cmp008-largura-disponivel:{LarguraDisponivel.ToString(CultureInfo.InvariantCulture)}px";
+
+    protected override void OnInitialized() => _ = Modelo;
+
+    private static string NomeCurva(CurvaRespostaSeletor curva) => curva switch
+    {
+        CurvaRespostaSeletor.EaseIn => "ease-in",
+        CurvaRespostaSeletor.EaseOut => "ease-out",
+        CurvaRespostaSeletor.EaseInOut => "ease-in-out",
+        _ => "linear"
+    };
+
+    private static string FormatarTom(int? valor) => valor.HasValue
+        ? valor.Value > 0 ? $"+{valor.Value}" : valor.Value.ToString(CultureInfo.InvariantCulture)
+        : "nulo";
+
+    private Task AlterarTom(int? valor)
+    {
+        Tom = valor;
+        return Task.CompletedTask;
+    }
+
+    private Task RemoverTom()
+    {
+        Tom = null;
+        return Task.CompletedTask;
+    }
+
+    private void RecriarModelo()
+    {
+        modelo = null;
+        _ = Modelo;
+        var posicoes = ObterPosicoesProximidade();
+        if (proximidadeVisual != "afastada")
+            Modelo.AtualizarPosicoes(posicoes.Inicio, posicoes.Fim);
+
+        if (SimularGeometriaInvalida)
+        {
+            var centro = (Modelo.Estado.PosicaoInicio + Modelo.Estado.PosicaoFim) / 2d;
+            Modelo.AtualizarPosicoes(centro, centro);
+        }
+    }
+
+    private ModeloJanelaTemporal CriarModelo()
+    {
+        var novoModelo = new ModeloJanelaTemporal(GerarDiasPreservados());
+        novoModelo.PosicaoAlterada += estado => RegistrarEvento(
+            $"Geometria alterada: início {FormatarPosicao(estado.PosicaoInicio)}, fim {FormatarPosicao(estado.PosicaoFim)}.");
+        novoModelo.IntervaloAlterado += intervalo => RegistrarEvento(
+            $"Novo intervalo válido: {FormatarIntervalo(intervalo)}.");
+        novoModelo.OperacaoConcluida += conclusao => RegistrarEvento(
+            conclusao.Invalida
+                ? "Operação concluída com geometria inválida; nenhum intervalo foi publicado."
+                : $"Operação concluída: {FormatarIntervalo(conclusao.IntervaloValido)}.");
+        return novoModelo;
+    }
+
+    private IReadOnlyList<DateOnly> GerarDiasPreservados()
+    {
+        var dias = new DateOnly[QuantidadeDias];
+        var data = new DateOnly(2025, 1, 2);
+        for (var indice = 0; indice < dias.Length; indice++)
+        {
+            if (indice > 0)
+            {
+                var intervalo = Distribuicao switch
+                {
+                    "espacadas" => 30,
+                    "irregulares" => new[] { 1, 5, 2, 11 }[(indice - 1) % 4],
+                    _ => 1
+                };
+                data = data.AddDays(intervalo);
+            }
+
+            dias[indice] = data;
+        }
+
+        return dias;
+    }
+
+    private (double Inicio, double Fim) ObterPosicoesProximidade()
+    {
+        if (ProximidadeVisual == "afastada")
+            return (0d, 1d);
+
+        var comprimentoEixo = Math.Max(1d, LarguraDisponivel - DiametroMarcadorPixels);
+        var distanciaPixels = ProximidadeVisual == "encostada"
+            ? DiametroMarcadorPixels
+            : DistanciaProximidadePixels;
+        var distanciaNormalizada = Math.Min(1d, distanciaPixels / comprimentoEixo);
+        return (0.5d - distanciaNormalizada / 2d, 0.5d + distanciaNormalizada / 2d);
+    }
+
+    private void RegistrarEvento(string evento)
+    {
+        eventosRecentes.Insert(0, evento);
+        if (eventosRecentes.Count > 6)
+            eventosRecentes.RemoveAt(eventosRecentes.Count - 1);
+    }
+
+    private Task AtualizarJanela() => Task.CompletedTask;
+
+    private static string FormatarPosicao(double posicao) =>
+        posicao.ToString("0.####", CultureInfo.InvariantCulture);
+
+    private static string FormatarIntervalo(IntervaloJanelaTemporal? intervalo) => intervalo is null
+        ? "nenhum"
+        : $"{intervalo.DataInicio.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)}–{intervalo.DataFim.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)} · {intervalo.QuantidadeDias} dias preservados";
+}

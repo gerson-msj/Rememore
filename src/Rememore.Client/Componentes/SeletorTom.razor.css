@@ -107,10 +107,10 @@
     border-radius: 50%;
     box-shadow: 0 0 0 1px var(--bulma-text-weak);
     block-size: 1.15rem;
-    inset-block-start: calc(0.65rem - 2px);
+    inset-block-start: calc(1rem + 0.225rem);
     left: var(--seletor-tom-posicao);
     position: absolute;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     z-index: 1;
     inline-size: 1.15rem;
 }

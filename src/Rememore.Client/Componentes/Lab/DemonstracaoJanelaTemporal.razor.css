@@ -1,0 +1,10 @@
+.demonstracao-janela-temporal__amostra {
+    inline-size: min(var(--cmp008-largura-disponivel), 100%);
+    max-inline-size: 100%;
+}
+
+.demonstracao-janela-temporal input[type="range"] {
+    display: block;
+    inline-size: 100%;
+    max-inline-size: 100%;
+}
