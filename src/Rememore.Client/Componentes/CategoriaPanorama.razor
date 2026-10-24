@@ -1,0 +1,48 @@
+@using System.Globalization
+@using Rememore.Client.Infraestrutura
+
+<button type="button"
+        class="button is-fullwidth categoria-panorama @Aparencia.Classes @(Tom.HasValue ? string.Empty : "categoria-panorama--tom-ausente") @(AnimarApresentacao ? "categoria-panorama--transicao" : string.Empty) @(MovimentoReduzido ? "categoria-panorama--movimento-reduzido" : string.Empty)"
+        style="--categoria-panorama-representatividade: @RepresentatividadePercentual; @Aparencia.Estilo"
+        aria-label="@($"{Nome}; {RotuloTom}")"
+        @onclick="SelecionarAsync">
+    <span class="categoria-panorama__barra" aria-hidden="true"></span>
+    <span class="categoria-panorama__linha">
+        <span class="categoria-panorama__nome">@Nome</span>
+        <span class="categoria-panorama__tom">@RotuloTom</span>
+    </span>
+</button>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Identificador { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Nome { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public double Representatividade { get; set; }
+
+    [Parameter, EditorRequired]
+    public double? Tom { get; set; }
+
+    [Parameter, EditorRequired]
+    public string RotuloTom { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public AparenciaTomVisual Aparencia { get; set; } = new("aparencia-tom", string.Empty);
+
+    [Parameter]
+    public EventCallback<string> AoSelecionar { get; set; }
+
+    [Parameter]
+    public bool AnimarApresentacao { get; set; }
+
+    [Parameter]
+    public bool MovimentoReduzido { get; set; }
+
+    private string RepresentatividadePercentual =>
+        (Math.Clamp(Representatividade, 0d, 1d) * 100d).ToString("0.################", CultureInfo.InvariantCulture) + "%";
+
+    private Task SelecionarAsync() => AoSelecionar.InvokeAsync(Identificador);
+}

@@ -1,0 +1,46 @@
+@using Rememore.Client.Infraestrutura
+@using System.Globalization
+
+<div class="content">
+    <section class="box cmp009-amostra-individual" aria-labelledby="cmp009-individual-title">
+        <h3 class="title is-5" id="cmp009-individual-title">Amostra individual</h3>
+        <p class="help">DEMONSTRAÇÃO · amostras estáticas para revisar moldura, representatividade e contraste de Tom.</p>
+        <div class="cmp009-amostras-individuais">
+            @foreach (var amostra in amostrasIndividuais)
+            {
+                <CategoriaPanorama @key="amostra.Identificador"
+                                   Identificador="@amostra.Identificador"
+                                   Nome="@amostra.Nome"
+                                   Representatividade="@amostra.Representatividade"
+                                   Tom="@amostra.Tom"
+                                   RotuloTom="@amostra.RotuloTom"
+                                   Aparencia="@AparenciaTom.ObterPrecisao(amostra.Tom)"
+                                   AoSelecionar="RegistrarSelecaoAsync" />
+            }
+        </div>
+        <p class="help cmp009-amostra-selecao" aria-live="polite">@mensagemSelecao</p>
+    </section>
+
+    <ComposicaoPanoramaDemonstrativa />
+</div>
+
+@code {
+    private readonly AmostraPanorama[] amostrasIndividuais =
+    [
+        new("categoria-rep-max", "Categoria com representatividade máxima", 72, 1d, "Tom positivo, 72"),
+        new("categoria-rep-zero", "Categoria sem representatividade", 42, 0d, "Tom positivo, 42"),
+        new("categoria-negativa", "Categoria com Tom negativo", -42, 0.54d, "Tom negativo, menos 42"),
+        new("categoria-neutra", "Categoria com nome deliberadamente muito longo para conferir o truncamento visual e preservar a identificação integral acessível", 0, 0.22d, "Tom neutro, 0"),
+        new("categoria-sem-tom", "Categoria sem Tom informado", null, 0.08d, "Sem Tom")
+    ];
+
+    private string mensagemSelecao = "Selecione uma categoria para conferir o identificador retornado.";
+
+    private Task RegistrarSelecaoAsync(string identificador)
+    {
+        mensagemSelecao = $"Identificador selecionado: {identificador}";
+        return Task.CompletedTask;
+    }
+
+    private sealed record AmostraPanorama(string Identificador, string Nome, double? Tom, double Representatividade, string RotuloTom);
+}

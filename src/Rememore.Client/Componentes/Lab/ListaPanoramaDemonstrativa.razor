@@ -1,0 +1,160 @@
+@using System.Globalization
+@using Rememore.Client.Infraestrutura
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<section class="box cmp009-painel-lista" aria-labelledby="@($"{IdLista}-titulo")" data-painel-lista="@IdLista">
+    <div class="cmp009-painel-lista__cabecalho">
+        <div>
+            <h4 class="title is-5 cmp009-painel-lista__titulo" id="@($"{IdLista}-titulo")" tabindex="-1">@Titulo</h4>
+            <p class="help">@Descricao</p>
+        </div>
+        <span class="tag is-primary">Demonstração</span>
+    </div>
+    <ul @ref="raiz" class="cmp009-lista__itens @(MovimentoReduzido ? "cmp009-lista__itens--movimento-reduzido" : string.Empty)" aria-label="@Titulo">
+        @foreach (var categoria in Categorias)
+        {
+            var tom = ObterTom(categoria);
+            <li @key="categoria.IdentificadorCategoria"
+                class="cmp009-lista-panorama__item"
+                data-categoria-id="@categoria.IdentificadorCategoria">
+                <CategoriaPanorama Identificador="@categoria.IdentificadorCategoria"
+                                   Nome="@categoria.NomeCategoria"
+                                   Representatividade="@categoria.Representatividade"
+                                   Tom="@tom"
+                                   RotuloTom="@RotuloTom(tom)"
+                                   Aparencia="@ObterAparencia(tom)"
+                                   AnimarApresentacao="true"
+                                   MovimentoReduzido="@MovimentoReduzido"
+                                   AoSelecionar="AoSelecionar" />
+            </li>
+        }
+    </ul>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public string IdLista { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Titulo { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Descricao { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<ResumoCategoriaPanoramaDemonstrativo> Categorias { get; set; } = Array.Empty<ResumoCategoriaPanoramaDemonstrativo>();
+
+    [Parameter]
+    public OrigemTomPanoramaDemonstrativo Origem { get; set; }
+
+    [Parameter]
+    public PoliticaCromaticaPanoramaDemonstrativa Politica { get; set; }
+
+    [Parameter]
+    public int Limiar { get; set; } = AparenciaTom.LimiarPadrao;
+
+    [Parameter]
+    public int IntensidadeNoLimiar { get; set; } = AparenciaTom.IntensidadePadrao;
+
+    [Parameter]
+    public bool AnimarReordenacao { get; set; } = true;
+
+    [Parameter]
+    public bool MovimentoReduzido { get; set; }
+
+    [Parameter]
+    public EventCallback<string> AoSelecionar { get; set; }
+
+    private ElementReference raiz;
+    private IJSObjectReference? modulo;
+    private IJSObjectReference? controlador;
+    private bool aplicarAnimacaoPendente;
+
+    private double? ObterTom(ResumoCategoriaPanoramaDemonstrativo categoria) => Origem switch
+    {
+        OrigemTomPanoramaDemonstrativo.Direto => categoria.TomDireto,
+        _ => categoria.TomMedio
+    };
+
+    private AparenciaTomVisual ObterAparencia(double? tom) => Politica switch
+    {
+        PoliticaCromaticaPanoramaDemonstrativa.Linear => AparenciaTom.ObterLinearPrecisao(tom),
+        _ => AparenciaTom.ObterPrecisao(tom, Limiar, IntensidadeNoLimiar)
+    };
+
+    private string RotuloTom(double? tom) => Origem switch
+    {
+        OrigemTomPanoramaDemonstrativo.Direto => tom.HasValue ? $"Tom direto, {FormatarNumero(tom)}" : "Sem Tom direto",
+        _ => tom.HasValue ? $"Tom médio, {FormatarNumero(tom)}" : "Sem Tom médio"
+    };
+
+    private static string FormatarNumero(double? valor) =>
+        valor?.ToString("G", CultureInfo.GetCultureInfo("pt-BR")) ?? "ausente";
+
+    public async Task PrepararMudancaVisualAsync()
+    {
+        if (controlador is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await controlador.InvokeVoidAsync("capturar");
+            aplicarAnimacaoPendente = true;
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+        catch (ObjectDisposedException) { }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (primeiroRender)
+        {
+            modulo = await JS.InvokeAsync<IJSObjectReference>("import", "./js/listaPanorama.js?cmp009=1");
+            controlador = await modulo.InvokeAsync<IJSObjectReference>("conectar", raiz);
+        }
+
+        if (aplicarAnimacaoPendente && controlador is not null)
+        {
+            aplicarAnimacaoPendente = false;
+            try
+            {
+                await controlador.InvokeVoidAsync("aplicar", AnimarReordenacao, MovimentoReduzido, 180);
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+            catch (ObjectDisposedException) { }
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (controlador is not null)
+            {
+                try { await controlador.InvokeVoidAsync("descartar"); }
+                catch (JSDisconnectedException) { }
+                catch (ObjectDisposedException) { }
+                try { await controlador.DisposeAsync(); }
+                catch (JSDisconnectedException) { }
+                catch (ObjectDisposedException) { }
+            }
+        }
+        finally
+        {
+            if (modulo is not null)
+            {
+                try { await modulo.DisposeAsync(); }
+                catch (JSDisconnectedException) { }
+                catch (ObjectDisposedException) { }
+            }
+        }
+    }
+}

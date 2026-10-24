@@ -46,7 +46,44 @@ public static class AparenciaTom
         return CriarVisual(valor, Math.Abs((double)valor));
     }
 
-    private static AparenciaTomVisual CriarVisual(int valor, double intensidade)
+    public static AparenciaTomVisual ObterLinearPrecisao(double? tom)
+    {
+        if (!tom.HasValue) return new("aparencia-tom", string.Empty);
+        var valor = Math.Clamp(tom.Value, -100d, 100d);
+        return CriarVisual(valor, Math.Abs(valor));
+    }
+
+    public static double? TransformarPrecisao(double? tom, int limiar = LimiarPadrao, int intensidadeNoLimiar = IntensidadePadrao)
+    {
+        if (!tom.HasValue)
+        {
+            return null;
+        }
+
+        var valor = Math.Clamp(tom.Value, -100d, 100d);
+        var magnitude = Math.Abs(valor);
+        var limiarAjustado = Math.Clamp(limiar, 1, 99);
+        var intensidadeAjustada = Math.Clamp(intensidadeNoLimiar, 0, 100);
+        var intensidade = magnitude <= limiarAjustado
+            ? magnitude / limiarAjustado * intensidadeAjustada
+            : intensidadeAjustada + (magnitude - limiarAjustado) / (100d - limiarAjustado) * (100 - intensidadeAjustada);
+
+        return Math.Sign(valor) * intensidade;
+    }
+
+    public static AparenciaTomVisual ObterPrecisao(double? tom, int limiar = LimiarPadrao, int intensidadeNoLimiar = IntensidadePadrao)
+    {
+        if (!tom.HasValue)
+        {
+            return new("aparencia-tom", string.Empty);
+        }
+
+        var valor = Math.Clamp(tom.Value, -100d, 100d);
+        var intensidade = Math.Abs(TransformarPrecisao(valor, limiar, intensidadeNoLimiar)!.Value);
+        return CriarVisual(valor, intensidade);
+    }
+
+    private static AparenciaTomVisual CriarVisual(double valor, double intensidade)
     {
         var intensidadeCss = intensidade.ToString("0.################", CultureInfo.InvariantCulture);
         var polaridade = valor < 0 ? "negativo" : "positivo";

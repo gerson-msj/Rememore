@@ -6,7 +6,7 @@
 
 @{
     var estado = Modelo.Estado;
-    var aparenciaTom = AparenciaTom.Obter(Tom);
+    var aparenciaTom = AparenciaTom.ObterPrecisao(TomPreciso ?? Tom);
 }
 
 <section @ref="raiz"
@@ -97,6 +97,9 @@
     public int? Tom { get; set; }
 
     [Parameter]
+    public double? TomPreciso { get; set; }
+
+    [Parameter]
     public int LarguraDisponivel { get; set; } = 640;
 
     [Parameter]
@@ -113,10 +116,12 @@
 
     private EstadoJanelaTemporal Estado => Modelo.Estado;
 
-    private string EstadoTom => Tom switch
+    private double? TomEfetivo => TomPreciso ?? Tom;
+
+    private string EstadoTom => TomEfetivo switch
     {
         null => "nulo",
-        0 => "zero",
+        0d => "zero",
         < 0 => "negativo",
         _ => "positivo"
     };

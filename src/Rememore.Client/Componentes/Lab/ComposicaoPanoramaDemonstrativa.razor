@@ -1,0 +1,411 @@
+@using System.Globalization
+@using Rememore.Client.Infraestrutura
+@using Rememore.Client.Componentes.Lab
+@implements IDisposable
+
+<section aria-labelledby="cmp009-composicao-title">
+    <h3 class="title is-4" id="cmp009-composicao-title">Composição do Panorama</h3>
+
+    <div class="columns is-desktop cmp009-panorama">
+        <section class="column is-two-fifths-desktop cmp009-panorama__periodo" aria-labelledby="cmp009-janela-title">
+            <h4 class="title is-5" id="cmp009-janela-title">Janela Temporal compartilhada</h4>
+            <JanelaTemporal Modelo="@modelo"
+                             TomPreciso="@resultadoPanorama.TomMedioPonderado"
+                             AoAtualizar="AtualizarJanelaAsync" />
+
+            <section aria-labelledby="cmp009-ordenacao-title">
+                <h4 class="title is-5" id="cmp009-ordenacao-title">Ordenação da demonstração</h4>
+                <div class="buttons has-addons cmp009-ordenacao__acoes" role="group" aria-label="Ordenar categorias">
+                    <button type="button"
+                            class="button is-small @(ordenacao.Criterio == CriterioOrdenacaoPanorama.Representatividade ? "is-link is-selected" : string.Empty)"
+                            aria-pressed="@(ordenacao.Criterio == CriterioOrdenacaoPanorama.Representatividade ? "true" : "false")"
+                            aria-label="@RotuloRepresentatividade"
+                            @onclick="() => AlterarOrdenacaoAsync(CriterioOrdenacaoPanorama.Representatividade)">@IndicadorRepresentatividade</button>
+                    <button type="button"
+                            class="button is-small @(ordenacao.Criterio == CriterioOrdenacaoPanorama.Tom ? "is-link is-selected" : string.Empty)"
+                            aria-pressed="@(ordenacao.Criterio == CriterioOrdenacaoPanorama.Tom ? "true" : "false")"
+                            aria-label="@RotuloTom"
+                            @onclick="() => AlterarOrdenacaoAsync(CriterioOrdenacaoPanorama.Tom)">@IndicadorTom</button>
+                </div>
+                <p class="help cmp009-ordenacao__estado">@DescricaoOrdenacao</p>
+            </section>
+        </section>
+
+        <div class="column is-three-fifths-desktop cmp009-panorama__calibracao-coluna">
+            <section class="box cmp009-calibracao" aria-labelledby="cmp009-calibracao-title">
+                <h4 class="title is-5" id="cmp009-calibracao-title">Calibração da demonstração</h4>
+                <p class="help">DEMONSTRAÇÃO · origem e apresentação atuam somente nas listas sintéticas.</p>
+                <div class="cmp009-controles__grade">
+                    <div class="field cmp009-controle" role="group" aria-labelledby="cmp009-origem-title">
+                        <p class="label" id="cmp009-origem-title">Origem do Tom</p>
+                        <div class="buttons has-addons cmp009-opcoes">
+                            <button type="button"
+                                    class="button is-small @(origemTom == OrigemTomPanoramaDemonstrativo.Direto ? "is-link is-selected" : string.Empty)"
+                                    aria-pressed="@(origemTom == OrigemTomPanoramaDemonstrativo.Direto ? "true" : "false")"
+                                    disabled="@(modoVisualizacao == ModoVisualizacaoPanoramaDemonstrativa.CompararOrigens)"
+                                    @onclick="() => AlterarOrigemAsync(OrigemTomPanoramaDemonstrativo.Direto)">Direto</button>
+                            <button type="button"
+                                    class="button is-small @(origemTom == OrigemTomPanoramaDemonstrativo.Media ? "is-link is-selected" : string.Empty)"
+                                    aria-pressed="@(origemTom == OrigemTomPanoramaDemonstrativo.Media ? "true" : "false")"
+                                    disabled="@(modoVisualizacao == ModoVisualizacaoPanoramaDemonstrativa.CompararOrigens)"
+                                    @onclick="() => AlterarOrigemAsync(OrigemTomPanoramaDemonstrativo.Media)">Média</button>
+                        </div>
+                    </div>
+
+                    <div class="field cmp009-controle" role="group" aria-labelledby="cmp009-curva-title">
+                        <p class="label" id="cmp009-curva-title">Curva cromática</p>
+                        <div class="buttons has-addons cmp009-opcoes">
+                            <button type="button"
+                                    class="button is-small @(politicaCromatica == PoliticaCromaticaPanoramaDemonstrativa.Linear ? "is-link is-selected" : string.Empty)"
+                                    aria-pressed="@(politicaCromatica == PoliticaCromaticaPanoramaDemonstrativa.Linear ? "true" : "false")"
+                                    disabled="@(modoVisualizacao == ModoVisualizacaoPanoramaDemonstrativa.CompararCurvas)"
+                                    @onclick="() => AlterarPoliticaAsync(PoliticaCromaticaPanoramaDemonstrativa.Linear)">Linear</button>
+                            <button type="button"
+                                    class="button is-small @(politicaCromatica == PoliticaCromaticaPanoramaDemonstrativa.Limiar ? "is-link is-selected" : string.Empty)"
+                                    aria-pressed="@(politicaCromatica == PoliticaCromaticaPanoramaDemonstrativa.Limiar ? "true" : "false")"
+                                    disabled="@(modoVisualizacao == ModoVisualizacaoPanoramaDemonstrativa.CompararCurvas)"
+                                    @onclick="() => AlterarPoliticaAsync(PoliticaCromaticaPanoramaDemonstrativa.Limiar)">Limiar</button>
+                        </div>
+                        @if (modoVisualizacao == ModoVisualizacaoPanoramaDemonstrativa.CompararCurvas)
+                        {
+                            <p class="help">A comparação define A Linear e B Limiar.</p>
+                        }
+                    </div>
+
+                    <div class="field cmp009-controle" role="group" aria-labelledby="cmp009-limiar-title">
+                        <p class="label" id="cmp009-limiar-title">Limiar / Intensidade (L/I)</p>
+                        <div class="cmp009-parametro">
+                            <label for="cmp009-limiar">Limiar <output>@limiar</output></label>
+                            <input id="cmp009-limiar" class="cmp009-range" type="range" min="1" max="99" step="1" value="@limiar" disabled="@(!HabilitarLimiar)" @oninput="AlterarLimiar" />
+                        </div>
+                        <div class="cmp009-parametro">
+                            <label for="cmp009-intensidade">Intensidade no limiar <output>@intensidadeNoLimiar</output></label>
+                            <input id="cmp009-intensidade" class="cmp009-range" type="range" min="0" max="100" step="1" value="@intensidadeNoLimiar" disabled="@(!HabilitarLimiar)" @oninput="AlterarIntensidade" />
+                        </div>
+                    </div>
+
+                    <div class="field cmp009-controle">
+                        <label class="label" for="cmp009-visualizacao">Visualização</label>
+                        <div class="select cmp009-select">
+                            <select id="cmp009-visualizacao" value="@modoVisualizacao" @onchange="AlterarModoAsync">
+                                <option value="@ModoVisualizacaoPanoramaDemonstrativa.ListaUnica">Lista única</option>
+                                <option value="@ModoVisualizacaoPanoramaDemonstrativa.CompararCurvas">Comparar curvas</option>
+                                <option value="@ModoVisualizacaoPanoramaDemonstrativa.CompararOrigens">Comparar origens</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field cmp009-controle">
+                        <label class="label">Animar reordenação</label>
+                        <label class="checkbox cmp009-checkbox">
+                            <input type="checkbox" checked="@animarReordenacao" @onchange="AlterarAnimacaoAsync" />
+                            FLIP ligado (180 ms)
+                        </label>
+                    </div>
+
+                    <div class="field cmp009-controle">
+                        <label class="label">Movimento da lista</label>
+                        <label class="checkbox cmp009-checkbox">
+                            <input type="checkbox" checked="@simularMovimentoReduzido" @onchange="AlterarMovimentoReduzidoAsync" />
+                            Simular movimento reduzido
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <div class="cmp009-panorama__resultado">
+        @if (modoVisualizacao == ModoVisualizacaoPanoramaDemonstrativa.ListaUnica)
+            {
+                <ListaPanoramaDemonstrativa @ref="listaUnica"
+                                            IdLista="cmp009-lista-unica"
+                                            Titulo="Lista do Panorama"
+                                            Descricao="@DescricaoLista(origemTom, politicaCromatica)"
+                                            Categorias="@CategoriasOrdenadas(origemTom)"
+                                            Origem="@origemTom"
+                                            Politica="@politicaCromatica"
+                                            Limiar="@limiar"
+                                            IntensidadeNoLimiar="@intensidadeNoLimiar"
+                                            AnimarReordenacao="@animarReordenacao"
+                                            MovimentoReduzido="@simularMovimentoReduzido"
+                                            AoSelecionar="RegistrarSelecaoAsync" />
+            }
+            else if (modoVisualizacao == ModoVisualizacaoPanoramaDemonstrativa.CompararCurvas)
+            {
+                <div class="columns is-desktop cmp009-paineis cmp009-paineis--lista">
+                    <div class="column">
+                        <ListaPanoramaDemonstrativa @ref="listaPainelA"
+                                                    IdLista="cmp009-curvas-a"
+                                                    Titulo="Painel A · Linear"
+                                                    Descricao="@($"{DescricaoFonte(origemTom)}; curva linear.")"
+                                                    Categorias="@CategoriasOrdenadas(origemTom)"
+                                                    Origem="@origemTom"
+                                                    Politica="@PoliticaCromaticaPanoramaDemonstrativa.Linear"
+                                                    AnimarReordenacao="@animarReordenacao"
+                                                    MovimentoReduzido="@simularMovimentoReduzido"
+                                                    AoSelecionar="RegistrarSelecaoAsync" />
+                    </div>
+                    <div class="column">
+                        <ListaPanoramaDemonstrativa @ref="listaPainelB"
+                                                    IdLista="cmp009-curvas-b"
+                                                    Titulo="Painel B · Limiar"
+                                                    Descricao="@($"{DescricaoFonte(origemTom)}; L {limiar} / I {intensidadeNoLimiar}.")"
+                                                    Categorias="@CategoriasOrdenadas(origemTom)"
+                                                    Origem="@origemTom"
+                                                    Politica="@PoliticaCromaticaPanoramaDemonstrativa.Limiar"
+                                                    Limiar="@limiar"
+                                                    IntensidadeNoLimiar="@intensidadeNoLimiar"
+                                                    AnimarReordenacao="@animarReordenacao"
+                                                    MovimentoReduzido="@simularMovimentoReduzido"
+                                                    AoSelecionar="RegistrarSelecaoAsync" />
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="columns is-desktop cmp009-paineis cmp009-paineis--lista">
+                    <div class="column">
+                        <ListaPanoramaDemonstrativa @ref="listaPainelA"
+                                                    IdLista="cmp009-origens-a"
+                                                    Titulo="Painel A · Direto"
+                                                    Descricao="Observação direta fixa por categoria."
+                                                    Categorias="@CategoriasOrdenadas(OrigemTomPanoramaDemonstrativo.Direto)"
+                                                    Origem="@OrigemTomPanoramaDemonstrativo.Direto"
+                                                    Politica="@politicaCromatica"
+                                                    Limiar="@limiar"
+                                                    IntensidadeNoLimiar="@intensidadeNoLimiar"
+                                                    AnimarReordenacao="@animarReordenacao"
+                                                    MovimentoReduzido="@simularMovimentoReduzido"
+                                                    AoSelecionar="RegistrarSelecaoAsync" />
+                    </div>
+                    <div class="column">
+                        <ListaPanoramaDemonstrativa @ref="listaPainelB"
+                                                    IdLista="cmp009-origens-b"
+                                                    Titulo="Painel B · Média"
+                                                    Descricao="Média REG-203 dos Tons definidos."
+                                                    Categorias="@CategoriasOrdenadas(OrigemTomPanoramaDemonstrativo.Media)"
+                                                    Origem="@OrigemTomPanoramaDemonstrativo.Media"
+                                                    Politica="@politicaCromatica"
+                                                    Limiar="@limiar"
+                                                    IntensidadeNoLimiar="@intensidadeNoLimiar"
+                                                    AnimarReordenacao="@animarReordenacao"
+                                                    MovimentoReduzido="@simularMovimentoReduzido"
+                                                    AoSelecionar="RegistrarSelecaoAsync" />
+                    </div>
+                </div>
+                <p class="help">A origem Direta e a origem Média podem ordenar diferente por Tom; ambas mantêm o mesmo período, IDs e representatividade.</p>
+            }
+
+            <section class="box cmp009-diagnostico" aria-labelledby="cmp009-diagnostico-title">
+                <h4 class="title is-6" id="cmp009-diagnostico-title">Diagnóstico da massa demonstrativa</h4>
+                <p class="help">
+                    Recorte válido: @FormatarData(modelo.Estado.UltimoIntervaloValido?.DataInicio) a @FormatarData(modelo.Estado.UltimoIntervaloValido?.DataFim).
+                    @if (modelo.Estado.Invalida)
+                    {
+                        <span>Seleção inválida; dados do último recorte válido preservados.</span>
+                    }
+                </p>
+                <p>
+                    @resultadoPanorama.QuantidadeDatasConsideradas datas ·
+                    @resultadoPanorama.QuantidadeOcorrencias ocorrências ·
+                    @resultadoPanorama.QuantidadeAssociacoes associações ·
+                    qMax = @resultadoPanorama.QuantidadeMaximaAssociacoes ·
+                    Tom médio ponderado (REG-219) = @FormatarNumero(resultadoPanorama.TomMedioPonderado)
+                </p>
+                <ul class="cmp009-diagnostico__categorias">
+                    @foreach (var categoria in resultadoPanorama.Categorias)
+                    {
+                        <li @key="categoria.IdentificadorCategoria">
+                            <strong>@categoria.NomeCategoria</strong>
+                            <span>q = @categoria.QuantidadeAssociacoes · Tons definidos = @categoria.QuantidadeTonsDefinidos · representatividade = @FormatarNumero(categoria.Representatividade)</span>
+                            <span>Tom direto = @RotuloDiagnosticoDireto(categoria) · Tom médio = @FormatarNumero(categoria.TomMedio)</span>
+                        </li>
+                    }
+                </ul>
+            </section>
+    </div>
+
+    <p class="help cmp009-amostra-selecao" aria-live="polite">@mensagemSelecao</p>
+</section>
+
+@code {
+    private readonly ModeloJanelaTemporal modelo = new(MassaPanoramaDemonstrativa.Datas);
+    private ResultadoPanoramaDemonstrativo resultadoPanorama = default!;
+    private OrigemTomPanoramaDemonstrativo origemTom = OrigemTomPanoramaDemonstrativo.Direto;
+    private PoliticaCromaticaPanoramaDemonstrativa politicaCromatica = PoliticaCromaticaPanoramaDemonstrativa.Limiar;
+    private ModoVisualizacaoPanoramaDemonstrativa modoVisualizacao = ModoVisualizacaoPanoramaDemonstrativa.ListaUnica;
+    private EstadoOrdenacaoPanorama ordenacao = EstadoOrdenacaoPanorama.Inicial;
+    private int limiar = AparenciaTom.LimiarPadrao;
+    private int intensidadeNoLimiar = AparenciaTom.IntensidadePadrao;
+    private bool animarReordenacao = true;
+    private bool simularMovimentoReduzido;
+    private string mensagemSelecao = "Selecione uma categoria para conferir o identificador retornado.";
+    private ListaPanoramaDemonstrativa? listaUnica;
+    private ListaPanoramaDemonstrativa? listaPainelA;
+    private ListaPanoramaDemonstrativa? listaPainelB;
+
+    private bool HabilitarLimiar =>
+        modoVisualizacao == ModoVisualizacaoPanoramaDemonstrativa.CompararCurvas
+        || politicaCromatica == PoliticaCromaticaPanoramaDemonstrativa.Limiar;
+
+    private string IndicadorRepresentatividade => ordenacao.SentidoRepresentatividade == SentidoOrdenacaoPanorama.Decrescente
+        ? "Representatividade ↓"
+        : "Representatividade ↑";
+
+    private string IndicadorTom => ordenacao.SentidoTom switch
+    {
+        SentidoOrdenacaoPanorama.Decrescente => "Tom +",
+        SentidoOrdenacaoPanorama.Crescente => "Tom −",
+        _ => "Tom ∅"
+    };
+
+    private string RotuloRepresentatividade => ordenacao.Criterio == CriterioOrdenacaoPanorama.Representatividade
+        ? $"Ordenar por representatividade, {(ordenacao.SentidoRepresentatividade == SentidoOrdenacaoPanorama.Decrescente ? "decrescente" : "crescente")}; critério ativo"
+        : "Ordenar por representatividade decrescente";
+
+    private string RotuloTom => ordenacao.Criterio == CriterioOrdenacaoPanorama.Tom
+        ? $"Ordenar por Tom, {DescricaoSentidoTom}; critério ativo"
+        : "Ordenar por Tom positivo";
+
+    private string DescricaoSentidoTom => ordenacao.SentidoTom switch
+    {
+        SentidoOrdenacaoPanorama.Decrescente => "definidos decrescentes",
+        SentidoOrdenacaoPanorama.Crescente => "definidos crescentes",
+        _ => "Sem Tom primeiro"
+    };
+
+    private string DescricaoOrdenacao => ordenacao.Criterio switch
+    {
+        CriterioOrdenacaoPanorama.Representatividade => $"Representatividade: {ordenacao.SentidoRepresentatividade}; empates pelo nome e ID. A intensidade cromática não altera a ordem.",
+        _ => $"Tom: {DescricaoSentidoTom}; empates pela representatividade. Nulos são {(ordenacao.SentidoTom == SentidoOrdenacaoPanorama.SemTomPrimeiro ? "priorizados" : "mantidos no final")}."
+    };
+
+    protected override void OnInitialized()
+    {
+        modelo.IntervaloAlterado += AtualizarIntervalo;
+        AtualizarIntervaloAtual(modelo.Estado.IntervaloValidoAtual);
+    }
+
+    private void AtualizarIntervalo(IntervaloJanelaTemporal intervalo) =>
+        _ = InvokeAsync(() => AtualizarIntervaloAsync(intervalo));
+
+    private async Task AtualizarIntervaloAsync(IntervaloJanelaTemporal intervalo)
+    {
+        await PrepararMudancaVisualAsync();
+        AtualizarIntervaloAtual(intervalo);
+        StateHasChanged();
+    }
+
+    private void AtualizarIntervaloAtual(IntervaloJanelaTemporal? intervalo)
+    {
+        if (intervalo is null) return;
+        var datasDoIntervalo = modelo.DiasPreservados
+            .Where(data => data >= intervalo.DataInicio && data <= intervalo.DataFim)
+            .ToArray();
+        resultadoPanorama = CalculosPanoramaDemonstrativo.Calcular(datasDoIntervalo, MassaPanoramaDemonstrativa.Ocorrencias);
+    }
+
+    private Task AtualizarJanelaAsync() => InvokeAsync(StateHasChanged);
+
+    private async Task AlterarOrigemAsync(OrigemTomPanoramaDemonstrativo origem)
+    {
+        if (origemTom == origem || modoVisualizacao == ModoVisualizacaoPanoramaDemonstrativa.CompararOrigens) return;
+        await PrepararMudancaVisualAsync();
+        origemTom = origem;
+    }
+
+    private Task AlterarPoliticaAsync(PoliticaCromaticaPanoramaDemonstrativa politica)
+    {
+        if (modoVisualizacao != ModoVisualizacaoPanoramaDemonstrativa.CompararCurvas)
+            politicaCromatica = politica;
+        return Task.CompletedTask;
+    }
+
+    private Task AlterarModoAsync(ChangeEventArgs args)
+    {
+        if (!Enum.TryParse<ModoVisualizacaoPanoramaDemonstrativa>(args.Value?.ToString(), out var modo)
+            || modoVisualizacao == modo)
+            return Task.CompletedTask;
+        modoVisualizacao = modo;
+        return Task.CompletedTask;
+    }
+
+    private async Task AlterarOrdenacaoAsync(CriterioOrdenacaoPanorama criterio)
+    {
+        await PrepararMudancaVisualAsync();
+        ordenacao = OrdenacaoPanoramaDemonstrativo.Avancar(ordenacao, criterio);
+    }
+
+    private async Task AlterarAnimacaoAsync(ChangeEventArgs args)
+    {
+        await PrepararMudancaVisualAsync();
+        animarReordenacao = args.Value is bool valor && valor;
+    }
+
+    private async Task AlterarMovimentoReduzidoAsync(ChangeEventArgs args)
+    {
+        await PrepararMudancaVisualAsync();
+        simularMovimentoReduzido = args.Value is bool valor && valor;
+    }
+
+    private void AlterarLimiar(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var valor))
+            limiar = Math.Clamp(valor, 1, 99);
+    }
+
+    private void AlterarIntensidade(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var valor))
+            intensidadeNoLimiar = Math.Clamp(valor, 0, 100);
+    }
+
+    private async Task PrepararMudancaVisualAsync()
+    {
+        if (modoVisualizacao == ModoVisualizacaoPanoramaDemonstrativa.ListaUnica)
+        {
+            if (listaUnica is not null) await listaUnica.PrepararMudancaVisualAsync();
+            return;
+        }
+
+        if (listaPainelA is not null) await listaPainelA.PrepararMudancaVisualAsync();
+        if (listaPainelB is not null) await listaPainelB.PrepararMudancaVisualAsync();
+    }
+
+    private IReadOnlyList<ResumoCategoriaPanoramaDemonstrativo> CategoriasOrdenadas(OrigemTomPanoramaDemonstrativo origem) =>
+        OrdenacaoPanoramaDemonstrativo.Ordenar(resultadoPanorama.Categorias, ordenacao, categoria => TomDaOrigem(categoria, origem));
+
+    private static double? TomDaOrigem(ResumoCategoriaPanoramaDemonstrativo categoria, OrigemTomPanoramaDemonstrativo origem) =>
+        origem == OrigemTomPanoramaDemonstrativo.Direto ? categoria.TomDireto : categoria.TomMedio;
+
+    private string DescricaoLista(OrigemTomPanoramaDemonstrativo origem, PoliticaCromaticaPanoramaDemonstrativa politica) =>
+        $"{DescricaoFonte(origem)}; curva { (politica == PoliticaCromaticaPanoramaDemonstrativa.Linear ? "linear" : $"Limiar L {limiar} / I {intensidadeNoLimiar}") }.";
+
+    private static string DescricaoFonte(OrigemTomPanoramaDemonstrativo origem) => origem switch
+    {
+        OrigemTomPanoramaDemonstrativo.Direto => "Tom direto pela observação sintética fixa",
+        _ => "Tom médio dos Tons definidos no recorte"
+    };
+
+    private static string RotuloDiagnosticoDireto(ResumoCategoriaPanoramaDemonstrativo categoria) =>
+        categoria.IdentificadorObservacaoTomDireto is null
+            ? "sem observação direta definida no recorte"
+            : $"{FormatarNumero(categoria.TomDireto)} pela ocorrência {categoria.IdentificadorObservacaoTomDireto}";
+
+    private static string FormatarNumero(double? valor) =>
+        valor?.ToString("G", CultureInfo.GetCultureInfo("pt-BR")) ?? "ausente";
+
+    private static string FormatarData(DateOnly? data) =>
+        data?.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("pt-BR")) ?? "sem período";
+
+    private Task RegistrarSelecaoAsync(string identificador)
+    {
+        mensagemSelecao = $"Identificador selecionado: {identificador}";
+        return Task.CompletedTask;
+    }
+
+    public void Dispose() => modelo.IntervaloAlterado -= AtualizarIntervalo;
+}
+

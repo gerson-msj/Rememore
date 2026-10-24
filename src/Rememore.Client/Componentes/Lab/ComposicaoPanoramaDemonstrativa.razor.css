@@ -1,0 +1,176 @@
+.cmp009-panorama__resultado {
+    display: grid;
+    align-content: start;
+    gap: 1.25rem;
+    min-width: 0;
+}
+
+.cmp009-panorama > .column {
+    box-sizing: border-box;
+}
+
+.cmp009-panorama__periodo {
+    display: grid;
+    align-content: start;
+    gap: 1.25rem;
+}
+
+.cmp009-panorama__periodo > .title {
+    margin-bottom: 0;
+}
+
+.cmp009-panorama__periodo > section > .title {
+    margin-bottom: 0.5rem;
+}
+
+.cmp009-panorama__calibracao-coluna {
+    min-width: 0;
+}
+
+.cmp009-calibracao {
+    margin-bottom: 0;
+    padding: 1rem;
+}
+
+.cmp009-calibracao > .title {
+    margin-bottom: 0.5rem;
+}
+
+.cmp009-calibracao > .help {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+}
+
+.cmp009-controles__grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: 0.75rem 1rem;
+}
+
+.cmp009-controle {
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.cmp009-controle .label {
+    margin-bottom: 0.35rem;
+}
+
+.cmp009-opcoes {
+    margin-bottom: 0;
+}
+
+.cmp009-opcoes .button {
+    white-space: normal;
+}
+
+.cmp009-parametro + .cmp009-parametro {
+    margin-top: 0.35rem;
+}
+
+.cmp009-parametro label {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.cmp009-parametro output {
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--bulma-weight-semibold);
+}
+
+.cmp009-range {
+    display: block;
+    width: 100%;
+    margin: 0.15rem 0 0;
+    accent-color: var(--bulma-link);
+}
+
+.cmp009-range:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.cmp009-select,
+.cmp009-select select {
+    width: 100%;
+}
+
+.cmp009-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    line-height: 1.35;
+}
+
+.cmp009-checkbox input {
+    flex: 0 0 auto;
+    margin-top: 0.15em;
+}
+
+.cmp009-ordenacao__acoes {
+    margin-bottom: 0.25rem;
+}
+
+.cmp009-ordenacao__acoes .button {
+    min-width: 0;
+    white-space: normal;
+}
+
+.cmp009-ordenacao__estado {
+    margin-top: 0;
+}
+
+.cmp009-paineis--lista {
+    margin: 0 -0.75rem;
+}
+
+.cmp009-paineis--lista .column {
+    min-width: 0;
+}
+
+.cmp009-diagnostico {
+    margin-bottom: 0;
+    padding: 1rem;
+}
+
+.cmp009-diagnostico > .title {
+    margin-bottom: 0.35rem;
+}
+
+.cmp009-diagnostico > .help {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.cmp009-diagnostico__categorias {
+    display: grid;
+    gap: 0.35rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.cmp009-diagnostico__categorias li {
+    display: grid;
+    gap: 0.1rem;
+    min-width: 0;
+    padding-top: 0.35rem;
+    border-top: 1px solid var(--bulma-border);
+}
+
+.cmp009-diagnostico__categorias span {
+    color: var(--bulma-text-weak);
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 768px) {
+    .cmp009-paineis--lista {
+        margin-inline: 0;
+    }
+
+    .cmp009-controles__grade {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

@@ -77,4 +77,74 @@ public sealed class AparenciaTomTests
         Assert.Contains("--tom-peso:37%", AparenciaTom.ObterLinear(37).Estilo);
         Assert.Equal(60.625, AparenciaTom.Transformar(37)!.Value, 10);
     }
+
+    [Theory]
+    [InlineData(20d, 50d)]
+    [InlineData(-20d, -50d)]
+    [InlineData(37.5d, 60.9375d)]
+    [InlineData(-37.5d, -60.9375d)]
+    [InlineData(100d / 15d, 16.666666666666668d)]
+    [InlineData(0d, 0d)]
+    public void CurvaOficialPreservaTomFracionario(double tom, double esperado)
+    {
+        Assert.Equal(esperado, AparenciaTom.TransformarPrecisao(tom)!.Value, 10);
+    }
+
+    [Fact]
+    public void AparenciaFracionariaPreservaPrecisaoPolaridadeZeroENulo()
+    {
+        var positivo = AparenciaTom.ObterPrecisao(60d / 7d);
+        var negativo = AparenciaTom.ObterPrecisao(-60d / 7d);
+        var zero = AparenciaTom.ObterPrecisao(0d);
+        var nulo = AparenciaTom.ObterPrecisao(null);
+
+        Assert.Contains("--tom-extremo:var(--tom-positivo)", positivo.Estilo);
+        Assert.Equal(AparenciaTom.TransformarPrecisao(60d / 7d)!.Value.ToString("0.################", System.Globalization.CultureInfo.InvariantCulture),
+            LerPeso(positivo.Estilo)?.TrimEnd('%'));
+        Assert.Contains("--tom-extremo:var(--tom-negativo)", negativo.Estilo);
+        Assert.Contains("--tom-peso:0%", zero.Estilo);
+        Assert.Equal("aparencia-tom", nulo.Classes);
+        Assert.Empty(nulo.Estilo);
+    }
+
+    [Fact]
+    public void CurvaComPrecisaoMantemAparenciaAprovadaParaTodosOsInteiros()
+    {
+        for (var tom = -100; tom <= 100; tom++)
+        {
+            var aparenciaInteira = AparenciaTom.Obter(tom);
+            var aparenciaPrecisa = AparenciaTom.ObterPrecisao(tom);
+
+            Assert.Equal(aparenciaInteira.Classes, aparenciaPrecisa.Classes);
+            Assert.Equal(aparenciaInteira.Estilo, aparenciaPrecisa.Estilo);
+        }
+    }
+
+    [Theory]
+    [InlineData(100d, 20, 50, 100d)]
+    [InlineData(37.5d, 20, 50, 60.9375d)]
+    [InlineData(-20d, 20, 50, -50d)]
+    [InlineData(10d, 20, 0, 0d)]
+    [InlineData(10d, 20, 100, 50d)]
+    [InlineData(100d, 99, 100, 100d)]
+    public void CurvaParametrizadaMantemLimitesEPrecisa(double tom, int limiar, int intensidade, double esperado)
+    {
+        Assert.Equal(esperado, AparenciaTom.TransformarPrecisao(tom, limiar, intensidade)!.Value, 10);
+    }
+
+    [Fact]
+    public void CurvaLinearPrecisaPreservaFracaoEContinuaForaDaEscalaQuandoAusente()
+    {
+        var visual = AparenciaTom.ObterLinearPrecisao(20d / 3d);
+
+        Assert.Equal(20d / 3d, double.Parse(LerPeso(visual.Estilo)!.TrimEnd('%'), System.Globalization.CultureInfo.InvariantCulture), 12);
+        Assert.Equal("aparencia-tom", AparenciaTom.ObterLinearPrecisao(null).Classes);
+    }
+
+    private static string? LerPeso(string estilo) => estilo
+        .Split(';', StringSplitOptions.RemoveEmptyEntries)
+        .Select(propriedade => propriedade.Trim())
+        .Where(propriedade => propriedade.StartsWith("--tom-peso:", StringComparison.Ordinal))
+        .Select(propriedade => propriedade["--tom-peso:".Length..])
+        .SingleOrDefault();
 }

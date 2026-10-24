@@ -1,0 +1,11 @@
+.cmp009-amostras-individuais {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.cmp009-amostra-selecao {
+    min-height: 1.25em;
+    margin-top: 0.5rem;
+}

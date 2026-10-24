@@ -14,6 +14,9 @@
   <ItemGroup>
     <Compile Include="../../src/Rememore.Client/Infraestrutura/AparenciaTom.cs" Link="Infraestrutura/AparenciaTom.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/RespostaSeletor.cs" Link="Infraestrutura/RespostaSeletor.cs" />
+    <Compile Include="../../src/Rememore.Client/Componentes/Lab/CalculosPanoramaDemonstrativo.cs" Link="Componentes/Lab/CalculosPanoramaDemonstrativo.cs" />
+    <Compile Include="../../src/Rememore.Client/Componentes/Lab/MassaPanoramaDemonstrativa.cs" Link="Componentes/Lab/MassaPanoramaDemonstrativa.cs" />
+    <Compile Include="../../src/Rememore.Client/Componentes/Lab/OrdenacaoPanoramaDemonstrativo.cs" Link="Componentes/Lab/OrdenacaoPanoramaDemonstrativo.cs" />
     <Compile Include="../../src/Rememore.Client/Componentes/Lab/MovimentacaoListaDemonstrativa.cs" Link="Componentes/Lab/MovimentacaoListaDemonstrativa.cs" />
     <Compile Include="../../src/Rememore.Client/Componentes/ModeloJanelaTemporal.cs" Link="Componentes/ModeloJanelaTemporal.cs" />
   </ItemGroup>
