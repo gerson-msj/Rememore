@@ -19,5 +19,6 @@
     <Compile Include="../../src/Rememore.Client/Componentes/Lab/OrdenacaoPanoramaDemonstrativo.cs" Link="Componentes/Lab/OrdenacaoPanoramaDemonstrativo.cs" />
     <Compile Include="../../src/Rememore.Client/Componentes/Lab/MovimentacaoListaDemonstrativa.cs" Link="Componentes/Lab/MovimentacaoListaDemonstrativa.cs" />
     <Compile Include="../../src/Rememore.Client/Componentes/ModeloJanelaTemporal.cs" Link="Componentes/ModeloJanelaTemporal.cs" />
+    <Compile Include="../../src/Rememore.Client/Componentes/CalculosOndaUtilizacaoCategoria.cs" Link="Componentes/CalculosOndaUtilizacaoCategoria.cs" />
   </ItemGroup>
 </Project>

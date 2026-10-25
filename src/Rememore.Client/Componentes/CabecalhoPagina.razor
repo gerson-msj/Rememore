@@ -1,4 +1,4 @@
-<header class="container is-max-desktop cabecalho-pagina" aria-label="Cabeçalho de página">
+<header class="container is-max-desktop cabecalho-pagina" style="@EstiloLargura" aria-label="Cabeçalho de página">
     <div class="section py-2">
         <div class="columns is-mobile mt-2 is-gapless is-vcentered cabecalho-pagina__colunas">
             <div class="column is-1 is-flex is-align-items-center">
@@ -52,4 +52,12 @@
 
     [Parameter]
     public EventCallback AoSair { get; set; }
+
+    // Omitir preserva o limite desktop do Bulma; páginas com outro contêiner podem informar seu próprio limite CSS.
+    [Parameter]
+    public string? LarguraMaxima { get; set; }
+
+    private string? EstiloLargura => string.IsNullOrWhiteSpace(LarguraMaxima)
+        ? null
+        : $"max-width:{LarguraMaxima};";
 }

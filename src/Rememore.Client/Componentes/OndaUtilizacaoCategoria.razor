@@ -1,0 +1,124 @@
+@using System.Globalization
+@using Microsoft.JSInterop
+@using Rememore.Client.Infraestrutura
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div class="box onda-utilizacao @Aparencia.Classes @ClasseTom @ClassePreenchimento @ClasseEstado" style="@EstiloComponente">
+    <div class="onda-utilizacao__area"
+         @ref="_area"
+         role="img"
+         aria-label="@DescricaoAcessivel">
+        <h3 class="title is-6 onda-utilizacao__titulo">Uso da categoria</h3>
+        <svg class="onda-utilizacao__grafico"
+             aria-hidden="true"
+             focusable="false"
+             viewBox="0 0 100 100"
+             width="100%"
+             height="100"
+             preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="@_idGradiente" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="currentColor" stop-opacity="0.2" />
+                    <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+                </linearGradient>
+            </defs>
+            <path class="onda-utilizacao__preenchimento"
+                  d="M 0 50 C 11.1111 50, 22.2222 50, 33.3333 50 C 44.4444 50, 55.5556 50, 66.6667 50 C 77.7778 50, 88.8889 50, 100 50 L 100 100 L 0 100 Z"
+                  fill="url(#@_idGradiente)"
+                  stroke="none" />
+            <path class="onda-utilizacao__linha"
+                  d="M 0 50 C 11.1111 50, 22.2222 50, 33.3333 50 C 44.4444 50, 55.5556 50, 66.6667 50 C 77.7778 50, 88.8889 50, 100 50"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.25"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  vector-effect="non-scaling-stroke" />
+        </svg>
+    </div>
+</div>
+
+@code {
+    private readonly string _idGradiente = $"onda-utilizacao-gradiente-{Guid.NewGuid():N}";
+    private ElementReference _area;
+    private IJSObjectReference? _modulo;
+    private bool _conectado;
+    private ResultadoOndaUtilizacaoCategoria _resultado = CalculosOndaUtilizacaoCategoria.Calcular([]);
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<double> Serie { get; set; } = Array.Empty<double>();
+
+    [Parameter]
+    public int? LarguraMaximaPx { get; set; }
+
+    [Parameter]
+    public double? Tom { get; set; }
+
+    [Parameter]
+    public bool MostrarPreenchimento { get; set; } = true;
+
+    private double? TomVisual => _resultado.SemDados ? null : Tom;
+
+    private AparenciaTomVisual Aparencia => AparenciaTom.ObterPrecisao(TomVisual);
+
+    private string ClasseTom => TomVisual.HasValue ? string.Empty : "onda-utilizacao--tom-ausente";
+
+    private string ClassePreenchimento => MostrarPreenchimento ? string.Empty : "onda-utilizacao--sem-preenchimento";
+
+    private string ClasseEstado => _resultado.SemDados ? "onda-utilizacao--sem-dados" : string.Empty;
+
+    private string DescricaoAcessivel => _resultado.SemDados
+        ? "Uso da categoria. Sem dados de ocorrência para representar uma tendência de utilização."
+        : "Uso da categoria. Tendência geral de utilização ao longo das ocorrências registradas.";
+
+    private string EstiloLargura => LarguraMaximaPx is > 0
+        ? $"--onda-utilizacao-largura-maxima:{LarguraMaximaPx.Value.ToString(CultureInfo.InvariantCulture)}px"
+        : string.Empty;
+
+    private string EstiloComponente => string.IsNullOrWhiteSpace(Aparencia.Estilo)
+        ? EstiloLargura
+        : string.IsNullOrWhiteSpace(EstiloLargura)
+            ? Aparencia.Estilo
+            : $"{Aparencia.Estilo};{EstiloLargura}";
+
+    protected override void OnParametersSet()
+    {
+        _resultado = CalculosOndaUtilizacaoCategoria.Calcular(Serie);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        try
+        {
+            _modulo ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/ondaUtilizacaoCategoria.js?cmp011=1");
+            var pontos = _resultado.ValoresNormalizados.ToArray();
+            if (_conectado)
+                await _modulo.InvokeVoidAsync("atualizarOnda", _area, pontos);
+            else
+            {
+                await _modulo.InvokeVoidAsync("conectarOnda", _area, pontos);
+                _conectado = true;
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_modulo is null)
+            return;
+
+        try
+        {
+            if (_conectado)
+                await _modulo.InvokeVoidAsync("desconectarOnda", _area);
+            await _modulo.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+    }
+}

@@ -1,0 +1,130 @@
+@using System.Globalization
+@using Rememore.Client.Componentes
+
+<div>
+    <p class="help">A série, o Tom e o preenchimento atualizam a amostra; os diagnósticos ficam fora do gráfico.</p>
+
+    <OndaUtilizacaoCategoria Serie="@SerieAtual"
+                             LarguraMaximaPx="@LarguraMaximaPx"
+                             Tom="@TomFornecido"
+                             MostrarPreenchimento="@PreenchimentoVisivel" />
+
+    <div class="columns is-mobile">
+        <div class="column">
+            <div class="field">
+                <label class="label" for="cmp011-cenario">Série determinística</label>
+                <div class="control">
+                    <div class="select is-fullwidth">
+                        <select id="cmp011-cenario" @bind="CenarioSelecionado">
+                            <option value="vazio">Ausência de dados []</option>
+                            <option value="uma">Uma ocorrência [5]</option>
+                            <option value="duas-crescimento">Duas em crescimento [1,7]</option>
+                            <option value="duas-queda">Duas em queda [7,1]</option>
+                            <option value="tres">Três [2,8,5]</option>
+                            <option value="quatro">Quatro [2,8,4,10]</option>
+                            <option value="constante">Série constante [4,4,4,4,4,4]</option>
+                            <option value="crescimento">Crescimento [1,2,3,5,8,13]</option>
+                            <option value="queda">Queda [13,8,5,3,2,1]</option>
+                            <option value="oscilacao">Oscilação [2,9,3,8,2,7,3]</option>
+                            <option value="pico">Pico isolado [2,3,4,5,40,5,4,3,2,3,4,5,6]</option>
+                            <option value="referencia-longa">Referência longa [1,2,3,2,20,5,6,7,6,8,9,8,11,10,12,14,15]</option>
+                            <option value="dias-sem-ocorrencia">Dias sem ocorrência intercalados [3,0,7,0,4]</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="column">
+            <div class="field">
+                <label class="label" for="cmp011-tom">Tom fornecido</label>
+                <div class="control">
+                    <div class="select is-fullwidth">
+                        <select id="cmp011-tom" @bind="TomSelecionado">
+                            <option value="65">Tom positivo (+65)</option>
+                            <option value="-65">Tom negativo (-65)</option>
+                            <option value="0">Tom 0</option>
+                            <option value="">Tom nulo</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="columns is-mobile">
+        <div class="column">
+            <div class="field">
+                <label class="label" for="cmp011-largura">Largura máxima da amostra: @LarguraMaximaPx px</label>
+                <div class="control">
+                    <input id="cmp011-largura"
+                           type="range"
+                           min="120"
+                           max="900"
+                           step="10"
+                           @bind="LarguraMaximaPx"
+                           @bind:event="oninput" />
+                </div>
+            </div>
+        </div>
+
+        <div class="column">
+            <div class="field">
+                <div class="control">
+                    <label class="checkbox">
+                        <input id="cmp011-preenchimento" type="checkbox" @bind="PreenchimentoVisivel" />
+                        Preenchimento degradê
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section aria-label="Diagnóstico da amostra">
+        <p class="label">Diagnóstico da amostra</p>
+        <p>Série após filtragem: @FormatarSerie(_resultado.SerieFiltrada)</p>
+        <p>Quatro valores amostrados: @FormatarSerie(_resultado.ValoresAmostrados)</p>
+        <p>Valores normalizados: @FormatarSerie(_resultado.ValoresNormalizados)</p>
+    </section>
+</div>
+
+@code {
+    private static readonly Dictionary<string, double[]> Cenarios = new()
+    {
+        ["vazio"] = [],
+        ["uma"] = [5],
+        ["duas-crescimento"] = [1, 7],
+        ["duas-queda"] = [7, 1],
+        ["tres"] = [2, 8, 5],
+        ["quatro"] = [2, 8, 4, 10],
+        ["constante"] = [4, 4, 4, 4, 4, 4],
+        ["crescimento"] = [1, 2, 3, 5, 8, 13],
+        ["queda"] = [13, 8, 5, 3, 2, 1],
+        ["oscilacao"] = [2, 9, 3, 8, 2, 7, 3],
+        ["pico"] = [2, 3, 4, 5, 40, 5, 4, 3, 2, 3, 4, 5, 6],
+        ["referencia-longa"] = [1, 2, 3, 2, 20, 5, 6, 7, 6, 8, 9, 8, 11, 10, 12, 14, 15],
+        ["dias-sem-ocorrencia"] = [3, 0, 7, 0, 4]
+    };
+
+    private int LarguraMaximaPx { get; set; } = 560;
+
+    private string CenarioSelecionado { get; set; } = "quatro";
+
+    private string TomSelecionado { get; set; } = "65";
+
+    private bool PreenchimentoVisivel { get; set; } = true;
+
+    private IReadOnlyList<double> SerieAtual => Cenarios[CenarioSelecionado];
+
+    private ResultadoOndaUtilizacaoCategoria _resultado => CalculosOndaUtilizacaoCategoria.Calcular(SerieAtual);
+
+    private double? TomFornecido => TomSelecionado switch
+    {
+        "65" => 65,
+        "-65" => -65,
+        "0" => 0,
+        _ => null
+    };
+
+    private static string FormatarSerie(IReadOnlyList<double> valores) => $"[{string.Join(", ", valores.Select(valor => valor.ToString("0.###", CultureInfo.CurrentCulture)))}]";
+}

@@ -1,14 +1,19 @@
 .cabecalho-pagina {
     position: fixed;
     top: 0;
-    left: 50%;
-    transform: translateX(-50%);
+    right: 0;
+    left: 0;
     z-index: 30;
     min-height: 4rem;
     background: var(--cor-main);
     color: var(--cor-text);
     border-bottom: 1px solid var(--cor-border);
     box-shadow: 0 0.6rem 0.4rem -0.5rem var(--cor-background);
+}
+
+.container.cabecalho-pagina {
+    width: calc(100% - 4rem);
+    margin-inline: auto;
 }
 
 .cabecalho-pagina__colunas > .column {
