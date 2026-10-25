@@ -1,5 +1,5 @@
 .pagina-entrar { min-height: 100vh; }
-.pagina-entrar__conteudo { width: min(100% - 2rem, 30rem); margin: 0 auto; padding: 2.5rem 0; }
+.pagina-entrar__conteudo { width: min(100% - 2rem, 30rem); margin: 0 auto; padding: calc(4rem + 2.5rem) 0 2.5rem; }
 .pagina-entrar__formulario { display: grid; gap: 1rem; }
 .pagina-entrar__acoes { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .pagina-entrar__redefinir { color: var(--cor-link); text-decoration: underline; text-underline-offset: .15em; }
