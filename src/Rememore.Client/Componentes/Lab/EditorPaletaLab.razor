@@ -1,6 +1,7 @@
-@inject EstadoTema Tema
+@inject EstadoPaletaLaboratorio Paletas
 @inject IJSRuntime JS
 @implements IAsyncDisposable
+@implements IDisposable
 
 <div class="field">
     <label class="label">Paleta em edição</label>
@@ -12,9 +13,9 @@
 
 <button class="button is-small mb-5" type="button" @onclick="RestaurarPaletaAsync">Restaurar paleta aprovada</button>
 
-@if (Tema.AvisoRascunhoNaoSalvo.Length > 0)
+@if (Paletas.AvisoRascunhoNaoSalvo.Length > 0)
 {
-    <p class="help is-danger mb-4" role="status">@Tema.AvisoRascunhoNaoSalvo</p>
+    <p class="help is-danger mb-4" role="status">@Paletas.AvisoRascunhoNaoSalvo</p>
 }
 
 @foreach (var grupo in Grupos)
@@ -39,7 +40,7 @@
 }
 
 <h3 class="title is-6">Prévia da paleta @NomeTema</h3>
-<div data-theme="@TemaCss" style="@EstiloPrevia">
+<div data-theme="@TemaCss" style="@Paletas.GerarEstiloPrevia(TemaEditado)">
     <div class="box">
         <h4 class="title is-5">Uma lembrança do dia</h4>
         <p>Um texto de exemplo para observar a leitura nesta paleta.</p>
@@ -79,10 +80,16 @@
         ("Cores semânticas", [("primary", "Primária"), ("link", "Link"), ("info", "Informação"), ("success", "Sucesso"), ("warning", "Aviso"), ("danger", "Erro")])
     ];
 
-    private IReadOnlyDictionary<string, string> PaletaAtual => TemaEditado == PreferenciaTema.Escuro ? Tema.PaletaEscura : Tema.PaletaClara;
+    private IReadOnlyDictionary<string, string> PaletaAtual => Paletas.ObterPaleta(TemaEditado);
     private string NomeTema => TemaEditado == PreferenciaTema.Escuro ? "escura" : "clara";
     private string TemaCss => TemaEditado == PreferenciaTema.Escuro ? "dark" : "light";
-    private string TextoExportado => Tema.ExportarPaleta(TemaEditado);
+    private string TextoExportado => Paletas.ExportarPaleta(TemaEditado);
+
+    protected override void OnInitialized() => Paletas.Alterado += Atualizar;
+
+    private void Atualizar() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Paletas.Alterado -= Atualizar;
 
     private void SelecionarTema(PreferenciaTema tema)
     {
@@ -106,68 +113,11 @@
 
     private Task AlterarCorAsync(string chave, string? valor) => valor is null
         ? Task.CompletedTask
-        : Tema.AtualizarCorAsync(TemaEditado, chave, valor);
+        : Paletas.AtualizarCorAsync(TemaEditado, chave, valor);
 
-    private Task RestaurarPaletaAsync() => Tema.RestaurarPaletaAsync(TemaEditado);
+    private Task RestaurarPaletaAsync() => Paletas.RestaurarPaletaAsync(TemaEditado);
 
     private string IdCor(string chave) => $"paleta-lab-{NomeTema}-{chave}";
-
-    private string EstiloPrevia
-    {
-        get
-        {
-            var declaracoes = new List<string>
-            {
-                Variavel("scheme-main", "main"),
-                Variavel("scheme-main-bis", "bis"),
-                Variavel("scheme-main-ter", "ter"),
-                Variavel("background", "background"),
-                Variavel("text", "text"),
-                Variavel("text-weak", "text-weak"),
-                Variavel("text-strong", "text-strong"),
-                Variavel("title-color", "title"),
-                Variavel("border", "border"),
-                Variavel("border-weak", "border-weak")
-            };
-
-            foreach (var nome in new[] { "text", "primary", "link", "info", "success", "warning", "danger" })
-            {
-                var (h, s, l) = ParaHsl(PaletaAtual[nome]);
-                declaracoes.Add(Variavel(nome, nome));
-                declaracoes.Add($"--bulma-{nome}-h: {h}deg");
-                declaracoes.Add($"--bulma-{nome}-s: {s}%");
-                declaracoes.Add($"--bulma-{nome}-l: {l}%");
-            }
-
-            return string.Join(";", declaracoes);
-        }
-    }
-
-    private string Variavel(string nome, string chave) => $"--bulma-{nome}: {PaletaAtual[chave]}";
-
-    private static (int Hue, int Saturation, int Lightness) ParaHsl(string hex)
-    {
-        var r = Convert.ToInt32(hex.Substring(1, 2), 16) / 255d;
-        var g = Convert.ToInt32(hex.Substring(3, 2), 16) / 255d;
-        var b = Convert.ToInt32(hex.Substring(5, 2), 16) / 255d;
-        var max = Math.Max(r, Math.Max(g, b));
-        var min = Math.Min(r, Math.Min(g, b));
-        var delta = max - min;
-        var lightness = (max + min) / 2;
-        var hue = 0d;
-        var saturation = 0d;
-
-        if (delta != 0)
-        {
-            saturation = delta / (1 - Math.Abs(2 * lightness - 1));
-            if (max == r) hue = 60 * (((g - b) / delta) % 6);
-            else if (max == g) hue = 60 * ((b - r) / delta + 2);
-            else hue = 60 * ((r - g) / delta + 4);
-            if (hue < 0) hue += 360;
-        }
-
-        return ((int)Math.Round(hue), (int)Math.Round(saturation * 100), (int)Math.Round(lightness * 100));
-    }
 
     public async ValueTask DisposeAsync()
     {

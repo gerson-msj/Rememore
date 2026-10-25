@@ -19,6 +19,7 @@ builder.Services.AddScoped(_ => new HttpClient
     BaseAddress = new Uri(apiBaseUrl)
 });
 builder.Services.AddScoped<EstadoTema>();
+builder.Services.AddScoped<EstadoPaletaLaboratorio>();
 builder.Services.AddSingleton(CatalogoOrientacoes.CriarPadrao());
 builder.Services.AddScoped<FonteNivelOrientacaoSimulada>();
 builder.Services.AddScoped<IFonteNivelOrientacao>(servicos => servicos.GetRequiredService<FonteNivelOrientacaoSimulada>());

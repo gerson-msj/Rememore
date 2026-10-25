@@ -1,4 +1,6 @@
 @inject IJSRuntime JS
+@inject EstadoPaletaLaboratorio Paletas
+@implements IDisposable
 
 <div class="demonstracao-paletas">
     @if (Tema.Preferencia == PreferenciaTema.Sistema)
@@ -6,14 +8,15 @@
         <div class="notification is-warning is-light">Sistema está exibindo a paleta efetiva. Escolha Claro ou Escuro para editar uma paleta específica.</div>
     }
     <div class="paleta-acoes">
-        <button class="button is-small" type="button" disabled="@(Tema.Preferencia == PreferenciaTema.Sistema)" @onclick="Tema.RestaurarPaletaAsync">Restaurar paleta aprovada</button>
+        <button class="button is-small" type="button" disabled="@(Tema.Preferencia == PreferenciaTema.Sistema)" @onclick="() => Paletas.RestaurarPaletaAsync(Tema.Preferencia)">Restaurar paleta aprovada</button>
         <button class="button is-small" type="button" @onclick="CopiarAsync">Copiar/exportar paleta</button>
     </div>
     @if (Tema.MensagemArmazenamento.Length > 0) { <p class="help is-danger" role="status">@Tema.MensagemArmazenamento</p> }
+    @if (Paletas.AvisoRascunhoNaoSalvo.Length > 0) { <p class="help is-danger" role="status">@Paletas.AvisoRascunhoNaoSalvo</p> }
     @if (mensagemCopia.Length > 0) { <p class="help" role="status">@mensagemCopia</p> }
-    @if (mostrarExportacao) { <label class="label" for="exportacao-paleta">Conteúdo para cópia manual</label><textarea class="textarea" id="exportacao-paleta" rows="8" readonly @ref="campoExportacao">@Tema.ExportarPaleta()</textarea> }
+    @if (mostrarExportacao) { <label class="label" for="exportacao-paleta">Conteúdo para cópia manual</label><textarea class="textarea" id="exportacao-paleta" rows="8" readonly @ref="campoExportacao">@Paletas.ExportarPaleta(Tema.AparenciaEscura ? PreferenciaTema.Escuro : PreferenciaTema.Claro)</textarea> }
     <div class="paleta-grade">
-        @foreach (var (nome, valor) in Tema.PaletaEfetiva)
+        @foreach (var (nome, valor) in Paletas.ObterPaletaEfetiva(Tema.AparenciaEscura))
         {
             <div class="paleta-entrada">
                 <div class="paleta-amostra" style="--amostra: @valor" aria-label="Amostra de @nome"></div>
@@ -21,7 +24,7 @@
                 @if (Tema.Preferencia != PreferenciaTema.Sistema)
                 {
                     <input class="paleta-cor" type="color" aria-label="Editar cor @nome" value="@valor" @onchange="args => AlterarAsync(nome, args.Value?.ToString())" />
-                    <button class="paleta-restaurar" type="button" aria-label="Restaurar @nome" title="Restaurar valor aprovado" @onclick="() => Tema.RestaurarCorAsync(nome)"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i></button>
+                    <button class="paleta-restaurar" type="button" aria-label="Restaurar @nome" title="Restaurar valor aprovado" @onclick="() => Paletas.RestaurarCorAsync(Tema.Preferencia, nome)"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i></button>
                 }
             </div>
         }
@@ -37,14 +40,20 @@
     private bool mostrarExportacao;
     private ElementReference campoExportacao;
 
+    protected override void OnInitialized() => Paletas.Alterado += Atualizar;
+
+    private void Atualizar() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Paletas.Alterado -= Atualizar;
+
     private async Task AlterarAsync(string nome, string? valor)
     {
-        if (valor is not null) await Tema.AtualizarCorAsync(nome, valor);
+        if (valor is not null) await Paletas.AtualizarCorEfetivaAsync(nome, valor, Tema.AparenciaEscura);
     }
 
     private async Task CopiarAsync()
     {
-        var texto = Tema.ExportarPaleta();
+        var texto = Paletas.ExportarPaleta(Tema.AparenciaEscura ? PreferenciaTema.Escuro : PreferenciaTema.Claro);
         try
         {
             var modulo = await JS.InvokeAsync<IJSObjectReference>("import", "./js/laboratorio.js");

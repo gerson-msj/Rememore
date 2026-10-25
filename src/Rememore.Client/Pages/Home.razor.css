@@ -1,0 +1,107 @@
+.pagina-inicial {
+    min-height: 100vh;
+    background: var(--cor-background);
+}
+
+.pagina-inicial .pagina-inicial__conteudo {
+    display: flex;
+    min-height: 100vh;
+    align-items: center;
+    padding: calc(4rem + clamp(2rem, 7vh, 4rem)) 1.5rem clamp(2.5rem, 7vh, 4rem);
+}
+
+.inicio-apresentacao {
+    display: grid;
+    width: min(100%, 64rem);
+    gap: clamp(1.75rem, 5vw, 3rem);
+    margin-inline: auto;
+    padding: clamp(1.5rem, 5vw, 4rem);
+    border: 1px solid var(--cor-border-weak);
+    border-radius: 1.25rem;
+    background: var(--cor-main);
+    box-shadow: 0 1.25rem 3rem rgb(32 42 54 / 7%);
+}
+
+.inicio-apresentacao__abertura {
+    max-width: 24ch;
+    margin: 0;
+    color: var(--cor-title);
+    font-size: clamp(2rem, 4.5vw, 3.25rem);
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    text-wrap: balance;
+}
+
+.inicio-apresentacao__texto {
+    max-width: 62ch;
+    margin: 0;
+    color: var(--cor-text-weak);
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    line-height: 1.7;
+}
+
+.inicio-apresentacao__convite {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--cor-border-weak);
+}
+
+.inicio-apresentacao__convite-texto {
+    max-width: 38ch;
+    margin: 0;
+    color: var(--cor-text-strong);
+}
+
+.inicio-acoes {
+    gap: 0.75rem;
+}
+
+.inicio-acoes ::deep > .button {
+    min-width: 8.5rem;
+    justify-content: center;
+}
+
+.inicio-acoes ::deep > .button.is-outlined,
+.inicio-acoes ::deep > .button.is-outlined:hover,
+.inicio-acoes ::deep > .button.is-outlined:focus-visible,
+.inicio-acoes ::deep > .button.is-outlined:active {
+    border-color: var(--cor-text-strong);
+    background-color: var(--cor-main);
+    color: var(--cor-text-strong);
+}
+
+@media (max-width: 40rem) {
+    .pagina-inicial .pagina-inicial__conteudo {
+        padding-inline: 1rem;
+    }
+
+    .inicio-apresentacao {
+        gap: 1.75rem;
+        padding: 1.5rem;
+        border-radius: 1rem;
+    }
+
+    .inicio-apresentacao__convite {
+        align-items: stretch;
+    }
+
+    .inicio-acoes {
+        width: 100%;
+    }
+
+    .inicio-acoes ::deep > .button {
+        min-width: 0;
+        flex: 1 1 8.5rem;
+    }
+}
+
+@media (max-width: 22rem) {
+    .inicio-acoes {
+        flex-direction: column;
+    }
+}

@@ -1,7 +1,11 @@
 @page "/lab"
 @using Rememore.Client.Componentes
 @using Rememore.Client.Componentes.Lab
+@inject EstadoTema Tema
+@inject EstadoPaletaLaboratorio Paletas
+@implements IDisposable
 
+<div class="lab-pagina" style="@Paletas.GerarEstiloPrevia(Tema.AparenciaEscura)">
 <CabecalhoPagina Titulo="@TituloCabecalho"
                  LarguraMaxima="84rem"
                  MostrarVoltar="@MostrarVoltar"
@@ -159,6 +163,7 @@
         </BlocoLab>
     </div>
 </main>
+</div>
 
 @code {
     private string FonteSelecionada { get; set; } = "Faculty Glyphic";
@@ -181,4 +186,23 @@
     private void ReceberRetorno() => acionamentosRetorno++;
 
     private void ReceberSaida() => acionamentosSaida++;
+
+    protected override void OnInitialized()
+    {
+        Tema.Alterado += Atualizar;
+        Paletas.Alterado += Atualizar;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (primeiroRender) await Paletas.InicializarAsync();
+    }
+
+    private void Atualizar() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Tema.Alterado -= Atualizar;
+        Paletas.Alterado -= Atualizar;
+    }
 }

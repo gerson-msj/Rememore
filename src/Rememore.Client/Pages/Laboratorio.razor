@@ -1,10 +1,11 @@
 @page "/laboratorio"
 @implements IDisposable
 @inject EstadoTema Tema
+@inject EstadoPaletaLaboratorio Paletas
 
 <PageTitle>Laboratório — Rememore</PageTitle>
 
-<div class="pagina-laboratorio">
+<div class="pagina-laboratorio" style="@Paletas.GerarEstiloPrevia(Tema.AparenciaEscura)">
     <CabecalhoPagina_old Titulo="Laboratório" />
     <div class="laboratorio-ferramentas">
         <div class="laboratorio-ferramentas__conteudo">
@@ -40,8 +41,22 @@
 </div>
 
 @code {
-    protected override void OnInitialized() => Tema.Alterado += Atualizar;
+    protected override void OnInitialized()
+    {
+        Tema.Alterado += Atualizar;
+        Paletas.Alterado += Atualizar;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (primeiroRender) await Paletas.InicializarAsync();
+    }
 
     private void Atualizar() => _ = InvokeAsync(StateHasChanged);
-    public void Dispose() => Tema.Alterado -= Atualizar;
+
+    public void Dispose()
+    {
+        Tema.Alterado -= Atualizar;
+        Paletas.Alterado -= Atualizar;
+    }
 }

@@ -1,23 +1,23 @@
-@page "/inicio"
+@page "/"
 @attribute [AllowAnonymous]
 
 <PageTitle>Rememore</PageTitle>
 
 <div class="pagina-inicial">
-    <CabecalhoPagina_old Titulo="Rememore" Fixo="false" />
-    <main class="pagina-inicial__conteudo" aria-labelledby="titulo-inicio">
-        <section class="inicio-apresentacao">
-            <h1 class="inicio-apresentacao__abertura" id="titulo-inicio">Nem todos os dias são iguais. Às vezes, é a memória que os torna parecidos.</h1>
-            <div class="inicio-apresentacao__texto">
-                <p>O Rememore ajuda você a preservar lembranças do cotidiano e voltar a elas ao longo do tempo, recuperando detalhes que poderiam se perder com a passagem dos dias.</p>
-            </div>
-            <div class="inicio-apresentacao__convite">
-                <p>Entre na sua conta ou, se recebeu um convite, comece por aqui.</p>
-                <nav class="inicio-acoes" aria-label="Acesso à conta">
-                    <NavLink class="button is-link" href="entrar">Entrar</NavLink>
-                    <NavLink class="button is-link" href="cadastro">Criar conta</NavLink>
-                </nav>
-            </div>
-        </section>
+    <CabecalhoPagina Titulo="Rememore" />
+    <main class="section pagina-inicial__conteudo">
+        <div class="container is-max-desktop">
+            <section class="inicio-apresentacao" aria-labelledby="titulo-inicio">
+                <h2 class="title is-1 inicio-apresentacao__abertura" id="titulo-inicio">Nem todos os dias são iguais. Às vezes, é a memória que os torna parecidos.</h2>
+                <p class="subtitle is-4 inicio-apresentacao__texto">O Rememore ajuda você a preservar lembranças do cotidiano e voltar a elas ao longo do tempo, recuperando detalhes que poderiam se perder com a passagem dos dias.</p>
+                <div class="inicio-apresentacao__convite">
+                    <p class="inicio-apresentacao__convite-texto">Entre na sua conta ou, se recebeu um convite, comece por aqui.</p>
+                    <nav class="is-flex is-flex-wrap-wrap inicio-acoes" aria-label="Acesso à conta">
+                        <NavLink class="button is-link" href="entrar">Entrar</NavLink>
+                        <NavLink class="button is-link is-outlined" href="cadastro">Criar conta</NavLink>
+                    </nav>
+                </div>
+            </section>
+        </div>
     </main>
 </div>
