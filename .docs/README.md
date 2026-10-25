@@ -1,28 +1,32 @@
 # Documentação operacional — Stack .NET
 
-Este diretório é a memória técnica do desenvolvimento vigente de Rememore em .NET 10. Não substitui a documentação canônica do produto no Google Drive.
+Memória técnica da Stack2 (.NET 10). A documentação funcional canônica do produto permanece no Google Drive; o código não substitui a especificação aprovada.
 
-## Leitura inicial do programador
+## Leitura inicial
 
-1. `/AGENTS.md` — instruções operacionais permanentes.
-2. `.docs/memoria-tecnica.md` — fatos e recursos técnicos **atuais**, reutilizáveis.
-3. **Somente** a especificação da unidade indicada pelo operador em `.docs/especificacoes/`.
+1. `/AGENTS.md` — normas permanentes e exceção da campanha.
+2. `.docs/memoria-tecnica.md` — fatos/contratos técnicos reutilizáveis (verifique registros superados).
+3. **Durante a campanha de refatoração visual:** `.docs/plano-refatoracao-paginas.md`, a especificação **concluída da unidade** em `.docs/especificacoes/concluidas/` (incluindo corpo, Parecer e adendos) e apenas o código relacionado. P01 é o piloto; nenhuma página começou ainda.
+4. **Fora da campanha:** somente a especificação operacional atual indicada pelo operador, conforme `/AGENTS.md`.
 
-Não ler por padrão o histórico `Stack1/.docs/`, outras especificações, toda a árvore do código ou documentos Google Drive. A especificação corrente deve ser autossuficiente. Para dúvidas pontuais sobre comportamento da implementação anterior, consultar seletivamente `Stack1/` sem editar seu conteúdo.
+Não ler por padrão o histórico Stack1, toda a árvore de código, todas as especificações ou documentos do Drive. Na campanha **não recorrer à Stack1**: trabalhar apenas com as fontes e decisões Stack2.
 
 ## Organização
 
-- `memoria-tecnica.md`: índice curto dos contratos, componentes e conhecimentos **verificados** da nova stack.
-- `especificacoes/`: somente as unidades operacionais abertas, corpo original aprovado preservado, continuidade, checkpoints e decisões.
-- `especificacoes/concluidas/`: unidades encerradas, incluindo seus pareceres finais completos.
-- Referências técnicas temáticas poderão ser criadas conforme necessidade comprovada, com indicação neste índice.
+- `plano-refatoracao-paginas.md` — **macroplano temporário vigente**: escopo fechado até 06.02, ordem P01–P08, protocolo de autonomia/escalonamento, checkpoints, progresso e conclusão.
+- `memoria-tecnica.md` — padrões e contratos verificados da Stack2; não transformar em diário de campanha.
+- `especificacoes/` — futuras unidades funcionais abertas; a campanha não cria novas especificações.
+- `especificacoes/concluidas/` — unidades históricas aprovadas, com seus Pareceres. Na campanha, anexar **somente após aceite** um `Adendo Técnico — Refatoração da Apresentação (Stack2)` ao arquivo original da página, preservando conteúdo prévio.
+- `AUDITORIA.md` — ler apenas após solicitação expressa de auditoria independente, nunca automaticamente.
 
-Não importar automaticamente a memória técnica da Stack1. A nova memória cresce conforme as unidades .NET sejam implementadas.
+## Ciclo especial da campanha
 
-## Ciclo
+Cada página: Codex apresenta diagnóstico/plano → operador aprova → Codex percorre autonomamente HTML/Bulma/CMPs, CSS/JS, integração funcional equivalente e limpeza/testes → pergunta ao operador **antes** de incompatibilidade ou alteração contratual/funcional/visual aprovada → entrega e operador inspeciona/testa → após aceite, adendo e atualização de progresso → **operador faz commit e autoriza próxima página**. Sem quatro interrupções obrigatórias, sem retorno ao analista entre páginas, sem modificar especificações antigas.
 
-O analista prepara a unidade a partir da documentação vigente e do histórico original, quando relevante, e o operador a aprova. O programador lê somente a unidade entregue, clarifica dúvidas antes do plano, implementa e valida em checkpoints e registra as decisões/observações a cada conclusão. Compactações de contexto não exigem preparação nem nova sessão.
+No encerramento geral, realizar regressão transversal, remover legados apenas sem consumidores, emitir Parecer Final Geral e levar ao analista para reconciliação única no Drive. Arquivar macroplano depois, sem apagar evidências. O padrão permanente de qualidade continua no AGENTS.
 
-No encerramento solicitado pelo operador, o programador registra o Parecer final no mesmo Markdown, move-o para `concluidas/` e entrega um bloco completo copiável no chat. O operador/analista reconciliam o Google Drive somente após discussão e autorização.
+## Ciclo normal futuro
 
-Referência do contexto canônico: https://docs.google.com/document/d/1THCkMHH-NyKL8xqn_X5AcXtakD2Iu-OEgsehRbZy2tk/edit
+Para funcionalidades novas, volta a regra de especificação autossuficiente aprovada, clarificação, checkpoints, Parecer final e reconciliação prevista em AGENTS. Não iniciar novas páginas antes do encerramento autorizado da campanha.
+
+Referência canônica de contexto: https://docs.google.com/document/d/1THCkMHH-NyKL8xqn_X5AcXtakD2Iu-OEgsehRbZy2tk/edit

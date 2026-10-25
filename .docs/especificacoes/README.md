@@ -1,17 +1,17 @@
-# Especificações operacionais abertas
+# Especificações operacionais — Stack2
 
-Somente os documentos `05.XX` ou `05.XX.YY` entregues e aprovados pelo operador podem entrar como unidades em execução. A referência documental canônica está no Google Drive, `05 - Especificação`; histórico de Deno/Fresh está em `Stack1 - Histórico` (Drive) e `Stack1/` (repositório).
+`.docs/especificacoes/` recebe futuras especificações **novas**, somente por autorização do operador. `concluidas/` preserva o corpo aprovado, checkpoints, notas e Parecer final de unidades concluídas.
 
-## Reconstrução histórica da Stack1 — orientação temporária
+## Campanha temporária de refatoração visual (25/10/2026)
 
-Na fase atual, as unidades tratam da reconstrução de componentes produzidos anteriormente na Stack1. Cada nova especificação pode apontar os arquivos de origem relevantes — por exemplo, `.tsx`, `.css` e JavaScript —, blocos do laboratório antigo e especificações anteriores. Ela condensará as regras e decisões necessárias para a unidade, mesmo quando o histórico as tenha registrado em documentos diferentes.
+A reconstrução isolada dos componentes da Stack2 foi encerrada com o CMP-012. **Não criar nem reescrever especificações** para refatorar as páginas já existentes. O plano obrigatório está em `.docs/plano-refatoracao-paginas.md`; suas unidades P01–P08 usam como base **os arquivos Stack2 já concluídos** (01.md, 02.02.md, 03.01.md, 03.02.md, 04.md, 06.02.md etc.) com suas decisões e Pareceres finais. O Codex deve ler apenas a(s) especificação(ões) vinculada(s) à página liberada.
 
-Consulte os arquivos e documentos da Stack1 indicados expressamente na especificação para compreender a implementação anterior, seus comportamentos e a forma como HTML, Bulma, CSS, JavaScript e TypeScript foram combinados. Se necessário para esclarecer comportamento ou aparência, pode-se executar o projeto antigo e observá-lo. Use essas referências para reconstruir o componente na nova stack, seguindo as etapas visuais e técnicas do `/AGENTS.md`; adapte a implementação à arquitetura atual, sem editar a Stack1. Não faça varreduras do legado nem leia especificações antigas que não tenham sido referenciadas pela unidade.
+A campanha muda HTML/Bulma/CSS e integra os CMPs aprovados, **sem reinterpretar regras, contratos ou comportamentos**. Se houver incompatibilidade, interromper e obter decisão do operador antes de modificar componente ou funcionalidade. Após aceite da página, anexar ao **mesmo arquivo de especificação concluída**, sem substituir nada, o `Adendo Técnico — Refatoração da Apresentação (Stack2)`, identificado pela página PXX. Se uma especificação sustentar mais de uma página, cada adendo identifica somente seu próprio recorte.
 
-Por enquanto, essa fase abrange somente componentes. Quando a reconstrução de páginas começar, as referências históricas da Stack1 também poderão orientar esse trabalho, conforme as especificações então aprovadas. Essa orientação transitória vale enquanto estiver sendo coberto o material produzido na Stack1; o operador avisará quando ela deixar de valer e o trabalho passar a tratar de conteúdo novo, sem equivalente histórico.
+Não consultar Stack1 ou seus documentos na campanha. `07.02` foi cancelada e não autoriza implementação; `05.md` e `06.01.md` são fundações não visuais, não novas páginas; `07.01.md` é histórico de CMP no laboratório anterior. O trabalho retomará novas especificações **após** campanha e regressão geral aceitas.
 
-Cada arquivo operacional conserva **integralmente e sem modificações** o corpo aprovado. O programador pode anexar e organizar livremente notas, plano, checkpoints, decisões, observações do operador, pendências e Parecer final em seções separadas. Registre a conclusão de **cada checkpoint**, independentemente de compactação do contexto.
+## Preservação
 
-A numeração `05.07.01` indica divisão deliberada da antiga `05.07`, **não** revisão de seu corpo nem versão da unidade. Uma unidade por vez; seu escopo deve ser autossuficiente, mesmo que referências históricas sejam indicadas. Não consulte automaticamente outras especificações; durante a reconstrução histórica, consulte apenas as fontes da Stack1 e especificações antigas explicitamente apontadas pela unidade corrente.
+O corpo originalmente aprovado e o Parecer final anterior são imutáveis. Documente decisões posteriores em seções anexas, sem apagar, reinterpretar ou reescrever o histórico. Registre testes reais e limites não comprovados; o operador é a única autoridade para aceitar e encerrar uma unidade.
 
-Após encerramento **solicitado pelo operador**, incluir Parecer final autossuficiente no mesmo arquivo, movê-lo a `concluidas/` e apresentar o Parecer integral em bloco copiável no chat.
+As referências antigas da Stack1 permanecem históricas e não são fonte de implementação desta campanha.

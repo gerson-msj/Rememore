@@ -1,5 +1,8 @@
 # Memória técnica reutilizável — Stack .NET
 
+> **Estado operacional em 25/10/2026:** a fase de reconstrução preventiva dos componentes no /lab foi concluída com CMP-012. A campanha seguinte é exclusivamente a refatoração visual das páginas Stack2 existentes; consultar primeiro `.docs/plano-refatoracao-paginas.md`. Notas abaixo podem refletir marcos históricos intermediários (por exemplo, “aceite pendente” em CMPs já encerrados): prevalecem os Pareceres finais arquivados e o macroplano. Não consultar Stack1 durante a campanha.
+
+
 **Situação:** fundação visual inicial implementada na Spec 01. CMP-001 está revisado e CMP-002 foi validado pelo operador no `/lab`; integração em páginas permanece para uma unidade própria. CMP-003 foi concluído e validado pelo operador no `/lab`; não foi integrado a páginas e sua integração requer unidade própria. O CMP-006 está em funcionalização no `/lab`; sua apresentação e os efeitos compartilhados com o CMP-028 foram aprovados pelo operador, e a revisão funcional aguarda aceite.
 
 ## Estrutura da solução
