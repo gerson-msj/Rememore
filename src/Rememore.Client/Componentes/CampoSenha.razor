@@ -4,7 +4,7 @@
         <input id="@Id" class="input @(string.IsNullOrWhiteSpace(ErroId) ? "" : "is-danger")"
                type="@(visivel ? "text" : "password")" autocomplete="@Autocomplete"
                value="@Valor" @oninput="AlterarValor" aria-describedby="@DescricaoComErro"
-               aria-invalid="@(!string.IsNullOrWhiteSpace(ErroId))" />
+               aria-invalid="@(string.IsNullOrWhiteSpace(ErroId) ? null : "true")" />
         <button class="button is-ghost icon is-right icone-controle-interativo @(string.IsNullOrWhiteSpace(ErroId) ? "" : "has-text-danger")" type="button"
                 aria-label="@(visivel ? "Ocultar senha" : "Mostrar senha")"
                 aria-controls="@Id" aria-pressed="@visivel" @onclick="AlternarVisibilidade">

@@ -5,6 +5,10 @@
 
 **Situação:** fundação visual inicial implementada na Spec 01. CMP-001 está revisado e CMP-002 foi validado pelo operador no `/lab`; integração em páginas permanece para uma unidade própria. CMP-003 foi concluído e validado pelo operador no `/lab`; não foi integrado a páginas e sua integração requer unidade própria. O CMP-006 está em funcionalização no `/lab`; sua apresentação e os efeitos compartilhados com o CMP-028 foram aprovados pelo operador, e a revisão funcional aguarda aceite.
 
+## Governança de componentes do `/lab`
+
+- Componentes definidos e validados no `/lab` são padrões vigentes, mas não imutáveis. Se uma revisão revelar erro ou necessidade de mudança em CMP ou regra, registrar a evidência e propor a correção ao operador; aguardar autorização antes de editar. Toda mudança autorizada em CMP deve ser demonstrada e validada novamente no `/lab` antes de integração ou continuidade da página real, com regressão de consumidores afetados.
+
 ## Estrutura da solução
 
 - `Rememore.slnx` contém `src/Rememore.Client` (Blazor WebAssembly standalone, .NET 10) e `src/Rememore.Api` (ASP.NET Core Minimal API, .NET 10).
@@ -23,7 +27,7 @@
 
 ## Componente revisado até CMP-001
 
-- `CampoSenha` — `src/Rememore.Client/Componentes/CampoSenha.razor`: campo passivo com visibilidade interna. `Valor`/`ValorChanged` mantêm o conteúdo sob controle do chamador; `Rotulo`/`Id` identificam o campo; `Autocomplete` define o contexto e `ErroId` associa mensagem externa e ativa `is-danger`/`aria-invalid`. O ícone do botão de alternância recebe `has-text-danger` nesse estado. O botão usa `type="button"` e não emite alteração de valor. Usa `field has-addons`, `control is-expanded`, `input` e `button` do Bulma.
+- `CampoSenha` — `src/Rememore.Client/Componentes/CampoSenha.razor`: campo passivo com visibilidade interna. `Valor`/`ValorChanged` mantêm o conteúdo sob controle do chamador; `Rotulo`/`Id` identificam o campo; `Autocomplete` define o contexto e `ErroId` associa mensagem externa e ativa `is-danger`/`aria-invalid="true"`. Sem erro, `aria-invalid` é omitido. O ícone do botão de alternância recebe `has-text-danger` nesse estado. O botão usa `type="button"` e não emite alteração de valor. Usa `field has-addons`, `control is-expanded`, `input` e `button` do Bulma.
 - A classe global `icone-controle-interativo`, em `wwwroot/css/components.css`, compartilha a cor neutra e o estado hover/foco de ícones em botões dentro de campos; é usada pelo CMP-001 e pela demonstração CMP-002. `index.html` carrega essa folha após `app.css` e Bulma. Para controles Bulma `has-icons-right`, o seletor inclui `.control.has-icons-right` para superar o `pointer-events: none` do ícone decorativo do Bulma.
 - A demonstração CMP-001 em `/lab` usa um único campo e permite alternar `autocomplete` entre senha atual e nova senha, sem credenciais reais. Checkbox de demonstração controla o estado visual e a mensagem de erro, sem afetar valor ou visibilidade.
 

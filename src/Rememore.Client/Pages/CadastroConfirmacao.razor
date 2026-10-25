@@ -1,12 +1,13 @@
 @page "/cadastro/confirmacao"
 @attribute [AllowAnonymous]
+@implements IAsyncDisposable
 @inject ConfirmacaoChavePendente ConfirmacaoPendente
 @inject NavigationManager Navegacao
 
 <PageTitle>Conta criada — Rememore</PageTitle>
 
 <div class="pagina-cadastro-confirmacao">
-    <CabecalhoPagina_old Titulo="Conta criada" Fixo="false" />
+    <CabecalhoPagina Titulo="Conta criada" />
     <main class="pagina-cadastro-confirmacao__conteudo">
         @if (!restauracaoConcluida)
         {
@@ -14,9 +15,16 @@
         }
         else if (contexto is not null)
         {
-            <ConfirmacaoNovaChave_old MensagemContextual="@MensagemContextual"
-                                      MensagemApresentacaoUnica="@MensagemApresentacaoUnica"
-                                      Chave="@contexto.Chave" Disponivel="true" AoEntrar="AbrirConfirmacao" />
+            <p class="pagina-cadastro-confirmacao__contexto">@MensagemContextual</p>
+            <ConfirmacaoNovaChave Chave="@contexto.Chave" AoCopiar="RegistrarCopiaAsync" />
+            @if (copiaConcluida)
+            {
+                <p class="pagina-cadastro-confirmacao__feedback" role="status" aria-live="polite">Chave copiada. Guarde-a em um local seguro.</p>
+            }
+            <p class="pagina-cadastro-confirmacao__unica">@MensagemApresentacaoUnica</p>
+            <div class="pagina-cadastro-confirmacao__acoes">
+                <button class="button is-link" type="button" @onclick="AbrirConfirmacao">Entrar</button>
+            </div>
             @if (erroEntrada)
             {
                 <p class="pagina-cadastro-confirmacao__erro" role="alert">Não foi possível concluir a entrada. Tente novamente.</p>
@@ -36,6 +44,39 @@
     private bool popupAberto;
     private bool confirmando;
     private bool erroEntrada;
+    private bool copiaConcluida;
+    private CancellationTokenSource? temporizadorCopia;
+
+    private Task RegistrarCopiaAsync(bool sucesso)
+    {
+        temporizadorCopia?.Cancel();
+        temporizadorCopia?.Dispose();
+        temporizadorCopia = null;
+        copiaConcluida = false;
+
+        if (!sucesso) return Task.CompletedTask;
+
+        temporizadorCopia = new CancellationTokenSource();
+        copiaConcluida = true;
+        _ = OcultarFeedbackCopiaAsync(temporizadorCopia.Token);
+        return Task.CompletedTask;
+    }
+
+    private async Task OcultarFeedbackCopiaAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(4), token);
+            await InvokeAsync(() =>
+            {
+                copiaConcluida = false;
+                StateHasChanged();
+            });
+        }
+        catch (OperationCanceledException) { }
+        catch (ObjectDisposedException) { }
+        catch (InvalidOperationException) { }
+    }
 
     private void AbrirConfirmacao()
     {
@@ -103,5 +144,12 @@
             Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "").ToString(), replace: true);
         }
         finally { restauracaoConcluida = true; }
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        temporizadorCopia?.Cancel();
+        temporizadorCopia?.Dispose();
+        return ValueTask.CompletedTask;
     }
 }

@@ -9,7 +9,7 @@
 <PageTitle>Criar conta — Rememore</PageTitle>
 
 <div class="pagina-cadastro">
-    <CabecalhoPagina_old Titulo="Criar conta" MostrarRetorno="true" Fixo="false" AoRetornar="VoltarInicio" />
+    <CabecalhoPagina Titulo="Criar conta" MostrarVoltar="true" AoRetornar="VoltarInicio" />
     <main class="pagina-cadastro__conteudo">
         <form class="pagina-cadastro__formulario" @onsubmit="CadastrarAsync" @onsubmit:preventDefault="true">
             <div class="field">
@@ -17,7 +17,7 @@
                 <div class="control">
                     <input id="convite" class="input @(erroConvite ? "is-danger" : "")" type="text"
                            autocomplete="off" readonly="@conviteDaUrl" value="@convite" @oninput="ConviteAlterado"
-                           aria-invalid="@erroConvite" aria-describedby="@(erroConvite ? "convite-erro" : null)" />
+                           aria-invalid="@(erroConvite ? "true" : null)" aria-describedby="@(erroConvite ? "convite-erro" : null)" />
                 </div>
             </div>
             <div class="field">
@@ -25,7 +25,7 @@
                 <div class="control">
                     <input id="nome-usuario" class="input @(erroNome ? "is-danger" : "")" type="text"
                            autocomplete="username" value="@nomeUsuario" @oninput="NomeAlterado"
-                           aria-invalid="@erroNome" aria-describedby="@(erroNome ? "nome-erro" : null)" />
+                           aria-invalid="@(erroNome ? "true" : null)" aria-describedby="@(erroNome ? "nome-erro" : null)" />
                 </div>
             </div>
             <div class="field">
