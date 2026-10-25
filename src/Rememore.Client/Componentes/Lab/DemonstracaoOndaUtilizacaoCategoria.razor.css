@@ -1,3 +1,21 @@
 .columns.is-mobile > .column {
     min-width: 0;
 }
+
+.demonstracao-onda-utilizacao ::deep .onda-utilizacao {
+    border: var(--bulma-control-border-width, 1px) solid var(--bulma-input-border-color, var(--bulma-border));
+    border-radius: var(--bulma-input-radius, var(--bulma-radius));
+    box-shadow: none;
+}
+
+.demonstracao-onda-utilizacao ::deep .onda-utilizacao__titulo {
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+@container (max-width: 180px) {
+    .demonstracao-onda-utilizacao ::deep .onda-utilizacao__titulo {
+        font-size: 0.65rem;
+    }
+}

@@ -1,0 +1,39 @@
+.variacao-tom-comparacao {
+    /* Reserva o padding das duas caixas e das colunas Bulma is-2 para manter o par agrupado. */
+    width: min(100%, calc(var(--variacao-tom-largura-comparacao, 560px) + var(--variacao-tom-largura-comparacao, 560px) + 5rem + 4px));
+    max-width: 75rem;
+    margin-inline: auto;
+}
+
+.columns.is-mobile > .column {
+    min-width: 0;
+}
+
+.variacao-tom-controles > .column {
+    box-sizing: border-box;
+}
+
+.variacao-tom-controles .control input[type="range"] {
+    display: block;
+    box-sizing: border-box;
+    inline-size: 100%;
+    max-inline-size: 100%;
+}
+
+.variacao-tom-comparacao > .column ::deep .onda-utilizacao {
+    border: var(--bulma-control-border-width, 1px) solid var(--bulma-input-border-color, var(--bulma-border));
+    border-radius: var(--bulma-input-radius, var(--bulma-radius));
+    box-shadow: none;
+}
+
+.variacao-tom-comparacao > .column ::deep .onda-utilizacao__titulo {
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+@container (max-width: 180px) {
+    .variacao-tom-comparacao > .column ::deep .onda-utilizacao__titulo {
+        font-size: 0.65rem;
+    }
+}

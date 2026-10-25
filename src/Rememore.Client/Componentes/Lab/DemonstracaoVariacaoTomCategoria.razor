@@ -1,0 +1,143 @@
+@using System.Globalization
+@using Rememore.Client.Componentes
+
+<div>
+    <div class="columns is-mobile is-2 variacao-tom-comparacao" style="@EstiloLarguraComparacao">
+        <div class="column">
+            <OndaUtilizacaoCategoria Serie="@SerieComparacao"
+                                     LarguraMaximaPx="@LarguraMaximaPx"
+                                     Tom="@TomComparacao"
+                                     MostrarPreenchimento="true" />
+        </div>
+        <div class="column">
+            <VariacaoTomCategoria Tons="@TonsAtual"
+                                  LarguraMaximaPx="@LarguraMaximaPx" />
+        </div>
+    </div>
+
+    <div class="columns is-mobile variacao-tom-controles">
+        <div class="column is-6">
+            <div class="field">
+                <label class="label" for="cmp012-conjunto">Conjunto determinístico</label>
+                <div class="control">
+                    <div class="select is-fullwidth">
+                        <select id="cmp012-conjunto" @bind="CenarioSelecionado">
+                            <option value="nenhum">Nenhum Tom: []</option>
+                            <option value="somente-zero">Somente Tom 0: [0]</option>
+                            <option value="um-negativo">Somente um Tom negativo: [−65]</option>
+                            <option value="um-positivo">Somente um Tom positivo: [+65]</option>
+                            <option value="varios-negativos">Vários negativos: [−80, −20, −50]</option>
+                            <option value="varios-positivos">Vários positivos: [+20, +60, +90]</option>
+                            <option value="equilibrados">Negativos e positivos equilibrados: [−60, −40, +40, +60]</option>
+                            <option value="negativos-fortes">Negativos fortes e positivos leves: [−90, −70, +10, +20]</option>
+                            <option value="positivos-fortes">Negativos leves e positivos fortes: [−10, −20, +70, +90]</option>
+                            <option value="extremos">Extremos: [−100, +100]</option>
+                            <option value="proximos-centro">Valores próximos ao centro: [−2, −8, +3, +9]</option>
+                            <option value="nulos">Mistura com Tons nulos: [−30, nulo, +50, nulo]</option>
+                            <option value="misto">Negativo, zero, positivo e nulo: [−70, 0, +45, nulo]</option>
+                            <option value="troca-predominancia">Troca brusca de predominância: [−90, −80, +10, +20]</option>
+                            <option value="sem-tom">Mudança para estado sem Tom: [nulo, nulo]</option>
+                            <option value="apenas-neutro">Mudança para apenas neutro: [0, 0]</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="column is-6">
+            <div class="field">
+                <label class="label" for="cmp012-largura">Largura máxima</label>
+                <div class="control">
+                    <input id="cmp012-largura"
+                           type="range"
+                           min="120"
+                           max="900"
+                           step="10"
+                           @bind="LarguraMaximaPx"
+                           @bind:event="oninput" />
+                </div>
+                <p class="help">@LarguraMaximaPx px</p>
+            </div>
+        </div>
+    </div>
+
+    <section aria-label="Diagnósticos da amostra">
+        <dl class="columns is-multiline">
+            <div class="column is-6">
+                <dt class="label">Tons de origem</dt>
+                <dd>@FormatarTons()</dd>
+            </div>
+            <div class="column is-6">
+                <dt class="label">Média negativa</dt>
+                <dd>@FormatarMedia(ResultadoAtual.MediaNegativa)</dd>
+            </div>
+            <div class="column is-6">
+                <dt class="label">Média positiva</dt>
+                <dd>@FormatarMedia(ResultadoAtual.MediaPositiva)</dd>
+            </div>
+            <div class="column is-6">
+                <dt class="label">Tom definido</dt>
+                <dd>@TextoTomDefinido</dd>
+            </div>
+        </dl>
+    </section>
+</div>
+
+@code {
+    private static readonly Dictionary<string, double?[]> Cenarios = new()
+    {
+        ["nenhum"] = [],
+        ["somente-zero"] = [0d],
+        ["um-negativo"] = [-65d],
+        ["um-positivo"] = [65d],
+        ["varios-negativos"] = [-80d, -20d, -50d],
+        ["varios-positivos"] = [20d, 60d, 90d],
+        ["equilibrados"] = [-60d, -40d, 40d, 60d],
+        ["negativos-fortes"] = [-90d, -70d, 10d, 20d],
+        ["positivos-fortes"] = [-10d, -20d, 70d, 90d],
+        ["extremos"] = [-100d, 100d],
+        ["proximos-centro"] = [-2d, -8d, 3d, 9d],
+        ["nulos"] = [-30d, null, 50d, null],
+        ["misto"] = [-70d, 0d, 45d, null],
+        ["troca-predominancia"] = [-90d, -80d, 10d, 20d],
+        ["sem-tom"] = [null, null],
+        ["apenas-neutro"] = [0d, 0d]
+    };
+
+    private static readonly double[] SerieComparacao = [2, 8, 4, 10];
+    private const double TomComparacao = 65;
+
+    private string CenarioSelecionado { get; set; } = "equilibrados";
+
+    private int LarguraMaximaPx { get; set; } = 560;
+
+    private string EstiloLarguraComparacao =>
+        $"--variacao-tom-largura-comparacao:{LarguraMaximaPx.ToString(CultureInfo.InvariantCulture)}px";
+
+    private IReadOnlyList<double?> TonsAtual => Cenarios[CenarioSelecionado];
+
+    private ResultadoVariacaoTomCategoria ResultadoAtual => CalculosVariacaoTomCategoria.Calcular(TonsAtual);
+
+    private string TextoTomDefinido => ResultadoAtual.TomDefinido
+        ? $"Sim ({ResultadoAtual.QuantidadeTonsDefinidos} Tons definidos)"
+        : "Não";
+
+    private string FormatarTons() => TonsAtual.Count == 0
+        ? "Conjunto vazio"
+        : $"[{string.Join(", ", TonsAtual.Select(tom => tom.HasValue ? FormatarTom(tom.Value) : "nulo"))}]";
+
+    private static string FormatarMedia(double? media) => media.HasValue
+        ? FormatarTom(media.Value)
+        : "Sem extensão";
+
+    private static string FormatarTom(double tom)
+    {
+        var valor = Math.Abs(tom).ToString("0.###", CultureInfo.CurrentCulture);
+        return tom switch
+        {
+            < 0 => $"−{valor}",
+            > 0 => $"+{valor}",
+            _ => "0"
+        };
+    }
+}

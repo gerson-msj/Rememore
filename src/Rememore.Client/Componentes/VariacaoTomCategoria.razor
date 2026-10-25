@@ -1,0 +1,85 @@
+@using System.Globalization
+@using Rememore.Client.Infraestrutura
+
+<div class="box variacao-tom-categoria mb-5 @ClasseEstado" style="@EstiloComponente">
+    <div class="variacao-tom-categoria__area">
+        <h3 class="title is-6 variacao-tom-categoria__titulo">Variação do Tom</h3>
+        <div class="variacao-tom-categoria__trilha"
+             role="img"
+             aria-label="@DescricaoAcessivel">
+            <span class="variacao-tom-categoria__base" aria-hidden="true"></span>
+            <span class="variacao-tom-categoria__lado variacao-tom-categoria__lado--negativo @AparenciaNegativa.Classes"
+                  style="@EstiloNegativo"
+                  aria-hidden="true"></span>
+            <span class="variacao-tom-categoria__lado variacao-tom-categoria__lado--positivo @AparenciaPositiva.Classes"
+                  style="@EstiloPositivo"
+                  aria-hidden="true"></span>
+            <span class="variacao-tom-categoria__centro" aria-hidden="true"></span>
+        </div>
+    </div>
+</div>
+
+@code {
+    private ResultadoVariacaoTomCategoria _resultado = CalculosVariacaoTomCategoria.Calcular([]);
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<double?> Tons { get; set; } = Array.Empty<double?>();
+
+    [Parameter]
+    public int? LarguraMaximaPx { get; set; }
+
+    private AparenciaTomVisual AparenciaNegativa => AparenciaTom.ObterPrecisao(_resultado.MediaNegativa);
+
+    private AparenciaTomVisual AparenciaPositiva => AparenciaTom.ObterPrecisao(_resultado.MediaPositiva);
+
+    private string ClasseEstado => _resultado.Ausente ? "variacao-tom-categoria--ausente" : string.Empty;
+
+    private string EstiloNegativo => CriarEstiloLado(_resultado.MediaNegativa, _resultado.LarguraNegativaPercentual);
+
+    private string EstiloPositivo => CriarEstiloLado(_resultado.MediaPositiva, _resultado.LarguraPositivaPercentual);
+
+    private string EstiloComponente => LarguraMaximaPx is > 0
+        ? $"--variacao-tom-largura-maxima:{LarguraMaximaPx.Value.ToString(CultureInfo.InvariantCulture)}px"
+        : string.Empty;
+
+    private string DescricaoAcessivel
+    {
+        get
+        {
+            const string direcoes = "Variação do Tom. Direção negativa à esquerda, centro neutro e direção positiva à direita.";
+            if (_resultado.Ausente)
+                return $"{direcoes} Nenhum Tom definido.";
+            if (_resultado.MediaNegativa is null && _resultado.MediaPositiva is null)
+                return $"{direcoes} Somente Tons neutros definidos.";
+            return direcoes;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        _resultado = CalculosVariacaoTomCategoria.Calcular(Tons);
+    }
+
+    private static string CriarEstiloLado(double? media, double larguraPercentual)
+    {
+        var aparencia = AparenciaTom.ObterPrecisao(media);
+        if (!media.HasValue)
+            return aparencia.Estilo;
+
+        var magnitude = Math.Abs(media.Value);
+        var magnitudeLimiar = Math.Min(magnitude, AparenciaTom.LimiarPadrao);
+        var tomLimiar = Math.CopySign(magnitudeLimiar, media.Value);
+        var pesoLimiar = Math.Abs(AparenciaTom.TransformarPrecisao(tomLimiar) ?? 0d);
+        var posicaoLimiar = magnitude <= AparenciaTom.LimiarPadrao
+            ? 100d
+            : AparenciaTom.LimiarPadrao / magnitude * 100d;
+        var estiloCurva = string.Join(";",
+            $"--variacao-tom-largura:{larguraPercentual.ToString("0.################", CultureInfo.InvariantCulture)}%",
+            $"--variacao-tom-posicao-limiar:{posicaoLimiar.ToString("0.################", CultureInfo.InvariantCulture)}%",
+            $"--variacao-tom-peso-limiar:{pesoLimiar.ToString("0.################", CultureInfo.InvariantCulture)}%");
+
+        return string.IsNullOrWhiteSpace(aparencia.Estilo)
+            ? estiloCurva
+            : $"{aparencia.Estilo};{estiloCurva}";
+    }
+}
