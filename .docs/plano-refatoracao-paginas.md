@@ -106,5 +106,7 @@ Depois da conclusão, retirar a campanha de /AGENTS.md e do índice ativo de .do
 
 ## 7. Registro de progresso
 
+- Este Registro é o local canônico dos checkpoints operacionais de cada unidade em andamento, inclusive antes da validação final, do aceite e do adendo à especificação concluída. Ao concluir cada etapa interna ou tomar uma decisão relevante, registrar: unidade e etapa atual; implementação e arquivos/contratos afetados; validações realizadas, resultados e limites; observações e decisões do operador; pendências e próximo passo concreto. Manter informação suficiente para retomar o trabalho em outra sessão, sem criar especificação ou arquivo operacional separado por página.
+- Depois do aceite e do adendo, registrar aqui o estado final da unidade, a data e o hash do commit quando conhecidos, dependências relevantes e a autorização para avançar. Para retomar o trabalho em outro computador, os checkpoints e alterações necessários precisam estar incluídos em commit e push; conteúdo ainda não commitado não estará disponível ao sincronizar o repositório.
 - **25/10/2026 — Preparação documental:** macroplano criado; nenhuma página ou componente refatorado.
 - **Próxima ação:** somente por comando do operador, abrir P01 (piloto), apresentar diagnóstico e plano, aguardar aprovação.
