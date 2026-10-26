@@ -1,0 +1,72 @@
+<div class="content demonstracao-elementos-html">
+    <section aria-labelledby="elm-01-titulo-secao">
+        <h2 class="title is-6 demonstracao-elementos-html__titulo-elemento" id="elm-01-titulo-secao">ELM-01 — Título</h2>
+        <h3 class="title is-4">Título</h3>
+    </section>
+
+    <section aria-labelledby="elm-02-titulo-secao">
+        <h2 class="title is-6 demonstracao-elementos-html__titulo-elemento" id="elm-02-titulo-secao">ELM-02 — Parágrafo</h2>
+        <p>Este é um parágrafo de exemplo com texto simples.</p>
+    </section>
+
+    <section aria-labelledby="elm-03-titulo-secao">
+        <h2 class="title is-6 demonstracao-elementos-html__titulo-elemento" id="elm-03-titulo-secao">ELM-03 — Link</h2>
+        <a class="elemento-link-padrao" href="https://bulma.io/documentation/">Link para a documentação do Bulma</a>
+    </section>
+
+    <section aria-labelledby="elm-04-titulo-secao">
+        <h2 class="title is-6 demonstracao-elementos-html__titulo-elemento" id="elm-04-titulo-secao">ELM-04 — Lista</h2>
+        <ul>
+            <li>Primeiro item da lista</li>
+            <li>Segundo item da lista</li>
+            <li>Terceiro item da lista</li>
+        </ul>
+    </section>
+
+    <section aria-labelledby="elm-05-titulo-secao">
+        <h2 class="title is-6 demonstracao-elementos-html__titulo-elemento" id="elm-05-titulo-secao">ELM-05 — Campo de texto</h2>
+        <div class="demonstracao-elementos-html__campos">
+            <div class="field">
+                <label class="label" for="lab-caixa-texto">Caixa de texto</label>
+                <div class="control">
+                    <input class="input" id="lab-caixa-texto" type="text" placeholder="Digite um texto" />
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="lab-caixa-texto-erro">Caixa de texto em estado de erro</label>
+                <div class="control">
+                    <input class="input is-danger"
+                           id="lab-caixa-texto-erro"
+                           type="text"
+                           placeholder="Digite um texto"
+                           aria-invalid="true"
+                           aria-describedby="lab-caixa-texto-erro-mensagem" />
+                </div>
+                <p class="help is-danger" id="lab-caixa-texto-erro-mensagem">Mensagem de erro de exemplo.</p>
+            </div>
+
+            <div class="field">
+                <label class="label" for="lab-caixa-texto-somente-leitura">Caixa de texto somente leitura</label>
+                <div class="control">
+                    <input class="input"
+                           id="lab-caixa-texto-somente-leitura"
+                           type="text"
+                           value="Este valor pode ser selecionado"
+                           readonly />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section aria-labelledby="elm-06-titulo-secao">
+        <h2 class="title is-6 demonstracao-elementos-html__titulo-elemento" id="elm-06-titulo-secao">ELM-06 — Botão</h2>
+        <div class="buttons">
+            <button class="button is-link" type="button">Botão de exemplo</button>
+            <button class="button is-light elemento-botao-com-icone" type="button">
+                <span class="icon" aria-hidden="true"><i class="fa-solid fa-user-gear"></i></span>
+                <span>Botão com ícone</span>
+            </button>
+        </div>
+    </section>
+</div>

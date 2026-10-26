@@ -1,0 +1,58 @@
+/*
+ * Estilos compartilhados dos ELMs, derivados do Bulma e reutilizaveis nas paginas.
+ * Nao incluir aqui ajustes exclusivos da estrutura do catalogo no laboratorio.
+ */
+
+.elemento-link-padrao {
+    color: var(--bulma-link-text);
+    font-weight: var(--bulma-weight-normal);
+    text-decoration: none;
+    transition: font-weight 180ms ease, text-shadow 180ms ease;
+}
+
+.elemento-link-padrao:hover,
+.elemento-link-padrao:focus-visible {
+    font-weight: var(--bulma-weight-medium);
+    text-shadow: 0 0 0.15px currentColor;
+    text-decoration: none;
+}
+
+.button.elemento-botao-com-icone {
+    box-sizing: border-box;
+    height: var(--bulma-control-height);
+    min-height: var(--bulma-control-height);
+    flex: 0 1 auto;
+    gap: 0.7rem;
+    padding-block: 0;
+    padding-inline: 1.1rem;
+    border-color: var(--cor-border-weak);
+    border-radius: 0.75rem;
+    background: var(--cor-main);
+    color: var(--cor-text-strong);
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.button.elemento-botao-com-icone:hover {
+    border-color: var(--cor-border);
+    background: var(--cor-bis);
+    color: var(--cor-title);
+}
+
+.elemento-botao-com-icone:focus-visible {
+    outline: 3px solid var(--cor-link);
+    outline-offset: 3px;
+}
+
+.elemento-botao-com-icone > .icon {
+    margin-inline: 0;
+    color: var(--cor-link);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .elemento-link-padrao,
+    .elemento-botao-com-icone {
+        transition: none;
+    }
+}

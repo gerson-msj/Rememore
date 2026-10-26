@@ -1,0 +1,17 @@
+/* Ajustes locais da apresentacao do catalogo ELM no laboratorio, sem estilos de produto. */
+
+.demonstracao-elementos-html > section ~ section {
+    border-block-start: 1px solid var(--bulma-border);
+    margin-block-start: 1.25rem;
+    padding-block-start: 1rem;
+}
+.demonstracao-elementos-html__titulo-elemento {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.demonstracao-elementos-html__campos {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
