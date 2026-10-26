@@ -1,10 +1,10 @@
 .pagina-redefinir-senha { min-height: 100vh; }
-.pagina-redefinir-senha__conteudo { width: min(100% - 2rem, 30rem); margin: 0 auto; padding: 2.5rem 0; }
+.pagina-redefinir-senha__conteudo { width: min(100% - 2rem, 30rem); margin: 0 auto; padding: calc(4rem + 2.5rem) 0 2.5rem; }
 .pagina-redefinir-senha__formulario { display: grid; gap: 1rem; }
 .pagina-redefinir-senha__acoes { display: flex; justify-content: flex-end; }
 .pagina-redefinir-senha__erro { margin: .35rem 0 0; color: var(--cor-danger); }
 @media (max-width: 30rem) {
-    .pagina-redefinir-senha__conteudo { padding-top: 1.5rem; }
+    .pagina-redefinir-senha__conteudo { padding-top: calc(4rem + 1.5rem); }
     .pagina-redefinir-senha__acoes { justify-content: stretch; }
     .pagina-redefinir-senha__acoes > .button { width: 100%; }
 }

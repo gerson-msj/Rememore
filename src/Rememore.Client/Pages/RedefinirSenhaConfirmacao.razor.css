@@ -1,5 +1,10 @@
 .pagina-redefinir-confirmacao { min-height: 100vh; }
-.pagina-redefinir-confirmacao__conteudo { width: min(100% - 2rem, 36rem); margin: 0 auto; padding: 2.5rem 0; }
+.pagina-redefinir-confirmacao__conteudo { display: grid; gap: 1rem; width: min(100% - 2rem, 36rem); margin: 0 auto; padding: calc(4rem + 2.5rem) 0 2.5rem; }
 .pagina-redefinir-confirmacao__carregando { min-height: 12rem; }
 .pagina-redefinir-confirmacao__erro { margin: 1rem 0 0; color: var(--cor-danger); }
-@media (max-width: 30rem) { .pagina-redefinir-confirmacao__conteudo { padding-top: 1.5rem; } }
+.pagina-redefinir-confirmacao__conteudo > p { margin: 0; }
+.pagina-redefinir-confirmacao__unica { color: var(--cor-text-weak); }
+.pagina-redefinir-confirmacao__feedback { color: var(--cor-success); }
+.pagina-redefinir-confirmacao__acoes { display: flex; justify-content: flex-end; }
+.pagina-redefinir-confirmacao__conteudo ::deep .confirmacao-nova-chave { margin-bottom: 0; }
+@media (max-width: 30rem) { .pagina-redefinir-confirmacao__conteudo { padding-top: calc(4rem + 1.5rem); } }

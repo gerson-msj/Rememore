@@ -14,7 +14,7 @@
                 aria-label="Copiar chave"
                 aria-controls="@idCampo"
                 @onclick="CopiarChaveAsync">
-            <i class="fa-solid @(copiaConcluida ? "fa-check" : "fa-copy")" aria-hidden="true"></i>
+            <i class="fa-solid fa-copy" aria-hidden="true"></i>
         </button>
     </div>
 </div>
@@ -23,8 +23,6 @@
     private static long proximoId;
     private readonly string idCampo = $"cmp002-chave-{Interlocked.Increment(ref proximoId)}";
     private IJSObjectReference? modulo;
-    private bool copiaConcluida;
-
     [Parameter, EditorRequired] public string Chave { get; set; } = string.Empty;
     [Parameter] public EventCallback<bool> AoCopiar { get; set; }
     [Parameter] public Func<string, Task<bool>>? TentativaCopiaAlternativaAsync { get; set; }
@@ -54,7 +52,6 @@
             // A falha de interop não deve bloquear o campo selecionável.
         }
 
-        copiaConcluida |= sucesso;
         await AoCopiar.InvokeAsync(sucesso);
     }
 
