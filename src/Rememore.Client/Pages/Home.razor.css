@@ -1,6 +1,5 @@
 .pagina-inicial {
     min-height: 100vh;
-    background: var(--cor-background);
 }
 
 .pagina-inicial .pagina-inicial__conteudo {

@@ -1,5 +1,5 @@
-.pagina-captura-dia { min-height: 100vh; background: var(--cor-background); }
-.captura-dia__conteudo { display: grid; width: min(100%, 42rem); margin-inline: auto; padding: clamp(1.5rem, 5vw, 3.5rem) var(--rememore-espaco-lateral) 4rem; gap: 1.4rem; }
+.pagina-captura-dia { min-height: 100vh; }
+.captura-dia__conteudo { display: grid; width: min(100%, 42rem); margin-inline: auto; padding-block: calc(4rem + clamp(1.5rem, 5vw, 3.5rem)) 4rem; padding-inline: clamp(1rem, 4vw, 2.5rem); gap: 1.4rem; }
 .captura-dia__conteudo h1 { margin: 0; color: var(--cor-title); font-size: clamp(1.55rem, 4vw, 2.15rem); line-height: 1.2; }
 .captura-dia__conteudo > p { margin: 0; color: var(--cor-text-strong); line-height: 1.6; }
 .captura-dia__conteudo > .button { justify-self: start; min-height: 2.8rem; }

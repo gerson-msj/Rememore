@@ -1,8 +1,10 @@
 @inject NavigationManager Navegacao
 @inject EstadoAutenticacaoProvider EstadoAutenticacao
 
-    <CabecalhoPagina_old Titulo="@Titulo" MostrarRetorno="@MostrarRetorno" MostrarSaida="true" AoRetornar="Retornar" AoSair="AbrirConfirmacao" />
-<MensagemPopup IsOpen="popupAberto" Paragrafos="@MensagemSaida" RotuloConfirmacao="Sim" RotuloCancelamento="Não" AoResponder="ResponderSaidaAsync" />
+<div class="cabecalho-ambiente">
+    <CabecalhoPagina Titulo="@Titulo" MostrarVoltar="@MostrarRetorno" MostrarSair="true" LarguraMaxima="@LarguraMaxima" AoRetornar="Retornar" AoSair="AbrirConfirmacao" />
+    <MensagemPopup IsOpen="popupAberto" Paragrafos="@MensagemSaida" RotuloConfirmacao="Sim" RotuloCancelamento="Não" AoResponder="ResponderSaidaAsync" />
+</div>
 
 @code {
     private static readonly IReadOnlyList<string> MensagemSaida = ["Deseja realmente sair?"];
@@ -11,6 +13,7 @@
     [Parameter, EditorRequired] public string Titulo { get; set; } = "";
     [Parameter] public bool MostrarRetorno { get; set; }
     [Parameter] public EventCallback AoRetornar { get; set; }
+    [Parameter] public string? LarguraMaxima { get; set; }
 
     private Task Retornar() => AoRetornar.HasDelegate
         ? AoRetornar.InvokeAsync()

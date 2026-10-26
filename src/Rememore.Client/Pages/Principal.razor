@@ -8,7 +8,7 @@
 <PageTitle>Rememore</PageTitle>
 
 <main class="pagina-principal">
-    <CabecalhoAmbiente Titulo="Rememore" />
+    <CabecalhoAmbiente Titulo="Rememore" LarguraMaxima="72rem" />
     <h1 class="is-sr-only">Rememore</h1>
 
     @if (carregando)
@@ -24,7 +24,7 @@
                     {
                         <button class="card principal-jornada" type="button" aria-haspopup="@(jornada.Disponivel ? null : "dialog")" @onclick="() => AcionarJornada(jornada)">
                             <span class="card-content principal-jornada__conteudo">
-                                <span class="principal-jornada__icone" aria-hidden="true"><i class="@jornada.ClasseIcone"></i></span>
+                                <span class="icon is-large principal-jornada__icone" aria-hidden="true"><i class="@jornada.ClasseIcone"></i></span>
                                 <span class="principal-jornada__texto">
                                     <span class="principal-jornada__titulo">@jornada.Titulo</span>
                                     <span class="principal-jornada__descricao">@jornada.Descricao</span>
@@ -39,30 +39,32 @@
                 </div>
             </section>
 
-            <nav class="principal-acessos" aria-label="Continuidade, conta e sistema">
+            <div class="principal-secundaria">
                 @if (falhaPendencias)
                 {
                     <p class="principal-pendencias-erro" role="alert">Não foi possível verificar as capturas pendentes neste dispositivo.</p>
                 }
-                @if (pendenciaCaptura)
-                {
-                    <a class="principal-acesso principal-acesso--pendente" href="capturar">
-                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-                        <span>Capturas pendentes</span>
+                <nav class="principal-acessos" aria-label="Continuidade, conta e sistema">
+                    @if (pendenciaCaptura)
+                    {
+                        <a class="button is-light principal-acesso principal-acesso--pendente" href="capturar">
+                            <span class="icon" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                            <span>Capturas pendentes</span>
+                        </a>
+                    }
+                    <a class="button is-light principal-acesso" href="conta">
+                        <span class="icon" aria-hidden="true"><i class="fa-solid fa-user-gear"></i></span>
+                        <span>Minha Conta e Meus Dados</span>
                     </a>
-                }
-                <a class="principal-acesso" href="conta">
-                    <i class="fa-solid fa-user-gear" aria-hidden="true"></i>
-                    <span>Minha Conta e Meus Dados</span>
-                </a>
-                @if (capacidades?.Administracao == true)
-                {
-                    <a class="principal-acesso" href="admin">
-                        <i class="fa-solid fa-wrench" aria-hidden="true"></i>
-                        <span>Administração</span>
-                    </a>
-                }
-            </nav>
+                    @if (capacidades?.Administracao == true)
+                    {
+                        <a class="button is-light principal-acesso" href="admin">
+                            <span class="icon" aria-hidden="true"><i class="fa-solid fa-wrench"></i></span>
+                            <span>Administração</span>
+                        </a>
+                    }
+                </nav>
+            </div>
         </div>
     }
 
