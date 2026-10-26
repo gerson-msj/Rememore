@@ -6,7 +6,7 @@ Memória técnica da Stack2 (.NET 10). A documentação funcional canônica do p
 
 1. `/AGENTS.md` — normas permanentes e exceção da campanha.
 2. `.docs/memoria-tecnica.md` — fatos/contratos técnicos reutilizáveis (verifique registros superados).
-3. **Durante a campanha de refatoração visual:** `.docs/plano-refatoracao-paginas.md`, a especificação **concluída da unidade** em `.docs/especificacoes/concluidas/` (incluindo corpo, Parecer e adendos) e apenas o código relacionado. P01 foi o piloto e foi aceita; P01–P05 estão concluídas e aceitas. P06 — Seleção de Captura está em preparação; seu plano técnico deve ser aprovado antes de editar a página.
+3. **Durante a campanha de refatoração visual:** `.docs/plano-refatoracao-paginas.md`, a especificação **concluída da unidade** em `.docs/especificacoes/concluidas/` (incluindo corpo, Parecer e adendos) e apenas o código relacionado. P01 foi o piloto e foi aceita; P01–P05 estão concluídas e aceitas. P06 — Seleção de Captura está suspensa até que as referências visuais ausentes sejam inventariadas, demonstradas e aceitas no `/Lab`; somente depois se fecha e aprova o plano da página.
 4. **Fora da campanha:** somente a especificação operacional atual indicada pelo operador, conforme `/AGENTS.md`.
 
 Não ler por padrão o histórico Stack1, toda a árvore de código, todas as especificações ou documentos do Drive. Na campanha **não recorrer à Stack1**: trabalhar apenas com as fontes e decisões Stack2.
@@ -21,7 +21,7 @@ Não ler por padrão o histórico Stack1, toda a árvore de código, todas as es
 
 ## Ciclo especial da campanha
 
-Cada página: Codex apresenta diagnóstico/plano → operador aprova → Codex percorre autonomamente HTML/Bulma/CMPs, CSS/JS, integração funcional equivalente e limpeza/testes → pergunta ao operador **antes** de incompatibilidade ou alteração contratual/funcional/visual aprovada → entrega e operador inspeciona/testa → após aceite, adendo e atualização de progresso → **Codex faz commit e push em `develop`; depois o operador libera a próxima página**. Sem quatro interrupções obrigatórias, sem retorno ao analista entre páginas, sem modificar especificações antigas.
+Cada página: inventariar seus padrões visuais e mapear cada um para CMP aprovado ou exemplo básico aprovado no `/Lab` → quando faltar referência, consultar Bulma oficial e criar/demonstrar o elemento básico ou especificar/demonstrar CMP conforme o caso → operador valida as novas referências → Codex apresenta plano da página → operador aprova → Codex percorre autonomamente HTML/Bulma/CMPs, CSS/JS, integração funcional equivalente e limpeza/testes → pergunta ao operador **antes** de incompatibilidade ou alteração contratual/funcional/visual aprovada → entrega e operador inspeciona/testa → após aceite, adendo e atualização de progresso → **Codex faz commit e push em `develop`; depois o operador libera a próxima página**. Sem quatro interrupções obrigatórias, sem retorno ao analista entre páginas, sem modificar especificações antigas.
 
 No encerramento geral, realizar regressão transversal, remover legados apenas sem consumidores, emitir Parecer Final Geral e levar ao analista para reconciliação única no Drive. Arquivar macroplano depois, sem apagar evidências. O padrão permanente de qualidade continua no AGENTS.
 
