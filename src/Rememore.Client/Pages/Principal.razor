@@ -22,15 +22,15 @@
                 <div class="principal-jornadas__grade">
                     @foreach (var jornada in Jornadas)
                     {
-                        <button class="card principal-jornada" type="button" aria-haspopup="@(jornada.Disponivel ? null : "dialog")" @onclick="() => AcionarJornada(jornada)">
-                            <span class="card-content principal-jornada__conteudo">
-                                <span class="icon is-large principal-jornada__icone" aria-hidden="true"><i class="@jornada.ClasseIcone"></i></span>
-                                <span class="principal-jornada__texto">
-                                    <span class="principal-jornada__titulo">@jornada.Titulo</span>
-                                    <span class="principal-jornada__descricao">@jornada.Descricao</span>
+                        <button class="card elemento-card-principal" type="button" aria-haspopup="@(jornada.Disponivel ? null : "dialog")" @onclick="() => AcionarJornada(jornada)">
+                            <span class="card-content elemento-card-principal__conteudo">
+                                <span class="icon is-large elemento-card-principal__icone" aria-hidden="true"><i class="@jornada.ClasseIcone"></i></span>
+                                <span class="elemento-card-principal__texto">
+                                    <span class="elemento-card-principal__titulo">@jornada.Titulo</span>
+                                    <span class="elemento-card-principal__descricao">@jornada.Descricao</span>
                                     @if (!jornada.Disponivel)
                                     {
-                                        <span class="principal-jornada__disponibilidade">@jornada.MensagemIndisponibilidade</span>
+                                        <span class="elemento-card-principal__disponibilidade">@jornada.MensagemIndisponibilidade</span>
                                     }
                                 </span>
                             </span>

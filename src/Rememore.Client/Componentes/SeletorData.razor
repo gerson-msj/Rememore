@@ -7,14 +7,14 @@
     <div class="control has-icons-right">
         <input @ref="campo"
                id="@idCampo"
-               class="input seletor-data__entrada @(!ValidadeAtual ? "seletor-data__entrada--texto-provisorio" : "")"
+               class="input superficie-controle-campo seletor-data__entrada @(!ValidadeAtual ? "seletor-data__entrada--texto-provisorio" : "")"
                type="date"
                value="@valorAtual"
                max="@LimiteMaximoTexto"
                aria-invalid="@(!ValidadeAtual ? "true" : "false")"
                @oninput="AoEditarAsync" />
         <button @ref="botaoCalendario"
-                class="button is-ghost icon is-right icone-controle-interativo"
+                class="button is-ghost icon is-right botao-icone-controle icone-controle-interativo icone-acao-realce"
                 type="button"
                 aria-label="Abrir calendário"
                 aria-controls="@idCampo">

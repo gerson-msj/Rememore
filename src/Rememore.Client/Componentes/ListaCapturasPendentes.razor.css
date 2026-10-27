@@ -1,0 +1,47 @@
+.cmp034-lista-capturas-pendentes {
+    display: grid;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cmp034-lista-capturas-pendentes__item {
+    display: flex;
+    align-items: stretch;
+    min-height: var(--bulma-control-height);
+    overflow: visible;
+}
+
+.cmp034-lista-capturas-pendentes__abrir {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    min-width: 0;
+    padding: var(--bulma-control-padding-vertical) var(--bulma-control-padding-horizontal);
+    border: 0;
+    border-radius: var(--bulma-control-radius);
+    background: transparent;
+    color: var(--bulma-text);
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.cmp034-lista-capturas-pendentes__abrir:focus-visible,
+.cmp034-lista-capturas-pendentes__excluir:focus-visible {
+    outline: 3px solid var(--cor-link);
+    outline-offset: 2px;
+    z-index: 1;
+}
+
+.cmp034-lista-capturas-pendentes__excluir {
+    align-self: center;
+    color: var(--bulma-text-weak);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cmp034-lista-capturas-pendentes__item {
+        transition: none;
+    }
+}

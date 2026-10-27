@@ -1,0 +1,31 @@
+@using System.Globalization
+
+@if (Datas.Count > 0)
+{
+    <ul class="cmp034-lista-capturas-pendentes">
+        @foreach (var data in Datas)
+        {
+            var dataIso = data.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var dataApresentada = data.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("pt-BR"));
+
+            <li class="cmp034-lista-capturas-pendentes__item superficie-controle-campo" @key="dataIso">
+                <button class="cmp034-lista-capturas-pendentes__abrir" type="button" aria-label="Abrir captura de @dataApresentada" @onclick="() => AbrirAsync(data)">
+                    <time datetime="@dataIso">@dataApresentada</time>
+                </button>
+                <button class="button is-ghost icon botao-icone-controle icone-acao-realce cmp034-lista-capturas-pendentes__excluir" type="button" aria-label="Solicitar exclusão da captura de @dataApresentada" @onclick="() => SolicitarExclusaoAsync(data)">
+                    <span class="icon" aria-hidden="true"><i class="fa-solid fa-trash"></i></span>
+                </button>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<DateOnly> Datas { get; set; } = Array.Empty<DateOnly>();
+    [Parameter] public EventCallback<DateOnly> AoAbrir { get; set; }
+    [Parameter] public EventCallback<DateOnly> AoSolicitarExclusao { get; set; }
+
+    private Task AbrirAsync(DateOnly data) => AoAbrir.InvokeAsync(data);
+
+    private Task SolicitarExclusaoAsync(DateOnly data) => AoSolicitarExclusao.InvokeAsync(data);
+}

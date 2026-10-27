@@ -1,3 +1,48 @@
+.superficie-controle-campo {
+    /* Bulma define estes tokens apenas em .control/.input; declara-los aqui permite reusar a superficie fora de um campo. */
+    --bulma-input-h: var(--bulma-scheme-h);
+    --bulma-input-s: var(--bulma-scheme-s);
+    --bulma-input-border-style: solid;
+    --bulma-input-border-width: var(--bulma-control-border-width);
+    --bulma-input-border-l: var(--bulma-border-l);
+    --bulma-input-border-l-delta: 0%;
+    --bulma-input-border-color: hsl(var(--bulma-input-h), var(--bulma-input-s), calc(var(--bulma-input-border-l) + var(--bulma-input-border-l-delta)));
+    --bulma-input-hover-border-l-delta: var(--bulma-hover-border-l-delta);
+    --bulma-input-background-l: var(--bulma-scheme-main-l);
+    --bulma-input-background-l-delta: 0%;
+    --bulma-input-radius: var(--bulma-control-radius);
+    background-color: hsl(var(--bulma-input-h), var(--bulma-input-s), calc(var(--bulma-input-background-l) + var(--bulma-input-background-l-delta)));
+    border-color: var(--bulma-input-border-color);
+    border-radius: var(--bulma-input-radius);
+    border-style: var(--bulma-input-border-style);
+    border-width: var(--bulma-input-border-width);
+    transition-duration: var(--bulma-duration);
+    transition-timing-function: var(--bulma-easing);
+}
+
+.superficie-controle-campo:hover {
+    --bulma-input-border-l-delta: var(--bulma-input-hover-border-l-delta);
+}
+
+.botao-icone-controle {
+    display: inline-flex;
+    width: var(--bulma-control-height);
+    height: var(--bulma-control-height);
+    box-sizing: border-box;
+    flex: 0 0 var(--bulma-control-height);
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
+
+.botao-icone-controle > i,
+.botao-icone-controle > .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .control.has-icons-right .icone-controle-interativo {
     pointer-events: auto;
     color: var(--bulma-text);
@@ -7,6 +52,19 @@
 .control.has-icons-right .icone-controle-interativo:hover,
 .control.has-icons-right .icone-controle-interativo:focus-visible {
     color: var(--bulma-link);
+}
+
+.icone-acao-realce > i,
+.icone-acao-realce > .icon > i {
+    transition: color 180ms ease, text-shadow 180ms ease;
+}
+
+.icone-acao-realce:hover > i,
+.icone-acao-realce:focus-visible > i,
+.icone-acao-realce:hover > .icon > i,
+.icone-acao-realce:focus-visible > .icon > i {
+    color: var(--bulma-link);
+    text-shadow: 0 0 0.15px currentColor;
 }
 
 .modal.modal--popup-compartilhado {
@@ -100,6 +158,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .icone-acao-realce > i,
+    .icone-acao-realce > .icon > i {
+        transition: none;
+    }
+
     .modal.modal--popup-compartilhado,
     .modal.modal--popup-compartilhado > .modal-background,
     .modal.modal--popup-compartilhado > .modal-card {

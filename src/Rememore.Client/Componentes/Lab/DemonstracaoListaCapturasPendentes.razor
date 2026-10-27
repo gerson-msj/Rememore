@@ -1,0 +1,83 @@
+@using System.Globalization
+
+<section aria-labelledby="cmp034-titulo-demonstracao">
+    <h3 class="title is-5" id="cmp034-titulo-demonstracao">Lista de capturas</h3>
+    <p class="mb-4">Cada data tem ações independentes para abrir ou solicitar exclusão.</p>
+
+    <ListaCapturasPendentes Datas="@datasVisiveis"
+                            AoAbrir="RegistrarAbertura"
+                            AoSolicitarExclusao="RegistrarSolicitacaoExclusao" />
+
+    <div class="buttons mt-4">
+        @if (demonstrarListaVazia)
+        {
+            <button class="button is-light" type="button" @onclick="RestaurarDatas">Restaurar três datas</button>
+        }
+        else
+        {
+            <button class="button is-light" type="button" @onclick="DemonstrarListaVaziaAsync">Demonstrar lista vazia</button>
+        }
+    </div>
+
+    @if (demonstrarListaVazia)
+    {
+        <p class="help">Lista vazia: o componente não renderiza itens nem mensagem substitutiva.</p>
+    }
+
+    <div class="content mt-4" aria-live="polite" aria-atomic="true">
+        <p><strong>Abrir captura:</strong> @resultadoAbertura</p>
+        <p><strong>Solicitar exclusão:</strong> @resultadoSolicitacaoExclusao</p>
+    </div>
+</section>
+
+@code {
+    private readonly IReadOnlyList<DateOnly> DatasDemonstrativas =
+    [
+        new DateOnly(2026, 10, 6),
+        new DateOnly(2026, 10, 14),
+        new DateOnly(2026, 10, 22)
+    ];
+
+    private IReadOnlyList<DateOnly> datasVisiveis = Array.Empty<DateOnly>();
+    private string resultadoAbertura = "Aguardando clique em uma data.";
+    private string resultadoSolicitacaoExclusao = "Aguardando clique no ícone da lixeira.";
+    private bool demonstrarListaVazia;
+
+    protected override void OnInitialized() => datasVisiveis = DatasDemonstrativas;
+
+    private Task RegistrarAbertura(DateOnly data)
+    {
+        resultadoAbertura = FormatarData(data);
+        return Task.CompletedTask;
+    }
+
+    private Task RegistrarSolicitacaoExclusao(DateOnly data)
+    {
+        resultadoSolicitacaoExclusao = FormatarData(data);
+        return Task.CompletedTask;
+    }
+
+    private Task DemonstrarListaVaziaAsync()
+    {
+        demonstrarListaVazia = true;
+        datasVisiveis = Array.Empty<DateOnly>();
+        LimparResultados();
+        return Task.CompletedTask;
+    }
+
+    private Task RestaurarDatas()
+    {
+        demonstrarListaVazia = false;
+        datasVisiveis = DatasDemonstrativas;
+        LimparResultados();
+        return Task.CompletedTask;
+    }
+
+    private void LimparResultados()
+    {
+        resultadoAbertura = "Aguardando clique em uma data.";
+        resultadoSolicitacaoExclusao = "Aguardando clique no ícone da lixeira.";
+    }
+
+    private static string FormatarData(DateOnly data) => data.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("pt-BR"));
+}

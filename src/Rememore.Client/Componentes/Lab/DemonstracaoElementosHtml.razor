@@ -67,6 +67,62 @@
                 <span class="icon" aria-hidden="true"><i class="fa-solid fa-user-gear"></i></span>
                 <span>Botão com ícone</span>
             </button>
+            <button class="button is-link" type="button" disabled>Capturar</button>
         </div>
     </section>
+
+    <section aria-labelledby="elm-07-titulo-secao">
+        <h2 class="title is-6 demonstracao-elementos-html__titulo-elemento" id="elm-07-titulo-secao">ELM-07 — Orientação Informativa</h2>
+        <div class="notification elemento-orientacao-informativa">
+            <span class="elemento-orientacao-informativa__texto">Escolha uma data para continuar.</span>
+        </div>
+        <div class="notification elemento-orientacao-informativa">
+            <span class="elemento-orientacao-informativa__texto">@MensagemOrientativaMultilinha</span>
+        </div>
+    </section>
+
+    <section aria-labelledby="elm-08-titulo-secao">
+        <h2 class="title is-6 demonstracao-elementos-html__titulo-elemento" id="elm-08-titulo-secao">ELM-08 — Falha Recuperável</h2>
+        <div class="notification elemento-falha-recuperavel" role="alert" aria-atomic="true">
+            <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </span>
+            <div class="elemento-falha-recuperavel__conteudo">
+                <p class="elemento-falha-recuperavel__mensagem"><strong>Não foi possível verificar as capturas pendentes neste dispositivo.</strong></p>
+                <p class="elemento-falha-recuperavel__apoio">Você pode tentar consultar novamente.</p>
+                <button class="button is-light elemento-botao-com-icone" type="button" @onclick="RegistrarNovaTentativa">
+                    <span class="icon" aria-hidden="true"><i class="fa-solid fa-rotate"></i></span>
+                    <span>Tentar novamente</span>
+                </button>
+                @if (tentativasConsulta > 0)
+                {
+                    <p class="elemento-falha-recuperavel__resultado" role="status" aria-live="polite">@ResultadoNovaTentativa</p>
+                }
+            </div>
+        </div>
+    </section>
+
+    <section aria-labelledby="elm-09-titulo-secao">
+        <h2 class="title is-6 demonstracao-elementos-html__titulo-elemento" id="elm-09-titulo-secao">ELM-09 — Card Principal</h2>
+        <button class="card elemento-card-principal" type="button">
+            <span class="card-content elemento-card-principal__conteudo">
+                <span class="icon is-large elemento-card-principal__icone" aria-hidden="true"><i class="fa-solid fa-lightbulb"></i></span>
+                <span class="elemento-card-principal__texto">
+                    <span class="elemento-card-principal__titulo">Ideias para guardar</span>
+                    <span class="elemento-card-principal__disponibilidade">Disponível para receber novas lembranças.</span>
+                </span>
+            </span>
+        </button>
+    </section>
 </div>
+
+@code {
+    private const string MensagemOrientativaMultilinha = "A data escolhida será usada para abrir a captura.\nVocê poderá continuar trabalhando com segurança no seu dispositivo.";
+    private int tentativasConsulta;
+
+    private string ResultadoNovaTentativa => tentativasConsulta == 0
+        ? ""
+        : $"Tentativa simulada solicitada ({tentativasConsulta}). A falha permanece visível.";
+
+    private void RegistrarNovaTentativa() => tentativasConsulta++;
+}
