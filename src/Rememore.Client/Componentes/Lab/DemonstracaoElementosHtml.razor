@@ -2,6 +2,8 @@
     <section aria-labelledby="elm-01-titulo-secao">
         <h2 class="title is-6 demonstracao-elementos-html__titulo-elemento" id="elm-01-titulo-secao">ELM-01 — Título</h2>
         <h3 class="title is-4">Título</h3>
+        <p class="is-size-7 has-text-weight-medium">Variação de título — Linha da data</p>
+        <time class="subtitle is-5" datetime="2026-10-27">27 de outubro de 2026</time>
     </section>
 
     <section aria-labelledby="elm-02-titulo-secao">
@@ -30,6 +32,16 @@
                 <label class="label" for="lab-caixa-texto">Caixa de texto</label>
                 <div class="control">
                     <input class="input" id="lab-caixa-texto" type="text" placeholder="Digite um texto" />
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="lab-caixa-texto-multilinha">Caixa de texto multilinha</label>
+                <div class="control">
+                    <textarea class="textarea has-fixed-size"
+                              id="lab-caixa-texto-multilinha"
+                              rows="3"
+                              placeholder="Digite um texto"></textarea>
                 </div>
             </div>
 
@@ -68,6 +80,16 @@
                 <span>Botão com ícone</span>
             </button>
             <button class="button is-link" type="button" disabled>Capturar</button>
+        </div>
+        <div class="buttons has-addons">
+            <button class="button is-link" type="button">
+                <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-plus"></i></span>
+                <span>Incluir memória</span>
+            </button>
+            <button class="button is-light" type="button">
+                <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-times"></i></span>
+                <span>Cancelar inclusão</span>
+            </button>
         </div>
     </section>
 
@@ -114,6 +136,33 @@
             </span>
         </button>
     </section>
+
+    <section aria-labelledby="elm-10-titulo-secao">
+        <h2 class="title is-6 demonstracao-elementos-html__titulo-elemento" id="elm-10-titulo-secao">ELM-10 — Abas</h2>
+        <div class="tabs is-fullwidth" role="group" aria-label="Etapas da captura">
+            <ul>
+                <li class="is-active">
+                    <a aria-current="step">
+                        <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-feather-pointed"></i></span>
+                        <span>Memorar</span>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-layer-group"></i></span>
+                        <span>Categorizar</span>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-bookmark"></i></span>
+                        <span>Revisar</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </section>
+
 </div>
 
 @code {
