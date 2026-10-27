@@ -13,63 +13,75 @@
 <PageTitle>Capturar</PageTitle>
 
 <main class="pagina-selecao-capturar">
-    <CabecalhoAmbiente Titulo="Capturar" MostrarRetorno AoRetornar="VoltarPrincipal" />
-    <div class="selecao-capturar__conteudo">
-        <h1>Escolha o dia que deseja capturar</h1>
+    <CabecalhoPagina Titulo="Capturar" MostrarVoltar MostrarSair AoRetornar="VoltarPrincipal" AoSair="AbrirPopupSaida" />
+    <section class="selecao-capturar__conteudo">
+        <h1 class="title is-4">Escolha o dia que deseja capturar</h1>
 
         @if (carregando)
         {
-            <p aria-busy="true">Carregando seleção…</p>
+            <p class="help" aria-busy="true">Carregando seleção…</p>
         }
         else
         {
             @if (textoOrientacao is not null)
             {
-                <p class="selecao-capturar__orientacao">@textoOrientacao</p>
+                <div class="notification elemento-orientacao-informativa">
+                    <span class="elemento-orientacao-informativa__texto">@textoOrientacao</span>
+                </div>
             }
 
             <section class="selecao-capturar__escolha" aria-label="Seleção da data">
-                <SeletorData_old Valor="@valorData" Maximo="@hojeTexto" Invalido="@(!DataValida)" AoMudar="AtualizarData" />
-                <button class="button is-link selecao-capturar__acao" type="button" disabled="@(!DataValida)" @onclick="AbrirCaptura">Capturar</button>
+                <SeletorData ValorInicial="@hojeTexto" AoMudarValor="AtualizarData" />
+                <div class="is-flex is-justify-content-flex-end">
+                    <button class="button is-link" type="button" disabled="@(!DataValida)" @onclick="AbrirCaptura">Capturar</button>
+                </div>
             </section>
 
             @if (falhaConsulta)
             {
-                <div class="selecao-capturar__falha" role="alert">
-                    <p>Não foi possível verificar as capturas pendentes neste dispositivo.</p>
-                    <button class="button" type="button" @onclick="CarregarPendenciasAsync">Tentar novamente</button>
+                <div class="notification elemento-falha-recuperavel" role="alert" aria-atomic="true">
+                    <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </span>
+                    <div class="elemento-falha-recuperavel__conteudo">
+                        <p class="elemento-falha-recuperavel__mensagem"><strong>Não foi possível verificar as capturas pendentes neste dispositivo.</strong></p>
+                        <button class="button is-light elemento-botao-com-icone" type="button" @onclick="CarregarPendenciasAsync">
+                            <span class="icon" aria-hidden="true"><i class="fa-solid fa-rotate"></i></span>
+                            <span>Tentar novamente</span>
+                        </button>
+                    </div>
                 </div>
             }
             else if (pendencias.Count > 0)
             {
                 <section class="selecao-capturar__pendencias" aria-labelledby="titulo-pendencias">
-                    <h2 id="titulo-pendencias">Capturas pendentes</h2>
-                    <ul>
-                        @foreach (var pendencia in pendencias)
-                        {
-                            <li @key="pendencia.Data" class="selecao-capturar__pendencia">
-                                <a href="@($"capturar/{pendencia.Data:yyyy-MM-dd}")">@DatasCaptura.Apresentar(pendencia.Data)</a>
-                                <button class="selecao-capturar__apagar" type="button"
-                                        aria-label="@($"Apagar captura de {DatasCaptura.Apresentar(pendencia.Data)}")"
-                                        @onclick="() => SolicitarExclusao(pendencia)">
-                                    <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
-                                </button>
-                            </li>
-                        }
-                    </ul>
+                    <h2 class="title is-5" id="titulo-pendencias">Capturas pendentes</h2>
+                    <ListaCapturasPendentes Datas="@pendencias.Select(pendencia => pendencia.Data).ToArray()"
+                                            AoAbrir="AbrirPendencia"
+                                            AoSolicitarExclusao="SolicitarExclusao" />
                 </section>
             }
 
             @if (falhaRemocao)
             {
-                <p class="selecao-capturar__falha" role="alert">Não foi possível apagar as alterações. Tente novamente.</p>
+                <div class="notification elemento-falha-recuperavel" role="alert" aria-atomic="true">
+                    <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </span>
+                    <div class="elemento-falha-recuperavel__conteudo">
+                        <p class="elemento-falha-recuperavel__mensagem"><strong>Não foi possível apagar as alterações. Tente novamente.</strong></p>
+                    </div>
+                </div>
             }
         }
-    </div>
+    </section>
 
-    <MensagemPopup IsOpen="@popupAberto" Titulo="@TituloExclusao" Paragrafos="@MensagemExclusao"
-                   Cor="CorSemanticaPopup.Perigo" RotuloConfirmacao="Apagar" RotuloCancelamento="Cancelar"
-                   AoResponder="ResponderExclusaoAsync" />
+    <Popup Aberto="@popupAberto" Titulo="@TituloExclusao" Mensagem="@MensagemExclusaoPopup"
+           ClassePopup="popup--sombra-danger" TextoConfirmar="Apagar" TextoCancelar="Cancelar"
+           ClasseBotaoConfirmar="is-danger" AoResponder="ResponderExclusaoAsync" />
+    <Popup Aberto="@popupSaidaAberto" Mensagem="Deseja realmente sair?"
+           TextoConfirmar="Sim" TextoCancelar="Não" ClasseBotaoConfirmar="is-link"
+           AoResponder="ResponderSaidaAsync" />
 </main>
 
 @code {
@@ -84,9 +96,10 @@
     private bool falhaConsulta;
     private bool falhaRemocao;
     private bool popupAberto;
-
-    private bool DataValida => DatasCaptura.TentarValidar(valorData, hoje, out _);
+    private bool popupSaidaAberto;
+    private bool DataValida => valorData.Length > 0;
     private string DataExclusao => pendenciaSelecionada is null ? "" : DatasCaptura.Apresentar(pendenciaSelecionada.Data);
+    private string MensagemExclusaoPopup => string.Join("\n\n", MensagemExclusao);
     private string TituloExclusao => pendenciaSelecionada?.Origem switch
     {
         OrigemCapturaLocal.Ausente => $"Apagar as memórias de {DataExclusao}?",
@@ -124,7 +137,11 @@
             .ToArray();
     }
 
-    private void AtualizarData(string novoValor) => valorData = novoValor;
+    private Task AtualizarData(string? novoValor)
+    {
+        valorData = novoValor ?? "";
+        return Task.CompletedTask;
+    }
 
     private void AbrirCaptura()
     {
@@ -132,12 +149,17 @@
             Navegacao.NavigateTo($"capturar/{data:yyyy-MM-dd}");
     }
 
-    private void SolicitarExclusao(WorkspaceCapturaLocal pendencia)
+    private void AbrirPendencia(DateOnly data) => Navegacao.NavigateTo($"capturar/{data:yyyy-MM-dd}");
+
+    private void SolicitarExclusao(DateOnly data)
     {
         falhaRemocao = false;
-        pendenciaSelecionada = pendencia;
+        pendenciaSelecionada = pendencias.FirstOrDefault(pendencia => pendencia.Data == data);
+        if (pendenciaSelecionada is null) return;
         popupAberto = true;
     }
+
+    private void AbrirPopupSaida() => popupSaidaAberto = true;
 
     private async Task ResponderExclusaoAsync(RespostaPopup resposta)
     {
@@ -156,6 +178,15 @@
         }
 
         await CarregarPendenciasAsync();
+    }
+
+    private async Task ResponderSaidaAsync(RespostaPopup resposta)
+    {
+        popupSaidaAberto = false;
+        if (resposta != RespostaPopup.Confirmacao) return;
+
+        await EstadoAutenticacao.EncerrarSessaoAsync();
+        Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "").ToString());
     }
 
     private void VoltarPrincipal() => Navegacao.NavigateTo("principal");

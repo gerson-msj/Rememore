@@ -37,7 +37,16 @@
 
 .cmp034-lista-capturas-pendentes__excluir {
     align-self: center;
-    color: var(--bulma-text-weak);
+    --bulma-button-ghost-hover-decoration: none;
+}
+
+.cmp034-lista-capturas-pendentes__excluir:hover {
+    color: var(--bulma-danger) !important;
+}
+
+.cmp034-lista-capturas-pendentes__excluir:hover > .icon > i,
+.cmp034-lista-capturas-pendentes__excluir:focus-visible > .icon > i {
+    color: var(--bulma-danger);
 }
 
 @media (prefers-reduced-motion: reduce) {

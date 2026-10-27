@@ -6,7 +6,7 @@ Memória técnica da Stack2 (.NET 10). A documentação funcional canônica do p
 
 1. `/AGENTS.md` — normas permanentes e exceção da campanha.
 2. `.docs/memoria-tecnica.md` — fatos/contratos técnicos reutilizáveis (verifique registros superados).
-3. **Durante a campanha de refatoração visual:** `.docs/plano-refatoracao-paginas.md`, a especificação **concluída da unidade** em `.docs/especificacoes/concluidas/` (incluindo corpo, Parecer e adendos) e apenas o código relacionado. P01 foi o piloto e foi aceita; P01–P05 estão concluídas e aceitas. P06 — Seleção de Captura está suspensa até que uma especificação separada para as referências visuais ausentes seja aprovada, implementada e aceita no `/Lab`; somente depois se fecha e aprova o plano da página.
+3. **Durante a campanha de refatoração visual:** `.docs/plano-refatoracao-paginas.md`, a especificação **concluída da unidade** em `.docs/especificacoes/concluidas/` (incluindo corpo, Parecer e adendos) e apenas o código relacionado. P01 foi o piloto; P01–P06 estão concluídas e aceitas. P07 — Captura do Dia aguarda liberação expressa do operador; não iniciar até essa liberação.
 4. **Fora da campanha:** somente a especificação operacional atual indicada pelo operador, conforme `/AGENTS.md`.
 
 Não ler por padrão o histórico Stack1, toda a árvore de código, todas as especificações ou documentos do Drive. Na campanha **não recorrer à Stack1**: trabalhar apenas com as fontes e decisões Stack2.

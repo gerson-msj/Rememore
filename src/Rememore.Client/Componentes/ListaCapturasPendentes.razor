@@ -12,7 +12,7 @@
                 <button class="cmp034-lista-capturas-pendentes__abrir" type="button" aria-label="Abrir captura de @dataApresentada" @onclick="() => AbrirAsync(data)">
                     <time datetime="@dataIso">@dataApresentada</time>
                 </button>
-                <button class="button is-ghost icon botao-icone-controle icone-acao-realce cmp034-lista-capturas-pendentes__excluir" type="button" aria-label="Solicitar exclusão da captura de @dataApresentada" @onclick="() => SolicitarExclusaoAsync(data)">
+                <button class="button is-ghost icon botao-icone-controle icone-acao-realce has-text-danger-75 cmp034-lista-capturas-pendentes__excluir" type="button" aria-label="Solicitar exclusão da captura de @dataApresentada" @onclick="() => SolicitarExclusaoAsync(data)">
                     <span class="icon" aria-hidden="true"><i class="fa-solid fa-trash"></i></span>
                 </button>
             </li>
