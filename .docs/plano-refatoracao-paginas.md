@@ -1,6 +1,6 @@
 # Campanha temporária — Refatoração visual das páginas Stack2
 
-**Estado:** em andamento; P01–P06 concluídas/aceitas. A organização dos seis ELMs no `/Lab` foi implementada em `develop` (`5d1e124`) e aceita pelo operador em 26/10/2026. As referências de `.docs/especificacoes/concluidas/P06-lab.md` e `.docs/especificacoes/concluidas/P06-elm-09-card-principal.md` foram implementadas, aceitas no `/Lab` e encerradas em 26/10/2026. P06 — Seleção de Captura foi visual e funcionalmente validada pelo operador em 26/10/2026; o commit de implementação `f12e9e9` e o registro do hash `e4f7850` foram enviados para `origin/develop`. P07 continua pendente e não será iniciada sem liberação expressa do operador. **Atualizado:** 26/10/2026. **Branch:** develop. **Operador:** responsável pela aprovação das unidades, validação final e liberação da próxima unidade. **Programador:** Codex; executa o plano aprovado, registra adendos após aceite e faz commit/push da unidade aceita antes de avançar. **Marco inicial:** componentes da Stack2 concluídos e validados em /lab até CMP-012 (25/10/2026). **Marco final:** todas as páginas existentes no escopo abaixo aprovadas, regressão global aprovada, legados sem consumidores eliminados, adendos registrados e encerramento autorizado pelo operador.
+**Estado:** P01–P08 concluídas e validadas pelo operador; adendos e commits de cada página registrados. Push dos commits de P07/P08 concluído em `origin/develop`. Parecer Final Geral preparado abaixo e aguardando aprovação do operador antes do arquivamento deste macroplano e da retirada da campanha dos documentos ativos. **Atualizado:** 27/10/2026. **Branch:** develop. A organização dos seis ELMs no `/Lab` foi implementada em `develop` (`5d1e124`) e aceita em 26/10/2026. As referências de `.docs/especificacoes/concluidas/P06-lab.md` e `.docs/especificacoes/concluidas/P06-elm-09-card-principal.md` foram implementadas, aceitas no `/Lab` e encerradas em 26/10/2026. P06 foi validada e publicada em `f12e9e9`; os hashes finais da campanha constam na tabela e nos adendos. **Marco inicial:** CMP-012 reconstruído e validado no `/Lab` em 25/10/2026. **Marco final técnico:** páginas do escopo aprovadas, regressão executada, legados sem consumidores removidos e adendos registrados. O encerramento documental final depende da aprovação deste Parecer Geral.
 
 Este é o **macroplano operacional temporário**, a ser lido junto com /AGENTS.md e .docs/README.md. Ele substitui, apenas durante esta campanha, o procedimento normal de criar novas especificações: **não criar novas especificações para as páginas existentes e não voltar ao analista entre unidades**. As especificações originais já aprovadas e seus Pareceres continuam sendo a fonte funcional obrigatória. Não editar seus corpos nem Pareceres antigos.
 
@@ -44,8 +44,8 @@ Trabalhar uma unidade por vez, na ordem abaixo, respeitando dependências compar
 | P04 | Redefinição e confirmação — Pages/RedefinirSenha*.razor | concluidas/03.02.md | Concluída — 25/10/2026, commit `c644af9` |
 | P05 | Ambiente Principal — Pages/Principal.razor e dependências de apresentação | concluidas/04.md; evolução de pendências em 06.02.md | Concluída e aceita — 26/10/2026, commit `893602c` |
 | P06 | Seleção de Captura — Pages/SelecaoCapturar.razor | concluidas/06.02.md; fundação preservada em 05.md e orientação em 06.01.md | Concluída e aceita — 26/10/2026, commit `f12e9e9` |
-| P07 | Captura do Dia, **somente a casca existente** — Pages/CapturaDia.razor | concluidas/06.02.md | Pendente |
-| P08 | Cascas auxiliares existentes — Pages/CascaJornada.razor e seus destinos protegidos | concluidas/04.md e decisões posteriores pertinentes | Pendente |
+| P07 | Captura do Dia, **somente a casca existente** — Pages/CapturaDia.razor | concluidas/06.02.md | Concluída e aceita — 27/10/2026, commit `10201de` |
+| P08 | Cascas auxiliares existentes — Pages/CascaJornada.razor e seus destinos protegidos | concluidas/04.md e decisões posteriores pertinentes | Concluída e aceita — 27/10/2026, commit `f413d9d` |
 
 Os paths acima são pontos de entrada, não inventário exaustivo de arquivos a modificar. Uma unidade pode incluir CSS e componentes compartilhados **somente quando necessários e justificados**; alterações compartilhadas exigem regressão das unidades já aceitas. A ordem P06/P07 deve preservar invariantes do IndexedDB, cache/revisão, data e pendências da 06.02. 05.md (fundação IndexedDB), 06.01.md (orientação não visual) e 07.01.md (CMP-030 no laboratório antigo) **não são páginas a refatorar**. 07.02 cancelada **não entra** na campanha. Não implementar conteúdo real das cascas futuras.
 
@@ -206,3 +206,63 @@ Depois da conclusão, retirar a campanha de /AGENTS.md e do índice ativo de .do
 - **P06 — validação e aceite do operador (26/10/2026):** o operador declarou “Visualmente ok” para a mensagem de erro e confirmou que P06 está devidamente validada. `dotnet build Rememore.slnx --no-restore` passou com 0 avisos e 0 erros; `git diff --check` não encontrou erros de whitespace. O aceite visual/funcional do operador complementa a compilação; não houve nova execução dos cenários de falha IndexedDB da 06.02.
 - **P06 — encerramento solicitado e bloqueio de avanço (26/10/2026):** o operador autorizou corrigir este macroplano, registrar o Adendo Técnico, fazer commit e push em `develop`, e determinou que P07 não seja iniciada nesta sessão. O estado de P07 permanece pendente de liberação expressa.
 - **P06 — commit e push concluídos (26/10/2026):** commit de implementação `f12e9e9` (`P06 refatoracao visual da selecao de captura`) e registro documental `e4f7850` foram enviados com sucesso para `origin/develop`. P07 permanece pendente da liberação expressa do operador.
+- **P07/P08 — execução autorizada e pronta para validação conjunta (26/10/2026):** o operador autorizou seguir até o fim do macroplano e validar P07/P08 em uma única revisão. Em P07, `CapturaDia.razor` passou a usar a hierarquia semântica da CMP-027/ELM-01, textos ELM-02, botões ELM-06 e falhas recuperáveis ELM-08; os estados, mensagens, operações, contratos, persistência e regras da 06.02 foram preservados. Em P08, foi removido o `h1` oculto duplicado: o cabeçalho CMP-027 já contém o título `h1`; rotas e guarda não mudaram. Nenhuma referência nova foi criada no `/Lab`.
+- **Higiene geral:** busca de referências confirmou que `/laboratorio`, demonstrações antigas, `BlocoLaboratorio`, componentes `_old` e `wwwroot/css/v1_old` eram consumidos somente pela árvore antiga. Essa árvore e os estilos obsoletos foram removidos; `wwwroot/js/laboratorio.js` foi mantido porque continua consumido por `EstadoTema`, `EstadoPaletaLaboratorio` e pelo `/lab`. O `@using` legado correspondente também foi retirado. `/lab` continuou carregando e `/laboratorio` deixou de renderizar a página antiga.
+- **Validação técnica:** build completa de `Rememore.slnx` fora do sandbox passou com 0 avisos/erros; `git diff --check` passou. Playwright em instância local isolada verificou em P07 workspace limpo/alterado, falha/sucesso da marcação, F5, data futura inválida e falha de IndexedDB com retorno seguro. P08 verificou os títulos únicos das cascas, retorno à Principal e proteção sem sessão nas seis rotas; a semente simulada atual é administradora, portanto o ramo de usuário autenticado sem capacidade administrativa não foi repetido nesta rodada. P07 e P08 não tiveram overflow a 320 px em Claro, Escuro e Sistema com movimento reduzido. Um smoke das rotas públicas, `/lab`, oito rotas autenticadas e ausência da antiga página `/laboratorio` passou sem exceções JavaScript. O verificador determinístico de abertura da 06.02 passou nos 16 cenários.
+- **Limites de validação:** a suíte `Rememore.Client.Tests` teve 121/122 testes aprovados; `CalculosOndaUtilizacaoCategoriaTests.NormalizacaoUsaPicoOriginalMesmoQuandoAmostragemNaoOPreserva` falhou por diferença na expectativa numérica. Nenhum arquivo de cálculo ou teste dessa suíte foi alterado nesta campanha. `tests/Capturar/verificar-navegacao.cjs` interrompeu-se antes do fluxo de captura porque procura o rótulo acessível antigo `Data da captura`; verificações equivalentes atualizadas foram executadas sem alterar o script. A inspeção do navegador visual controlado pelo operador permanece pendente; capturas técnicas dos estados de P07 estão em `artifacts/verificacao-capturar/revisao-final/`.
+- **P07 — commit criado:** `10201de` (`P07 refatoracao visual da captura do dia`).
+- **P08 — commit criado:** `f413d9d` (`P08 finaliza cascas e remove laboratorio antigo`), incluindo a retirada da árvore obsoleta do `/laboratorio`.
+- **Aceite e publicação de P07/P08 (27/10/2026):** o operador confirmou “Tudo validado, pode seguir para a finalização.” Os Adendos Técnicos foram anexados a `06.02.md` e `04.md`; commits separados `10201de` (P07) e `f413d9d` (P08) foram enviados juntos para `origin/develop`, que avançou de `03bdb63` para `f413d9d`.
+- **Próximo passo:** aprovação do operador ao Parecer Final Geral abaixo. Depois da aprovação, atualizar `.docs/README.md` e `AGENTS.md` para retirar a campanha ativa e arquivar este macroplano para rastreabilidade.
+
+## Parecer Final Geral da Campanha — submetido à aprovação do operador
+
+**Data:** 27/10/2026
+
+**Branch publicada:** `develop`
+
+**Estado:** P01–P08 executadas, aceitas e publicadas; regressões finais registradas. Este parecer está preparado e aguarda aprovação expressa do operador para encerrar a campanha e arquivar o macroplano.
+
+### Resultado
+
+A campanha refatorou a apresentação das oito páginas existentes da Stack2, preservando os comportamentos, mensagens, rotas, contratos e regras funcionais aprovados nas especificações correspondentes. P07 permaneceu limitada à casca de Captura do Dia. P08 permaneceu limitada às cascas auxiliares existentes. Não foram materializadas jornadas futuras, operações reais de memória, backend, API, publicação ou mudanças na Stack1.
+
+### Inventário e publicações
+
+| Unidade | Resultado | Commit em `develop` |
+|---|---|---|
+| P01 — Página Inicial | Concluída e aceita | `b8c80c9` |
+| P02 — Login | Concluída e aceita | `4b32387` |
+| P03 — Cadastro e confirmação | Concluída e aceita | `a791207`; registro `5f52e0e` |
+| P04 — Redefinição e confirmação | Concluída e aceita | `c644af9`; registro `d304969` |
+| P05 — Ambiente Principal | Concluída e aceita | `893602c`; registro `e1ce91d` |
+| P06 — Seleção de Captura | Concluída e aceita | `f12e9e9`; adendo `e4f7850`; registro `03bdb63` |
+| P07 — Captura do Dia | Concluída e aceita em 27/10/2026 | `10201de` |
+| P08 — Cascas auxiliares | Concluída e aceita em 27/10/2026 | `f413d9d` |
+
+P07 usa CMP-027, ELM-01/02/06 e ELM-08 com CSS restrito à composição da página. P08 mantém CMP-027 e suas rotas/guardas, removendo apenas o `h1` oculto redundante. Os Adendos Técnicos correspondentes foram acrescentados a `.docs/especificacoes/concluidas/06.02.md` e `.docs/especificacoes/concluidas/04.md`, sem alterar os corpos ou Pareceres funcionais aprovados.
+
+### Higiene e legado
+
+Após busca de referências e build, foram removidos `/laboratorio`, suas demonstrações antigas, `BlocoLaboratorio`, componentes `_old` sem consumidores e `wwwroot/css/v1_old`. O `/lab` atual permaneceu funcional. `wwwroot/js/laboratorio.js` foi preservado porque continua sendo dependência dos temas e do `/lab`. Não restou referência de aplicação à rota antiga.
+
+### Validação executada
+
+- `dotnet build Rememore.slnx --no-restore --verbosity:minimal`: sucesso fora do sandbox, zero avisos e zero erros.
+- `git diff --check`: sem erros de whitespace.
+- Verificador determinístico de abertura de captura: 16 cenários aprovados.
+- Playwright local isolado: P07 verificou workspace limpo/alterado, falha/sucesso ao marcar, F5, data futura inválida e falha de IndexedDB com retorno seguro; P08 verificou títulos únicos, retorno e proteção sem sessão.
+- Responsividade: P07/P08 sem overflow a 320 px em Claro, Escuro e Sistema, com movimento reduzido ativo.
+- Smoke de rotas: quatro rotas públicas, `/lab`, oito rotas autenticadas e ausência do antigo `/laboratorio`, sem exceções JavaScript.
+- O operador inspecionou e validou visual e funcionalmente P07, P08 e a limpeza geral em uma única revisão, em 27/10/2026.
+
+### Limites e pendências
+
+- `Rememore.Client.Tests`: 121/122 aprovados. `CalculosOndaUtilizacaoCategoriaTests.NormalizacaoUsaPicoOriginalMesmoQuandoAmostragemNaoOPreserva` falhou por uma expectativa numérica de amostragem. O cálculo e esse teste não foram alterados nesta campanha; o achado não bloqueou a validação das páginas.
+- `tests/Capturar/verificar-navegacao.cjs` ainda busca o rótulo acessível antigo `Data da captura`; por isso parou antes do fluxo. Verificações equivalentes foram executadas com seletores atuais, sem editar o roteiro legado.
+- A semente simulada desta última validação concede acesso administrativo; o ramo autenticado sem capacidade administrativa não foi repetido nesta rodada. O registro de P05 contém validação anterior desse ramo.
+- Não houve implantação, alteração de hospedagem, integração real com API, backend, Turso ou publicação fora do push para `origin/develop`.
+
+### Conclusão
+
+O resultado técnico da campanha está entregue e publicado; não há implementação pendente dentro do escopo aprovado. Solicita-se ao operador aprovar este Parecer Final Geral. Após essa aprovação, o próximo passo é retirar a campanha ativa de `AGENTS.md` e `.docs/README.md` e mover este macroplano para o arquivo histórico, sem apagar seu conteúdo.
