@@ -17,35 +17,56 @@
     <div class="captura-dia__conteudo">
         @if (dataInvalida)
         {
-            <h1>Data inválida</h1>
-            <p role="alert">Data inválida. Escolha uma data completa, existente e até hoje.</p>
-            <button class="button is-link" type="button" @onclick="VoltarSelecao">Voltar à Seleção</button>
+            <h2 class="title is-3">Data inválida</h2>
+            <div class="notification elemento-falha-recuperavel" role="alert" aria-atomic="true">
+                <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </span>
+                <div class="elemento-falha-recuperavel__conteudo">
+                    <p class="elemento-falha-recuperavel__mensagem"><strong>Data inválida. Escolha uma data completa, existente e até hoje.</strong></p>
+                    <button class="button is-link captura-dia__botao-retorno" type="button" @onclick="VoltarSelecao">Voltar à Seleção</button>
+                </div>
+            </div>
         }
         else if (preparando)
         {
-            <h1>Captura de @dataFormatada</h1>
+            <h2 class="title is-3">Captura de @dataFormatada</h2>
             <p aria-busy="true">Preparando captura…</p>
         }
         else if (resultado?.Estado != EstadoAberturaCaptura.Aberta)
         {
-            <h1>Captura de @dataFormatada</h1>
-            <p role="alert">@MensagemFalha</p>
-            <button class="button is-link" type="button" @onclick="VoltarAposFalha">@RotuloRetornoFalha</button>
+            <h2 class="title is-3">Captura de @dataFormatada</h2>
+            <div class="notification elemento-falha-recuperavel" role="alert" aria-atomic="true">
+                <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </span>
+                <div class="elemento-falha-recuperavel__conteudo">
+                    <p class="elemento-falha-recuperavel__mensagem"><strong>@MensagemFalha</strong></p>
+                    <button class="button is-link captura-dia__botao-retorno" type="button" @onclick="VoltarAposFalha">@RotuloRetornoFalha</button>
+                </div>
+            </div>
         }
         else
         {
-            <h1>Captura de @dataFormatada</h1>
+            <h2 class="title is-3">Captura de @dataFormatada</h2>
             <div class="captura-dia__estado" role="status">
                 <span class="captura-dia__estado-icone" aria-hidden="true"><i class="@(workspace?.Alterado == true ? "fa-solid fa-pen" : "fa-regular fa-circle-check")"></i></span>
                 <span>Workspace @(workspace?.Alterado == true ? "alterado" : "limpo")</span>
             </div>
 
             <section class="captura-dia__controle" aria-labelledby="controle-temporario-titulo">
-                <h2 id="controle-temporario-titulo">Controle temporário de desenvolvimento</h2>
+                <h3 class="title is-5" id="controle-temporario-titulo">Controle temporário de desenvolvimento</h3>
                 <button class="button" type="button" disabled="@marcando" @onclick="MarcarAlteradoAsync">Marcar como alterada</button>
                 @if (falhaMarcacao)
                 {
-                    <p role="alert">Não foi possível marcar a captura como alterada. Tente novamente.</p>
+                    <div class="notification elemento-falha-recuperavel" role="alert" aria-atomic="true">
+                        <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </span>
+                        <div class="elemento-falha-recuperavel__conteudo">
+                            <p class="elemento-falha-recuperavel__mensagem"><strong>Não foi possível marcar a captura como alterada. Tente novamente.</strong></p>
+                        </div>
+                    </div>
                 }
             </section>
         }
