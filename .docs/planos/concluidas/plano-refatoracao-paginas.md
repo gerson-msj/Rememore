@@ -1,6 +1,6 @@
 # Campanha temporária — Refatoração visual das páginas Stack2
 
-**Estado:** P01–P08 concluídas e validadas pelo operador; adendos e commits de cada página registrados. Push dos commits de P07/P08 concluído em `origin/develop`. Parecer Final Geral preparado abaixo e aguardando aprovação do operador antes do arquivamento deste macroplano e da retirada da campanha dos documentos ativos. **Atualizado:** 27/10/2026. **Branch:** develop. A organização dos seis ELMs no `/Lab` foi implementada em `develop` (`5d1e124`) e aceita em 26/10/2026. As referências de `.docs/especificacoes/concluidas/P06-lab.md` e `.docs/especificacoes/concluidas/P06-elm-09-card-principal.md` foram implementadas, aceitas no `/Lab` e encerradas em 26/10/2026. P06 foi validada e publicada em `f12e9e9`; os hashes finais da campanha constam na tabela e nos adendos. **Marco inicial:** CMP-012 reconstruído e validado no `/Lab` em 25/10/2026. **Marco final técnico:** páginas do escopo aprovadas, regressão executada, legados sem consumidores removidos e adendos registrados. O encerramento documental final depende da aprovação deste Parecer Geral.
+**Estado:** P01–P08 concluídas e validadas pelo operador; adendos e commits de cada página registrados. Push dos commits de P07/P08 concluído em `origin/develop`. Parecer Final Geral aprovado pelo operador em 27/10/2026; campanha encerrada e macroplano arquivado para rastreabilidade. **Atualizado:** 27/10/2026. **Branch:** develop. A organização dos seis ELMs no `/Lab` foi implementada em `develop` (`5d1e124`) e aceita em 26/10/2026. As referências de `.docs/especificacoes/concluidas/P06-lab.md` e `.docs/especificacoes/concluidas/P06-elm-09-card-principal.md` foram implementadas, aceitas no `/Lab` e encerradas em 26/10/2026. P06 foi validada e publicada em `f12e9e9`; os hashes finais da campanha constam na tabela e nos adendos. **Marco inicial:** CMP-012 reconstruído e validado no `/Lab` em 25/10/2026. **Marco final técnico:** páginas do escopo aprovadas, regressão executada, legados sem consumidores removidos e adendos registrados. O encerramento documental foi concluído após a aprovação do Parecer Geral.
 
 Este é o **macroplano operacional temporário**, a ser lido junto com /AGENTS.md e .docs/README.md. Ele substitui, apenas durante esta campanha, o procedimento normal de criar novas especificações: **não criar novas especificações para as páginas existentes e não voltar ao analista entre unidades**. As especificações originais já aprovadas e seus Pareceres continuam sendo a fonte funcional obrigatória. Não editar seus corpos nem Pareceres antigos.
 
@@ -213,15 +213,15 @@ Depois da conclusão, retirar a campanha de /AGENTS.md e do índice ativo de .do
 - **P07 — commit criado:** `10201de` (`P07 refatoracao visual da captura do dia`).
 - **P08 — commit criado:** `f413d9d` (`P08 finaliza cascas e remove laboratorio antigo`), incluindo a retirada da árvore obsoleta do `/laboratorio`.
 - **Aceite e publicação de P07/P08 (27/10/2026):** o operador confirmou “Tudo validado, pode seguir para a finalização.” Os Adendos Técnicos foram anexados a `06.02.md` e `04.md`; commits separados `10201de` (P07) e `f413d9d` (P08) foram enviados juntos para `origin/develop`, que avançou de `03bdb63` para `f413d9d`.
-- **Próximo passo:** aprovação do operador ao Parecer Final Geral abaixo. Depois da aprovação, atualizar `.docs/README.md` e `AGENTS.md` para retirar a campanha ativa e arquivar este macroplano para rastreabilidade.
+- **27/10/2026 — aprovação e encerramento:** o operador aprovou o Parecer Final Geral. A campanha foi retirada das orientações ativas e este macroplano, com o parecer integral, foi movido para `.docs/planos/concluidas/plano-refatoracao-paginas.md`.
 
-## Parecer Final Geral da Campanha — submetido à aprovação do operador
+## Parecer Final Geral da Campanha — aprovado pelo operador em 27/10/2026
 
 **Data:** 27/10/2026
 
 **Branch publicada:** `develop`
 
-**Estado:** P01–P08 executadas, aceitas e publicadas; regressões finais registradas. Este parecer está preparado e aguarda aprovação expressa do operador para encerrar a campanha e arquivar o macroplano.
+**Estado:** P01–P08 executadas, aceitas e publicadas; regressões finais registradas. O operador aprovou este parecer em 27/10/2026, encerrando a campanha e autorizando o arquivamento do macroplano.
 
 ### Resultado
 
@@ -265,4 +265,4 @@ Após busca de referências e build, foram removidos `/laboratorio`, suas demons
 
 ### Conclusão
 
-O resultado técnico da campanha está entregue e publicado; não há implementação pendente dentro do escopo aprovado. Solicita-se ao operador aprovar este Parecer Final Geral. Após essa aprovação, o próximo passo é retirar a campanha ativa de `AGENTS.md` e `.docs/README.md` e mover este macroplano para o arquivo histórico, sem apagar seu conteúdo.
+O resultado técnico da campanha está entregue e publicado; não há implementação pendente dentro do escopo aprovado. O operador aprovou este Parecer Final Geral em 27/10/2026. A campanha foi retirada das orientações ativas, e este macroplano foi movido integralmente para `.docs/planos/concluidas/plano-refatoracao-paginas.md` para preservar o histórico e apoiar a reconciliação documental.
