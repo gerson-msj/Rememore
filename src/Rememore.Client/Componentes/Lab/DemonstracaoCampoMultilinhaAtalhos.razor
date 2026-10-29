@@ -1,0 +1,55 @@
+<section aria-label="Demonstração do campo multilinha com atalhos">
+    <CampoMultilinhaAtalhos @ref="campo"
+                            @bind-Value="texto"
+                            Desabilitado="@desabilitado"
+                            AoSolicitarInclusao="SolicitarInclusao"
+                            AoSolicitarInclusaoEContinuar="SolicitarInclusaoEContinuar"
+                            AoSolicitarCancelamento="SolicitarCancelamento" />
+
+    <p class="help">Enter insere linha; Shift+Enter solicita incluir; Ctrl+Enter solicita incluir e continuar; Esc solicita cancelar.</p>
+
+    <div class="field is-grouped is-grouped-multiline mt-4">
+        <div class="control">
+            <button class="button is-small" type="button" disabled="@desabilitado" @onclick="FocarNoCampoAsync">Focar no campo</button>
+        </div>
+        <div class="control">
+            <label class="checkbox">
+                <input type="checkbox" @bind="desabilitado" />
+                Desabilitar campo (teste)
+            </label>
+        </div>
+    </div>
+
+    <div class="notification is-light mt-4" role="status" aria-live="polite">
+        <p><strong>Última intenção:</strong> @ultimaIntencao</p>
+        <p><strong>Intenções recebidas:</strong> @quantidadeIntencoes</p>
+        <p><strong>Texto:</strong> @texto.Length caracteres em @QuantidadeLinhas linha(s)</p>
+    </div>
+</section>
+
+@code {
+    private CampoMultilinhaAtalhos? campo;
+    private string texto = string.Empty;
+    private string ultimaIntencao = "Nenhuma";
+    private bool desabilitado;
+    private int quantidadeIntencoes;
+
+    private int QuantidadeLinhas => texto.Split('\n').Length;
+
+    private async Task FocarNoCampoAsync()
+    {
+        if (campo is null) return;
+        await campo.FocarAsync();
+        ultimaIntencao = "Foco solicitado ao campo";
+    }
+
+    private void SolicitarInclusao() => RegistrarIntencao("Solicitou incluir (Shift+Enter)");
+    private void SolicitarInclusaoEContinuar() => RegistrarIntencao("Solicitou incluir e continuar (Ctrl+Enter)");
+    private void SolicitarCancelamento() => RegistrarIntencao("Solicitou cancelar (Esc)");
+
+    private void RegistrarIntencao(string descricao)
+    {
+        ultimaIntencao = descricao;
+        quantidadeIntencoes++;
+    }
+}

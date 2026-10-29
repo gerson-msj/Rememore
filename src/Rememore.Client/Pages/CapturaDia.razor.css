@@ -14,6 +14,11 @@
 .captura-dia__conteudo > .notification { margin: 0; }
 .captura-dia__conteudo > .notification .elemento-falha-recuperavel__mensagem { margin: 0; }
 .captura-dia__conteudo > .notification .captura-dia__botao-retorno { margin-block-start: 0.75rem; }
+.captura-dia__memoria-simulada { margin: 0; }
+.captura-dia__inclusao { display: grid; gap: 0.75rem; }
+.captura-dia__acoes-inclusao,
+.captura-dia__acao-incluir { margin: 0; }
+.captura-dia__dica-atalhos { margin: 0; border-inline-start-color: var(--bulma-warning); }
 @media (max-width: 480px) {
     .captura-dia__barra-fixa .tabs.captura-dia__abas li a { gap: 0.25rem; padding-inline: 0.25rem; font-size: 0.8rem; white-space: nowrap; }
     .captura-dia__barra-fixa .tabs.captura-dia__abas .icon { margin-inline-end: 0; }

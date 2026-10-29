@@ -1,0 +1,94 @@
+@implements IAsyncDisposable
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+
+<div class="field campo-multilinha-atalhos">
+    <label class="is-sr-only" for="@idCampo">Texto da memória</label>
+    <div class="control">
+        <textarea class="textarea has-fixed-size"
+                  @ref="campo"
+                  id="@idCampo"
+                  rows="5"
+                  placeholder="Registre uma memória..."
+                  disabled="@Desabilitado"
+                  @bind:get="Value"
+                  @bind:set="AtualizarValorAsync"
+                  @bind:event="oninput"></textarea>
+    </div>
+</div>
+
+@code {
+    private readonly string idCampo = $"campo-multilinha-atalhos-{Guid.NewGuid():N}";
+    private ElementReference campo;
+    private DotNetObjectReference<CampoMultilinhaAtalhos>? referencia;
+    private IJSObjectReference? modulo;
+    private IJSObjectReference? controlador;
+    private bool comandoEmExecucao;
+    private bool descartando;
+
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public bool Desabilitado { get; set; }
+    [Parameter] public EventCallback AoSolicitarInclusao { get; set; }
+    [Parameter] public EventCallback AoSolicitarInclusaoEContinuar { get; set; }
+    [Parameter] public EventCallback AoSolicitarCancelamento { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (!primeiroRender) return;
+
+        modulo = await JS.InvokeAsync<IJSObjectReference>("import", "./js/campoMultilinhaAtalhos.js");
+        referencia = DotNetObjectReference.Create(this);
+        controlador = await modulo.InvokeAsync<IJSObjectReference>("conectar", campo, referencia);
+    }
+
+    private Task AtualizarValorAsync(string valor) => ValueChanged.InvokeAsync(valor);
+
+    public ValueTask FocarAsync() => Desabilitado
+        ? ValueTask.CompletedTask
+        : campo.FocusAsync(preventScroll: true);
+
+    [JSInvokable]
+    public async Task TratarAtalhoAsync(string intencao)
+    {
+        if (Desabilitado || comandoEmExecucao || descartando) return;
+
+        var evento = intencao switch
+        {
+            "incluir" => AoSolicitarInclusao,
+            "incluir-e-continuar" => AoSolicitarInclusaoEContinuar,
+            "cancelar" => AoSolicitarCancelamento,
+            _ => default
+        };
+
+        if (!evento.HasDelegate) return;
+
+        comandoEmExecucao = true;
+        try
+        {
+            await evento.InvokeAsync();
+        }
+        finally
+        {
+            comandoEmExecucao = false;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        descartando = true;
+        if (controlador is not null)
+        {
+            try { await controlador.InvokeVoidAsync("desconectar"); }
+            catch (JSDisconnectedException) { }
+            try { await controlador.DisposeAsync(); }
+            catch (JSDisconnectedException) { }
+        }
+        referencia?.Dispose();
+        if (modulo is not null)
+        {
+            try { await modulo.DisposeAsync(); }
+            catch (JSDisconnectedException) { }
+        }
+    }
+}

@@ -90,6 +90,45 @@
                 </div>
             }
 
+            @if (Ambiente.IsDevelopment() && cenarioSimulado == CenarioComposicao.ComMemorias)
+            {
+                <article class="box captura-dia__memoria-simulada" aria-label="Memória simulada para verificação">
+                    Memória demonstrativa — cenário local de verificação
+                </article>
+            }
+
+            @if (inclusaoAberta)
+            {
+                <section class="captura-dia__inclusao" aria-label="Inclusão de memória">
+                    <CampoMultilinhaAtalhos @ref="campoInclusao" @bind-Value="textoInclusao" />
+                    <div class="buttons has-addons is-right captura-dia__acoes-inclusao">
+                        <button class="button is-link" type="button">
+                            <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-plus"></i></span>
+                            <span>Incluir memória</span>
+                        </button>
+                        <button class="button is-light" type="button">
+                            <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-times"></i></span>
+                            <span>Cancelar inclusão</span>
+                        </button>
+                    </div>
+                    @if (ExibirDicaAtalhos)
+                    {
+                        <div class="notification elemento-orientacao-informativa captura-dia__dica-atalhos" role="note">
+                            <span class="elemento-orientacao-informativa__texto">@DicaAtalhos</span>
+                        </div>
+                    }
+                </section>
+            }
+            else
+            {
+                <div class="buttons is-right captura-dia__acao-incluir">
+                    <button class="button is-link" type="button" @onclick="AbrirInclusao">
+                        <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-plus"></i></span>
+                        <span>Incluir memória</span>
+                    </button>
+                </div>
+            }
+
             @if (Ambiente.IsDevelopment())
             {
                 <section class="box captura-dia__verificacao" aria-labelledby="verificacao-orientacao-titulo">
@@ -142,6 +181,13 @@
     private NivelOrientacao nivelOriginal;
     private CenarioComposicao cenarioSimulado;
     private string? textoOrientacao;
+    private CampoMultilinhaAtalhos? campoInclusao;
+    private string textoInclusao = string.Empty;
+    private bool inclusaoAberta;
+    private bool focarInclusaoAposRenderizar;
+
+    private const string DicaAtalhos = "Enter cria uma nova linha.\nShift+Enter inclui a memória.\nCtrl+Enter inclui e permite registrar outra.\nEsc cancela.";
+    private bool ExibirDicaAtalhos => inclusaoAberta && ComposicaoVazia && nivelSimulado == NivelOrientacao.Iniciante;
 
     private bool ComposicaoVazia => cenarioSimulado switch
     {
@@ -171,6 +217,8 @@
         {
             await Continuidade.LimparAsync();
             cenarioSimulado = CenarioComposicao.Real;
+            inclusaoAberta = false;
+            textoInclusao = string.Empty;
         }
         ultimaDataRota = DataRota;
         preparando = true;
@@ -211,6 +259,19 @@
     {
         NivelOrientacaoSimulado.NivelAtual = nivelSimulado;
         textoOrientacao = await Orientacao.ObterTextoAsync(ContextosOrientacao.CapturaMemorar);
+    }
+
+    private void AbrirInclusao()
+    {
+        inclusaoAberta = true;
+        focarInclusaoAposRenderizar = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (!focarInclusaoAposRenderizar || campoInclusao is null) return;
+        focarInclusaoAposRenderizar = false;
+        await campoInclusao.FocarAsync();
     }
 
     private void VoltarSelecao() => Navegacao.NavigateTo("capturar");

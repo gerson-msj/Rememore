@@ -23,6 +23,10 @@ A propriedade dos estilos é definida pelo alcance:
 
 Reaproveite classes e estilos existentes antes de criar outros. Não reproduza estilos de ELMs ou CMPs em páginas. Mudanças em CSS compartilhado exigem verificar os consumidores afetados; mudanças de markup, parâmetros ou eventos exigem revisar os chamadores.
 
+## Execução .NET no Windows
+
+No ambiente Windows do ChatGPT Desktop, não execute comandos `dotnet` dentro do sandbox: suas restrições de acesso impedem a execução correta. Execute restauração, build, testes e aplicação fora do sandbox.
+
 ## Convenções de código
 
 Use português brasileiro em nomes autorais, com identificadores ASCII e convenções usuais da linguagem. Preserve a grafia de APIs, bibliotecas, atributos, rotas e contratos externos. Separe regras de negócio da apresentação quando isso ajudar a manter comportamento reutilizável e testável; não crie camadas ou abstrações sem necessidade concreta.
