@@ -7,13 +7,45 @@
 @inject IJSRuntime JS
 @inject EstadoAutenticacaoProvider EstadoAutenticacao
 @inject AberturaCaptura Abertura
-@inject ICapturasLocais Capturas
 @inject ContinuidadeCapturaSessionStorage Continuidade
+@using System.Globalization
 
 <PageTitle>Capturar @dataFormatada</PageTitle>
 
 <main class="pagina-captura-dia">
     <CabecalhoAmbiente Titulo="Capturar" MostrarRetorno AoRetornar="VoltarSelecao" />
+    <div class="captura-dia__espacador-cabecalho" aria-hidden="true"></div>
+    @if (!dataInvalida && !string.IsNullOrEmpty(dataFormatada))
+    {
+        <div class="captura-dia__barra-fixa">
+            <div class="captura-dia__linha-data">
+                <time class="subtitle is-6 has-text-weight-medium" datetime="@data.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">@dataFormatada</time>
+            </div>
+            <nav class="tabs is-fullwidth captura-dia__abas" role="group" aria-label="Etapas da captura">
+                <ul>
+                    <li class="is-active">
+                        <a aria-current="step">
+                            <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-feather-pointed"></i></span>
+                            <span>Memorar</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a aria-disabled="true" tabindex="-1">
+                            <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-layer-group"></i></span>
+                            <span>Categorizar</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a aria-disabled="true" tabindex="-1">
+                            <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-bookmark"></i></span>
+                            <span>Revisar</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <div class="captura-dia__espacador-barra" aria-hidden="true"></div>
+    }
     <div class="captura-dia__conteudo">
         @if (dataInvalida)
         {
@@ -30,12 +62,10 @@
         }
         else if (preparando)
         {
-            <h2 class="title is-3">Captura de @dataFormatada</h2>
             <p aria-busy="true">Preparando captura…</p>
         }
         else if (resultado?.Estado != EstadoAberturaCaptura.Aberta)
         {
-            <h2 class="title is-3">Captura de @dataFormatada</h2>
             <div class="notification elemento-falha-recuperavel" role="alert" aria-atomic="true">
                 <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true">
                     <i class="fa-solid fa-triangle-exclamation"></i>
@@ -48,27 +78,6 @@
         }
         else
         {
-            <h2 class="title is-3">Captura de @dataFormatada</h2>
-            <div class="captura-dia__estado" role="status">
-                <span class="captura-dia__estado-icone" aria-hidden="true"><i class="@(workspace?.Alterado == true ? "fa-solid fa-pen" : "fa-regular fa-circle-check")"></i></span>
-                <span>Workspace @(workspace?.Alterado == true ? "alterado" : "limpo")</span>
-            </div>
-
-            <section class="captura-dia__controle" aria-labelledby="controle-temporario-titulo">
-                <h3 class="title is-5" id="controle-temporario-titulo">Controle temporário de desenvolvimento</h3>
-                <button class="button" type="button" disabled="@marcando" @onclick="MarcarAlteradoAsync">Marcar como alterada</button>
-                @if (falhaMarcacao)
-                {
-                    <div class="notification elemento-falha-recuperavel" role="alert" aria-atomic="true">
-                        <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true">
-                            <i class="fa-solid fa-triangle-exclamation"></i>
-                        </span>
-                        <div class="elemento-falha-recuperavel__conteudo">
-                            <p class="elemento-falha-recuperavel__mensagem"><strong>Não foi possível marcar a captura como alterada. Tente novamente.</strong></p>
-                        </div>
-                    </div>
-                }
-            </section>
         }
     </div>
 </main>
@@ -83,10 +92,7 @@
     private string dataFormatada = "";
     private bool dataInvalida;
     private bool preparando = true;
-    private bool marcando;
-    private bool falhaMarcacao;
     private ResultadoAberturaCaptura? resultado;
-    private WorkspaceCapturaLocal? workspace;
 
     private string MensagemFalha => resultado?.Estado switch
     {
@@ -105,8 +111,6 @@
         preparando = true;
         dataFormatada = "";
         resultado = null;
-        workspace = null;
-        falhaMarcacao = false;
 
         moduloCalendario ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/calendarioCaptura.js");
         var hojeTexto = await moduloCalendario.InvokeAsync<string>("hojeLocal");
@@ -114,7 +118,7 @@
         dataInvalida = !DatasCaptura.TentarValidar(DataRota, hoje, out data);
         if (dataInvalida) { preparando = false; return; }
 
-        dataFormatada = DatasCaptura.Apresentar(data);
+        dataFormatada = data.ToString("dddd, d 'de' MMMM 'de' yyyy", CultureInfo.GetCultureInfo("pt-BR"));
         var identidadeConta = EstadoAutenticacao.IdentidadeConta;
         if (identidadeConta is null)
         {
@@ -125,7 +129,6 @@
 
         var recargaAtiva = await Continuidade.EhRecargaAtivaAsync(identidadeConta, data);
         resultado = await Abertura.AbrirAsync(identidadeConta, data, recargaAtiva);
-        workspace = resultado.Workspace;
         if (resultado.Estado == EstadoAberturaCaptura.Aberta)
         {
             await Continuidade.RegistrarAsync(identidadeConta, data);
@@ -136,21 +139,6 @@
             });
         }
         preparando = false;
-    }
-
-    private async Task MarcarAlteradoAsync()
-    {
-        if (marcando || workspace is null) return;
-        marcando = true;
-        falhaMarcacao = false;
-        try
-        {
-            var marcacao = await Capturas.MarcarAlteradoAsync(workspace.IdentidadeConta, workspace.Data);
-            if (marcacao.Sucesso && marcacao.Valor is not null)
-                workspace = marcacao.Valor;
-            else falhaMarcacao = true;
-        }
-        finally { marcando = false; }
     }
 
     private void VoltarSelecao() => Navegacao.NavigateTo("capturar");
