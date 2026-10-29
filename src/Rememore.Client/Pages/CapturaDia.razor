@@ -2,12 +2,17 @@
 @attribute [Authorize]
 @implements IAsyncDisposable
 @using Rememore.Client.Infraestrutura.Capturar
+@using Rememore.Client.Infraestrutura.OrientacaoProgressiva
 @using Rememore.Client.Infraestrutura.TrabalhoLocal
+@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
 @inject NavigationManager Navegacao
 @inject IJSRuntime JS
 @inject EstadoAutenticacaoProvider EstadoAutenticacao
 @inject AberturaCaptura Abertura
 @inject ContinuidadeCapturaSessionStorage Continuidade
+@inject IOrientacaoProgressiva Orientacao
+@inject FonteNivelOrientacaoSimulada NivelOrientacaoSimulado
+@inject IWebAssemblyHostEnvironment Ambiente
 @using System.Globalization
 
 <PageTitle>Capturar @dataFormatada</PageTitle>
@@ -78,12 +83,52 @@
         }
         else
         {
+            @if (ComposicaoVazia && textoOrientacao is not null)
+            {
+                <div class="notification elemento-orientacao-informativa" role="status">
+                    <span class="elemento-orientacao-informativa__texto">@textoOrientacao</span>
+                </div>
+            }
+
+            @if (Ambiente.IsDevelopment())
+            {
+                <section class="box captura-dia__verificacao" aria-labelledby="verificacao-orientacao-titulo">
+                    <h2 class="title is-6" id="verificacao-orientacao-titulo">Controles de verificação — Desenvolvimento</h2>
+                    <div class="field">
+                        <label class="label" for="nivel-orientacao-simulado">Nível de orientação simulado</label>
+                        <div class="control">
+                            <div class="select">
+                                <select id="nivel-orientacao-simulado" @bind="nivelSimulado" @bind:after="AtualizarOrientacaoAsync">
+                                    <option value="@NivelOrientacao.Iniciante">Iniciante</option>
+                                    <option value="@NivelOrientacao.Intermediario">Intermediário</option>
+                                    <option value="@NivelOrientacao.Avancado">Avançado</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label" for="cenario-composicao-simulado">Cenário da composição</label>
+                        <div class="control">
+                            <div class="select">
+                                <select id="cenario-composicao-simulado" @bind="cenarioSimulado" @bind:after="AtualizarOrientacaoAsync">
+                                    <option value="@CenarioComposicao.Real">Composição real do workspace</option>
+                                    <option value="@CenarioComposicao.Vazia">Simular composição vazia</option>
+                                    <option value="@CenarioComposicao.ComMemorias">Simular memória confirmada</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <p>Simulações locais e reversíveis: não gravam no workspace nem alteram progresso.</p>
+                </section>
+            }
         }
     </div>
 </main>
 
 @code {
     [Parameter] public string DataRota { get; set; } = "";
+
+    private enum CenarioComposicao { Real, Vazia, ComMemorias }
 
     private IJSObjectReference? moduloCalendario;
     private IDisposable? registroMudancaLocal;
@@ -93,6 +138,17 @@
     private bool dataInvalida;
     private bool preparando = true;
     private ResultadoAberturaCaptura? resultado;
+    private NivelOrientacao nivelSimulado;
+    private NivelOrientacao nivelOriginal;
+    private CenarioComposicao cenarioSimulado;
+    private string? textoOrientacao;
+
+    private bool ComposicaoVazia => cenarioSimulado switch
+    {
+        CenarioComposicao.Vazia => true,
+        CenarioComposicao.ComMemorias => false,
+        _ => resultado?.Workspace?.Memorias is { Count: 0 }
+    };
 
     private string MensagemFalha => resultado?.Estado switch
     {
@@ -103,10 +159,19 @@
     private string RotuloRetornoFalha => resultado?.Estado is EstadoAberturaCaptura.ApiIndisponivel or EstadoAberturaCaptura.FalhaArmazenamento
         ? "Voltar à Principal" : "Voltar à Seleção";
 
+    protected override void OnInitialized()
+    {
+        nivelOriginal = NivelOrientacaoSimulado.NivelAtual;
+        nivelSimulado = nivelOriginal;
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         if (ultimaDataRota is not null && ultimaDataRota != DataRota)
+        {
             await Continuidade.LimparAsync();
+            cenarioSimulado = CenarioComposicao.Real;
+        }
         ultimaDataRota = DataRota;
         preparando = true;
         dataFormatada = "";
@@ -137,8 +202,15 @@
                 if (!string.Equals(contexto.TargetLocation, Navegacao.Uri, StringComparison.Ordinal))
                     await Continuidade.LimparAsync();
             });
+            await AtualizarOrientacaoAsync();
         }
         preparando = false;
+    }
+
+    private async Task AtualizarOrientacaoAsync()
+    {
+        NivelOrientacaoSimulado.NivelAtual = nivelSimulado;
+        textoOrientacao = await Orientacao.ObterTextoAsync(ContextosOrientacao.CapturaMemorar);
     }
 
     private void VoltarSelecao() => Navegacao.NavigateTo("capturar");
@@ -148,6 +220,7 @@
 
     public async ValueTask DisposeAsync()
     {
+        NivelOrientacaoSimulado.NivelAtual = nivelOriginal;
         registroMudancaLocal?.Dispose();
         if (moduloCalendario is not null) await moduloCalendario.DisposeAsync();
     }

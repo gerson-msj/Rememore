@@ -9,7 +9,12 @@ public sealed class CatalogoOrientacoes
             ContextosOrientacao.SelecaoCapturar,
             "Você pode capturar qualquer dia até hoje. Escolha uma data para começar.",
             "Você pode voltar a qualquer data passada quando quiser registrar algo que ainda lembra.",
-            null)
+            null),
+        new DefinicaoOrientacao(
+            ContextosOrientacao.CapturaMemorar,
+            "Comece pelo que vier à memória. Pode ser uma frase curta, um detalhe ou algo que aconteceu hoje.",
+            "Registre uma lembrança por vez. Memórias mais focadas ajudam a reencontrar melhor cada contexto depois.",
+            "Observe detalhes que normalmente passariam despercebidos: uma conversa, uma sensação, uma pequena mudança.")
     ]);
 
     public CatalogoOrientacoes(IEnumerable<DefinicaoOrientacao> definicoes)

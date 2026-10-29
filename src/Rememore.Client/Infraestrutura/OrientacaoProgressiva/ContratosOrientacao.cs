@@ -3,6 +3,7 @@ namespace Rememore.Client.Infraestrutura.OrientacaoProgressiva;
 public static class ContextosOrientacao
 {
     public const string SelecaoCapturar = "capturar.selecao";
+    public const string CapturaMemorar = "capturar.memorar";
 }
 
 public enum NivelOrientacao
