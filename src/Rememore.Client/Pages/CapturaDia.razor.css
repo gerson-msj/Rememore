@@ -7,17 +7,18 @@
 .captura-dia__abas ul { margin: 0; }
 .captura-dia__abas li { flex: 1; }
 .captura-dia__espacador-barra { height: 5.25rem; }
-.captura-dia__conteudo { display: grid; width: min(100%, 60rem); margin-inline: auto; padding-block: clamp(1.25rem, 3vw, 2.5rem) 4rem; padding-inline: clamp(1rem, 4vw, 2.5rem); gap: 1.4rem; }
+.captura-dia__conteudo { --captura-dia-espacamento: 1.4rem; display: grid; width: min(100%, 60rem); margin-inline: auto; padding-block: clamp(1.25rem, 3vw, 2.5rem) 4rem; padding-inline: clamp(1rem, 4vw, 2.5rem); gap: var(--captura-dia-espacamento); }
 .captura-dia__conteudo > .title { margin: 0; color: var(--cor-title); font-size: clamp(1.55rem, 4vw, 2.15rem); line-height: 1.2; }
 .captura-dia__conteudo > p { margin: 0; color: var(--cor-text-strong); line-height: 1.6; }
 .captura-dia__botao-retorno { justify-self: start; min-height: 2.8rem; margin-block-start: 0.75rem; }
 .captura-dia__conteudo > .notification { margin: 0; }
 .captura-dia__conteudo > .notification .elemento-falha-recuperavel__mensagem { margin: 0; }
 .captura-dia__conteudo > .notification .captura-dia__botao-retorno { margin-block-start: 0.75rem; }
-.captura-dia__memoria-simulada { margin: 0; }
-.captura-dia__inclusao { display: grid; gap: 0.75rem; }
+.captura-dia__inclusao { display: grid; gap: var(--captura-dia-espacamento); }
+.captura-dia__inclusao ::deep .campo-multilinha-atalhos { margin-block-end: 0; }
 .captura-dia__acoes-inclusao,
 .captura-dia__acao-incluir { margin: 0; }
+.captura-dia__falha-inclusao { margin: 0; }
 .captura-dia__dica-atalhos { margin: 0; border-inline-start-color: var(--bulma-warning); }
 @media (max-width: 480px) {
     .captura-dia__barra-fixa .tabs.captura-dia__abas li a { gap: 0.25rem; padding-inline: 0.25rem; font-size: 0.8rem; white-space: nowrap; }

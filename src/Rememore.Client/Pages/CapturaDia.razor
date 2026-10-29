@@ -9,6 +9,7 @@
 @inject IJSRuntime JS
 @inject EstadoAutenticacaoProvider EstadoAutenticacao
 @inject AberturaCaptura Abertura
+@inject ICapturasLocais CapturasLocais
 @inject ContinuidadeCapturaSessionStorage Continuidade
 @inject IOrientacaoProgressiva Orientacao
 @inject FonteNivelOrientacaoSimulada NivelOrientacaoSimulado
@@ -90,27 +91,44 @@
                 </div>
             }
 
-            @if (Ambiente.IsDevelopment() && cenarioSimulado == CenarioComposicao.ComMemorias)
+            @foreach (var memoria in Memorias)
             {
-                <article class="box captura-dia__memoria-simulada" aria-label="Memória simulada para verificação">
-                    Memória demonstrativa — cenário local de verificação
-                </article>
+                <Memoria @key="memoria.Identidade"
+                         Identificador="memoria.Identidade"
+                         Conteudo="memoria.Conteudo"
+                         Modo="ModoMemoria.Memorar"
+                         Inativa="true" />
             }
 
             @if (inclusaoAberta)
             {
                 <section class="captura-dia__inclusao" aria-label="Inclusão de memória">
-                    <CampoMultilinhaAtalhos @ref="campoInclusao" @bind-Value="textoInclusao" />
+                    <CampoMultilinhaAtalhos @ref="campoInclusao" @bind-Value="textoInclusao"
+                                             Desabilitado="@operacaoEmAndamento"
+                                             AoSolicitarInclusao="IncluirMemoriaAsync"
+                                             AoSolicitarInclusaoEContinuar="IncluirEContinuarAsync"
+                                             AoSolicitarCancelamento="CancelarInclusaoAsync" />
                     <div class="buttons has-addons is-right captura-dia__acoes-inclusao">
-                        <button class="button is-link" type="button">
+                        <button class="button is-link" type="button" disabled="@operacaoEmAndamento" @onclick="IncluirMemoriaAsync">
                             <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-plus"></i></span>
                             <span>Incluir memória</span>
                         </button>
-                        <button class="button is-light" type="button">
+                        <button class="button is-light" type="button" disabled="@operacaoEmAndamento" @onclick="CancelarInclusaoAsync">
                             <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-times"></i></span>
                             <span>Cancelar inclusão</span>
                         </button>
                     </div>
+                    @if (mensagemFalhaInclusao is not null)
+                    {
+                        <div class="notification elemento-falha-recuperavel captura-dia__falha-inclusao" role="alert" aria-atomic="true">
+                            <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            </span>
+                            <div class="elemento-falha-recuperavel__conteudo">
+                                <p class="elemento-falha-recuperavel__mensagem"><strong>@mensagemFalhaInclusao</strong></p>
+                            </div>
+                        </div>
+                    }
                     @if (ExibirDicaAtalhos)
                     {
                         <div class="notification elemento-orientacao-informativa captura-dia__dica-atalhos" role="note">
@@ -152,7 +170,6 @@
                                 <select id="cenario-composicao-simulado" @bind="cenarioSimulado" @bind:after="AtualizarOrientacaoAsync">
                                     <option value="@CenarioComposicao.Real">Composição real do workspace</option>
                                     <option value="@CenarioComposicao.Vazia">Simular composição vazia</option>
-                                    <option value="@CenarioComposicao.ComMemorias">Simular memória confirmada</option>
                                 </select>
                             </div>
                         </div>
@@ -162,12 +179,22 @@
             }
         }
     </div>
+    <MensagemPopup IsOpen="popupCancelamentoInclusao" Titulo="Cancelar inclusão da memória?"
+                   Paragrafos="@MensagemCancelamentoInclusao"
+                   RotuloConfirmacao="Cancelar inclusão"
+                   RotuloCancelamento="Continuar escrevendo"
+                   AoResponder="ResponderCancelamentoInclusaoAsync" />
 </main>
 
 @code {
     [Parameter] public string DataRota { get; set; } = "";
 
-    private enum CenarioComposicao { Real, Vazia, ComMemorias }
+    private enum CenarioComposicao { Real, Vazia }
+
+    private static readonly IReadOnlyList<string> MensagemCancelamentoInclusao =
+    [
+        "A memória que você está escrevendo ainda não foi incluída. Se cancelar agora, esse texto será perdido."
+    ];
 
     private IJSObjectReference? moduloCalendario;
     private IDisposable? registroMudancaLocal;
@@ -183,17 +210,20 @@
     private string? textoOrientacao;
     private CampoMultilinhaAtalhos? campoInclusao;
     private string textoInclusao = string.Empty;
+    private string? mensagemFalhaInclusao;
     private bool inclusaoAberta;
+    private bool operacaoEmAndamento;
+    private bool popupCancelamentoInclusao;
     private bool focarInclusaoAposRenderizar;
 
     private const string DicaAtalhos = "Enter cria uma nova linha.\nShift+Enter inclui a memória.\nCtrl+Enter inclui e permite registrar outra.\nEsc cancela.";
     private bool ExibirDicaAtalhos => inclusaoAberta && ComposicaoVazia && nivelSimulado == NivelOrientacao.Iniciante;
+    private IReadOnlyList<MemoriaCapturaLocal> Memorias => resultado?.Workspace?.Memorias ?? [];
 
     private bool ComposicaoVazia => cenarioSimulado switch
     {
         CenarioComposicao.Vazia => true,
-        CenarioComposicao.ComMemorias => false,
-        _ => resultado?.Workspace?.Memorias is { Count: 0 }
+        _ => Memorias.Count == 0
     };
 
     private string MensagemFalha => resultado?.Estado switch
@@ -264,7 +294,80 @@
     private void AbrirInclusao()
     {
         inclusaoAberta = true;
+        mensagemFalhaInclusao = null;
         focarInclusaoAposRenderizar = true;
+    }
+
+    private Task IncluirMemoriaAsync() => PersistirMemoriaAsync(continuar: false);
+
+    private Task IncluirEContinuarAsync() => PersistirMemoriaAsync(continuar: true);
+
+    private async Task PersistirMemoriaAsync(bool continuar)
+    {
+        if (operacaoEmAndamento || !inclusaoAberta) return;
+        if (string.IsNullOrWhiteSpace(textoInclusao))
+        {
+            mensagemFalhaInclusao = "Escreva uma memória antes de incluir.";
+            return;
+        }
+
+        var workspace = resultado?.Workspace;
+        if (workspace is null) return;
+
+        operacaoEmAndamento = true;
+        mensagemFalhaInclusao = null;
+        try
+        {
+            var memorias = workspace.Memorias.ToList();
+            var ordem = memorias.Count == 0 ? 0 : memorias.Max(memoria => memoria.Ordem) + 1;
+            memorias.Add(new(Guid.NewGuid().ToString("N"), textoInclusao, ordem));
+            var atualizado = workspace with { Alterado = true, Memorias = memorias };
+            var gravacao = await CapturasLocais.GravarAsync(atualizado);
+            if (!gravacao.Sucesso)
+            {
+                mensagemFalhaInclusao = "Não foi possível incluir a memória. Tente novamente.";
+                return;
+            }
+
+            resultado = resultado! with { Workspace = atualizado };
+            textoInclusao = string.Empty;
+            inclusaoAberta = continuar;
+            if (continuar) focarInclusaoAposRenderizar = true;
+            await AtualizarOrientacaoAsync();
+        }
+        finally
+        {
+            operacaoEmAndamento = false;
+        }
+    }
+
+    private Task CancelarInclusaoAsync()
+    {
+        if (operacaoEmAndamento || !inclusaoAberta) return Task.CompletedTask;
+        mensagemFalhaInclusao = null;
+        if (string.IsNullOrWhiteSpace(textoInclusao))
+        {
+            FecharInclusao();
+            return Task.CompletedTask;
+        }
+
+        popupCancelamentoInclusao = true;
+        return Task.CompletedTask;
+    }
+
+    private Task ResponderCancelamentoInclusaoAsync(RespostaPopup resposta)
+    {
+        popupCancelamentoInclusao = false;
+        if (resposta == RespostaPopup.Confirmacao) FecharInclusao();
+        else focarInclusaoAposRenderizar = true;
+        return Task.CompletedTask;
+    }
+
+    private void FecharInclusao()
+    {
+        textoInclusao = string.Empty;
+        mensagemFalhaInclusao = null;
+        inclusaoAberta = false;
     }
 
     protected override async Task OnAfterRenderAsync(bool primeiroRender)
