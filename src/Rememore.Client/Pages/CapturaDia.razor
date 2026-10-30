@@ -19,7 +19,10 @@
 <PageTitle>Capturar @dataFormatada</PageTitle>
 
 <main class="pagina-captura-dia">
-    <CabecalhoAmbiente Titulo="Capturar" MostrarRetorno AoRetornar="VoltarSelecao" />
+    <CabecalhoPagina Titulo="Capturar" MostrarVoltar MostrarSair
+                     AoRetornar="SolicitarVoltarCabecalhoAsync"
+                     AoSair="SolicitarSaidaAsync" />
+    <NavigationLock ConfirmExternalNavigation="@ExigirConfirmacaoAbandono" />
     <div class="captura-dia__espacador-cabecalho" aria-hidden="true"></div>
     @if (!dataInvalida && !string.IsNullOrEmpty(dataFormatada))
     {
@@ -103,7 +106,9 @@
             @if (inclusaoAberta)
             {
                 <section class="captura-dia__inclusao" aria-label="Inclusão de memória">
-                    <CampoMultilinhaAtalhos @ref="campoInclusao" @bind-Value="textoInclusao"
+                    <CampoMultilinhaAtalhos @ref="campoInclusao"
+                                             Value="@textoInclusao"
+                                             ValueChanged="AtualizarTextoInclusaoAsync"
                                              Desabilitado="@operacaoEmAndamento"
                                              AoSolicitarInclusao="IncluirMemoriaAsync"
                                              AoSolicitarInclusaoEContinuar="IncluirEContinuarAsync"
@@ -184,12 +189,18 @@
                    RotuloConfirmacao="Cancelar inclusão"
                    RotuloCancelamento="Continuar escrevendo"
                    AoResponder="ResponderCancelamentoInclusaoAsync" />
+    <MensagemPopup IsOpen="popupNavegacaoAberto" Titulo="@TituloPopupNavegacao"
+                   Paragrafos="@ParagrafosPopupNavegacao"
+                   RotuloConfirmacao="@RotuloConfirmacaoNavegacao"
+                   RotuloCancelamento="@RotuloCancelamentoNavegacao"
+                   AoResponder="ResponderPopupNavegacaoAsync" />
 </main>
 
 @code {
     [Parameter] public string DataRota { get; set; } = "";
 
     private enum CenarioComposicao { Real, Vazia }
+    private enum TipoPopupNavegacao { Nenhum, VoltarCabecalho, SairSemTexto, SairComTexto, NavegacaoInterna }
 
     private static readonly IReadOnlyList<string> MensagemCancelamentoInclusao =
     [
@@ -197,6 +208,8 @@
     ];
 
     private IJSObjectReference? moduloCalendario;
+    private IJSObjectReference? moduloNavegacao;
+    private DotNetObjectReference<CapturaDia>? referenciaNavegacao;
     private IDisposable? registroMudancaLocal;
     private string? ultimaDataRota;
     private DateOnly data;
@@ -214,11 +227,46 @@
     private bool inclusaoAberta;
     private bool operacaoEmAndamento;
     private bool popupCancelamentoInclusao;
+    private bool popupNavegacaoAberto;
+    private bool permitirProximaNavegacao;
     private bool focarInclusaoAposRenderizar;
+    private TipoPopupNavegacao tipoPopupNavegacao;
+    private TaskCompletionSource<bool>? decisaoNavegacaoInterna;
 
     private const string DicaAtalhos = "Enter cria uma nova linha.\nShift+Enter inclui a memória.\nCtrl+Enter inclui e permite registrar outra.\nEsc cancela.";
     private bool ExibirDicaAtalhos => inclusaoAberta && ComposicaoVazia && nivelSimulado == NivelOrientacao.Iniciante;
     private IReadOnlyList<MemoriaCapturaLocal> Memorias => resultado?.Workspace?.Memorias ?? [];
+    private bool TemTextoUtil => inclusaoAberta && !string.IsNullOrWhiteSpace(textoInclusao);
+    private bool ExigirConfirmacaoAbandono => TemTextoUtil;
+
+    private string TituloPopupNavegacao => tipoPopupNavegacao switch
+    {
+        TipoPopupNavegacao.VoltarCabecalho or TipoPopupNavegacao.NavegacaoInterna => "Voltar sem incluir a memória?",
+        TipoPopupNavegacao.SairComTexto => "Sair sem incluir a memória?",
+        TipoPopupNavegacao.SairSemTexto => "Sair do Rememore?",
+        _ => string.Empty
+    };
+
+    private IReadOnlyList<string> ParagrafosPopupNavegacao => tipoPopupNavegacao switch
+    {
+        TipoPopupNavegacao.VoltarCabecalho or TipoPopupNavegacao.NavegacaoInterna =>
+            ["A memória que você está escrevendo ainda não foi incluída. Se voltar agora, esse texto será perdido."],
+        TipoPopupNavegacao.SairComTexto =>
+            ["A memória que você está escrevendo ainda não foi incluída. Se sair agora, esse texto será perdido e sua sessão será encerrada."],
+        TipoPopupNavegacao.SairSemTexto => ["Deseja encerrar sua sessão?"],
+        _ => []
+    };
+
+    private string RotuloConfirmacaoNavegacao => tipoPopupNavegacao switch
+    {
+        TipoPopupNavegacao.VoltarCabecalho or TipoPopupNavegacao.NavegacaoInterna => "Voltar sem incluir",
+        TipoPopupNavegacao.SairComTexto => "Sair sem incluir",
+        TipoPopupNavegacao.SairSemTexto => "Sair",
+        _ => "Confirmar"
+    };
+
+    private string RotuloCancelamentoNavegacao => tipoPopupNavegacao == TipoPopupNavegacao.SairSemTexto
+        ? "Cancelar" : "Continuar escrevendo";
 
     private bool ComposicaoVazia => cenarioSimulado switch
     {
@@ -246,6 +294,7 @@
         if (ultimaDataRota is not null && ultimaDataRota != DataRota)
         {
             await Continuidade.LimparAsync();
+            await Continuidade.LimparRascunhoAsync();
             cenarioSimulado = CenarioComposicao.Real;
             inclusaoAberta = false;
             textoInclusao = string.Empty;
@@ -274,12 +323,23 @@
         resultado = await Abertura.AbrirAsync(identidadeConta, data, recargaAtiva);
         if (resultado.Estado == EstadoAberturaCaptura.Aberta)
         {
-            await Continuidade.RegistrarAsync(identidadeConta, data);
-            registroMudancaLocal ??= Navegacao.RegisterLocationChangingHandler(async contexto =>
+            if (recargaAtiva)
             {
-                if (!string.Equals(contexto.TargetLocation, Navegacao.Uri, StringComparison.Ordinal))
-                    await Continuidade.LimparAsync();
-            });
+                var rascunho = await Continuidade.RecuperarRascunhoAsync(identidadeConta, data);
+                inclusaoAberta = rascunho?.InclusaoAberta == true;
+                textoInclusao = inclusaoAberta ? rascunho!.Texto : string.Empty;
+                focarInclusaoAposRenderizar = inclusaoAberta;
+                if (!inclusaoAberta) await Continuidade.LimparRascunhoAsync();
+            }
+            else
+            {
+                inclusaoAberta = false;
+                textoInclusao = string.Empty;
+                await Continuidade.LimparRascunhoAsync();
+            }
+
+            await Continuidade.RegistrarAsync(identidadeConta, data);
+            registroMudancaLocal ??= Navegacao.RegisterLocationChangingHandler(TratarMudancaInternaAsync);
             await AtualizarOrientacaoAsync();
         }
         preparando = false;
@@ -291,11 +351,27 @@
         textoOrientacao = await Orientacao.ObterTextoAsync(ContextosOrientacao.CapturaMemorar);
     }
 
-    private void AbrirInclusao()
+    private async Task AbrirInclusao()
     {
         inclusaoAberta = true;
         mensagemFalhaInclusao = null;
         focarInclusaoAposRenderizar = true;
+        await RegistrarRascunhoAsync();
+    }
+
+    private async Task AtualizarTextoInclusaoAsync(string texto)
+    {
+        textoInclusao = texto;
+        mensagemFalhaInclusao = null;
+        await RegistrarRascunhoAsync();
+    }
+
+    private Task RegistrarRascunhoAsync()
+    {
+        var workspace = resultado?.Workspace;
+        return workspace is null
+            ? Task.CompletedTask
+            : Continuidade.RegistrarRascunhoAsync(workspace.IdentidadeConta, workspace.Data, inclusaoAberta, textoInclusao);
     }
 
     private Task IncluirMemoriaAsync() => PersistirMemoriaAsync(continuar: false);
@@ -332,6 +408,8 @@
             resultado = resultado! with { Workspace = atualizado };
             textoInclusao = string.Empty;
             inclusaoAberta = continuar;
+            if (continuar) await RegistrarRascunhoAsync();
+            else await Continuidade.LimparRascunhoAsync();
             if (continuar) focarInclusaoAposRenderizar = true;
             await AtualizarOrientacaoAsync();
         }
@@ -341,40 +419,171 @@
         }
     }
 
-    private Task CancelarInclusaoAsync()
+    private async Task CancelarInclusaoAsync()
     {
-        if (operacaoEmAndamento || !inclusaoAberta) return Task.CompletedTask;
+        if (operacaoEmAndamento || !inclusaoAberta) return;
         mensagemFalhaInclusao = null;
         if (string.IsNullOrWhiteSpace(textoInclusao))
         {
-            FecharInclusao();
-            return Task.CompletedTask;
+            await DescartarInclusaoAsync();
+            return;
         }
 
         popupCancelamentoInclusao = true;
-        return Task.CompletedTask;
     }
 
-    private Task ResponderCancelamentoInclusaoAsync(RespostaPopup resposta)
+    private async Task ResponderCancelamentoInclusaoAsync(RespostaPopup resposta)
     {
         popupCancelamentoInclusao = false;
-        if (resposta == RespostaPopup.Confirmacao) FecharInclusao();
+        if (resposta == RespostaPopup.Confirmacao) await DescartarInclusaoAsync();
         else focarInclusaoAposRenderizar = true;
-        return Task.CompletedTask;
     }
 
-    private void FecharInclusao()
+    private async Task DescartarInclusaoAsync()
     {
         textoInclusao = string.Empty;
         mensagemFalhaInclusao = null;
         inclusaoAberta = false;
+        await Continuidade.LimparRascunhoAsync();
+    }
+
+    private async Task LimparInclusaoEIndicadorAsync()
+    {
+        await DescartarInclusaoAsync();
+        await Continuidade.LimparAsync();
+    }
+
+    private async Task SolicitarVoltarCabecalhoAsync()
+    {
+        if (TemTextoUtil)
+        {
+            tipoPopupNavegacao = TipoPopupNavegacao.VoltarCabecalho;
+            popupNavegacaoAberto = true;
+            return;
+        }
+
+        await LimparInclusaoEIndicadorAsync();
+        permitirProximaNavegacao = true;
+        Navegacao.NavigateTo("capturar");
+    }
+
+    private Task SolicitarSaidaAsync()
+    {
+        tipoPopupNavegacao = TemTextoUtil
+            ? TipoPopupNavegacao.SairComTexto
+            : TipoPopupNavegacao.SairSemTexto;
+        popupNavegacaoAberto = true;
+        return Task.CompletedTask;
+    }
+
+    private async Task ResponderPopupNavegacaoAsync(RespostaPopup resposta)
+    {
+        var tipo = tipoPopupNavegacao;
+        popupNavegacaoAberto = false;
+
+        if (tipo == TipoPopupNavegacao.NavegacaoInterna)
+        {
+            if (resposta == RespostaPopup.Cancelamento)
+            {
+                focarInclusaoAposRenderizar = true;
+                decisaoNavegacaoInterna?.TrySetResult(false);
+            }
+            else decisaoNavegacaoInterna?.TrySetResult(true);
+            return;
+        }
+
+        if (resposta == RespostaPopup.Cancelamento)
+        {
+            if (TemTextoUtil) focarInclusaoAposRenderizar = true;
+            return;
+        }
+
+        if (tipo == TipoPopupNavegacao.VoltarCabecalho)
+        {
+            await LimparInclusaoEIndicadorAsync();
+            permitirProximaNavegacao = true;
+            Navegacao.NavigateTo("capturar");
+            return;
+        }
+
+        if (tipo is TipoPopupNavegacao.SairComTexto or TipoPopupNavegacao.SairSemTexto)
+        {
+            await LimparInclusaoEIndicadorAsync();
+            permitirProximaNavegacao = true;
+            await EstadoAutenticacao.EncerrarSessaoAsync();
+            Navegacao.NavigateTo(Navegacao.BaseUri);
+        }
+    }
+
+    private async ValueTask TratarMudancaInternaAsync(LocationChangingContext contexto)
+    {
+        if (permitirProximaNavegacao)
+        {
+            permitirProximaNavegacao = false;
+            return;
+        }
+
+        if (!TemTextoUtil)
+        {
+            await LimparInclusaoEIndicadorAsync();
+            return;
+        }
+
+        if (decisaoNavegacaoInterna is not null)
+        {
+            contexto.PreventNavigation();
+            return;
+        }
+
+        decisaoNavegacaoInterna = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        tipoPopupNavegacao = TipoPopupNavegacao.NavegacaoInterna;
+        popupNavegacaoAberto = true;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var confirmou = await decisaoNavegacaoInterna.Task.WaitAsync(contexto.CancellationToken);
+            if (!confirmou)
+            {
+                contexto.PreventNavigation();
+                return;
+            }
+
+            await LimparInclusaoEIndicadorAsync();
+        }
+        catch (OperationCanceledException)
+        {
+            contexto.PreventNavigation();
+        }
+        finally
+        {
+            popupNavegacaoAberto = false;
+            tipoPopupNavegacao = TipoPopupNavegacao.Nenhum;
+            decisaoNavegacaoInterna = null;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool primeiroRender)
     {
+        if (primeiroRender)
+        {
+            moduloNavegacao = await JS.InvokeAsync<IJSObjectReference>("import", "./js/capturaDiaNavegacao.js");
+            referenciaNavegacao = DotNetObjectReference.Create(this);
+            await moduloNavegacao.InvokeVoidAsync("conectar", referenciaNavegacao);
+        }
+
         if (!focarInclusaoAposRenderizar || campoInclusao is null) return;
         focarInclusaoAposRenderizar = false;
         await campoInclusao.FocarAsync();
+    }
+
+    [JSInvokable]
+    public async Task AoRestaurarPaginaDoCacheAsync()
+    {
+        await LimparInclusaoEIndicadorAsync();
+        popupNavegacaoAberto = false;
+        popupCancelamentoInclusao = false;
+        await InvokeAsync(StateHasChanged);
     }
 
     private void VoltarSelecao() => Navegacao.NavigateTo("capturar");
@@ -387,5 +596,13 @@
         NivelOrientacaoSimulado.NivelAtual = nivelOriginal;
         registroMudancaLocal?.Dispose();
         if (moduloCalendario is not null) await moduloCalendario.DisposeAsync();
+        if (moduloNavegacao is not null)
+        {
+            try { await moduloNavegacao.InvokeVoidAsync("desconectar"); }
+            catch (JSDisconnectedException) { }
+            try { await moduloNavegacao.DisposeAsync(); }
+            catch (JSDisconnectedException) { }
+        }
+        referenciaNavegacao?.Dispose();
     }
 }
