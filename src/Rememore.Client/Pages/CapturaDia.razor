@@ -4,7 +4,6 @@
 @using Rememore.Client.Infraestrutura.Capturar
 @using Rememore.Client.Infraestrutura.OrientacaoProgressiva
 @using Rememore.Client.Infraestrutura.TrabalhoLocal
-@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
 @inject NavigationManager Navegacao
 @inject IJSRuntime JS
 @inject EstadoAutenticacaoProvider EstadoAutenticacao
@@ -12,8 +11,7 @@
 @inject ICapturasLocais CapturasLocais
 @inject ContinuidadeCapturaSessionStorage Continuidade
 @inject IOrientacaoProgressiva Orientacao
-@inject FonteNivelOrientacaoSimulada NivelOrientacaoSimulado
-@inject IWebAssemblyHostEnvironment Ambiente
+@inject IFonteNivelOrientacao FonteNivelOrientacao
 @using System.Globalization
 
 <PageTitle>Capturar @dataFormatada</PageTitle>
@@ -87,7 +85,7 @@
         }
         else
         {
-            @if (ComposicaoVazia && textoOrientacao is not null)
+            @if (Memorias.Count == 0 && textoOrientacao is not null)
             {
                 <div class="notification elemento-orientacao-informativa" role="status">
                     <span class="elemento-orientacao-informativa__texto">@textoOrientacao</span>
@@ -96,7 +94,7 @@
 
             @if (Memorias.Count > 0)
             {
-                <div class="captura-dia__lista-memorias" role="list" aria-label="Memórias da captura">
+                <div class="lista-memorias captura-dia__lista-memorias" role="list" aria-label="Memórias da captura">
                     @for (var indice = 0; indice < Memorias.Count; indice++)
                     {
                         var memoria = Memorias[indice];
@@ -165,42 +163,6 @@
                 </div>
             }
 
-            @if (Ambiente.IsDevelopment())
-            {
-                <section class="box captura-dia__verificacao" aria-labelledby="verificacao-orientacao-titulo">
-                    <h2 class="title is-6" id="verificacao-orientacao-titulo">Controles de verificação — Desenvolvimento</h2>
-                    <div class="field">
-                        <label class="label" for="nivel-orientacao-simulado">Nível de orientação simulado</label>
-                        <div class="control">
-                            <div class="select">
-                                <select id="nivel-orientacao-simulado" @bind="nivelSimulado" @bind:after="AtualizarOrientacaoAsync">
-                                    <option value="@NivelOrientacao.Iniciante">Iniciante</option>
-                                    <option value="@NivelOrientacao.Intermediario">Intermediário</option>
-                                    <option value="@NivelOrientacao.Avancado">Avançado</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label class="label" for="cenario-composicao-simulado">Cenário da composição</label>
-                        <div class="control">
-                            <div class="select">
-                                <select id="cenario-composicao-simulado" @bind="cenarioSimulado" @bind:after="AtualizarOrientacaoAsync">
-                                    <option value="@CenarioComposicao.Real">Composição real do workspace</option>
-                                    <option value="@CenarioComposicao.Vazia">Simular composição vazia</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label class="checkbox" for="simular-falha-ordenacao">
-                            <input id="simular-falha-ordenacao" type="checkbox" @bind="simularFalhaOrdenacao" />
-                            Simular falha ao salvar reordenação
-                        </label>
-                    </div>
-                    <p>Simulações locais e reversíveis: não gravam no workspace nem alteram progresso.</p>
-                </section>
-            }
         }
     </div>
     <Popup Aberto="@popupCancelamentoInclusao" Titulo="Cancelar inclusão da memória?"
@@ -228,7 +190,6 @@
 @code {
     [Parameter] public string DataRota { get; set; } = "";
 
-    private enum CenarioComposicao { Real, Vazia }
     private enum TipoPopupNavegacao { Nenhum, VoltarCabecalho, SairSemTexto, SairComTexto, NavegacaoInterna }
 
     private const string MensagemCancelamentoInclusao = "A memória que você está escrevendo ainda não foi incluída. Se cancelar agora, esse texto será perdido.";
@@ -245,9 +206,7 @@
     private bool dataInvalida;
     private bool preparando = true;
     private ResultadoAberturaCaptura? resultado;
-    private NivelOrientacao nivelSimulado;
-    private NivelOrientacao nivelOriginal;
-    private CenarioComposicao cenarioSimulado;
+    private NivelOrientacao nivelOrientacaoAtual = NivelOrientacao.Iniciante;
     private string? textoOrientacao;
     private CampoMultilinhaAtalhos? campoInclusao;
     private string textoInclusao = string.Empty;
@@ -260,14 +219,13 @@
     private bool focarInclusaoAposRenderizar;
     private string? identidadeFocoOrdenacao;
     private bool focarElevarAposOrdenacao;
-    private bool simularFalhaOrdenacao;
     private bool popupFalhaOrdenacao;
     private bool restaurarFocoOrdenacaoAposRenderizar;
     private TipoPopupNavegacao tipoPopupNavegacao;
     private TaskCompletionSource<bool>? decisaoNavegacaoInterna;
 
     private const string DicaAtalhos = "Enter cria uma nova linha.\nShift+Enter inclui a memória.\nCtrl+Enter inclui e permite registrar outra.\nEsc cancela.";
-    private bool ExibirDicaAtalhos => inclusaoAberta && ComposicaoVazia && nivelSimulado == NivelOrientacao.Iniciante;
+    private bool ExibirDicaAtalhos => inclusaoAberta && Memorias.Count == 0 && nivelOrientacaoAtual == NivelOrientacao.Iniciante;
     private IReadOnlyList<MemoriaCapturaLocal> Memorias => resultado?.Workspace?.Memorias.OrderBy(memoria => memoria.Ordem).ToList() ?? [];
     private bool TemTextoUtil => inclusaoAberta && !string.IsNullOrWhiteSpace(textoInclusao);
     private bool ExigirConfirmacaoAbandono => TemTextoUtil;
@@ -301,12 +259,6 @@
     private string RotuloCancelamentoNavegacao => tipoPopupNavegacao == TipoPopupNavegacao.SairSemTexto
         ? "Cancelar" : "Continuar escrevendo";
 
-    private bool ComposicaoVazia => cenarioSimulado switch
-    {
-        CenarioComposicao.Vazia => true,
-        _ => Memorias.Count == 0
-    };
-
     private string MensagemFalha => resultado?.Estado switch
     {
         EstadoAberturaCaptura.ApiIndisponivel => "Não é possível iniciar uma captura neste navegador. O Rememore precisa do armazenamento local do navegador para proteger suas memórias enquanto você trabalha. Tente utilizar uma versão atualizada de um navegador compatível.",
@@ -316,19 +268,12 @@
     private string RotuloRetornoFalha => resultado?.Estado is EstadoAberturaCaptura.ApiIndisponivel or EstadoAberturaCaptura.FalhaArmazenamento
         ? "Voltar à Principal" : "Voltar à Seleção";
 
-    protected override void OnInitialized()
-    {
-        nivelOriginal = NivelOrientacaoSimulado.NivelAtual;
-        nivelSimulado = nivelOriginal;
-    }
-
     protected override async Task OnParametersSetAsync()
     {
         if (ultimaDataRota is not null && ultimaDataRota != DataRota)
         {
             await Continuidade.LimparAsync();
             await Continuidade.LimparRascunhoAsync();
-            cenarioSimulado = CenarioComposicao.Real;
             inclusaoAberta = false;
             textoInclusao = string.Empty;
         }
@@ -380,7 +325,7 @@
 
     private async Task AtualizarOrientacaoAsync()
     {
-        NivelOrientacaoSimulado.NivelAtual = nivelSimulado;
+        nivelOrientacaoAtual = await FonteNivelOrientacao.ObterNivelAsync();
         textoOrientacao = await Orientacao.ObterTextoAsync(ContextosOrientacao.CapturaMemorar);
     }
 
@@ -431,12 +376,6 @@
         var atualizado = workspace with { Alterado = true, Memorias = reordenadas };
         identidadeFocoOrdenacao = identidade;
         focarElevarAposOrdenacao = deslocamento < 0;
-
-        if (simularFalhaOrdenacao)
-        {
-            popupFalhaOrdenacao = true;
-            return;
-        }
 
         operacaoEmAndamento = true;
         try
@@ -694,7 +633,6 @@
 
     public async ValueTask DisposeAsync()
     {
-        NivelOrientacaoSimulado.NivelAtual = nivelOriginal;
         registroMudancaLocal?.Dispose();
         if (moduloCalendario is not null) await moduloCalendario.DisposeAsync();
         if (moduloNavegacao is not null)

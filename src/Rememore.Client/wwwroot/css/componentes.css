@@ -1,3 +1,8 @@
+.lista-memorias {
+    display: grid;
+    gap: 1rem;
+}
+
 .superficie-controle-campo {
     /* Bulma define estes tokens apenas em .control/.input; declara-los aqui permite reusar a superficie fora de um campo. */
     --bulma-input-h: var(--bulma-scheme-h);

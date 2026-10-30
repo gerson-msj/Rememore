@@ -14,7 +14,6 @@
 .captura-dia__conteudo > .notification { margin: 0; }
 .captura-dia__conteudo > .notification .elemento-falha-recuperavel__mensagem { margin: 0; }
 .captura-dia__conteudo > .notification .captura-dia__botao-retorno { margin-block-start: 0.75rem; }
-.captura-dia__lista-memorias { display: grid; gap: var(--bulma-block-spacing); }
 .captura-dia__item-memoria { min-width: 0; }
 .captura-dia__inclusao { display: grid; gap: var(--captura-dia-espacamento); }
 .captura-dia__inclusao ::deep .campo-multilinha-atalhos { margin-block-end: 0; }
