@@ -1,10 +1,35 @@
-.modal.modal--popup-topo .modal-card-foot .buttons {
+.modal.modal--popup-topo .modal-card-foot .popup__botoes {
+    display: flex;
+    flex-wrap: wrap;
     justify-content: flex-end;
-    width: 100%;
+    width: max-content;
+    max-width: 100%;
+    margin-left: auto;
+    column-gap: 1rem;
+    row-gap: 1rem;
 }
 
-.modal.modal--popup-topo .modal-card-foot .button {
-    width: 7rem;
+.modal.modal--popup-topo .modal-card-foot .popup__botoes--duas-acoes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1rem;
+}
+
+.modal.modal--popup-topo .modal-card-foot .popup__botoes--duas-acoes .button {
+    box-sizing: border-box;
+    width: 100%;
+    white-space: normal;
+}
+
+@media (max-width: 30rem) {
+    .modal.modal--popup-topo .modal-card-foot .popup__botoes--duas-acoes {
+        width: 100%;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .modal.modal--popup-topo .modal-card-foot .popup__botoes--duas-acoes .button {
+        min-width: 0;
+    }
 }
 
 .modal.modal--popup-topo .modal-card.popup--sombra-primary {

@@ -68,13 +68,13 @@
         </div>
     }
 
-    <MensagemPopup IsOpen="popupAberto"
-                   Titulo="@jornadaSelecionada?.Titulo"
-                   Icone="@IconeJornadaSelecionada"
-                   Paragrafos="@MensagemJornadaSelecionada"
-                   MostrarCancelamento="false"
-                   RotuloConfirmacao="OK"
-                   AoResponder="FecharExplicacaoAsync" />
+    <Popup Aberto="@popupAberto"
+           Titulo="@jornadaSelecionada?.Titulo"
+           Icone="@IconeJornadaSelecionada"
+           Mensagem="@MensagemJornadaSelecionada"
+           TextoConfirmar="OK"
+           ClasseBotaoConfirmar="is-link"
+           AoResponder="FecharExplicacaoAsync" />
 </main>
 
 @code {
@@ -110,7 +110,7 @@
     ];
 
     private string? IconeJornadaSelecionada => jornadaSelecionada?.ClasseIcone;
-    private IReadOnlyList<string> MensagemJornadaSelecionada => jornadaSelecionada?.Explicacao ?? [];
+    private string MensagemJornadaSelecionada => string.Join(Environment.NewLine + Environment.NewLine, jornadaSelecionada?.Explicacao ?? []);
 
     protected override async Task OnInitializedAsync()
     {

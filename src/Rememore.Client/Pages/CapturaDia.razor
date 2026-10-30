@@ -94,13 +94,26 @@
                 </div>
             }
 
-            @foreach (var memoria in Memorias)
+            @if (Memorias.Count > 0)
             {
-                <Memoria @key="memoria.Identidade"
-                         Identificador="memoria.Identidade"
-                         Conteudo="memoria.Conteudo"
-                         Modo="ModoMemoria.Memorar"
-                         Inativa="true" />
+                <div class="captura-dia__lista-memorias" role="list" aria-label="Memórias da captura">
+                    @for (var indice = 0; indice < Memorias.Count; indice++)
+                    {
+                        var memoria = Memorias[indice];
+                        <div @key="memoria.Identidade" class="captura-dia__item-memoria" role="listitem"
+                             data-identidade-memoria="@memoria.Identidade">
+                            <Memoria
+                                     Identificador="@memoria.Identidade"
+                                     Conteudo="@memoria.Conteudo"
+                                     Modo="ModoMemoria.Memorar"
+                                     Primeira="@(indice == 0)"
+                                     Ultima="@(indice == Memorias.Count - 1)"
+                                     Inativa="@(inclusaoAberta || operacaoEmAndamento)"
+                                     AoElevar="ElevarMemoriaAsync"
+                                     AoRebaixar="RebaixarMemoriaAsync" />
+                        </div>
+                    }
+                </div>
             }
 
             @if (inclusaoAberta)
@@ -179,21 +192,37 @@
                             </div>
                         </div>
                     </div>
+                    <div class="field">
+                        <label class="checkbox" for="simular-falha-ordenacao">
+                            <input id="simular-falha-ordenacao" type="checkbox" @bind="simularFalhaOrdenacao" />
+                            Simular falha ao salvar reordenação
+                        </label>
+                    </div>
                     <p>Simulações locais e reversíveis: não gravam no workspace nem alteram progresso.</p>
                 </section>
             }
         }
     </div>
-    <MensagemPopup IsOpen="popupCancelamentoInclusao" Titulo="Cancelar inclusão da memória?"
-                   Paragrafos="@MensagemCancelamentoInclusao"
-                   RotuloConfirmacao="Cancelar inclusão"
-                   RotuloCancelamento="Continuar escrevendo"
-                   AoResponder="ResponderCancelamentoInclusaoAsync" />
-    <MensagemPopup IsOpen="popupNavegacaoAberto" Titulo="@TituloPopupNavegacao"
-                   Paragrafos="@ParagrafosPopupNavegacao"
-                   RotuloConfirmacao="@RotuloConfirmacaoNavegacao"
-                   RotuloCancelamento="@RotuloCancelamentoNavegacao"
-                   AoResponder="ResponderPopupNavegacaoAsync" />
+    <Popup Aberto="@popupCancelamentoInclusao" Titulo="Cancelar inclusão da memória?"
+           Mensagem="@MensagemCancelamentoInclusao"
+           TextoConfirmar="Cancelar inclusão"
+           TextoCancelar="Continuar escrevendo"
+           ClasseBotaoConfirmar="is-danger is-light"
+           ClasseBotaoCancelar="is-info"
+           AoResponder="ResponderCancelamentoInclusaoAsync" />
+    <Popup Aberto="@popupNavegacaoAberto" Titulo="@TituloPopupNavegacao"
+           Mensagem="@MensagemNavegacao"
+           TextoConfirmar="@RotuloConfirmacaoNavegacao"
+           TextoCancelar="@RotuloCancelamentoNavegacao"
+           ClasseBotaoConfirmar="is-danger is-light"
+           ClasseBotaoCancelar="is-info"
+           AoResponder="ResponderPopupNavegacaoAsync" />
+    <Popup Aberto="@popupFalhaOrdenacao"
+           Mensagem="@MensagemFalhaOrdenacao"
+           ClassePopup="popup--sombra-warning"
+           TextoConfirmar="Ok"
+           ClasseBotaoConfirmar="is-info"
+           AoResponder="ResponderFalhaOrdenacaoAsync" />
 </main>
 
 @code {
@@ -202,13 +231,12 @@
     private enum CenarioComposicao { Real, Vazia }
     private enum TipoPopupNavegacao { Nenhum, VoltarCabecalho, SairSemTexto, SairComTexto, NavegacaoInterna }
 
-    private static readonly IReadOnlyList<string> MensagemCancelamentoInclusao =
-    [
-        "A memória que você está escrevendo ainda não foi incluída. Se cancelar agora, esse texto será perdido."
-    ];
+    private const string MensagemCancelamentoInclusao = "A memória que você está escrevendo ainda não foi incluída. Se cancelar agora, esse texto será perdido.";
+    private const string MensagemFalhaOrdenacao = "Não foi possível atualizar a ordem das memórias. A ordem anterior foi mantida. Tente novamente.";
 
     private IJSObjectReference? moduloCalendario;
     private IJSObjectReference? moduloNavegacao;
+    private IJSObjectReference? moduloLista;
     private DotNetObjectReference<CapturaDia>? referenciaNavegacao;
     private IDisposable? registroMudancaLocal;
     private string? ultimaDataRota;
@@ -230,12 +258,17 @@
     private bool popupNavegacaoAberto;
     private bool permitirProximaNavegacao;
     private bool focarInclusaoAposRenderizar;
+    private string? identidadeFocoOrdenacao;
+    private bool focarElevarAposOrdenacao;
+    private bool simularFalhaOrdenacao;
+    private bool popupFalhaOrdenacao;
+    private bool restaurarFocoOrdenacaoAposRenderizar;
     private TipoPopupNavegacao tipoPopupNavegacao;
     private TaskCompletionSource<bool>? decisaoNavegacaoInterna;
 
     private const string DicaAtalhos = "Enter cria uma nova linha.\nShift+Enter inclui a memória.\nCtrl+Enter inclui e permite registrar outra.\nEsc cancela.";
     private bool ExibirDicaAtalhos => inclusaoAberta && ComposicaoVazia && nivelSimulado == NivelOrientacao.Iniciante;
-    private IReadOnlyList<MemoriaCapturaLocal> Memorias => resultado?.Workspace?.Memorias ?? [];
+    private IReadOnlyList<MemoriaCapturaLocal> Memorias => resultado?.Workspace?.Memorias.OrderBy(memoria => memoria.Ordem).ToList() ?? [];
     private bool TemTextoUtil => inclusaoAberta && !string.IsNullOrWhiteSpace(textoInclusao);
     private bool ExigirConfirmacaoAbandono => TemTextoUtil;
 
@@ -247,14 +280,14 @@
         _ => string.Empty
     };
 
-    private IReadOnlyList<string> ParagrafosPopupNavegacao => tipoPopupNavegacao switch
+    private string MensagemNavegacao => tipoPopupNavegacao switch
     {
         TipoPopupNavegacao.VoltarCabecalho or TipoPopupNavegacao.NavegacaoInterna =>
-            ["A memória que você está escrevendo ainda não foi incluída. Se voltar agora, esse texto será perdido."],
+            "A memória que você está escrevendo ainda não foi incluída. Se voltar agora, esse texto será perdido.",
         TipoPopupNavegacao.SairComTexto =>
-            ["A memória que você está escrevendo ainda não foi incluída. Se sair agora, esse texto será perdido e sua sessão será encerrada."],
-        TipoPopupNavegacao.SairSemTexto => ["Deseja encerrar sua sessão?"],
-        _ => []
+            "A memória que você está escrevendo ainda não foi incluída. Se sair agora, esse texto será perdido e sua sessão será encerrada.",
+        TipoPopupNavegacao.SairSemTexto => "Deseja encerrar sua sessão?",
+        _ => string.Empty
     };
 
     private string RotuloConfirmacaoNavegacao => tipoPopupNavegacao switch
@@ -377,6 +410,66 @@
     private Task IncluirMemoriaAsync() => PersistirMemoriaAsync(continuar: false);
 
     private Task IncluirEContinuarAsync() => PersistirMemoriaAsync(continuar: true);
+
+    private Task ElevarMemoriaAsync(string identidade) => MoverMemoriaAsync(identidade, -1);
+
+    private Task RebaixarMemoriaAsync(string identidade) => MoverMemoriaAsync(identidade, 1);
+
+    private async Task MoverMemoriaAsync(string identidade, int deslocamento)
+    {
+        if (operacaoEmAndamento || inclusaoAberta) return;
+        var workspace = resultado?.Workspace;
+        if (workspace is null) return;
+
+        var memorias = workspace.Memorias.OrderBy(memoria => memoria.Ordem).ToList();
+        var indice = memorias.FindIndex(memoria => memoria.Identidade == identidade);
+        var destino = indice + deslocamento;
+        if (indice < 0 || destino < 0 || destino >= memorias.Count) return;
+
+        (memorias[indice], memorias[destino]) = (memorias[destino], memorias[indice]);
+        var reordenadas = memorias.Select((memoria, ordem) => memoria with { Ordem = ordem }).ToList();
+        var atualizado = workspace with { Alterado = true, Memorias = reordenadas };
+        identidadeFocoOrdenacao = identidade;
+        focarElevarAposOrdenacao = deslocamento < 0;
+
+        if (simularFalhaOrdenacao)
+        {
+            popupFalhaOrdenacao = true;
+            return;
+        }
+
+        operacaoEmAndamento = true;
+        try
+        {
+            var gravacao = await CapturasLocais.GravarAsync(atualizado);
+            if (!gravacao.Sucesso)
+            {
+                popupFalhaOrdenacao = true;
+                return;
+            }
+
+            resultado = resultado! with { Workspace = atualizado };
+            restaurarFocoOrdenacaoAposRenderizar = true;
+        }
+        finally
+        {
+            operacaoEmAndamento = false;
+        }
+    }
+
+    private Task ResponderFalhaOrdenacaoAsync(RespostaPopup _)
+    {
+        popupFalhaOrdenacao = false;
+        restaurarFocoOrdenacaoAposRenderizar = true;
+        return Task.CompletedTask;
+    }
+
+    private async Task RestaurarFocoOrdenacaoAsync()
+    {
+        if (identidadeFocoOrdenacao is null) return;
+        await (moduloLista ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/capturaDiaLista.js"))
+            .InvokeVoidAsync("focarEManterVisivel", identidadeFocoOrdenacao, focarElevarAposOrdenacao, ".captura-dia__barra-fixa");
+    }
 
     private async Task PersistirMemoriaAsync(bool continuar)
     {
@@ -568,8 +661,16 @@
         if (primeiroRender)
         {
             moduloNavegacao = await JS.InvokeAsync<IJSObjectReference>("import", "./js/capturaDiaNavegacao.js");
+            moduloLista = await JS.InvokeAsync<IJSObjectReference>("import", "./js/capturaDiaLista.js");
+            await moduloLista.InvokeVoidAsync("conectarOrdenacao");
             referenciaNavegacao = DotNetObjectReference.Create(this);
             await moduloNavegacao.InvokeVoidAsync("conectar", referenciaNavegacao);
+        }
+
+        if (restaurarFocoOrdenacaoAposRenderizar && !popupFalhaOrdenacao)
+        {
+            restaurarFocoOrdenacaoAposRenderizar = false;
+            await RestaurarFocoOrdenacaoAsync();
         }
 
         if (!focarInclusaoAposRenderizar || campoInclusao is null) return;
@@ -601,6 +702,13 @@
             try { await moduloNavegacao.InvokeVoidAsync("desconectar"); }
             catch (JSDisconnectedException) { }
             try { await moduloNavegacao.DisposeAsync(); }
+            catch (JSDisconnectedException) { }
+        }
+        if (moduloLista is not null)
+        {
+            try { await moduloLista.InvokeVoidAsync("desconectarOrdenacao"); }
+            catch (JSDisconnectedException) { }
+            try { await moduloLista.DisposeAsync(); }
             catch (JSDisconnectedException) { }
         }
         referenciaNavegacao?.Dispose();

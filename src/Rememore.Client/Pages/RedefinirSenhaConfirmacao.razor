@@ -31,14 +31,17 @@
             }
         }
     </main>
-    <MensagemPopup IsOpen="popupAberto" Paragrafos="@MensagemGuardarChave" Cor="CorSemanticaPopup.Atencao"
-                   RotuloConfirmacao="Já guardei, entrar" RotuloCancelamento="Voltar e guardar" AoResponder="ResponderConfirmacaoAsync" />
+    <Popup Aberto="@popupAberto" Mensagem="@MensagemGuardarChave"
+           ClassePopup="popup--sombra-warning"
+           TextoConfirmar="Já guardei, entrar" TextoCancelar="Voltar e guardar"
+           ClasseBotaoConfirmar="is-warning" ClasseBotaoCancelar="is-light"
+           AoResponder="ResponderConfirmacaoAsync" />
 </div>
 
 @code {
     private const string MensagemContextual = "Sua senha foi redefinida. Guarde esta nova chave: ela será necessária caso você precise redefinir sua senha novamente no futuro.";
     private const string MensagemApresentacaoUnica = "Esta chave será exibida somente agora. O Rememore não poderá mostrá-la novamente depois que você sair desta página.";
-    private static readonly IReadOnlyList<string> MensagemGuardarChave = ["Você já guardou sua chave de redefinição? Depois de entrar, ela não poderá ser exibida novamente."];
+    private const string MensagemGuardarChave = "Você já guardou sua chave de redefinição? Depois de entrar, ela não poderá ser exibida novamente.";
     private ContextoChavePendente? contexto;
     private bool restauracaoConcluida;
     private bool popupAberto;

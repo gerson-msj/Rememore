@@ -40,7 +40,7 @@
         @if (TemBotaoCancelar || TemBotaoConfirmar)
         {
             <footer class="modal-card-foot">
-                <div class="buttons">
+                <div class="popup__botoes @(TemBotaoCancelar && TemBotaoConfirmar ? "popup__botoes--duas-acoes" : string.Empty)">
                     @if (TemBotaoConfirmar)
                     {
                         <button class="button is-small @ClasseBotaoConfirmar" type="button" @onclick="() => ResponderAsync(RespostaPopup.Confirmacao)">@TextoConfirmar</button>

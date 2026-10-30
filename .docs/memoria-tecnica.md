@@ -4,9 +4,11 @@ Este arquivo guarda somente princípios técnicos reutilizáveis entre unidades.
 
 ## Laboratório e reutilização
 
-O `/lab` demonstra e valida os ELMs, CMPs e estilos reais usados pelas páginas. Antes de implementar, consulte o bloco no laboratório e inspecione no código seus contratos e consumidores atuais. Reutilize elementos e componentes existentes; não replique seu comportamento ou aparência em páginas.
+Os ELMs e CMPs demonstrados no `/lab` são os blocos reutilizáveis da aplicação: definem seus próprios parâmetros, estilos e funcionalidades. Cada demonstração deve instanciar o bloco real e configurá-lo pelos parâmetros públicos, como faria uma página. Não deve reproduzir, compensar ou sobrescrever localmente estilos ou comportamentos próprios do bloco, pois isso mascara sua apresentação e cria divergência com os consumidores. Não é necessário testar no laboratório cada combinação de parâmetros ou ajuste local de uma página; valide a integração no contexto da própria página.
 
-Se a necessidade exigir criar ou mudar um padrão compartilhado, trate-o como unidade própria e obtenha decisão do operador. Demonstração e aceite no laboratório não substituem a verificação dos consumidores reais.
+A pedido ou com aprovação do operador, uma página pode receber ajustes locais de composição, estilo ou comportamento em seus próprios arquivos, sem modificar o bloco compartilhado; esses ajustes devem ser validados naquela página, não incorporados como exceções ao demonstrador. Quando a mudança deve valer para o elemento ou componente em todas as páginas, altere o código-fonte e os estilos no escopo compartilhado apropriado; o `/lab` e todos os consumidores devem refletir essa mudança. Verifique os consumidores afetados.
+
+O Codex pode sugerir ajustes locais ou compartilhados, mas deve obter solicitação ou aprovação do operador antes de implementá-los.
 
 ## HTML, Bulma e CSS
 

@@ -3,11 +3,13 @@
 
 <div class="cabecalho-ambiente">
     <CabecalhoPagina Titulo="@Titulo" MostrarVoltar="@MostrarRetorno" MostrarSair="true" LarguraMaxima="@LarguraMaxima" AoRetornar="Retornar" AoSair="AbrirConfirmacao" />
-    <MensagemPopup IsOpen="popupAberto" Paragrafos="@MensagemSaida" RotuloConfirmacao="Sim" RotuloCancelamento="Não" AoResponder="ResponderSaidaAsync" />
+    <Popup Aberto="@popupAberto" Mensagem="Deseja realmente sair?"
+           TextoConfirmar="Sim" TextoCancelar="Não"
+           ClasseBotaoConfirmar="is-link" ClasseBotaoCancelar="is-light"
+           AoResponder="ResponderSaidaAsync" />
 </div>
 
 @code {
-    private static readonly IReadOnlyList<string> MensagemSaida = ["Deseja realmente sair?"];
     private bool popupAberto;
 
     [Parameter, EditorRequired] public string Titulo { get; set; } = "";
