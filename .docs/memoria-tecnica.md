@@ -25,8 +25,6 @@ A propriedade dos estilos é definida pelo alcance:
 
 Reaproveite classes e estilos existentes antes de criar outros. Não reproduza estilos de ELMs ou CMPs em páginas. Mudanças em CSS compartilhado exigem verificar os consumidores afetados; mudanças de markup, parâmetros ou eventos exigem revisar os chamadores.
 
-Listas que apresentam instâncias de CMP-030 usam a classe `.lista-memorias`, definida em `wwwroot/css/componentes.css`, para manter o mesmo espaçamento entre itens no `/lab` e nas páginas. Os consumidores aplicam a classe ao contêiner; não repetem o `gap` ou margens interitem em CSS local. Largura, posição da lista e espaçamento externo continuam pertencendo à composição local de cada página ou demonstração.
-
 ## Execução .NET no Windows
 
 No ambiente Windows do ChatGPT Desktop, não execute comandos `dotnet` dentro do sandbox: suas restrições de acesso impedem a execução correta. Execute restauração, build, testes e aplicação fora do sandbox.

@@ -1,6 +1,6 @@
 # Documentação operacional
 
-A documentação funcional aprovada do Rememore fica no Google Drive. Este diretório reúne orientações para o trabalho no repositório e registros das unidades de implementação.
+Este diretório reúne orientações para o trabalho no repositório e registros das unidades de implementação.
 
 ## Leitura de início
 
@@ -17,5 +17,4 @@ Leia apenas a unidade atual. As especificações concluídas e os planos arquiva
 - `especificacoes/README.md` — guia do fluxo de especificação.
 - `especificacoes/` — unidades em andamento.
 - `especificacoes/concluidas/` — especificações encerradas, com pareceres e registros próprios.
-- `planos/concluidas/` — planos encerrados, mantidos para consulta histórica.
 - `AUDITORIA.md` — procedimento lido somente quando o operador solicitar auditoria.
