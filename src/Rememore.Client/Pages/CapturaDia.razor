@@ -107,6 +107,7 @@
                                      Primeira="@(indice == 0)"
                                      Ultima="@(indice == Memorias.Count - 1)"
                                      Inativa="@(inclusaoAberta || operacaoEmAndamento)"
+                                     AoAcionar="AbrirEdicaoMemoria"
                                      AoElevar="ElevarMemoriaAsync"
                                      AoRebaixar="RebaixarMemoriaAsync" />
                         </div>
@@ -221,6 +222,8 @@
     private bool focarElevarAposOrdenacao;
     private bool popupFalhaOrdenacao;
     private bool restaurarFocoOrdenacaoAposRenderizar;
+    private void AbrirEdicaoMemoria(string identidade) =>
+        Navegacao.NavigateTo($"editar-memoria/{Uri.EscapeDataString(DataRota)}/{Uri.EscapeDataString(identidade)}");
     private TipoPopupNavegacao tipoPopupNavegacao;
     private TaskCompletionSource<bool>? decisaoNavegacaoInterna;
 

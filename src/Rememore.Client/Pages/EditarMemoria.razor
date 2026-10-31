@@ -1,0 +1,72 @@
+@page "/editar-memoria/{DataRota}/{IdentidadeMemoria}"
+@attribute [Authorize]
+@using Rememore.Client.Infraestrutura.Capturar
+@using Rememore.Client.Infraestrutura.TrabalhoLocal
+@inject NavigationManager Navegacao
+@inject EstadoAutenticacaoProvider EstadoAutenticacao
+@inject AberturaCaptura Abertura
+
+<PageTitle>Editar Memória</PageTitle>
+<main class="container is-max-desktop">
+    <CabecalhoPagina Titulo="Editar Memória" MostrarVoltar MostrarSair
+                     AoRetornar="SolicitarVoltarAsync" AoSair="SolicitarSairAsync" />
+    <div class="editar-memoria__espacador-cabecalho" aria-hidden="true"></div>
+    @if (!pronta)
+    {
+        <p class="section" role="status">Preparando memória…</p>
+    }
+    else if (memoria is null)
+    {
+        <div class="section"><p role="alert">Não foi possível abrir esta memória.</p>
+            <button class="button is-link" @onclick="VoltarCaptura">Voltar à captura</button></div>
+    }
+    else { <div class="section" aria-live="polite"></div> }
+</main>
+<Popup Aberto="popup" Titulo="@tituloPopup" Mensagem="@mensagemPopup"
+       TextoConfirmar="@textoConfirmar" TextoCancelar="@textoCancelar"
+       ClasseBotaoConfirmar="@classeConfirmar" ClasseBotaoCancelar="@classeCancelar"
+       AoResponder="ResponderPopupAsync" />
+
+@code {
+    [Parameter] public string DataRota { get; set; } = "";
+    [Parameter] public string IdentidadeMemoria { get; set; } = "";
+    private enum TipoConteudoEdicao { Nenhum, MemoriaPrincipal, ComplementoNovo, ComplementoExistente }
+    private enum Acao { Nenhuma, Voltar, Sair }
+    private TipoConteudoEdicao tipoConteudoAtivo { get; set; } = TipoConteudoEdicao.Nenhum;
+    private bool alteracaoNaoConfirmada { get; set; }
+    private MemoriaCapturaLocal? memoria;
+    private bool pronta, popup;
+    private Acao acao;
+    private string tituloPopup = "", mensagemPopup = "", textoConfirmar = "", textoCancelar = "", classeConfirmar = "", classeCancelar = "";
+    protected override async Task OnParametersSetAsync() {
+        pronta = false; memoria = null;
+        if (!DateOnly.TryParseExact(DataRota, "yyyy-MM-dd", out var data) || data > DateOnly.FromDateTime(DateTime.Today) || EstadoAutenticacao.IdentidadeConta is not { } conta) { pronta = true; return; }
+        var resultado = await Abertura.AbrirAsync(conta, data, true);
+        if (resultado.Estado == EstadoAberturaCaptura.Aberta && resultado.Workspace is { } w && w.IdentidadeConta == conta && w.Data == data)
+            memoria = w.Memorias.SingleOrDefault(m => m.Identidade == Uri.UnescapeDataString(IdentidadeMemoria));
+        pronta = true;
+    }
+    private Task SolicitarVoltarAsync() => SolicitarAsync(Acao.Voltar);
+    private Task SolicitarSairAsync() => SolicitarAsync(Acao.Sair);
+    private Task SolicitarAsync(Acao destino) {
+        acao = destino;
+        if (alteracaoNaoConfirmada) {
+            var compNovo = tipoConteudoAtivo == TipoConteudoEdicao.ComplementoNovo;
+            var compExistente = tipoConteudoAtivo == TipoConteudoEdicao.ComplementoExistente;
+            var sair = destino == Acao.Sair;
+            tituloPopup = (sair ? "Sair" : "Voltar") + (compNovo ? " sem confirmar o complemento?" : compExistente ? " sem confirmar a edição do complemento?" : " sem confirmar a edição?");
+            mensagemPopup = (compNovo
+                ? sair ? "O complemento que você está escrevendo ainda não foi confirmado. Se sair agora, esse texto será perdido e sua sessão será encerrada." : "O complemento que você está escrevendo ainda não foi confirmado. Se voltar agora, esse texto será perdido."
+                : sair ? "As alterações feitas " + (compExistente ? "neste complemento" : "nesta memória") + " ainda não foram confirmadas. Se sair agora, elas serão perdidas e sua sessão será encerrada." : "As alterações feitas " + (compExistente ? "neste complemento" : "nesta memória") + " ainda não foram confirmadas. Se voltar agora, elas serão perdidas.");
+            textoConfirmar = sair ? "Sair sem confirmar" : "Voltar sem confirmar";
+            textoCancelar = compNovo ? "Continuar escrevendo" : "Continuar editando";
+            classeConfirmar = "is-danger"; classeCancelar = "is-link";
+        } else if (destino == Acao.Sair) {
+            tituloPopup = "Sair do Rememore?"; mensagemPopup = "Deseja encerrar sua sessão?";
+            textoConfirmar = "Sair"; textoCancelar = "Cancelar"; classeConfirmar = "is-link"; classeCancelar = "is-light";
+        } else { VoltarCaptura(); return Task.CompletedTask; }
+        popup = true; return Task.CompletedTask;
+    }
+    private async Task ResponderPopupAsync(RespostaPopup r) { popup = false; if (r != RespostaPopup.Confirmacao) return; if (acao == Acao.Voltar) VoltarCaptura(); else { await EstadoAutenticacao.EncerrarSessaoAsync(); Navegacao.NavigateTo(Navegacao.BaseUri); } }
+    private void VoltarCaptura() => Navegacao.NavigateTo($"capturar/{Uri.EscapeDataString(DataRota)}");
+}
