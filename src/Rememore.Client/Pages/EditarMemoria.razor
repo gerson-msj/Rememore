@@ -2,6 +2,7 @@
 @attribute [Authorize]
 @using Rememore.Client.Infraestrutura.Capturar
 @using Rememore.Client.Infraestrutura.TrabalhoLocal
+@using System.Globalization
 @inject NavigationManager Navegacao
 @inject EstadoAutenticacaoProvider EstadoAutenticacao
 @inject AberturaCaptura Abertura
@@ -10,7 +11,19 @@
 <main class="container is-max-desktop">
     <CabecalhoPagina Titulo="Editar Memória" MostrarVoltar MostrarSair
                      AoRetornar="SolicitarVoltarAsync" AoSair="SolicitarSairAsync" />
-    <div class="editar-memoria__espacador-cabecalho" aria-hidden="true"></div>
+    @if (dataCaptura is { } data)
+    {
+        <div class="editar-memoria__barra-data">
+            <div class="editar-memoria__linha-data">
+                <time class="subtitle is-6 has-text-weight-medium" datetime="@data.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">@data.ToString("dddd, d 'de' MMMM 'de' yyyy", CultureInfo.GetCultureInfo("pt-BR"))</time>
+            </div>
+        </div>
+        <div class="editar-memoria__espacador-data" aria-hidden="true"></div>
+    }
+    else
+    {
+        <div class="editar-memoria__espacador-cabecalho" aria-hidden="true"></div>
+    }
     @if (!pronta)
     {
         <p class="section" role="status">Preparando memória…</p>
@@ -20,7 +33,6 @@
         <div class="section"><p role="alert">Não foi possível abrir esta memória.</p>
             <button class="button is-link" @onclick="VoltarCaptura">Voltar à captura</button></div>
     }
-    else { <div class="section" aria-live="polite"></div> }
 </main>
 <Popup Aberto="popup" Titulo="@tituloPopup" Mensagem="@mensagemPopup"
        TextoConfirmar="@textoConfirmar" TextoCancelar="@textoCancelar"
@@ -35,15 +47,19 @@
     private TipoConteudoEdicao tipoConteudoAtivo { get; set; } = TipoConteudoEdicao.Nenhum;
     private bool alteracaoNaoConfirmada { get; set; }
     private MemoriaCapturaLocal? memoria;
+    private DateOnly? dataCaptura;
     private bool pronta, popup;
     private Acao acao;
     private string tituloPopup = "", mensagemPopup = "", textoConfirmar = "", textoCancelar = "", classeConfirmar = "", classeCancelar = "";
     protected override async Task OnParametersSetAsync() {
-        pronta = false; memoria = null;
+        pronta = false; memoria = null; dataCaptura = null;
         if (!DateOnly.TryParseExact(DataRota, "yyyy-MM-dd", out var data) || data > DateOnly.FromDateTime(DateTime.Today) || EstadoAutenticacao.IdentidadeConta is not { } conta) { pronta = true; return; }
         var resultado = await Abertura.AbrirAsync(conta, data, true);
         if (resultado.Estado == EstadoAberturaCaptura.Aberta && resultado.Workspace is { } w && w.IdentidadeConta == conta && w.Data == data)
+        {
             memoria = w.Memorias.SingleOrDefault(m => m.Identidade == Uri.UnescapeDataString(IdentidadeMemoria));
+            if (memoria is not null) dataCaptura = data;
+        }
         pronta = true;
     }
     private Task SolicitarVoltarAsync() => SolicitarAsync(Acao.Voltar);

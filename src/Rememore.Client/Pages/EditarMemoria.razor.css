@@ -1,3 +1,27 @@
 .editar-memoria__espacador-cabecalho {
     height: 4rem;
 }
+
+.editar-memoria__barra-data {
+    position: fixed;
+    inset: 4rem 0 auto;
+    z-index: 29;
+    background: var(--cor-main);
+}
+
+.editar-memoria__linha-data {
+    display: flex;
+    align-items: center;
+    width: min(100%, 60rem);
+    min-height: 2.75rem;
+    margin-inline: auto;
+    padding-inline: clamp(1rem, 4vw, 2.5rem);
+}
+
+.editar-memoria__linha-data > time {
+    margin: 0;
+}
+
+.editar-memoria__espacador-data {
+    height: 6.75rem;
+}
