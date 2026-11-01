@@ -9,7 +9,15 @@ public sealed record ResultadoLocal<T>(EstadoOperacaoLocal Estado, T? Valor = de
     public bool Sucesso => Estado == EstadoOperacaoLocal.Sucesso;
 }
 
-public sealed record MemoriaCapturaLocal(string Identidade, string Conteudo, int Ordem);
+public sealed record ComplementoCapturaLocal(
+    string Identidade, string Conteudo, int Ordem, DateTimeOffset? PrimeiraPreservacaoUtc = null,
+    bool TemporalidadeConhecida = false);
+
+public sealed record MemoriaCapturaLocal(
+    string Identidade, string Conteudo, int Ordem,
+    DateTimeOffset? PrimeiraPreservacaoUtc = null,
+    bool TemporalidadeConhecida = false,
+    IReadOnlyList<ComplementoCapturaLocal>? Complementos = null);
 
 public enum OrigemCapturaLocal { Desconhecida, Ausente, Presente }
 
@@ -32,4 +40,6 @@ public interface ICapturasLocais
     Task<ResultadoLocal<bool>> GravarSeLimpoAsync(WorkspaceCapturaLocal captura);
     Task<ResultadoLocal<WorkspaceCapturaLocal>> MarcarAlteradoAsync(string identidadeConta, DateOnly data);
     Task<ResultadoLocal<bool>> RemoverSeAlteradoAsync(string identidadeConta, DateOnly data);
+    Task<ResultadoLocal<WorkspaceCapturaLocal>> ConfirmarEdicaoMemoriaAsync(string identidadeConta, DateOnly data, string identidadeMemoria, string conteudoAnterior, string novoConteudo);
+    Task<ResultadoLocal<WorkspaceCapturaLocal>> ExcluirMemoriaSemComplementosAsync(string identidadeConta, DateOnly data, string identidadeMemoria, string conteudoConfirmado);
 }

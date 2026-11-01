@@ -21,5 +21,9 @@
     <Compile Include="../../src/Rememore.Client/Componentes/ModeloJanelaTemporal.cs" Link="Componentes/ModeloJanelaTemporal.cs" />
     <Compile Include="../../src/Rememore.Client/Componentes/CalculosOndaUtilizacaoCategoria.cs" Link="Componentes/CalculosOndaUtilizacaoCategoria.cs" />
     <Compile Include="../../src/Rememore.Client/Componentes/CalculosVariacaoTomCategoria.cs" Link="Componentes/CalculosVariacaoTomCategoria.cs" />
+    <Compile Include="../../src/Rememore.Client/Infraestrutura/TrabalhoLocal/ContratosTrabalhoLocal.cs" Link="Infraestrutura/ContratosTrabalhoLocal.cs" />
+    <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/ComposicaoCapturaRemota.cs" Link="Infraestrutura/ComposicaoCapturaRemota.cs" />
+    <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/RegraEdicaoMemoria.cs" Link="Infraestrutura/RegraEdicaoMemoria.cs" />
+    <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/EstadoEdicaoMemoria.cs" Link="Infraestrutura/EstadoEdicaoMemoria.cs" />
   </ItemGroup>
 </Project>

@@ -252,6 +252,36 @@ sealed class CapturasEmMemoria : IDiagnosticoTrabalhoLocal, ICapturasLocais
             ? new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Sucesso,
                 Capturas[(identidadeConta, data)] = captura with { Alterado = true })
             : new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Ausente));
+    public Task<ResultadoLocal<WorkspaceCapturaLocal>> ConfirmarEdicaoMemoriaAsync(string identidadeConta, DateOnly data, string identidadeMemoria, string conteudoAnterior, string novoConteudo)
+    {
+        if (FalharGravacao || !Capturas.TryGetValue((identidadeConta, data), out var captura))
+            return Task.FromResult(new ResultadoLocal<WorkspaceCapturaLocal>(FalharGravacao ? EstadoOperacaoLocal.Falha : EstadoOperacaoLocal.Ausente));
+        var memoria = captura.Memorias.SingleOrDefault(m => m.Identidade == identidadeMemoria);
+        if (memoria is null || memoria.Conteudo != conteudoAnterior || string.IsNullOrWhiteSpace(novoConteudo))
+            return Task.FromResult(new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Falha));
+        var atualizado = captura with
+        {
+            Alterado = true,
+            Memorias = captura.Memorias.Select(m => m.Identidade == identidadeMemoria ? m with { Conteudo = novoConteudo } : m).ToArray()
+        };
+        Gravacoes++;
+        Capturas[(identidadeConta, data)] = atualizado;
+        return Task.FromResult(new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Sucesso, atualizado));
+    }
+    public Task<ResultadoLocal<WorkspaceCapturaLocal>> ExcluirMemoriaSemComplementosAsync(string identidadeConta, DateOnly data, string identidadeMemoria, string conteudoConfirmado)
+    {
+        if (!Capturas.TryGetValue((identidadeConta, data), out var captura))
+            return Task.FromResult(new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Ausente));
+        var memoria = captura.Memorias.SingleOrDefault(m => m.Identidade == identidadeMemoria);
+        if (memoria is null || memoria.Conteudo != conteudoConfirmado)
+            return Task.FromResult(new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Falha));
+        if (memoria.Complementos is { Count: > 0 })
+            return Task.FromResult(new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Falha, Falha: new("exclusao", "PossuiComplementos")));
+        var atualizado = captura with { Alterado = true, Memorias = captura.Memorias.Where(m => m.Identidade != identidadeMemoria).ToArray() };
+        Gravacoes++;
+        Capturas[(identidadeConta, data)] = atualizado;
+        return Task.FromResult(new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Sucesso, atualizado));
+    }
     public Task<ResultadoLocal<IReadOnlyList<WorkspaceCapturaLocal>>> ConsultarAsync(string identidadeConta) => Task.FromResult(
         new ResultadoLocal<IReadOnlyList<WorkspaceCapturaLocal>>(EstadoOperacaoLocal.Sucesso,
             Capturas.Values.Where(captura => captura.IdentidadeConta == identidadeConta).ToArray()));

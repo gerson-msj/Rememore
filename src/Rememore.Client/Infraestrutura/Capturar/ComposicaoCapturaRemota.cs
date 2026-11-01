@@ -15,6 +15,19 @@ public interface IComposicaoCapturaRemota
     Task<ComposicaoCapturaRemota> ObterCompletaAsync(string identidadeConta, DateOnly data);
 }
 
+public sealed record ConfiguracaoCapturar(int PrazoEdicaoMemoriaDias);
+
+public interface IConfiguracaoCapturar
+{
+    Task<ConfiguracaoCapturar?> ObterAsync();
+}
+
+public sealed class ConfiguracaoCapturarSimulada : IConfiguracaoCapturar
+{
+    public ConfiguracaoCapturar? Atual { get; set; } = new(3);
+    public Task<ConfiguracaoCapturar?> ObterAsync() => Task.FromResult(Atual);
+}
+
 public sealed class ComposicaoCapturaRemotaSimulada : IComposicaoCapturaRemota
 {
     private readonly Dictionary<(string Conta, DateOnly Data), ComposicaoCapturaRemota> dados = [];

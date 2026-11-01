@@ -36,6 +36,14 @@ function validarCaptura(captura) {
     for (const memoria of captura.memorias) {
         if (typeof memoria.identidade !== "string" || !memoria.identidade.trim() || identidades.has(memoria.identidade)
             || typeof memoria.conteudo !== "string" || !Number.isInteger(memoria.ordem)) throw new TypeError("Memoria invalida.");
+        if (memoria.temporalidadeConhecida != null && typeof memoria.temporalidadeConhecida !== "boolean") throw new TypeError("Temporalidade de memoria invalida.");
+        if (memoria.primeiraPreservacaoUtc != null && (typeof memoria.primeiraPreservacaoUtc !== "string" || !Number.isFinite(Date.parse(memoria.primeiraPreservacaoUtc)))) throw new TypeError("Marco de preservacao invalido.");
+        if (memoria.complementos != null && !Array.isArray(memoria.complementos)) throw new TypeError("Complementos invalidos.");
+        if (memoria.temporalidadeConhecida === true && !Array.isArray(memoria.complementos)) throw new TypeError("Metadados completos ausentes.");
+        for (const complemento of memoria.complementos ?? []) {
+            if (typeof complemento.identidade !== "string" || !complemento.identidade.trim() || typeof complemento.conteudo !== "string" || !Number.isInteger(complemento.ordem)
+                || (complemento.primeiraPreservacaoUtc != null && (typeof complemento.primeiraPreservacaoUtc !== "string" || !Number.isFinite(Date.parse(complemento.primeiraPreservacaoUtc))))) throw new TypeError("Complemento invalido.");
+        }
         identidades.add(memoria.identidade);
     }
 }
@@ -132,4 +140,44 @@ export function consultar(identidadeConta) {
             const pedido = transacao.objectStore("capturas").index("porConta").getAll(identidadeConta);
             pedido.onsuccess = () => concluir({ estado: "sucesso", valor: pedido.result });
         }));
+}
+
+export function confirmarEdicaoMemoria(identidadeConta, data, identidadeMemoria, conteudoAnterior, novoConteudo) {
+    return operacaoValidada("edicaoMemoria", () => {
+        validarChave(identidadeConta, data);
+        if (typeof identidadeMemoria !== "string" || !identidadeMemoria.trim() || typeof conteudoAnterior !== "string" || typeof novoConteudo !== "string" || !novoConteudo.trim()) throw new TypeError("Edicao de memoria invalida.");
+    }, (banco) => transacionar(banco, ["capturas"], "readwrite", "edicaoMemoria", (transacao, concluir) => {
+        const store = transacao.objectStore("capturas");
+        const pedido = store.get([identidadeConta, data]);
+        pedido.onsuccess = () => {
+            const captura = pedido.result;
+            const memoria = captura?.memorias?.find(item => item.identidade === identidadeMemoria);
+            if (!captura || !memoria || memoria.conteudo !== conteudoAnterior) { concluir(falha("edicaoMemoria", { name: "MemoriaAlterada" })); return; }
+            const memorias = captura.memorias.map(item => item.identidade === identidadeMemoria ? { ...item, conteudo: novoConteudo } : item);
+            const atualizado = { ...captura, alterado: true, memorias };
+            store.put(atualizado);
+            concluir({ estado: "sucesso", valor: atualizado });
+        };
+    }));
+}
+
+export function excluirMemoriaSemComplementos(identidadeConta, data, identidadeMemoria, conteudoConfirmado) {
+    return operacaoValidada("exclusaoMemoria", () => {
+        validarChave(identidadeConta, data);
+        if (typeof identidadeMemoria !== "string" || !identidadeMemoria.trim() || typeof conteudoConfirmado !== "string") throw new TypeError("Exclusao de memoria invalida.");
+    }, (banco) => transacionar(banco, ["capturas"], "readwrite", "exclusaoMemoria", (transacao, concluir) => {
+        const store = transacao.objectStore("capturas");
+        const pedido = store.get([identidadeConta, data]);
+        pedido.onsuccess = () => {
+            const captura = pedido.result;
+            const memoria = captura?.memorias?.find(item => item.identidade === identidadeMemoria);
+            if (!captura || !memoria || memoria.conteudo !== conteudoConfirmado) { concluir(falha("exclusaoMemoria", { name: "MemoriaAlterada" })); return; }
+            if (memoria.temporalidadeConhecida !== true || !Array.isArray(memoria.complementos)) { concluir(falha("exclusaoMemoria", { name: "MetadadosAusentes" })); return; }
+            if (memoria.complementos.length !== 0) { concluir(falha("exclusaoMemoria", { name: "PossuiComplementos" })); return; }
+            const memorias = captura.memorias.filter(item => item.identidade !== identidadeMemoria).map((item, ordem) => ({ ...item, ordem }));
+            const atualizado = { ...captura, alterado: true, memorias };
+            store.put(atualizado);
+            concluir({ estado: "sucesso", valor: atualizado });
+        };
+    }));
 }

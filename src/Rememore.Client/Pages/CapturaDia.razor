@@ -431,7 +431,8 @@
         {
             var memorias = workspace.Memorias.ToList();
             var ordem = memorias.Count == 0 ? 0 : memorias.Max(memoria => memoria.Ordem) + 1;
-            memorias.Add(new(Guid.NewGuid().ToString("N"), textoInclusao, ordem));
+            memorias.Add(new(Guid.NewGuid().ToString("N"), textoInclusao, ordem,
+                PrimeiraPreservacaoUtc: null, TemporalidadeConhecida: true, Complementos: []));
             var atualizado = workspace with { Alterado = true, Memorias = memorias };
             var gravacao = await CapturasLocais.GravarAsync(atualizado);
             if (!gravacao.Sucesso)

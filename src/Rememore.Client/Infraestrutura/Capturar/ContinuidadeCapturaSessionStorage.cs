@@ -3,6 +3,7 @@ using Microsoft.JSInterop;
 namespace Rememore.Client.Infraestrutura.Capturar;
 
 public sealed record RascunhoInclusaoCaptura(bool InclusaoAberta, string Texto);
+public sealed record RascunhoEdicaoMemoria(string Texto, bool AutorizacaoConcedida);
 
 public sealed class ContinuidadeCapturaSessionStorage(IJSRuntime js) : IAsyncDisposable
 {
@@ -57,6 +58,24 @@ public sealed class ContinuidadeCapturaSessionStorage(IJSRuntime js) : IAsyncDis
     public async Task LimparRascunhoAsync()
     {
         try { await (await GarantirModuloAsync()).InvokeVoidAsync("limparRascunho"); }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException) { }
+    }
+
+    public async Task RegistrarEdicaoMemoriaAsync(string identidadeConta, DateOnly data, string identidadeMemoria, string texto, bool autorizacaoConcedida)
+    {
+        try { await (await GarantirModuloAsync()).InvokeVoidAsync("registrarEdicaoMemoria", identidadeConta, data.ToString("yyyy-MM-dd"), identidadeMemoria, texto, autorizacaoConcedida); }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException) { }
+    }
+
+    public async Task<RascunhoEdicaoMemoria?> RecuperarEdicaoMemoriaAsync(string identidadeConta, DateOnly data, string identidadeMemoria)
+    {
+        try { return await (await GarantirModuloAsync()).InvokeAsync<RascunhoEdicaoMemoria?>("recuperarEdicaoMemoria", identidadeConta, data.ToString("yyyy-MM-dd"), identidadeMemoria); }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException) { return null; }
+    }
+
+    public async Task LimparEdicaoMemoriaAsync(string identidadeConta, DateOnly data, string identidadeMemoria)
+    {
+        try { await (await GarantirModuloAsync()).InvokeVoidAsync("limparEdicaoMemoria", identidadeConta, data.ToString("yyyy-MM-dd"), identidadeMemoria); }
         catch (Exception ex) when (ex is JSException or InvalidOperationException) { }
     }
 

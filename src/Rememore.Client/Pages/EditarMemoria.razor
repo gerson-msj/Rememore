@@ -1,14 +1,21 @@
 @page "/editar-memoria/{DataRota}/{IdentidadeMemoria}"
 @attribute [Authorize]
+@implements IAsyncDisposable
 @using Rememore.Client.Infraestrutura.Capturar
 @using Rememore.Client.Infraestrutura.TrabalhoLocal
 @using System.Globalization
+@using Microsoft.JSInterop
 @inject NavigationManager Navegacao
 @inject EstadoAutenticacaoProvider EstadoAutenticacao
 @inject AberturaCaptura Abertura
+@inject ICapturasLocais CapturasLocais
+@inject IConfiguracaoCapturar Configuracao
+@inject ContinuidadeCapturaSessionStorage Continuidade
+@inject TimeProvider Relogio
 
 <PageTitle>Editar Memória</PageTitle>
 <main class="container is-max-desktop">
+    <NavigationLock ConfirmExternalNavigation="@EstadoReal.ExigeConfirmacaoDeSaida" />
     <CabecalhoPagina Titulo="Editar Memória" MostrarVoltar MostrarSair
                      AoRetornar="SolicitarVoltarAsync" AoSair="SolicitarSairAsync" />
     @if (dataCaptura is { } data)
@@ -33,40 +40,163 @@
         <div class="section"><p role="alert">Não foi possível abrir esta memória.</p>
             <button class="button is-link" @onclick="VoltarCaptura">Voltar à captura</button></div>
     }
+    else
+    {
+        <section class="editar-memoria__conteudo">
+            @if (!string.IsNullOrEmpty(erroContexto))
+            {
+                <div class="notification is-warning" role="alert">@erroContexto</div>
+            }
+            <label class="label" for="texto-memoria">Memória</label>
+            <textarea id="texto-memoria" class="textarea editar-memoria__campo" rows="5" readonly="@(!EstadoReal.PermiteEditar)" value="@texto" @oninput="TextoAlterado"></textarea>
+            @if (falhaOperacao && !string.IsNullOrEmpty(mensagemOperacao))
+            {
+                <div class="notification is-danger" role="alert">@mensagemOperacao</div>
+            }
+            <div class="buttons is-right editar-memoria__acoes">
+                @if (EstadoReal.PermiteEditar)
+                {
+                    <button class="button is-link" type="button" disabled="@(!EstadoReal.PermiteConfirmar)" @onclick="ConfirmarMemoriaAsync">
+                        <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-check"></i></span><span>Confirmar Memória</span>
+                    </button>
+                }
+                @if (EstadoReal.PermiteExcluirMemoria)
+                {
+                    <button class="button is-danger is-light" type="button" @onclick="AbrirExclusao">
+                        <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-trash"></i></span><span>Excluir Memória</span>
+                    </button>
+                }
+            </div>
+        </section>
+    }
 </main>
 <Popup Aberto="popup" Titulo="@tituloPopup" Mensagem="@mensagemPopup"
        TextoConfirmar="@textoConfirmar" TextoCancelar="@textoCancelar"
        ClasseBotaoConfirmar="@classeConfirmar" ClasseBotaoCancelar="@classeCancelar"
        AoResponder="ResponderPopupAsync" />
+<Popup Aberto="popupSucesso" Mensagem="@mensagemPopupSucesso" TextoConfirmar="Ok" AoResponder="FecharPopupSucessoAsync" />
 
 @code {
     [Parameter] public string DataRota { get; set; } = "";
     [Parameter] public string IdentidadeMemoria { get; set; } = "";
     private enum TipoConteudoEdicao { Nenhum, MemoriaPrincipal, ComplementoNovo, ComplementoExistente }
-    private enum Acao { Nenhuma, Voltar, Sair }
+    private enum Acao { Nenhuma, Voltar, Sair, Excluir }
     private TipoConteudoEdicao tipoConteudoAtivo { get; set; } = TipoConteudoEdicao.Nenhum;
     private bool alteracaoNaoConfirmada { get; set; }
     private MemoriaCapturaLocal? memoria;
     private DateOnly? dataCaptura;
     private bool pronta, popup;
+    private bool popupSucesso;
     private Acao acao;
+    private string texto = "", textoConfirmado = "", identidadeConta = "", erroContexto = "", mensagemOperacao = "";
+    private bool autorizada, operacaoEmAndamento, falhaOperacao;
+    private CancellationTokenSource? debounceRascunho;
+    private bool Sujo => EstadoReal.ExigeConfirmacaoDeSaida;
+    private bool TextoValido => !string.IsNullOrWhiteSpace(texto);
+    private bool ComplementosConhecidos => memoria?.Complementos is not null;
+    private int QuantidadeComplementos => memoria?.Complementos?.Count ?? 0;
+    private bool CapturaFoiAlterada { get; set; }
+    private EstadoEdicaoMemoria EstadoReal => ResolutorEstadoEdicaoMemoria.Resolver(new(
+        string.IsNullOrEmpty(erroContexto) && ComplementosConhecidos, autorizada, TextoValido, texto != textoConfirmado,
+        ComplementosConhecidos, QuantidadeComplementos, operacaoEmAndamento, CapturaFoiAlterada));
     private string tituloPopup = "", mensagemPopup = "", textoConfirmar = "", textoCancelar = "", classeConfirmar = "", classeCancelar = "";
+    private string mensagemPopupSucesso = "";
     protected override async Task OnParametersSetAsync() {
-        pronta = false; memoria = null; dataCaptura = null;
+        pronta = false; memoria = null; dataCaptura = null; autorizada = false; erroContexto = ""; mensagemOperacao = "";
         if (!DateOnly.TryParseExact(DataRota, "yyyy-MM-dd", out var data) || data > DateOnly.FromDateTime(DateTime.Today) || EstadoAutenticacao.IdentidadeConta is not { } conta) { pronta = true; return; }
+        identidadeConta = conta;
         var resultado = await Abertura.AbrirAsync(conta, data, true);
         if (resultado.Estado == EstadoAberturaCaptura.Aberta && resultado.Workspace is { } w && w.IdentidadeConta == conta && w.Data == data)
         {
+            CapturaFoiAlterada = w.Alterado;
             memoria = w.Memorias.SingleOrDefault(m => m.Identidade == Uri.UnescapeDataString(IdentidadeMemoria));
-            if (memoria is not null) dataCaptura = data;
+            if (memoria is not null)
+            {
+                dataCaptura = data;
+                textoConfirmado = memoria.Conteudo;
+                texto = textoConfirmado;
+                var configuracao = await Configuracao.ObterAsync();
+                if (configuracao is null || configuracao.PrazoEdicaoMemoriaDias <= 0)
+                    erroContexto = "Não foi possível validar o prazo de edição desta memória.";
+                else
+                {
+                    var rascunho = await Continuidade.RecuperarEdicaoMemoriaAsync(conta, data, memoria.Identidade);
+                    var autorizacao = RegraEdicaoMemoria.Resolver(memoria, configuracao, Relogio.GetUtcNow(), rascunho?.AutorizacaoConcedida);
+                    if (!autorizacao.DadosValidos) erroContexto = "Os dados temporais desta memória estão incompletos. Ela foi aberta somente para leitura.";
+                    else
+                    {
+                        autorizada = autorizacao.Concedida;
+                        if (rascunho is not null) texto = rascunho.Texto;
+                        else await Continuidade.RegistrarEdicaoMemoriaAsync(conta, data, memoria.Identidade, textoConfirmado, autorizada);
+                    }
+                }
+            }
         }
+        else erroContexto = "Não foi possível abrir esta memória nesta captura.";
         pronta = true;
+    }
+    private void TextoAlterado(ChangeEventArgs args)
+    {
+        texto = args.Value?.ToString() ?? ""; tipoConteudoAtivo = TipoConteudoEdicao.MemoriaPrincipal; alteracaoNaoConfirmada = Sujo; mensagemOperacao = ""; AgendarRascunho();
+    }
+    private void AgendarRascunho()
+    {
+        debounceRascunho?.Cancel(); debounceRascunho?.Dispose(); debounceRascunho = new(); var token = debounceRascunho.Token;
+        var textoAtual = texto; var autorizadoAtual = autorizada; var contaAtual = identidadeConta; var dataAtual = dataCaptura; var idAtual = memoria?.Identidade;
+        _ = Task.Run(async () => { try { await Task.Delay(300, token); if (dataAtual is { } data && idAtual is not null) await Continuidade.RegistrarEdicaoMemoriaAsync(contaAtual, data, idAtual, textoAtual, autorizadoAtual); } catch (OperationCanceledException) { } });
+    }
+    private async Task ConfirmarMemoriaAsync()
+    {
+        if (!autorizada || !TextoValido || operacaoEmAndamento || memoria is null || dataCaptura is null) return;
+        if (!Sujo) return;
+        CancelarDebounceRascunho();
+        operacaoEmAndamento = true; mensagemOperacao = "";
+        try
+        {
+            var gravacao = await CapturasLocais.ConfirmarEdicaoMemoriaAsync(identidadeConta, dataCaptura.Value, memoria.Identidade, textoConfirmado, texto);
+            if (!gravacao.Sucesso || gravacao.Valor is not { } atualizado) { Falhar("A memória mudou ou não foi possível confirmar. Seu texto continua protegido; tente novamente."); return; }
+            memoria = atualizado.Memorias.Single(m => m.Identidade == memoria.Identidade); textoConfirmado = texto; alteracaoNaoConfirmada = false;
+            await Continuidade.LimparEdicaoMemoriaAsync(identidadeConta, dataCaptura.Value, memoria.Identidade);
+            mensagemOperacao = ""; falhaOperacao = false;
+            mensagemPopupSucesso = "Memória confirmada."; popupSucesso = true;
+        }
+        catch (Exception) { Falhar("Não foi possível confirmar a memória. Seu texto continua protegido; tente novamente."); }
+        finally
+        {
+            operacaoEmAndamento = false;
+            if (falhaOperacao && memoria is not null && dataCaptura is not null)
+                await Continuidade.RegistrarEdicaoMemoriaAsync(identidadeConta, dataCaptura.Value, memoria.Identidade, texto, autorizada);
+        }
+    }
+    private void Falhar(string mensagem) { mensagemOperacao = mensagem; falhaOperacao = true; }
+    private Task FecharPopupSucessoAsync(RespostaPopup _) { popupSucesso = false; return Task.CompletedTask; }
+    private void AbrirExclusao()
+    {
+        if (memoria is null || operacaoEmAndamento || Sujo || !ComplementosConhecidos || QuantidadeComplementos != 0) return;
+        acao = Acao.Excluir;
+        tituloPopup = "Excluir esta memória?";
+        mensagemPopup = "Esta memória será removida desta captura. A versão já preservada, se existir, só será alterada quando você preservar este dia.";
+        textoConfirmar = "Excluir memória"; textoCancelar = "Cancelar"; classeConfirmar = "is-danger"; classeCancelar = "is-light"; popup = true;
+    }
+    private async Task ExcluirMemoriaAsync()
+    {
+        if (memoria is null || dataCaptura is null || operacaoEmAndamento || Sujo || !ComplementosConhecidos || QuantidadeComplementos != 0) return;
+        CancelarDebounceRascunho();
+        operacaoEmAndamento = true;
+        try
+        {
+            var resultado = await CapturasLocais.ExcluirMemoriaSemComplementosAsync(identidadeConta, dataCaptura.Value, memoria.Identidade, textoConfirmado);
+            if (!resultado.Sucesso) { Falhar(resultado.Falha?.Codigo == "PossuiComplementos" ? "Esta memória possui complementos e não pode ser excluída nesta etapa." : "A memória mudou ou não foi possível excluí-la. Tente novamente."); return; }
+            await Continuidade.LimparEdicaoMemoriaAsync(identidadeConta, dataCaptura.Value, memoria.Identidade);
+            Navegacao.NavigateTo($"capturar/{Uri.EscapeDataString(DataRota)}");
+        }
+        finally { operacaoEmAndamento = false; }
     }
     private Task SolicitarVoltarAsync() => SolicitarAsync(Acao.Voltar);
     private Task SolicitarSairAsync() => SolicitarAsync(Acao.Sair);
-    private Task SolicitarAsync(Acao destino) {
+    private async Task SolicitarAsync(Acao destino) {
         acao = destino;
-        if (alteracaoNaoConfirmada) {
+        if (Sujo) {
             var compNovo = tipoConteudoAtivo == TipoConteudoEdicao.ComplementoNovo;
             var compExistente = tipoConteudoAtivo == TipoConteudoEdicao.ComplementoExistente;
             var sair = destino == Acao.Sair;
@@ -80,9 +210,33 @@
         } else if (destino == Acao.Sair) {
             tituloPopup = "Sair do Rememore?"; mensagemPopup = "Deseja encerrar sua sessão?";
             textoConfirmar = "Sair"; textoCancelar = "Cancelar"; classeConfirmar = "is-link"; classeCancelar = "is-light";
-        } else { VoltarCaptura(); return Task.CompletedTask; }
-        popup = true; return Task.CompletedTask;
+        } else {
+            if (destino == Acao.Voltar) {
+                CancelarDebounceRascunho();
+                if (memoria is not null && dataCaptura is not null) await Continuidade.LimparEdicaoMemoriaAsync(identidadeConta, dataCaptura.Value, memoria.Identidade);
+                VoltarCaptura(); return;
+            }
+        }
+        popup = true;
     }
-    private async Task ResponderPopupAsync(RespostaPopup r) { popup = false; if (r != RespostaPopup.Confirmacao) return; if (acao == Acao.Voltar) VoltarCaptura(); else { await EstadoAutenticacao.EncerrarSessaoAsync(); Navegacao.NavigateTo(Navegacao.BaseUri); } }
+    private async Task ResponderPopupAsync(RespostaPopup r)
+    {
+        popup = false;
+        if (r != RespostaPopup.Confirmacao) return;
+        CancelarDebounceRascunho();
+        if (acao == Acao.Excluir) { await ExcluirMemoriaAsync(); return; }
+        if (alteracaoNaoConfirmada && memoria is not null && dataCaptura is not null)
+            await Continuidade.LimparEdicaoMemoriaAsync(identidadeConta, dataCaptura.Value, memoria.Identidade);
+        if (memoria is not null && dataCaptura is not null)
+            await Continuidade.LimparEdicaoMemoriaAsync(identidadeConta, dataCaptura.Value, memoria.Identidade);
+        if (acao == Acao.Voltar) VoltarCaptura();
+        else { await EstadoAutenticacao.EncerrarSessaoAsync(); Navegacao.NavigateTo(Navegacao.BaseUri); }
+    }
     private void VoltarCaptura() => Navegacao.NavigateTo($"capturar/{Uri.EscapeDataString(DataRota)}");
+    private void CancelarDebounceRascunho() { debounceRascunho?.Cancel(); debounceRascunho?.Dispose(); debounceRascunho = null; }
+    public ValueTask DisposeAsync()
+    {
+        CancelarDebounceRascunho();
+        return ValueTask.CompletedTask;
+    }
 }

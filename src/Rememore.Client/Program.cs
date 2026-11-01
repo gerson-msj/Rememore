@@ -37,6 +37,8 @@ builder.Services.AddScoped<ICapacidadesAmbiente>(servicos => servicos.GetRequire
 builder.Services.AddScoped<IPendenciaCapturaLocal, PendenciaCapturaLocalIndexedDb>();
 builder.Services.AddScoped<ComposicaoCapturaRemotaSimulada>();
 builder.Services.AddScoped<IComposicaoCapturaRemota>(servicos => servicos.GetRequiredService<ComposicaoCapturaRemotaSimulada>());
+builder.Services.AddScoped<ConfiguracaoCapturarSimulada>();
+builder.Services.AddScoped<IConfiguracaoCapturar>(servicos => servicos.GetRequiredService<ConfiguracaoCapturarSimulada>());
 builder.Services.AddScoped<AberturaCaptura>();
 builder.Services.AddScoped<ContinuidadeCapturaSessionStorage>();
 builder.Services.AddScoped<ConfirmacaoChavePendente>();
