@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../EstadoAutenticacaoProviderSimulado.cs" Link="EstadoAutenticacaoProviderSimulado.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/TrabalhoLocal/ContratosTrabalhoLocal.cs" Link="ContratosTrabalhoLocal.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/AberturaCaptura.cs" Link="AberturaCaptura.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/ComposicaoCapturaRemota.cs" Link="ComposicaoCapturaRemota.cs" />

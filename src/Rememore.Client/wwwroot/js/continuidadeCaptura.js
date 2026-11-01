@@ -38,8 +38,8 @@ export function limparRascunho() {
     catch { }
 }
 
-export function registrarEdicaoMemoria(identidadeConta, data, identidadeMemoria, texto, autorizacaoConcedida) {
-    try { sessionStorage.setItem(chaveEdicaoMemoria, JSON.stringify({ identidadeConta, data, identidadeMemoria, texto, autorizacaoConcedida })); } catch { }
+export function registrarEdicaoMemoria(identidadeConta, data, identidadeMemoria, tipo, identidadeComplemento, texto, autorizacaoConcedida) {
+    try { sessionStorage.setItem(chaveEdicaoMemoria, JSON.stringify({ identidadeConta, data, identidadeMemoria, tipo, identidadeComplemento, texto, autorizacaoConcedida })); } catch { }
 }
 
 export function recuperarEdicaoMemoria(identidadeConta, data, identidadeMemoria) {
@@ -49,7 +49,11 @@ export function recuperarEdicaoMemoria(identidadeConta, data, identidadeMemoria)
         if (navegacao?.type !== "reload" || rascunho?.identidadeConta !== identidadeConta || rascunho?.data !== data
             || rascunho?.identidadeMemoria !== identidadeMemoria || typeof rascunho.texto !== "string"
             || typeof rascunho.autorizacaoConcedida !== "boolean") return null;
-        return { texto: rascunho.texto, autorizacaoConcedida: rascunho.autorizacaoConcedida };
+        const tipo = rascunho.tipo ?? "MemoriaPrincipal";
+        if (!["MemoriaPrincipal", "ComplementoExistente", "ComplementoNovo"].includes(tipo)
+            || (tipo === "ComplementoExistente" && typeof rascunho.identidadeComplemento !== "string")
+            || (tipo !== "ComplementoExistente" && rascunho.identidadeComplemento != null)) return null;
+        return { texto: rascunho.texto, autorizacaoConcedida: rascunho.autorizacaoConcedida, tipo, identidadeComplemento: rascunho.identidadeComplemento ?? null };
     } catch { return null; }
 }
 

@@ -40,12 +40,32 @@ function validarCaptura(captura) {
         if (memoria.primeiraPreservacaoUtc != null && (typeof memoria.primeiraPreservacaoUtc !== "string" || !Number.isFinite(Date.parse(memoria.primeiraPreservacaoUtc)))) throw new TypeError("Marco de preservacao invalido.");
         if (memoria.complementos != null && !Array.isArray(memoria.complementos)) throw new TypeError("Complementos invalidos.");
         if (memoria.temporalidadeConhecida === true && !Array.isArray(memoria.complementos)) throw new TypeError("Metadados completos ausentes.");
+        const identidadesComplementos = new Set();
         for (const complemento of memoria.complementos ?? []) {
             if (typeof complemento.identidade !== "string" || !complemento.identidade.trim() || typeof complemento.conteudo !== "string" || !Number.isInteger(complemento.ordem)
+                || complemento.ordem < 0 || identidadesComplementos.has(complemento.identidade)
+                || (memoria.temporalidadeConhecida === true && complemento.temporalidadeConhecida !== true)
                 || (complemento.primeiraPreservacaoUtc != null && (typeof complemento.primeiraPreservacaoUtc !== "string" || !Number.isFinite(Date.parse(complemento.primeiraPreservacaoUtc))))) throw new TypeError("Complemento invalido.");
+            identidadesComplementos.add(complemento.identidade);
         }
+        const ordens = [...(memoria.complementos ?? [])].map(c => c.ordem).sort((a, b) => a - b);
+        if (ordens.some((ordem, indice) => ordem !== indice)) throw new TypeError("Ordem de complementos invalida.");
         identidades.add(memoria.identidade);
     }
+}
+
+function complementosLocaisValidos(memoria) {
+    const complementos = memoria?.complementos;
+    if (memoria?.temporalidadeConhecida !== true || !Array.isArray(complementos)) return false;
+    const ids = new Set();
+    for (const complemento of complementos) {
+        if (typeof complemento.identidade !== "string" || !complemento.identidade.trim() || ids.has(complemento.identidade)
+            || typeof complemento.conteudo !== "string" || !Number.isInteger(complemento.ordem) || !complemento.temporalidadeConhecida) return false;
+        if (complemento.primeiraPreservacaoUtc != null && (typeof complemento.primeiraPreservacaoUtc !== "string"
+            || !/[zZ]|[+-]00:00$/.test(complemento.primeiraPreservacaoUtc) || !Number.isFinite(Date.parse(complemento.primeiraPreservacaoUtc)))) return false;
+        ids.add(complemento.identidade);
+    }
+    return [...complementos].map(c => c.ordem).sort((a, b) => a - b).every((ordem, indice) => ordem === indice);
 }
 
 function operacaoValidada(etapa, validar, executar) {
@@ -175,6 +195,73 @@ export function excluirMemoriaSemComplementos(identidadeConta, data, identidadeM
             if (memoria.temporalidadeConhecida !== true || !Array.isArray(memoria.complementos)) { concluir(falha("exclusaoMemoria", { name: "MetadadosAusentes" })); return; }
             if (memoria.complementos.length !== 0) { concluir(falha("exclusaoMemoria", { name: "PossuiComplementos" })); return; }
             const memorias = captura.memorias.filter(item => item.identidade !== identidadeMemoria).map((item, ordem) => ({ ...item, ordem }));
+            const atualizado = { ...captura, alterado: true, memorias };
+            store.put(atualizado);
+            concluir({ estado: "sucesso", valor: atualizado });
+        };
+    }));
+}
+
+export function confirmarComplemento(identidadeConta, data, identidadeMemoria, quantidadeEsperada, identidadeUltimoEsperada, identidadeComplemento, conteudoAnterior, novoConteudo) {
+    return operacaoValidada("confirmacaoComplemento", () => {
+        validarChave(identidadeConta, data);
+        if (typeof identidadeMemoria !== "string" || !identidadeMemoria.trim() || !Number.isInteger(quantidadeEsperada) || quantidadeEsperada < 0
+            || (identidadeUltimoEsperada !== null && typeof identidadeUltimoEsperada !== "string")
+            || (identidadeComplemento !== null && (typeof identidadeComplemento !== "string" || !identidadeComplemento.trim()))
+            || (conteudoAnterior !== null && typeof conteudoAnterior !== "string") || typeof novoConteudo !== "string" || !novoConteudo.trim())
+            throw new TypeError("Confirmacao de complemento invalida.");
+        if ((identidadeComplemento === null) !== (conteudoAnterior === null)) throw new TypeError("Alvo de complemento invalido.");
+    }, (banco) => transacionar(banco, ["capturas"], "readwrite", "confirmacaoComplemento", (transacao, concluir) => {
+        const store = transacao.objectStore("capturas");
+        const pedido = store.get([identidadeConta, data]);
+        pedido.onsuccess = () => {
+            const captura = pedido.result;
+            const memoria = captura?.memorias?.find(item => item.identidade === identidadeMemoria);
+            const complementos = memoria?.complementos;
+            const ultimo = Array.isArray(complementos) && complementos.length ? complementos[complementos.length - 1] : null;
+            if (!captura || !memoria || !complementosLocaisValidos(memoria) || !Array.isArray(complementos)
+                || complementos.length !== quantidadeEsperada || (ultimo?.identidade ?? null) !== identidadeUltimoEsperada) {
+                concluir(falha("confirmacaoComplemento", { name: "ContextoAlterado" })); return;
+            }
+            let atualizados;
+            if (identidadeComplemento === null) {
+                if ((ultimo?.identidade ?? null) !== identidadeUltimoEsperada) { concluir(falha("confirmacaoComplemento", { name: "ContextoAlterado" })); return; }
+                const identidade = crypto.randomUUID();
+                atualizados = [...complementos, { identidade, conteudo: novoConteudo, ordem: complementos.length, primeiraPreservacaoUtc: null, temporalidadeConhecida: true }];
+            } else {
+                if (!ultimo || ultimo.identidade !== identidadeComplemento || ultimo.conteudo !== conteudoAnterior) {
+                    concluir(falha("confirmacaoComplemento", { name: "ComplementoAlterado" })); return;
+                }
+                atualizados = complementos.map(item => item.identidade === identidadeComplemento ? { ...item, conteudo: novoConteudo } : item);
+            }
+            const memorias = captura.memorias.map(item => item.identidade === identidadeMemoria ? { ...item, complementos: atualizados } : item);
+            const atualizado = { ...captura, alterado: true, memorias };
+            store.put(atualizado);
+            concluir({ estado: "sucesso", valor: atualizado });
+        };
+    }));
+}
+
+export function excluirUltimoComplemento(identidadeConta, data, identidadeMemoria, quantidadeEsperada, identidadeComplemento, conteudoConfirmado) {
+    return operacaoValidada("exclusaoComplemento", () => {
+        validarChave(identidadeConta, data);
+        if (typeof identidadeMemoria !== "string" || !identidadeMemoria.trim() || !Number.isInteger(quantidadeEsperada) || quantidadeEsperada <= 0
+            || typeof identidadeComplemento !== "string" || !identidadeComplemento.trim() || typeof conteudoConfirmado !== "string")
+            throw new TypeError("Exclusao de complemento invalida.");
+    }, (banco) => transacionar(banco, ["capturas"], "readwrite", "exclusaoComplemento", (transacao, concluir) => {
+        const store = transacao.objectStore("capturas");
+        const pedido = store.get([identidadeConta, data]);
+        pedido.onsuccess = () => {
+            const captura = pedido.result;
+            const memoria = captura?.memorias?.find(item => item.identidade === identidadeMemoria);
+            const complementos = memoria?.complementos;
+            const ultimo = Array.isArray(complementos) ? complementos[complementos.length - 1] : null;
+            if (!captura || !memoria || !complementosLocaisValidos(memoria) || !Array.isArray(complementos)
+                || complementos.length !== quantidadeEsperada || ultimo?.identidade !== identidadeComplemento || ultimo.conteudo !== conteudoConfirmado) {
+                concluir(falha("exclusaoComplemento", { name: "ContextoAlterado" })); return;
+            }
+            const atualizados = complementos.slice(0, -1).map((item, ordem) => ({ ...item, ordem }));
+            const memorias = captura.memorias.map(item => item.identidade === identidadeMemoria ? { ...item, complementos: atualizados } : item);
             const atualizado = { ...captura, alterado: true, memorias };
             store.put(atualizado);
             concluir({ estado: "sucesso", valor: atualizado });

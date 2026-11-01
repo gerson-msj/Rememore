@@ -3,7 +3,8 @@ using Microsoft.JSInterop;
 namespace Rememore.Client.Infraestrutura.Capturar;
 
 public sealed record RascunhoInclusaoCaptura(bool InclusaoAberta, string Texto);
-public sealed record RascunhoEdicaoMemoria(string Texto, bool AutorizacaoConcedida);
+public sealed record RascunhoEdicaoMemoria(string Texto, bool AutorizacaoConcedida,
+    string Tipo = "MemoriaPrincipal", string? IdentidadeComplemento = null);
 
 public sealed class ContinuidadeCapturaSessionStorage(IJSRuntime js) : IAsyncDisposable
 {
@@ -63,11 +64,23 @@ public sealed class ContinuidadeCapturaSessionStorage(IJSRuntime js) : IAsyncDis
 
     public async Task RegistrarEdicaoMemoriaAsync(string identidadeConta, DateOnly data, string identidadeMemoria, string texto, bool autorizacaoConcedida)
     {
-        try { await (await GarantirModuloAsync()).InvokeVoidAsync("registrarEdicaoMemoria", identidadeConta, data.ToString("yyyy-MM-dd"), identidadeMemoria, texto, autorizacaoConcedida); }
+        await RegistrarEdicaoAsync(identidadeConta, data, identidadeMemoria, "MemoriaPrincipal", null, texto, autorizacaoConcedida);
+    }
+
+    public async Task RegistrarEdicaoAsync(string identidadeConta, DateOnly data, string identidadeMemoria, string tipo,
+        string? identidadeComplemento, string texto, bool autorizacaoConcedida)
+    {
+        try { await (await GarantirModuloAsync()).InvokeVoidAsync("registrarEdicaoMemoria", identidadeConta, data.ToString("yyyy-MM-dd"), identidadeMemoria, tipo, identidadeComplemento, texto, autorizacaoConcedida); }
         catch (Exception ex) when (ex is JSException or InvalidOperationException) { }
     }
 
     public async Task<RascunhoEdicaoMemoria?> RecuperarEdicaoMemoriaAsync(string identidadeConta, DateOnly data, string identidadeMemoria)
+    {
+        try { return await (await GarantirModuloAsync()).InvokeAsync<RascunhoEdicaoMemoria?>("recuperarEdicaoMemoria", identidadeConta, data.ToString("yyyy-MM-dd"), identidadeMemoria); }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException) { return null; }
+    }
+
+    public async Task<RascunhoEdicaoMemoria?> RecuperarEdicaoAsync(string identidadeConta, DateOnly data, string identidadeMemoria)
     {
         try { return await (await GarantirModuloAsync()).InvokeAsync<RascunhoEdicaoMemoria?>("recuperarEdicaoMemoria", identidadeConta, data.ToString("yyyy-MM-dd"), identidadeMemoria); }
         catch (Exception ex) when (ex is JSException or InvalidOperationException) { return null; }

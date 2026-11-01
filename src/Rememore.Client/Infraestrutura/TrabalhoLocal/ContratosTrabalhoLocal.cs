@@ -42,4 +42,6 @@ public interface ICapturasLocais
     Task<ResultadoLocal<bool>> RemoverSeAlteradoAsync(string identidadeConta, DateOnly data);
     Task<ResultadoLocal<WorkspaceCapturaLocal>> ConfirmarEdicaoMemoriaAsync(string identidadeConta, DateOnly data, string identidadeMemoria, string conteudoAnterior, string novoConteudo);
     Task<ResultadoLocal<WorkspaceCapturaLocal>> ExcluirMemoriaSemComplementosAsync(string identidadeConta, DateOnly data, string identidadeMemoria, string conteudoConfirmado);
+    Task<ResultadoLocal<WorkspaceCapturaLocal>> ConfirmarComplementoAsync(string identidadeConta, DateOnly data, string identidadeMemoria, int quantidadeEsperada, string? identidadeUltimoEsperada, string? identidadeComplemento, string? conteudoAnterior, string novoConteudo);
+    Task<ResultadoLocal<WorkspaceCapturaLocal>> ExcluirUltimoComplementoAsync(string identidadeConta, DateOnly data, string identidadeMemoria, int quantidadeEsperada, string identidadeComplemento, string conteudoConfirmado);
 }

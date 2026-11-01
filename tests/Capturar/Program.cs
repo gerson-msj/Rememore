@@ -282,6 +282,26 @@ sealed class CapturasEmMemoria : IDiagnosticoTrabalhoLocal, ICapturasLocais
         Capturas[(identidadeConta, data)] = atualizado;
         return Task.FromResult(new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Sucesso, atualizado));
     }
+    public Task<ResultadoLocal<WorkspaceCapturaLocal>> ConfirmarComplementoAsync(string identidadeConta, DateOnly data, string identidadeMemoria, int quantidadeEsperada, string? identidadeUltimoEsperada, string? identidadeComplemento, string? conteudoAnterior, string novoConteudo)
+    {
+        if (FalharGravacao || !Capturas.TryGetValue((identidadeConta, data), out var captura)) return Task.FromResult(new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Falha));
+        var memoria = captura.Memorias.SingleOrDefault(m => m.Identidade == identidadeMemoria); var comps = memoria?.Complementos;
+        if (memoria is null || memoria.TemporalidadeConhecida != true || comps is null || comps.Count != quantidadeEsperada || comps.LastOrDefault()?.Identidade != identidadeUltimoEsperada || string.IsNullOrWhiteSpace(novoConteudo)) return Task.FromResult(new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Falha));
+        if (identidadeComplemento is not null && (comps.LastOrDefault() is not { } alvo || alvo.Identidade != identidadeComplemento || alvo.Conteudo != conteudoAnterior)) return Task.FromResult(new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Falha));
+        var atualizados = identidadeComplemento is null
+            ? comps.Append(new ComplementoCapturaLocal(Guid.NewGuid().ToString("N"), novoConteudo, comps.Count, null, true)).ToArray()
+            : comps.Select(c => c with { Conteudo = novoConteudo }).ToArray();
+        var atualizado = captura with { Alterado = true, Memorias = captura.Memorias.Select(m => m.Identidade == identidadeMemoria ? m with { Complementos = atualizados } : m).ToArray() };
+        Gravacoes++; Capturas[(identidadeConta, data)] = atualizado; return Task.FromResult(new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Sucesso, atualizado));
+    }
+    public Task<ResultadoLocal<WorkspaceCapturaLocal>> ExcluirUltimoComplementoAsync(string identidadeConta, DateOnly data, string identidadeMemoria, int quantidadeEsperada, string identidadeComplemento, string conteudoConfirmado)
+    {
+        if (!Capturas.TryGetValue((identidadeConta, data), out var captura)) return Task.FromResult(new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Ausente));
+        var memoria = captura.Memorias.SingleOrDefault(m => m.Identidade == identidadeMemoria); var comps = memoria?.Complementos;
+        if (memoria?.TemporalidadeConhecida != true || comps is null || comps.Count != quantidadeEsperada || comps.LastOrDefault() is not { } ultimo || ultimo.Identidade != identidadeComplemento || ultimo.Conteudo != conteudoConfirmado) return Task.FromResult(new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Falha));
+        var atualizado = captura with { Alterado = true, Memorias = captura.Memorias.Select(m => m.Identidade == identidadeMemoria ? m with { Complementos = comps.Take(comps.Count - 1).Select((c, i) => c with { Ordem = i }).ToArray() } : m).ToArray() };
+        Gravacoes++; Capturas[(identidadeConta, data)] = atualizado; return Task.FromResult(new ResultadoLocal<WorkspaceCapturaLocal>(EstadoOperacaoLocal.Sucesso, atualizado));
+    }
     public Task<ResultadoLocal<IReadOnlyList<WorkspaceCapturaLocal>>> ConsultarAsync(string identidadeConta) => Task.FromResult(
         new ResultadoLocal<IReadOnlyList<WorkspaceCapturaLocal>>(EstadoOperacaoLocal.Sucesso,
             Capturas.Values.Where(captura => captura.IdentidadeConta == identidadeConta).ToArray()));
