@@ -13,6 +13,7 @@
 @inject IOrientacaoProgressiva Orientacao
 @inject IFonteNivelOrientacao FonteNivelOrientacao
 @using System.Globalization
+@using Rememore.Client.Componentes
 
 <PageTitle>Capturar @dataFormatada</PageTitle>
 
@@ -28,16 +29,18 @@
             <div class="captura-dia__linha-data">
                 <time class="subtitle is-6 has-text-weight-medium" datetime="@data.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">@dataFormatada</time>
             </div>
-            <nav class="tabs is-fullwidth captura-dia__abas" role="group" aria-label="Etapas da captura">
+            <nav class="tabs is-fullwidth captura-dia__abas" aria-label="Etapas da captura">
                 <ul>
-                    <li class="is-active">
-                        <a aria-current="step">
+                    <li class="@(!AbaCategorizar ? "is-active" : string.Empty)">
+                        <a href="@UrlAbaMemorar" aria-current="@(!AbaCategorizar ? "step" : null)">
                             <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-feather-pointed"></i></span>
                             <span>Memorar</span>
                         </a>
                     </li>
-                    <li>
-                        <a aria-disabled="true" tabindex="-1">
+                    <li class="@(AbaCategorizar ? "is-active" : string.Empty)">
+                        <a href="@UrlAbaCategorizar" aria-current="@(AbaCategorizar ? "step" : null)"
+                           aria-disabled="@(inclusaoAberta ? "true" : null)" tabindex="@(inclusaoAberta ? -1 : null)"
+                           @onclick:preventDefault="@inclusaoAberta">
                             <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-layer-group"></i></span>
                             <span>Categorizar</span>
                         </a>
@@ -85,7 +88,11 @@
         }
         else
         {
-            @if (Memorias.Count == 0 && textoOrientacao is not null)
+            @if (AbaCategorizar && Memorias.Count == 0)
+            {
+                <p role="status">Não há memórias para categorizar.</p>
+            }
+            else if (!AbaCategorizar && Memorias.Count == 0 && textoOrientacao is not null)
             {
                 <div class="notification elemento-orientacao-informativa" role="status">
                     <span class="elemento-orientacao-informativa__texto">@textoOrientacao</span>
@@ -94,7 +101,7 @@
 
             @if (Memorias.Count > 0)
             {
-                <div class="lista-memorias captura-dia__lista-memorias" role="list" aria-label="Memórias da captura">
+                <div class="lista-memorias captura-dia__lista-memorias" role="list" aria-label="@(AbaCategorizar ? "Memórias para categorizar" : "Memórias da captura")">
                     @for (var indice = 0; indice < Memorias.Count; indice++)
                     {
                         var memoria = Memorias[indice];
@@ -103,11 +110,11 @@
                             <Memoria
                                      Identificador="@memoria.Identidade"
                                      Conteudo="@memoria.Conteudo"
-                                     Modo="ModoMemoria.Memorar"
+                                     Modo="@(AbaCategorizar ? ModoMemoria.Categorizar : ModoMemoria.Memorar)"
                                      Primeira="@(indice == 0)"
                                      Ultima="@(indice == Memorias.Count - 1)"
                                      Inativa="@(inclusaoAberta || operacaoEmAndamento)"
-                                     AoAcionar="AbrirEdicaoMemoria"
+                                     AoAcionar="AcionarMemoria"
                                      AoElevar="ElevarMemoriaAsync"
                                      AoRebaixar="RebaixarMemoriaAsync" />
                         </div>
@@ -115,7 +122,7 @@
                 </div>
             }
 
-            @if (inclusaoAberta)
+            @if (!AbaCategorizar && inclusaoAberta)
             {
                 <section class="captura-dia__inclusao" aria-label="Inclusão de memória">
                     <CampoMultilinhaAtalhos @ref="campoInclusao"
@@ -154,7 +161,7 @@
                     }
                 </section>
             }
-            else
+            else if (!AbaCategorizar)
             {
                 <div class="buttons is-right captura-dia__acao-incluir">
                     <button class="button is-link" type="button" @onclick="AbrirInclusao">
@@ -190,6 +197,7 @@
 
 @code {
     [Parameter] public string DataRota { get; set; } = "";
+    [SupplyParameterFromQuery(Name = "aba")] public string? Aba { get; set; }
 
     private enum TipoPopupNavegacao { Nenhum, VoltarCabecalho, SairSemTexto, SairComTexto, NavegacaoInterna }
 
@@ -205,6 +213,9 @@
     private DateOnly data;
     private string dataFormatada = "";
     private bool dataInvalida;
+    private bool AbaCategorizar => !inclusaoAberta && string.Equals(Aba, "categorizar", StringComparison.OrdinalIgnoreCase);
+    private string UrlAbaMemorar => $"capturar/{Uri.EscapeDataString(DataRota)}";
+    private string UrlAbaCategorizar => $"capturar/{Uri.EscapeDataString(DataRota)}?aba=categorizar";
     private bool preparando = true;
     private ResultadoAberturaCaptura? resultado;
     private NivelOrientacao nivelOrientacaoAtual = NivelOrientacao.Iniciante;
@@ -224,6 +235,13 @@
     private bool restaurarFocoOrdenacaoAposRenderizar;
     private void AbrirEdicaoMemoria(string identidade) =>
         Navegacao.NavigateTo($"editar-memoria/{Uri.EscapeDataString(DataRota)}/{Uri.EscapeDataString(identidade)}");
+    private void AbrirCategorizacaoMemoria(string identidade) =>
+        Navegacao.NavigateTo($"categorizar/{Uri.EscapeDataString(DataRota)}/{Uri.EscapeDataString(identidade)}");
+    private void AcionarMemoria(string identidade)
+    {
+        if (AbaCategorizar) AbrirCategorizacaoMemoria(identidade);
+        else AbrirEdicaoMemoria(identidade);
+    }
     private TipoPopupNavegacao tipoPopupNavegacao;
     private TaskCompletionSource<bool>? decisaoNavegacaoInterna;
 

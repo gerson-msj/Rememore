@@ -1,0 +1,12 @@
+.pagina-categorizar-memoria {
+    min-height: 100vh;
+}
+
+.categorizar-memoria__espacador-cabecalho {
+    height: 4rem;
+}
+
+.categorizar-memoria__estado {
+    width: min(calc(100% - 2rem), 56rem);
+    margin: 1.5rem auto;
+}

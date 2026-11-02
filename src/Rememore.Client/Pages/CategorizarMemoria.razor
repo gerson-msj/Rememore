@@ -1,0 +1,78 @@
+@page "/categorizar/{DataRota}/{IdentidadeMemoria}"
+@attribute [Authorize]
+@using System.Globalization
+@using Rememore.Client.Infraestrutura.Capturar
+@using Rememore.Client.Infraestrutura.TrabalhoLocal
+@inject NavigationManager Navegacao
+@inject IJSRuntime JS
+@inject EstadoAutenticacaoProvider EstadoAutenticacao
+@inject AberturaCaptura Abertura
+
+<PageTitle>Categorização</PageTitle>
+
+<main class="pagina-categorizar-memoria">
+    <CabecalhoAmbiente Titulo="Categorização" MostrarRetorno AoRetornar="VoltarParaLista" />
+    <div class="categorizar-memoria__espacador-cabecalho" aria-hidden="true"></div>
+
+    @if (preparando)
+    {
+        <p class="categorizar-memoria__estado" role="status" aria-busy="true">Preparando Categorização…</p>
+    }
+    else if (!memoriaValida)
+    {
+        <div class="notification elemento-falha-recuperavel categorizar-memoria__estado" role="alert" aria-atomic="true">
+            <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </span>
+            <div class="elemento-falha-recuperavel__conteudo">
+                <p class="elemento-falha-recuperavel__mensagem"><strong>Não foi possível abrir esta memória para Categorização.</strong></p>
+                <button class="button is-link" type="button" @onclick="VoltarParaLista">Voltar à lista Categorizar</button>
+            </div>
+        </div>
+    }
+</main>
+
+@code {
+    [Parameter] public string DataRota { get; set; } = string.Empty;
+    [Parameter] public string IdentidadeMemoria { get; set; } = string.Empty;
+
+    private bool preparando = true;
+    private bool memoriaValida;
+    private DateOnly data;
+    private string identidadeMemoria = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        preparando = true;
+        memoriaValida = false;
+        var moduloCalendario = await JS.InvokeAsync<IJSObjectReference>("import", "./js/calendarioCaptura.js");
+        try
+        {
+            var hojeTexto = await moduloCalendario.InvokeAsync<string>("hojeLocal");
+            var hoje = DateOnly.ParseExact(hojeTexto, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            if (!DatasCaptura.TentarValidar(DataRota, hoje, out data)
+                || string.IsNullOrWhiteSpace(IdentidadeMemoria)
+                || EstadoAutenticacao.IdentidadeConta is not { } conta)
+            {
+                preparando = false;
+                return;
+            }
+
+            identidadeMemoria = Uri.UnescapeDataString(IdentidadeMemoria);
+            var resultado = await Abertura.AbrirAsync(conta, data, continuidadeAtiva: true);
+            memoriaValida = resultado.Estado == EstadoAberturaCaptura.Aberta
+                && resultado.Workspace is { } workspace
+                && workspace.IdentidadeConta == conta
+                && workspace.Data == data
+                && workspace.Memorias.Any(memoria => memoria.Identidade == identidadeMemoria);
+        }
+        finally
+        {
+            await moduloCalendario.DisposeAsync();
+            preparando = false;
+        }
+    }
+
+    private void VoltarParaLista() => Navegacao.NavigateTo(
+        $"capturar/{Uri.EscapeDataString(DataRota)}?aba=categorizar");
+}
