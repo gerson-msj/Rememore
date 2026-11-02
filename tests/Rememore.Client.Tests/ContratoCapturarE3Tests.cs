@@ -35,4 +35,21 @@ public sealed class ContratoCapturarE3Tests
         fake.Atual = new(0);
         Assert.Equal(new ConfiguracaoCapturar(0), await fake.ObterAsync());
     }
+
+    [Fact]
+    public void AutorizacaoHistoricaUsaPreservacaoOriginalEConcessaoDaSessao()
+    {
+        var primeiraPreservacao = new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
+        var memoria = new MemoriaCapturaLocal("m1", "memória", 0, primeiraPreservacao, true,
+            [new ComplementoCapturaLocal("c1", "complemento recente", 0, primeiraPreservacao.AddDays(10), true)]);
+        var configuracao = new ConfiguracaoCapturar(3);
+        var aposPrazo = primeiraPreservacao.AddDays(3);
+
+        var expirada = RegraEdicaoMemoria.Resolver(memoria, configuracao, aposPrazo);
+        var restaurada = RegraEdicaoMemoria.Resolver(memoria, configuracao, aposPrazo, autorizacaoDaSessao: true);
+
+        Assert.False(expirada.Concedida);
+        Assert.True(restaurada.Concedida);
+        Assert.True(RegraEdicaoMemoria.Resolver(memoria, configuracao, aposPrazo.AddTicks(-1)).Concedida);
+    }
 }

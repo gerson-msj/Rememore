@@ -109,7 +109,7 @@ export function marcarAlterado(identidadeConta, data) {
             const pedido = store.get([identidadeConta, data]);
             pedido.onsuccess = () => {
                 if (pedido.result === undefined) { concluir({ estado: "ausente" }); return; }
-                const captura = { ...pedido.result, alterado: true };
+                const captura = { ...pedido.result, alterado: true, alteradoApenasPorCategorias: false };
                 try {
                     store.put(captura);
                     concluir({ estado: "sucesso", valor: captura });
@@ -174,7 +174,7 @@ export function confirmarEdicaoMemoria(identidadeConta, data, identidadeMemoria,
             const memoria = captura?.memorias?.find(item => item.identidade === identidadeMemoria);
             if (!captura || !memoria || memoria.conteudo !== conteudoAnterior) { concluir(falha("edicaoMemoria", { name: "MemoriaAlterada" })); return; }
             const memorias = captura.memorias.map(item => item.identidade === identidadeMemoria ? { ...item, conteudo: novoConteudo } : item);
-            const atualizado = { ...captura, alterado: true, memorias };
+            const atualizado = { ...captura, alterado: true, alteradoApenasPorCategorias: false, memorias };
             store.put(atualizado);
             concluir({ estado: "sucesso", valor: atualizado });
         };
@@ -195,7 +195,7 @@ export function excluirMemoriaSemComplementos(identidadeConta, data, identidadeM
             if (memoria.temporalidadeConhecida !== true || !Array.isArray(memoria.complementos)) { concluir(falha("exclusaoMemoria", { name: "MetadadosAusentes" })); return; }
             if (memoria.complementos.length !== 0) { concluir(falha("exclusaoMemoria", { name: "PossuiComplementos" })); return; }
             const memorias = captura.memorias.filter(item => item.identidade !== identidadeMemoria).map((item, ordem) => ({ ...item, ordem }));
-            const atualizado = { ...captura, alterado: true, memorias };
+            const atualizado = { ...captura, alterado: true, alteradoApenasPorCategorias: false, memorias };
             store.put(atualizado);
             concluir({ estado: "sucesso", valor: atualizado });
         };
@@ -235,7 +235,7 @@ export function confirmarComplemento(identidadeConta, data, identidadeMemoria, q
                 atualizados = complementos.map(item => item.identidade === identidadeComplemento ? { ...item, conteudo: novoConteudo } : item);
             }
             const memorias = captura.memorias.map(item => item.identidade === identidadeMemoria ? { ...item, complementos: atualizados } : item);
-            const atualizado = { ...captura, alterado: true, memorias };
+            const atualizado = { ...captura, alterado: true, alteradoApenasPorCategorias: false, memorias };
             store.put(atualizado);
             concluir({ estado: "sucesso", valor: atualizado });
         };
@@ -262,9 +262,91 @@ export function excluirUltimoComplemento(identidadeConta, data, identidadeMemori
             }
             const atualizados = complementos.slice(0, -1).map((item, ordem) => ({ ...item, ordem }));
             const memorias = captura.memorias.map(item => item.identidade === identidadeMemoria ? { ...item, complementos: atualizados } : item);
-            const atualizado = { ...captura, alterado: true, memorias };
+            const atualizado = { ...captura, alterado: true, alteradoApenasPorCategorias: false, memorias };
             store.put(atualizado);
             concluir({ estado: "sucesso", valor: atualizado });
         };
+    }));
+}
+
+function normalizarCategoria(nome) {
+    return nome.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").normalize("NFC").toLocaleUpperCase("pt-BR");
+}
+
+function mesmasCategorias(primeira, segunda) {
+    const nomes = lista => [...new Set(lista.map(item => normalizarCategoria(item.nome)))].sort();
+    const a = nomes(primeira);
+    const b = nomes(segunda);
+    return a.length === b.length && a.every((nome, indice) => nome === b[indice]);
+}
+
+function mesmasCategoriasOrdenadas(primeira, segunda) {
+    return JSON.stringify(primeira.map(item => [item.identidade, item.nome, item.origem, item.versao ?? null]))
+        === JSON.stringify(segunda.map(item => [item.identidade, item.nome, item.origem, item.versao ?? null]));
+}
+
+function validarCategorias(categorias) {
+    if (!Array.isArray(categorias)) throw new TypeError("Lista de categorias invalida.");
+    const nomes = new Set();
+    for (const categoria of categorias) {
+        if (typeof categoria.identidade !== "string" || !categoria.identidade.trim()
+            || typeof categoria.nome !== "string" || !categoria.nome.trim()
+            || ![0, 1].includes(categoria.origem)
+            || (categoria.versao != null && (!Number.isInteger(categoria.versao) || categoria.versao < 1))) {
+            throw new TypeError("Categoria associada invalida.");
+        }
+        const nome = normalizarCategoria(categoria.nome);
+        if (!nome || nomes.has(nome)) throw new TypeError("Categoria equivalente duplicada.");
+        nomes.add(nome);
+    }
+}
+
+export function confirmarCategorias(identidadeConta, data, identidadeMemoria, categoriasEsperadas, categoriasNovas) {
+    return operacaoValidada("categorias", () => {
+        validarChave(identidadeConta, data);
+        if (typeof identidadeMemoria !== "string" || !identidadeMemoria.trim()) throw new TypeError("Memoria invalida.");
+        validarCategorias(categoriasEsperadas);
+        validarCategorias(categoriasNovas);
+    }, banco => transacionar(banco, ["capturas"], "readwrite", "categorias", (transacao, concluir) => {
+        const store = transacao.objectStore("capturas");
+        const pedido = store.get([identidadeConta, data]);
+        pedido.onsuccess = () => {
+            const captura = pedido.result;
+            const memoria = captura?.memorias?.find(item => item.identidade === identidadeMemoria);
+            const atuais = memoria?.categorias ?? [];
+            if (!captura || !memoria || !mesmasCategoriasOrdenadas(atuais, categoriasEsperadas)) {
+                concluir(falha("categorias", { name: "ContextoAlterado" }));
+                return;
+            }
+            const originais = memoria.categoriasOriginais ?? atuais.map(item => ({ ...item }));
+            const diferemDaOrigem = !mesmasCategorias(originais, categoriasNovas);
+            const somenteCategorias = captura.alteradoApenasPorCategorias === true;
+            const alterado = captura.alterado && !somenteCategorias || diferemDaOrigem;
+            const memorias = captura.memorias.map(item => item.identidade === identidadeMemoria
+                ? { ...item, categorias: categoriasNovas.map(categoria => ({ ...categoria })), categoriasOriginais: originais }
+                : item);
+            const atualizado = { ...captura, alterado, alteradoApenasPorCategorias: alterado && diferemDaOrigem, memorias };
+            store.put(atualizado);
+            concluir({ estado: "sucesso", valor: atualizado });
+        };
+    }));
+}
+
+export function recuperarCacheCategorias(identidadeConta) {
+    return operacaoValidada("cacheCategorias", () => validarConta(identidadeConta), banco =>
+        transacionar(banco, ["catalogosCategorias"], "readonly", "cacheCategorias", (transacao, concluir) => {
+            const pedido = transacao.objectStore("catalogosCategorias").get(identidadeConta);
+            pedido.onsuccess = () => concluir(pedido.result === undefined
+                ? { estado: "ausente" }
+                : { estado: "sucesso", valor: pedido.result });
+        }));
+}
+
+export function gravarCacheCategorias(cache) {
+    return operacaoValidada("cacheCategorias", () => {
+        validarConta(cache.identidadeConta);
+        if (typeof cache.revisao !== "string" || !cache.revisao.trim() || !Array.isArray(cache.categorias)) throw new TypeError("Cache de categorias invalido.");
+    }, banco => transacionar(banco, ["catalogosCategorias"], "readwrite", "cacheCategorias", transacao => {
+        transacao.objectStore("catalogosCategorias").put(cache);
     }));
 }

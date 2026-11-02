@@ -92,6 +92,26 @@ public sealed class ContinuidadeCapturaSessionStorage(IJSRuntime js) : IAsyncDis
         catch (Exception ex) when (ex is JSException or InvalidOperationException) { }
     }
 
+    public async Task RegistrarAutorizacaoCategoriaAsync(string identidadeConta, DateOnly data, string identidadeMemoria)
+    {
+        try { await (await GarantirModuloAsync()).InvokeVoidAsync("registrarAutorizacaoCategoria",
+            identidadeConta, data.ToString("yyyy-MM-dd"), identidadeMemoria); }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException) { }
+    }
+
+    public async Task<bool> RecuperarAutorizacaoCategoriaAsync(string identidadeConta, DateOnly data, string identidadeMemoria)
+    {
+        try { return await (await GarantirModuloAsync()).InvokeAsync<bool>("recuperarAutorizacaoCategoria",
+            identidadeConta, data.ToString("yyyy-MM-dd"), identidadeMemoria); }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException) { return false; }
+    }
+
+    public async Task LimparAutorizacaoCategoriaAsync()
+    {
+        try { await (await GarantirModuloAsync()).InvokeVoidAsync("limparAutorizacaoCategoria"); }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException) { }
+    }
+
     private async Task<IJSObjectReference> GarantirModuloAsync() =>
         modulo ??= await js.InvokeAsync<IJSObjectReference>("import", "./js/continuidadeCaptura.js");
 

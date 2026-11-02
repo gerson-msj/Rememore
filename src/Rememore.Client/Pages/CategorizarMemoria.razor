@@ -1,4 +1,5 @@
 @page "/categorizar/{DataRota}/{IdentidadeMemoria}"
+@implements IDisposable
 @attribute [Authorize]
 @using System.Globalization
 @using Rememore.Client.Infraestrutura
@@ -10,8 +11,10 @@
 @inject IJSRuntime JS
 @inject EstadoAutenticacaoProvider EstadoAutenticacao
 @inject AberturaCaptura Abertura
-@inject ICatalogoCategoriasRemoto CatalogoCategorias
+@inject ICapturasLocais CapturasLocais
+@inject CatalogoCategoriasPorConta CatalogoCategorias
 @inject IConfiguracaoCapturar ConfiguracaoCapturar
+@inject ContinuidadeCapturaSessionStorage Continuidade
 @inject TimeProvider Relogio
 @inject IFonteNivelOrientacao FonteNivelOrientacao
 @inject ResolvedorOrientacaoProgressiva ResolvedorOrientacao
@@ -19,7 +22,7 @@
 <PageTitle>Categorização</PageTitle>
 
 <main class="pagina-categorizar-memoria">
-    <CabecalhoAmbiente Titulo="Categorização" MostrarRetorno AoRetornar="VoltarParaLista" />
+    <CabecalhoAmbiente Titulo="Categorização" MostrarRetorno AoRetornar="VoltarParaListaAsync" />
     <div class="categorizar-memoria__espacador-cabecalho" aria-hidden="true"></div>
 
     @if (dataCaptura is { } data)
@@ -43,12 +46,10 @@
     else if (memoriaAtual is null)
     {
         <div class="notification elemento-falha-recuperavel categorizar-memoria__estado" role="alert" aria-atomic="true">
-            <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-            </span>
+            <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></span>
             <div class="elemento-falha-recuperavel__conteudo">
                 <p class="elemento-falha-recuperavel__mensagem"><strong>Não foi possível abrir esta memória para Categorização.</strong></p>
-                <button class="button is-link" type="button" @onclick="VoltarParaLista">Voltar à lista Categorizar</button>
+                <button class="button is-link" type="button" @onclick="VoltarParaListaAsync">Voltar à lista Categorizar</button>
             </div>
         </div>
     }
@@ -69,15 +70,28 @@
             @if (falhaCatalogo is not null)
             {
                 <div class="notification elemento-falha-recuperavel" role="alert" aria-atomic="true">
-                    <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                    </span>
+                    <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></span>
                     <div class="elemento-falha-recuperavel__conteudo">
                         <p class="elemento-falha-recuperavel__mensagem"><strong>@falhaCatalogo</strong></p>
                         <button class="button is-light elemento-botao-com-icone" type="button" @onclick="RecarregarCatalogoAsync">
-                            <span class="icon" aria-hidden="true"><i class="fa-solid fa-rotate"></i></span>
-                            <span>Tentar novamente</span>
+                            <span class="icon" aria-hidden="true"><i class="fa-solid fa-rotate"></i></span><span>Tentar novamente</span>
                         </button>
+                    </div>
+                </div>
+            }
+
+            @if (falhaCategorias is not null)
+            {
+                <div class="notification elemento-falha-recuperavel" role="alert" aria-atomic="true">
+                    <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                    <div class="elemento-falha-recuperavel__conteudo">
+                        <p class="elemento-falha-recuperavel__mensagem"><strong>@falhaCategorias</strong></p>
+                        @if (repetirOperacaoCategoria is not null)
+                        {
+                            <button class="button is-light elemento-botao-com-icone" type="button" disabled="@operacaoCategoriaEmAndamento" @onclick="RepetirOperacaoCategoriaAsync">
+                                <span class="icon" aria-hidden="true"><i class="fa-solid fa-rotate"></i></span><span>Tentar novamente</span>
+                            </button>
+                        }
                     </div>
                 </div>
             }
@@ -102,15 +116,11 @@
             }
 
             <nav class="buttons is-centered categorizar-memoria__navegacao" aria-label="Navegação entre memórias">
-                <button class="button is-light elemento-botao-com-icone" type="button" aria-label="Memória anterior"
-                        disabled="@EhPrimeiraMemoria" @onclick="IrParaAnterior">
-                    <span class="icon" aria-hidden="true"><i class="fa-solid fa-chevron-left"></i></span>
-                    <span>Anterior</span>
+                <button class="button is-light elemento-botao-com-icone" type="button" aria-label="Memória anterior" disabled="@EhPrimeiraMemoria" @onclick="IrParaAnterior">
+                    <span class="icon" aria-hidden="true"><i class="fa-solid fa-chevron-left"></i></span><span>Anterior</span>
                 </button>
-                <button class="button is-light elemento-botao-com-icone" type="button" aria-label="Próxima memória"
-                        disabled="@EhUltimaMemoria" @onclick="IrParaProxima">
-                    <span>Próxima</span>
-                    <span class="icon" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
+                <button class="button is-light elemento-botao-com-icone" type="button" aria-label="Próxima memória" disabled="@EhUltimaMemoria" @onclick="IrParaProxima">
+                    <span>Próxima</span><span class="icon" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
                 </button>
             </nav>
         </section>
@@ -123,34 +133,29 @@
 
     private bool preparando = true;
     private bool popupAberto;
-    private bool catalogoCarregado;
+    private bool operacaoCategoriaEmAndamento;
     private DateOnly? dataCaptura;
     private string identidadeConta = string.Empty;
     private string identidadeMemoria = string.Empty;
-    private string? contaEstadoEfemero;
-    private DateOnly? dataEstadoEfemero;
     private string? falhaCatalogo;
+    private string? falhaCategorias;
     private string? textoOrientacao;
     private NivelOrientacao nivelOrientacaoAtual = NivelOrientacao.Iniciante;
     private MemoriaCapturaLocal? memoriaAtual;
+    private WorkspaceCapturaLocal? workspaceCaptura;
     private IReadOnlyList<MemoriaCapturaLocal> memoriasOrdenadas = [];
-    private readonly Dictionary<string, List<string>> categoriasTransitariasPorMemoria = new(StringComparer.Ordinal);
-    private readonly List<CategoriaPreservadaRemota> categoriasCatalogo = [];
-    private readonly List<string> categoriasCriadasTransientemente = [];
+    private IReadOnlyList<CategoriaPreservadaRemota> categoriasCatalogo = [];
+    private Func<Task>? repetirOperacaoCategoria;
+    private IDisposable? registroMudancaLocal;
 
     private bool SomenteLeitura { get; set; }
-    private IReadOnlyList<string> CategoriasSelecionadas =>
-        categoriasTransitariasPorMemoria.TryGetValue(identidadeMemoria, out var categorias)
-            ? categorias
-            : Array.Empty<string>();
-    private IReadOnlyList<string> CategoriasDisponiveis => categoriasCatalogo
-        .Where(categoria => categoria.Ativa)
+    private IReadOnlyList<CategoriaAssociadaLocal> AssociacoesSelecionadas => memoriaAtual?.Categorias ?? [];
+    private IReadOnlyList<string> CategoriasSelecionadas => AssociacoesSelecionadas.Select(categoria => categoria.Nome).ToArray();
+    private IReadOnlyList<string> CategoriasDisponiveis => categoriasCatalogo.Where(categoria => categoria.Ativa)
         .Select(categoria => categoria.Nome)
-        .Concat(categoriasCriadasTransientemente)
-        .DistinctBy(PesquisaCategorias.Normalizar)
-        .ToArray();
-    private string TextoContexto => memoriaAtual is null
-        ? string.Empty
+        .Concat(memoriasOrdenadas.SelectMany(memoria => memoria.Categorias ?? []).Select(categoria => categoria.Nome))
+        .DistinctBy(PesquisaCategorias.Normalizar).ToArray();
+    private string TextoContexto => memoriaAtual is null ? string.Empty
         : string.Join("\n\n", new[] { memoriaAtual.Conteudo }
             .Concat((memoriaAtual.Complementos ?? []).OrderBy(complemento => complemento.Ordem).Select(complemento => complemento.Conteudo)));
     private int IndiceMemoriaAtual => memoriasOrdenadas.ToList().FindIndex(memoria => memoria.Identidade == identidadeMemoria);
@@ -160,20 +165,16 @@
     protected override async Task OnParametersSetAsync()
     {
         var identidadeSolicitada = Uri.UnescapeDataString(IdentidadeMemoria);
-        if (!preparando && memoriaAtual is not null && dataCaptura is { } dataAberta
-            && DataRota == dataAberta.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
-            && contaEstadoEfemero == EstadoAutenticacao.IdentidadeConta)
+        if (!preparando && workspaceCaptura is not null && memoriaAtual is not null
+            && dataCaptura is { } dataAberta && DataRota == dataAberta.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+            && identidadeConta == EstadoAutenticacao.IdentidadeConta)
         {
             var destino = memoriasOrdenadas.SingleOrDefault(memoria => memoria.Identidade == identidadeSolicitada);
             if (destino is not null)
             {
-                var somenteLeitura = await ResolverSomenteLeituraAsync(destino);
                 popupAberto = false;
                 identidadeMemoria = identidadeSolicitada;
-                memoriaAtual = destino;
-                SomenteLeitura = somenteLeitura;
-                textoOrientacao = somenteLeitura ? null
-                    : ResolvedorOrientacao.ObterTextoAsync(ContextosOrientacao.CategorizacaoCategoria, nivelOrientacaoAtual);
+                await DefinirMemoriaAtualAsync(destino, restaurarAutorizacao: false);
                 return;
             }
         }
@@ -181,10 +182,13 @@
         preparando = true;
         popupAberto = false;
         memoriaAtual = null;
+        workspaceCaptura = null;
         dataCaptura = null;
         textoOrientacao = null;
         falhaCatalogo = null;
+        falhaCategorias = null;
         SomenteLeitura = false;
+        registroMudancaLocal ??= Navegacao.RegisterLocationChangingHandler(LimparAutorizacaoAoSairAsync);
 
         var moduloCalendario = await JS.InvokeAsync<IJSObjectReference>("import", "./js/calendarioCaptura.js");
         try
@@ -193,49 +197,27 @@
             var hoje = DateOnly.ParseExact(hojeTexto, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             if (!DatasCaptura.TentarValidar(DataRota, hoje, out var data)
                 || string.IsNullOrWhiteSpace(IdentidadeMemoria)
-                || EstadoAutenticacao.IdentidadeConta is not { } conta)
-            {
-                return;
-            }
-
-            var mudouContexto = contaEstadoEfemero != conta || dataEstadoEfemero != data;
-            if (mudouContexto)
-            {
-                categoriasTransitariasPorMemoria.Clear();
-                categoriasCriadasTransientemente.Clear();
-                categoriasCatalogo.Clear();
-                catalogoCarregado = false;
-                contaEstadoEfemero = conta;
-                dataEstadoEfemero = data;
-            }
+                || EstadoAutenticacao.IdentidadeConta is not { } conta) return;
 
             identidadeConta = conta;
             dataCaptura = data;
             identidadeMemoria = identidadeSolicitada;
-
             var resultado = await Abertura.AbrirAsync(conta, data, continuidadeAtiva: true);
-            if (resultado.Estado != EstadoAberturaCaptura.Aberta
-                || resultado.Workspace is not { } workspace
-                || workspace.IdentidadeConta != conta
-                || workspace.Data != data)
-            {
-                return;
-            }
+            if (resultado.Estado != EstadoAberturaCaptura.Aberta || resultado.Workspace is not { } workspace
+                || workspace.IdentidadeConta != conta || workspace.Data != data) return;
 
-            memoriasOrdenadas = workspace.Memorias.OrderBy(memoria => memoria.Ordem).ToArray();
+            workspaceCaptura = workspace;
+            AtualizarMemorias(workspace);
             memoriaAtual = memoriasOrdenadas.SingleOrDefault(memoria => memoria.Identidade == identidadeMemoria);
             if (memoriaAtual is null) return;
 
-            if (!categoriasTransitariasPorMemoria.ContainsKey(identidadeMemoria))
-                categoriasTransitariasPorMemoria[identidadeMemoria] = [];
-
-            SomenteLeitura = await ResolverSomenteLeituraAsync(memoriaAtual);
-            nivelOrientacaoAtual = await FonteNivelOrientacao.ObterNivelAsync();
-            if (!SomenteLeitura)
-                textoOrientacao = ResolvedorOrientacao.ObterTextoAsync(ContextosOrientacao.CategorizacaoCategoria, nivelOrientacaoAtual);
-
-            if (!catalogoCarregado)
-                await CarregarCatalogoAsync();
+            await DefinirMemoriaAtualAsync(memoriaAtual, restaurarAutorizacao: true);
+            var catalogo = await CatalogoCategorias.AtualizarAsync(conta);
+            categoriasCatalogo = catalogo.Categorias;
+            if (!catalogo.Disponivel || catalogo.FalhaCache)
+                falhaCatalogo = catalogo.FalhaCache
+                    ? "Não foi possível atualizar o cache local do catálogo. As categorias conhecidas desta captura continuam disponíveis."
+                    : "Não foi possível consultar o catálogo preservado. As categorias conhecidas desta captura continuam disponíveis.";
         }
         finally
         {
@@ -244,73 +226,137 @@
         }
     }
 
-    private async Task<bool> ResolverSomenteLeituraAsync(MemoriaCapturaLocal memoria)
+    private async Task DefinirMemoriaAtualAsync(MemoriaCapturaLocal memoria, bool restaurarAutorizacao)
     {
-        if (!memoria.TemporalidadeConhecida) return false;
+        memoriaAtual = memoria;
         var configuracao = await ConfiguracaoCapturar.ObterAsync();
-        var autorizacao = RegraEdicaoMemoria.Resolver(memoria, configuracao, Relogio.GetUtcNow());
-        return !autorizacao.DadosValidos || !autorizacao.Concedida;
+        var autorizacaoDaSessao = restaurarAutorizacao && dataCaptura is { } data
+            && await Continuidade.RecuperarAutorizacaoCategoriaAsync(identidadeConta, data, memoria.Identidade);
+        var autorizacao = RegraEdicaoMemoria.Resolver(memoria, configuracao, Relogio.GetUtcNow(),
+            autorizacaoDaSessao ? true : null);
+        SomenteLeitura = !autorizacao.DadosValidos || !autorizacao.Concedida;
+        if (dataCaptura is { } dataAtual)
+        {
+            if (SomenteLeitura) await Continuidade.LimparAutorizacaoCategoriaAsync();
+            else await Continuidade.RegistrarAutorizacaoCategoriaAsync(identidadeConta, dataAtual, memoria.Identidade);
+        }
+
+        if (!SomenteLeitura)
+        {
+            nivelOrientacaoAtual = await FonteNivelOrientacao.ObterNivelAsync();
+            textoOrientacao = ResolvedorOrientacao.ObterTextoAsync(ContextosOrientacao.CategorizacaoCategoria, nivelOrientacaoAtual);
+        }
+        else textoOrientacao = null;
+    }
+
+    private void AtualizarMemorias(WorkspaceCapturaLocal workspace)
+    {
+        memoriasOrdenadas = workspace.Memorias.OrderBy(memoria => memoria.Ordem).ToArray();
     }
 
     private async Task CarregarCatalogoAsync()
     {
         falhaCatalogo = null;
-        var resposta = await CatalogoCategorias.ObterAtivasAsync(identidadeConta);
-        if (resposta.Estado != EstadoCatalogoCategoriasRemoto.Disponivel || resposta.Categorias is null)
-        {
-            falhaCatalogo = "Não foi possível consultar o catálogo de categorias. As categorias não foram carregadas.";
-            catalogoCarregado = false;
-            return;
-        }
-
-        categoriasCatalogo.Clear();
-        categoriasCatalogo.AddRange(resposta.Categorias.Where(categoria =>
-            categoria.Ativa && !string.IsNullOrWhiteSpace(categoria.Identidade) && !string.IsNullOrWhiteSpace(categoria.Nome)));
-        catalogoCarregado = true;
+        var resultado = await CatalogoCategorias.AtualizarAsync(identidadeConta);
+        categoriasCatalogo = resultado.Categorias;
+        if (!resultado.Disponivel || resultado.FalhaCache)
+            falhaCatalogo = resultado.FalhaCache
+                ? "Não foi possível atualizar o cache local do catálogo. As categorias conhecidas desta captura continuam disponíveis."
+                : "Não foi possível consultar o catálogo preservado. As categorias conhecidas desta captura continuam disponíveis.";
     }
 
     private Task RecarregarCatalogoAsync() => CarregarCatalogoAsync();
 
     private Task AtualizarPopupAsync(bool aberto)
     {
-        popupAberto = aberto && !SomenteLeitura;
+        popupAberto = aberto && !SomenteLeitura && !operacaoCategoriaEmAndamento;
         return Task.CompletedTask;
     }
 
-    private Task AdicionarCategoriaAsync(string categoria)
+    private Task AdicionarCategoriaAsync(string nome)
     {
-        if (SomenteLeitura || string.IsNullOrWhiteSpace(categoria)) return Task.CompletedTask;
-        var categorias = ObterCategoriasTransitarias();
-        if (!categorias.Any(atual => Equivalentes(atual, categoria)))
-            categorias.Add(categoria);
-        return Task.CompletedTask;
+        if (SomenteLeitura || operacaoCategoriaEmAndamento) return Task.CompletedTask;
+        var existente = ObterCategoriaDisponivel(nome);
+        if (existente is null || AssociacoesSelecionadas.Any(item => Equivalentes(item.Nome, nome))) return Task.CompletedTask;
+        var novas = AssociacoesSelecionadas.Append(existente).ToArray();
+        repetirOperacaoCategoria = () => PersistirCategoriasAsync(novas);
+        return PersistirCategoriasAsync(novas);
     }
 
-    private Task CriarCategoriaAsync(string categoria)
+    private Task CriarCategoriaAsync(string nome)
     {
-        var nome = categoria.Trim();
-        if (SomenteLeitura || string.IsNullOrWhiteSpace(nome)) return Task.CompletedTask;
-        if (!CategoriasDisponiveis.Any(atual => Equivalentes(atual, nome)))
-            categoriasCriadasTransientemente.Add(nome);
-        return AdicionarCategoriaAsync(nome);
+        var nomePreservado = nome.Trim();
+        if (SomenteLeitura || operacaoCategoriaEmAndamento || string.IsNullOrWhiteSpace(nomePreservado)
+            || CategoriasDisponiveis.Any(atual => Equivalentes(atual, nomePreservado))) return Task.CompletedTask;
+        var categoria = new CategoriaAssociadaLocal($"local-{Guid.NewGuid():N}", nomePreservado, OrigemCategoriaLocal.Local);
+        var novas = AssociacoesSelecionadas.Append(categoria).ToArray();
+        repetirOperacaoCategoria = () => PersistirCategoriasAsync(novas);
+        return PersistirCategoriasAsync(novas);
     }
 
-    private Task RemoverCategoriaAsync(string categoria)
+    private Task RemoverCategoriaAsync(string nome)
     {
-        if (SomenteLeitura) return Task.CompletedTask;
-        ObterCategoriasTransitarias().RemoveAll(atual => string.Equals(atual, categoria, StringComparison.Ordinal));
-        return Task.CompletedTask;
+        if (SomenteLeitura || operacaoCategoriaEmAndamento) return Task.CompletedTask;
+        var novas = AssociacoesSelecionadas.Where(item => !string.Equals(item.Nome, nome, StringComparison.Ordinal)).ToArray();
+        if (novas.Length == AssociacoesSelecionadas.Count) return Task.CompletedTask;
+        repetirOperacaoCategoria = () => PersistirCategoriasAsync(novas);
+        return PersistirCategoriasAsync(novas);
     }
 
-    private List<string> ObterCategoriasTransitarias()
+    private CategoriaAssociadaLocal? ObterCategoriaDisponivel(string nome)
     {
-        if (!categoriasTransitariasPorMemoria.TryGetValue(identidadeMemoria, out var categorias))
+        var associadaNaCaptura = memoriasOrdenadas.SelectMany(memoria => memoria.Categorias ?? [])
+            .FirstOrDefault(item => Equivalentes(item.Nome, nome));
+        if (associadaNaCaptura is not null) return associadaNaCaptura;
+        var preservada = categoriasCatalogo.FirstOrDefault(item => item.Ativa && Equivalentes(item.Nome, nome));
+        return preservada is null ? null
+            : new(preservada.Identidade, preservada.Nome, OrigemCategoriaLocal.Preservada, preservada.Versao);
+    }
+
+    private async Task PersistirCategoriasAsync(IReadOnlyList<CategoriaAssociadaLocal> novas)
+    {
+        if (operacaoCategoriaEmAndamento || SomenteLeitura || dataCaptura is not { } data || memoriaAtual is null) return;
+        operacaoCategoriaEmAndamento = true;
+        falhaCategorias = null;
+        try
         {
-            categorias = [];
-            categoriasTransitariasPorMemoria[identidadeMemoria] = categorias;
+            var esperadas = memoriaAtual.Categorias ?? [];
+            var gravacao = await CapturasLocais.ConfirmarCategoriasAsync(identidadeConta, data,
+                identidadeMemoria, esperadas, novas);
+            if (gravacao.Sucesso && gravacao.Valor is { } atualizado)
+            {
+                workspaceCaptura = atualizado;
+                AtualizarMemorias(atualizado);
+                memoriaAtual = memoriasOrdenadas.SingleOrDefault(item => item.Identidade == identidadeMemoria);
+                repetirOperacaoCategoria = null;
+            }
+            else if (gravacao.Falha?.Codigo == "ContextoAlterado")
+            {
+                var atual = await CapturasLocais.RecuperarAsync(identidadeConta, data);
+                if (atual.Sucesso && atual.Valor is { } workspace)
+                {
+                    workspaceCaptura = workspace;
+                    AtualizarMemorias(workspace);
+                    memoriaAtual = memoriasOrdenadas.SingleOrDefault(item => item.Identidade == identidadeMemoria);
+                }
+                repetirOperacaoCategoria = null;
+                falhaCategorias = "As categorias mudaram em outra aba. O estado atual foi recarregado; confira e tente novamente.";
+            }
+            else
+            {
+                falhaCategorias = "Não foi possível confirmar a alteração no armazenamento local. As categorias confirmadas foram mantidas.";
+            }
         }
+        finally
+        {
+            operacaoCategoriaEmAndamento = false;
+        }
+    }
 
-        return categorias;
+    private async Task RepetirOperacaoCategoriaAsync()
+    {
+        var repetir = repetirOperacaoCategoria;
+        if (repetir is not null) await repetir();
     }
 
     private async Task IrParaAnterior()
@@ -329,14 +375,33 @@
 
     private Task NavegarParaMemoriaAsync(MemoriaCapturaLocal memoria)
     {
+        if (operacaoCategoriaEmAndamento) return Task.CompletedTask;
         popupAberto = false;
         Navegacao.NavigateTo($"categorizar/{Uri.EscapeDataString(DataRota)}/{Uri.EscapeDataString(memoria.Identidade)}");
         return Task.CompletedTask;
     }
 
-    private void VoltarParaLista() => Navegacao.NavigateTo(
-        $"capturar/{Uri.EscapeDataString(DataRota)}?aba=categorizar&memoria={Uri.EscapeDataString(identidadeMemoria)}");
+    private async Task VoltarParaListaAsync()
+    {
+        if (operacaoCategoriaEmAndamento) return;
+        await Continuidade.LimparAutorizacaoCategoriaAsync();
+        Navegacao.NavigateTo($"capturar/{Uri.EscapeDataString(DataRota)}?aba=categorizar&memoria={Uri.EscapeDataString(identidadeMemoria)}");
+    }
+
+    private async ValueTask LimparAutorizacaoAoSairAsync(LocationChangingContext contexto)
+    {
+        if (operacaoCategoriaEmAndamento)
+        {
+            contexto.PreventNavigation();
+            return;
+        }
+        var destino = Navegacao.ToAbsoluteUri(contexto.TargetLocation).AbsolutePath;
+        if (!destino.Contains("/categorizar/", StringComparison.OrdinalIgnoreCase))
+            await Continuidade.LimparAutorizacaoCategoriaAsync();
+    }
 
     private static bool Equivalentes(string primeira, string segunda) =>
         string.Equals(PesquisaCategorias.Normalizar(primeira), PesquisaCategorias.Normalizar(segunda), StringComparison.Ordinal);
+
+    public void Dispose() => registroMudancaLocal?.Dispose();
 }

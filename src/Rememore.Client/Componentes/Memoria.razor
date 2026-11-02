@@ -11,26 +11,28 @@
     <fieldset class="box memoria__moldura">
         @if (ExibirCategoria)
         {
-            <legend class="memoria__categoria @(Modo == ModoMemoria.Revisar ? "memoria__categoria--integral" : string.Empty)"
-                    title="@TextoCategoriaCompleto">
-                @if (Modo == ModoMemoria.Revisar && Categorias.Count > 0)
-                {
-                    @string.Join(", ", Categorias)
-                }
-                else if (Categorias.Count == 0)
-                {
-                    <span class="memoria__categoria-vazia @(CategoriaEmAtencao && Modo == ModoMemoria.Revisar ? "memoria__categoria-vazia--atencao" : string.Empty)">
-                        Sem categoria
-                    </span>
-                }
-                else
-                {
-                    <span class="memoria__categoria-nome">@Categorias[0]</span>
-                    @if (Categorias.Count > 1)
+            <legend class="memoria__categoria @(Modo == ModoMemoria.Revisar ? "memoria__categoria--integral" : string.Empty)">
+                <button class="memoria__categoria-acao" type="button" disabled="@Inativa"
+                        @onclick="() => AoAcionar.InvokeAsync(Identificador)">
+                    @if (Modo == ModoMemoria.Revisar && Categorias.Count > 0)
                     {
-                        <span class="memoria__categoria-contagem">e +@(Categorias.Count - 1)</span>
+                        @string.Join(", ", Categorias)
                     }
-                }
+                    else if (Categorias.Count == 0)
+                    {
+                        <span class="memoria__categoria-vazia @(CategoriaEmAtencao && Modo == ModoMemoria.Revisar ? "memoria__categoria-vazia--atencao" : string.Empty)">
+                            Sem categoria
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="memoria__categoria-nome">@Categorias[0]</span>
+                        @if (Categorias.Count > 1)
+                        {
+                            <span class="memoria__categoria-contagem">e +@(Categorias.Count - 1)</span>
+                        }
+                    }
+                </button>
             </legend>
         }
 
@@ -104,11 +106,4 @@
 
     private bool PodeAcionar => Modo is ModoMemoria.Memorar or ModoMemoria.Categorizar or ModoMemoria.Revisar;
 
-    private string TextoCategoriaCompleto => Categorias.Count == 0
-        ? "Sem categoria"
-        : Modo == ModoMemoria.Revisar
-            ? string.Join(", ", Categorias)
-            : Categorias.Count == 1
-                ? Categorias[0]
-                : $"{Categorias[0]} e +{Categorias.Count - 1}";
 }

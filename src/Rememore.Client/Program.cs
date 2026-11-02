@@ -29,6 +29,7 @@ builder.Services.AddScoped<IOrientacaoProgressiva>(servicos => servicos.GetRequi
 builder.Services.AddScoped<TrabalhoLocalIndexedDb>();
 builder.Services.AddScoped<IDiagnosticoTrabalhoLocal>(servicos => servicos.GetRequiredService<TrabalhoLocalIndexedDb>());
 builder.Services.AddScoped<ICapturasLocais>(servicos => servicos.GetRequiredService<TrabalhoLocalIndexedDb>());
+builder.Services.AddScoped<ICacheCatalogoCategoriasLocal>(servicos => servicos.GetRequiredService<TrabalhoLocalIndexedDb>());
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<IAutenticador, AutenticadorSimulado>();
 builder.Services.AddScoped<ICadastroPorConvite, CadastroPorConviteSimulado>();
@@ -40,6 +41,7 @@ builder.Services.AddScoped<IPendenciaCapturaLocal, PendenciaCapturaLocalIndexedD
 builder.Services.AddScoped<ComposicaoCapturaRemotaSimulada>();
 builder.Services.AddScoped<IComposicaoCapturaRemota>(servicos => servicos.GetRequiredService<ComposicaoCapturaRemotaSimulada>());
 builder.Services.AddScoped<ICatalogoCategoriasRemoto, CatalogoCategoriasRemotoSimulado>();
+builder.Services.AddScoped<CatalogoCategoriasPorConta>();
 builder.Services.AddScoped<ConfiguracaoCapturarSimulada>();
 builder.Services.AddScoped<IConfiguracaoCapturar>(servicos => servicos.GetRequiredService<ConfiguracaoCapturarSimulada>());
 builder.Services.AddScoped<AberturaCaptura>();

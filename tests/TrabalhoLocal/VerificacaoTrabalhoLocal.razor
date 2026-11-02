@@ -1,9 +1,11 @@
 @page "/verificacao-trabalho-local"
 @using Rememore.Client.Infraestrutura.TrabalhoLocal
+@using Rememore.Client.Infraestrutura.Categorias
 @using Microsoft.JSInterop
 @implements IDisposable
 @inject IDiagnosticoTrabalhoLocal Diagnostico
 @inject ICapturasLocais Capturas
+@inject ICacheCatalogoCategoriasLocal CacheCategorias
 @inject EstadoAutenticacaoProvider Autenticacao
 @inject IJSRuntime Js
 
@@ -23,6 +25,11 @@
     [JSInvokable] public Task<ResultadoLocal<WorkspaceCapturaLocal>> MarcarAlterado(string conta, string data) => Capturas.MarcarAlteradoAsync(conta, DateOnly.Parse(data));
     [JSInvokable] public Task<ResultadoLocal<bool>> RemoverSeAlterado(string conta, string data) => Capturas.RemoverSeAlteradoAsync(conta, DateOnly.Parse(data));
     [JSInvokable] public Task<ResultadoLocal<WorkspaceCapturaLocal>> Recuperar(string conta, string data) => Capturas.RecuperarAsync(conta, DateOnly.Parse(data));
+    [JSInvokable] public Task<ResultadoLocal<WorkspaceCapturaLocal>> ConfirmarCategorias(string conta, string data, string memoria,
+        IReadOnlyList<CategoriaAssociadaLocal> esperadas, IReadOnlyList<CategoriaAssociadaLocal> novas) =>
+        Capturas.ConfirmarCategoriasAsync(conta, DateOnly.Parse(data), memoria, esperadas, novas);
+    [JSInvokable] public Task<ResultadoLocal<CacheCatalogoCategoriasLocal>> RecuperarCacheCategorias(string conta) => CacheCategorias.RecuperarAsync(conta);
+    [JSInvokable] public Task<ResultadoLocal<bool>> GravarCacheCategorias(CacheCatalogoCategoriasLocal cache) => CacheCategorias.GravarAsync(cache);
     [JSInvokable] public Task<ResultadoLocal<bool>> Remover(string conta, string data) => Capturas.RemoverAsync(conta, DateOnly.Parse(data));
     [JSInvokable] public Task<ResultadoLocal<IReadOnlyList<WorkspaceCapturaLocal>>> Consultar(string conta) => Capturas.ConsultarAsync(conta);
     [JSInvokable] public string? IdentidadeConta() => Autenticacao.IdentidadeConta;

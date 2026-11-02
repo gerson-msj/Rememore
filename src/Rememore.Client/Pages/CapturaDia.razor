@@ -110,6 +110,7 @@
                             <Memoria
                                      Identificador="@memoria.Identidade"
                                      Conteudo="@memoria.Conteudo"
+                                     Categorias="@(memoria.Categorias?.Select(categoria => categoria.Nome).ToArray() ?? [])"
                                      Modo="@(AbaCategorizar ? ModoMemoria.Categorizar : ModoMemoria.Memorar)"
                                      Primeira="@(indice == 0)"
                                      Ultima="@(indice == Memorias.Count - 1)"
@@ -399,7 +400,7 @@
 
         (memorias[indice], memorias[destino]) = (memorias[destino], memorias[indice]);
         var reordenadas = memorias.Select((memoria, ordem) => memoria with { Ordem = ordem }).ToList();
-        var atualizado = workspace with { Alterado = true, Memorias = reordenadas };
+        var atualizado = workspace with { Alterado = true, AlteradoApenasPorCategorias = false, Memorias = reordenadas };
         identidadeFocoOrdenacao = identidade;
         focarElevarAposOrdenacao = deslocamento < 0;
 
@@ -456,7 +457,7 @@
             var ordem = memorias.Count == 0 ? 0 : memorias.Max(memoria => memoria.Ordem) + 1;
             memorias.Add(new(Guid.NewGuid().ToString("N"), textoInclusao, ordem,
                 PrimeiraPreservacaoUtc: null, TemporalidadeConhecida: true, Complementos: []));
-            var atualizado = workspace with { Alterado = true, Memorias = memorias };
+            var atualizado = workspace with { Alterado = true, AlteradoApenasPorCategorias = false, Memorias = memorias };
             var gravacao = await CapturasLocais.GravarAsync(atualizado);
             if (!gravacao.Sucesso)
             {

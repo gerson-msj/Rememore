@@ -48,7 +48,23 @@ export function alinharMemoriaNoTopo(identidade, seletorBarraFixa) {
     const topoUtil = barra instanceof HTMLElement
         ? Math.max(0, barra.getBoundingClientRect().bottom)
         : 0;
-    const deslocamento = elemento.getBoundingClientRect().top - topoUtil;
+    const anterior = elemento.previousElementSibling;
+    const proxima = elemento.nextElementSibling;
+    const retanguloMemoria = elemento.getBoundingClientRect();
+    const retanguloVizinho = anterior instanceof HTMLElement
+        ? anterior.getBoundingClientRect()
+        : proxima instanceof HTMLElement
+            ? proxima.getBoundingClientRect()
+            : null;
+    const espacamentoMemorias = retanguloVizinho
+        ? anterior instanceof HTMLElement
+            ? Math.max(0, retanguloMemoria.top - retanguloVizinho.bottom)
+            : Math.max(0, retanguloVizinho.top - retanguloMemoria.bottom)
+        : elemento.parentElement instanceof HTMLElement
+            ? Number.parseFloat(getComputedStyle(elemento.parentElement).rowGap) || 0
+            : 0;
+    const topoDesejado = topoUtil + espacamentoMemorias;
+    const deslocamento = retanguloMemoria.top - topoDesejado;
     if (Math.abs(deslocamento) > 0.5) window.scrollBy(0, deslocamento);
 }
 

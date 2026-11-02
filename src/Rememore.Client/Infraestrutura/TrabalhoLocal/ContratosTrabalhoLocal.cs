@@ -13,17 +13,25 @@ public sealed record ComplementoCapturaLocal(
     string Identidade, string Conteudo, int Ordem, DateTimeOffset? PrimeiraPreservacaoUtc = null,
     bool TemporalidadeConhecida = false);
 
+public enum OrigemCategoriaLocal { Preservada, Local }
+
+public sealed record CategoriaAssociadaLocal(
+    string Identidade, string Nome, OrigemCategoriaLocal Origem, long? Versao = null);
+
 public sealed record MemoriaCapturaLocal(
     string Identidade, string Conteudo, int Ordem,
     DateTimeOffset? PrimeiraPreservacaoUtc = null,
     bool TemporalidadeConhecida = false,
-    IReadOnlyList<ComplementoCapturaLocal>? Complementos = null);
+    IReadOnlyList<ComplementoCapturaLocal>? Complementos = null,
+    IReadOnlyList<CategoriaAssociadaLocal>? Categorias = null,
+    IReadOnlyList<CategoriaAssociadaLocal>? CategoriasOriginais = null);
 
 public enum OrigemCapturaLocal { Desconhecida, Ausente, Presente }
 
 public sealed record WorkspaceCapturaLocal(
     string IdentidadeConta, DateOnly Data, bool Alterado, IReadOnlyList<MemoriaCapturaLocal> Memorias,
-    OrigemCapturaLocal Origem = OrigemCapturaLocal.Desconhecida, string? RevisaoOrigem = null);
+    OrigemCapturaLocal Origem = OrigemCapturaLocal.Desconhecida, string? RevisaoOrigem = null,
+    bool AlteradoApenasPorCategorias = false);
 
 public interface IDiagnosticoTrabalhoLocal
 {
@@ -44,4 +52,7 @@ public interface ICapturasLocais
     Task<ResultadoLocal<WorkspaceCapturaLocal>> ExcluirMemoriaSemComplementosAsync(string identidadeConta, DateOnly data, string identidadeMemoria, string conteudoConfirmado);
     Task<ResultadoLocal<WorkspaceCapturaLocal>> ConfirmarComplementoAsync(string identidadeConta, DateOnly data, string identidadeMemoria, int quantidadeEsperada, string? identidadeUltimoEsperada, string? identidadeComplemento, string? conteudoAnterior, string novoConteudo);
     Task<ResultadoLocal<WorkspaceCapturaLocal>> ExcluirUltimoComplementoAsync(string identidadeConta, DateOnly data, string identidadeMemoria, int quantidadeEsperada, string identidadeComplemento, string conteudoConfirmado);
+    Task<ResultadoLocal<WorkspaceCapturaLocal>> ConfirmarCategoriasAsync(string identidadeConta, DateOnly data,
+        string identidadeMemoria, IReadOnlyList<CategoriaAssociadaLocal> categoriasEsperadas,
+        IReadOnlyList<CategoriaAssociadaLocal> categoriasNovas);
 }

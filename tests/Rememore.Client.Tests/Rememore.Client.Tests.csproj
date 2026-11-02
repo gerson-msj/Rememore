@@ -25,6 +25,7 @@
     <Compile Include="../../src/Rememore.Client/Infraestrutura/TrabalhoLocal/ContratosTrabalhoLocal.cs" Link="Infraestrutura/ContratosTrabalhoLocal.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/ComposicaoCapturaRemota.cs" Link="Infraestrutura/ComposicaoCapturaRemota.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Categorias/CatalogoCategoriasRemoto.cs" Link="Infraestrutura/CatalogoCategoriasRemoto.cs" />
+    <Compile Include="../../src/Rememore.Client/Infraestrutura/Categorias/CatalogoCategoriasPorConta.cs" Link="Infraestrutura/CatalogoCategoriasPorConta.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/OrientacaoProgressiva/ContratosOrientacao.cs" Link="Infraestrutura/Orientacao/ContratosOrientacao.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/OrientacaoProgressiva/CatalogoOrientacoes.cs" Link="Infraestrutura/Orientacao/CatalogoOrientacoes.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/OrientacaoProgressiva/ResolvedorOrientacaoProgressiva.cs" Link="Infraestrutura/Orientacao/ResolvedorOrientacaoProgressiva.cs" />

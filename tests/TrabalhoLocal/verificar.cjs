@@ -106,6 +106,76 @@ async function verificarCaptura(esperada = captura) {
             assert.equal((await chamar('RemoverSeAlterado', contaA, temporaria.data)).estado, 0);
             assert.equal((await chamar('Recuperar', contaA, temporaria.data)).estado, 1);
         });
+        const capturaCategorias = { ...captura, data: '2026-10-13', alterado: false, alteradoApenasPorCategorias: false,
+            memorias: [{ identidade: captura.memorias[0].identidade, conteudo: 'Primeira', ordem: 0, categorias: [] }] };
+        const familia = { identidade: 'categoria-familia', nome: 'Família', origem: 0, versao: 1 };
+        const trabalho = { identidade: 'categoria-trabalho', nome: 'Trabalho', origem: 0, versao: 1 };
+        await cenario('Associações gravam imediatamente e reverter ao baseline não cria pendência', async () => {
+            assert.equal((await chamar('Gravar', capturaCategorias)).estado, 0);
+            const adicionada = await chamar('ConfirmarCategorias', contaA, capturaCategorias.data,
+                capturaCategorias.memorias[0].identidade, [], [familia]);
+            assert.equal(adicionada.estado, 0);
+            assert.equal(adicionada.valor.alterado, true);
+            assert.deepEqual(adicionada.valor.memorias[0].categorias, [familia]);
+            const removida = await chamar('ConfirmarCategorias', contaA, capturaCategorias.data,
+                capturaCategorias.memorias[0].identidade, [familia], []);
+            assert.equal(removida.estado, 0);
+            assert.equal(removida.valor.alterado, false);
+            assert.deepEqual(removida.valor.memorias[0].categorias, []);
+            assert.deepEqual((await chamar('Recuperar', contaA, capturaCategorias.data)).valor.memorias[0].categoriasOriginais, []);
+        });
+        await cenario('Ordem, identidade e mudanças pendentes de outras operações são preservadas', async () => {
+            await chamar('MarcarAlterado', contaA, capturaCategorias.data);
+            let r = await chamar('ConfirmarCategorias', contaA, capturaCategorias.data,
+                capturaCategorias.memorias[0].identidade, [], [familia, trabalho]);
+            assert.equal(r.estado, 0);
+            assert.deepEqual(r.valor.memorias[0].categorias.map(c => c.nome), ['Família', 'Trabalho']);
+            r = await chamar('ConfirmarCategorias', contaA, capturaCategorias.data,
+                capturaCategorias.memorias[0].identidade, [familia, trabalho], [trabalho]);
+            assert.equal(r.estado, 0);
+            assert.deepEqual(r.valor.memorias[0].categorias.map(c => c.nome), ['Trabalho']);
+            assert.equal(r.valor.alterado, true);
+            const duplicada = await chamar('ConfirmarCategorias', contaA, capturaCategorias.data,
+                capturaCategorias.memorias[0].identidade, [trabalho], [trabalho,
+                    { identidade: 'local-duplicada', nome: 'TRABALHO', origem: 1 }]);
+            assert.equal(duplicada.estado, 3);
+            assert.deepEqual((await chamar('Recuperar', contaA, capturaCategorias.data)).valor.memorias[0].categorias, [trabalho]);
+        });
+        await cenario('Concorrência rejeita estado esperado antigo sem substituir associação confirmada', async () => {
+            const conflito = await chamar('ConfirmarCategorias', contaA, capturaCategorias.data,
+                capturaCategorias.memorias[0].identidade, [], [familia]);
+            assert.equal(conflito.estado, 3);
+            assert.equal(conflito.falha.codigo, 'ContextoAlterado');
+            assert.deepEqual((await chamar('Recuperar', contaA, capturaCategorias.data)).valor.memorias[0].categorias, [trabalho]);
+        });
+        await cenario('Falha de IndexedDB não confirma nem substitui o último estado', async () => {
+            const resultado = await pagina.evaluate(async ({ conta, data, memoria, trabalho, familia }) => {
+                const prototipo = IDBDatabase.prototype;
+                const descritor = Object.getOwnPropertyDescriptor(prototipo, 'transaction');
+                Object.defineProperty(prototipo, 'transaction', { configurable: true, writable: true,
+                    value: function (stores, modo, ...resto) {
+                        if (modo === 'readwrite' && Array.isArray(stores) && stores.includes('capturas'))
+                            throw new DOMException('Falha técnica de teste', 'UnknownError');
+                        return descritor.value.call(this, stores, modo, ...resto);
+                    } });
+                try {
+                    return await window.verificacao.invokeMethodAsync('ConfirmarCategorias', conta, data, memoria, [trabalho], [familia]);
+                } finally { Object.defineProperty(prototipo, 'transaction', descritor); }
+            }, { conta: contaA, data: capturaCategorias.data, memoria: capturaCategorias.memorias[0].identidade, trabalho, familia });
+            assert.equal(resultado.estado, 3);
+            const atual = (await chamar('Recuperar', contaA, capturaCategorias.data)).valor.memorias[0].categorias;
+            assert.deepEqual(atual, [trabalho]);
+        });
+        await cenario('Cache do catálogo persiste com isolamento por conta', async () => {
+            const cacheA = { identidadeConta: contaA, revisao: '3', categorias: [
+                { identidade: 'categoria-familia', nome: 'Família', versao: 1, ativa: true }] };
+            const cacheB = { identidadeConta: contaB, revisao: '5', categorias: [] };
+            assert.equal((await chamar('GravarCacheCategorias', cacheA)).estado, 0);
+            assert.equal((await chamar('GravarCacheCategorias', cacheB)).estado, 0);
+            assert.deepEqual((await chamar('RecuperarCacheCategorias', contaA)).valor, cacheA);
+            assert.deepEqual((await chamar('RecuperarCacheCategorias', contaB)).valor, cacheB);
+            assert.equal((await chamar('RecuperarCacheCategorias', 'conta-ausente')).estado, 1);
+        });
         await cenario('Diagnóstico não modifica captura e não deixa resíduos', async () => {
             assert.equal((await chamar('Diagnosticar')).estado, 0);
             await verificarCaptura(alterada);
@@ -235,7 +305,7 @@ async function verificarCaptura(esperada = captura) {
             assert.equal(r.bloqueado, 'upgradeBloqueado');
             assert.equal(r.falhou, 'upgrade');
             assert.equal(r.versaoAposBloqueio, 1);
-            assert.equal(r.versao, 2);
+            assert.equal(r.versao, 3);
             assert.deepEqual(r.leitura.valor, alterada);
         });
         await cenario('Principal e Seleção de Capturar continuam disponíveis', async () => {

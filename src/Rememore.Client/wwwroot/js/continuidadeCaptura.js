@@ -1,6 +1,7 @@
 const chave = "rememore.captura.ativa.v1";
 const chaveRascunho = "rememore.captura.rascunho.v1";
 const chaveEdicaoMemoria = "rememore.editar-memoria.rascunho.v1";
+const chaveAutorizacaoCategoria = "rememore.categorizar.autorizacao.v1";
 
 export function ehRecargaAtiva(identidadeConta, data) {
     try {
@@ -63,4 +64,23 @@ export function limparEdicaoMemoria(identidadeConta, data, identidadeMemoria) {
         if (rascunho?.identidadeConta === identidadeConta && rascunho?.data === data && rascunho?.identidadeMemoria === identidadeMemoria)
             sessionStorage.removeItem(chaveEdicaoMemoria);
     } catch { }
+}
+
+export function registrarAutorizacaoCategoria(identidadeConta, data, identidadeMemoria) {
+    try { sessionStorage.setItem(chaveAutorizacaoCategoria, JSON.stringify({ identidadeConta, data, identidadeMemoria })); }
+    catch { }
+}
+
+export function recuperarAutorizacaoCategoria(identidadeConta, data, identidadeMemoria) {
+    try {
+        const navegacao = performance.getEntriesByType("navigation")[0];
+        const autorizacao = JSON.parse(sessionStorage.getItem(chaveAutorizacaoCategoria) ?? "null");
+        return navegacao?.type === "reload" && autorizacao?.identidadeConta === identidadeConta
+            && autorizacao?.data === data && autorizacao?.identidadeMemoria === identidadMemoria;
+    } catch { return false; }
+}
+
+export function limparAutorizacaoCategoria() {
+    try { sessionStorage.removeItem(chaveAutorizacaoCategoria); }
+    catch { }
 }

@@ -1,8 +1,10 @@
 using Microsoft.JSInterop;
+using Rememore.Client.Infraestrutura.Categorias;
 
 namespace Rememore.Client.Infraestrutura.TrabalhoLocal;
 
-public sealed class TrabalhoLocalIndexedDb(IJSRuntime js) : IDiagnosticoTrabalhoLocal, ICapturasLocais, IAsyncDisposable
+public sealed class TrabalhoLocalIndexedDb(IJSRuntime js) : IDiagnosticoTrabalhoLocal, ICapturasLocais,
+    ICacheCatalogoCategoriasLocal, IAsyncDisposable
 {
     private Task<IJSObjectReference>? modulo;
     private bool descartado;
@@ -29,6 +31,15 @@ public sealed class TrabalhoLocalIndexedDb(IJSRuntime js) : IDiagnosticoTrabalho
         InvocarAsync<WorkspaceCapturaLocal>("confirmarComplemento", identidadeConta, data, identidadeMemoria, quantidadeEsperada, identidadeUltimoEsperada, identidadeComplemento, conteudoAnterior, novoConteudo);
     public Task<ResultadoLocal<WorkspaceCapturaLocal>> ExcluirUltimoComplementoAsync(string identidadeConta, DateOnly data, string identidadeMemoria, int quantidadeEsperada, string identidadeComplemento, string conteudoConfirmado) =>
         InvocarAsync<WorkspaceCapturaLocal>("excluirUltimoComplemento", identidadeConta, data, identidadeMemoria, quantidadeEsperada, identidadeComplemento, conteudoConfirmado);
+    public Task<ResultadoLocal<WorkspaceCapturaLocal>> ConfirmarCategoriasAsync(string identidadeConta, DateOnly data,
+        string identidadeMemoria, IReadOnlyList<CategoriaAssociadaLocal> categoriasEsperadas,
+        IReadOnlyList<CategoriaAssociadaLocal> categoriasNovas) =>
+        InvocarAsync<WorkspaceCapturaLocal>("confirmarCategorias", identidadeConta, data, identidadeMemoria,
+            categoriasEsperadas, categoriasNovas);
+    public Task<ResultadoLocal<CacheCatalogoCategoriasLocal>> RecuperarAsync(string identidadeConta) =>
+        InvocarAsync<CacheCatalogoCategoriasLocal>("recuperarCacheCategorias", identidadeConta);
+    public Task<ResultadoLocal<bool>> GravarAsync(CacheCatalogoCategoriasLocal cache) =>
+        InvocarAsync<bool>("gravarCacheCategorias", cache);
 
     private async Task<ResultadoLocal<T>> InvocarAsync<T>(string operacao, params object?[] argumentos)
     {
