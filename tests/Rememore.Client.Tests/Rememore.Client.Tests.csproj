@@ -24,6 +24,10 @@
     <Compile Include="../../src/Rememore.Client/Componentes/CalculosVariacaoTomCategoria.cs" Link="Componentes/CalculosVariacaoTomCategoria.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/TrabalhoLocal/ContratosTrabalhoLocal.cs" Link="Infraestrutura/ContratosTrabalhoLocal.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/ComposicaoCapturaRemota.cs" Link="Infraestrutura/ComposicaoCapturaRemota.cs" />
+    <Compile Include="../../src/Rememore.Client/Infraestrutura/Categorias/CatalogoCategoriasRemoto.cs" Link="Infraestrutura/CatalogoCategoriasRemoto.cs" />
+    <Compile Include="../../src/Rememore.Client/Infraestrutura/OrientacaoProgressiva/ContratosOrientacao.cs" Link="Infraestrutura/Orientacao/ContratosOrientacao.cs" />
+    <Compile Include="../../src/Rememore.Client/Infraestrutura/OrientacaoProgressiva/CatalogoOrientacoes.cs" Link="Infraestrutura/Orientacao/CatalogoOrientacoes.cs" />
+    <Compile Include="../../src/Rememore.Client/Infraestrutura/OrientacaoProgressiva/ResolvedorOrientacaoProgressiva.cs" Link="Infraestrutura/Orientacao/ResolvedorOrientacaoProgressiva.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/RegraEdicaoMemoria.cs" Link="Infraestrutura/RegraEdicaoMemoria.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/RegraEdicaoComplemento.cs" Link="Infraestrutura/RegraEdicaoComplemento.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/EstadoEdicaoMemoria.cs" Link="Infraestrutura/EstadoEdicaoMemoria.cs" />

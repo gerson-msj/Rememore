@@ -6,7 +6,7 @@ namespace Rememore.Client.Tests;
 public sealed class ContratoCapturarE1Tests
 {
     [Fact]
-    public async Task FakeEntregaDezMemoriasDistintasSemDadosDePreservacao()
+    public async Task FakeEntregaDezMemoriasDistintasEUmComplementoParaContextoE2()
     {
         var fake = new ComposicaoCapturaRemotaSimulada();
         var resposta = await fake.ObterCompletaAsync(EstadoAutenticacaoProvider.IdentidadeContaSimulada,
@@ -20,9 +20,15 @@ public sealed class ContratoCapturarE1Tests
         Assert.All(memorias, memoria =>
         {
             Assert.Null(memoria.PrimeiraPreservacaoUtc);
-            Assert.False(memoria.TemporalidadeConhecida);
-            Assert.Empty(memoria.Complementos!);
+            Assert.True(memoria.TemporalidadeConhecida);
         });
+        Assert.All(memorias.Where(memoria => memoria.Identidade != "e1-memoria-04"),
+            memoria => Assert.Empty(memoria.Complementos!));
+        var complemento = Assert.Single(memorias.Single(memoria => memoria.Identidade == "e1-memoria-04").Complementos!);
+        Assert.Equal("e2-complemento-04-01", complemento.Identidade);
+        Assert.Equal(0, complemento.Ordem);
+        Assert.Null(complemento.PrimeiraPreservacaoUtc);
+        Assert.True(complemento.TemporalidadeConhecida);
     }
 
     [Fact]

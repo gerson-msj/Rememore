@@ -198,6 +198,7 @@
 @code {
     [Parameter] public string DataRota { get; set; } = "";
     [SupplyParameterFromQuery(Name = "aba")] public string? Aba { get; set; }
+    [SupplyParameterFromQuery(Name = "memoria")] public string? MemoriaFocoRota { get; set; }
 
     private enum TipoPopupNavegacao { Nenhum, VoltarCabecalho, SairSemTexto, SairComTexto, NavegacaoInterna }
 
@@ -213,6 +214,7 @@
     private DateOnly data;
     private string dataFormatada = "";
     private bool dataInvalida;
+    private string? identidadeMemoriaParaAlinhar;
     private bool AbaCategorizar => !inclusaoAberta && string.Equals(Aba, "categorizar", StringComparison.OrdinalIgnoreCase);
     private string UrlAbaMemorar => $"capturar/{Uri.EscapeDataString(DataRota)}";
     private string UrlAbaCategorizar => $"capturar/{Uri.EscapeDataString(DataRota)}?aba=categorizar";
@@ -291,6 +293,9 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        identidadeMemoriaParaAlinhar = AbaCategorizar && !string.IsNullOrWhiteSpace(MemoriaFocoRota)
+            ? Uri.UnescapeDataString(MemoriaFocoRota)
+            : null;
         if (ultimaDataRota is not null && ultimaDataRota != DataRota)
         {
             await Continuidade.LimparAsync();
@@ -632,6 +637,15 @@
         {
             restaurarFocoOrdenacaoAposRenderizar = false;
             await RestaurarFocoOrdenacaoAsync();
+        }
+
+        if (!preparando && resultado?.Estado == EstadoAberturaCaptura.Aberta
+            && AbaCategorizar && identidadeMemoriaParaAlinhar is { } identidade
+            && Memorias.Any(memoria => memoria.Identidade == identidade)
+            && moduloLista is not null)
+        {
+            identidadeMemoriaParaAlinhar = null;
+            await moduloLista.InvokeVoidAsync("alinharMemoriaNoTopo", identidade, ".captura-dia__barra-fixa");
         }
 
         if (!focarInclusaoAposRenderizar || campoInclusao is null) return;

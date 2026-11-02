@@ -6,8 +6,13 @@ public sealed class ResolvedorOrientacaoProgressiva(
 {
     public async Task<string?> ObterTextoAsync(string contexto)
     {
-        var definicao = catalogo.Obter(contexto);
         var nivel = await fonteNivel.ObterNivelAsync();
+        return ObterTextoAsync(contexto, nivel);
+    }
+
+    public string? ObterTextoAsync(string contexto, NivelOrientacao nivel)
+    {
+        var definicao = catalogo.Obter(contexto);
 
         return nivel switch
         {

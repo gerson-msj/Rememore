@@ -4,8 +4,6 @@
 .captura-dia__linha-data { display: flex; align-items: center; width: min(100%, 60rem); min-height: 2.75rem; margin-inline: auto; padding-inline: clamp(1rem, 4vw, 2.5rem); }
 .captura-dia__linha-data > time { margin: 0; }
 .captura-dia__barra-fixa .tabs.captura-dia__abas { width: min(100%, 60rem); margin: 0 auto; }
-.captura-dia__abas ul { margin: 0; }
-.captura-dia__abas li { flex: 1; }
 .captura-dia__espacador-barra { height: 5.25rem; }
 .captura-dia__conteudo { --captura-dia-espacamento: 1.4rem; display: grid; width: min(100%, 60rem); margin-inline: auto; padding-block: clamp(1.25rem, 3vw, 2.5rem) 4rem; padding-inline: clamp(1rem, 4vw, 2.5rem); gap: var(--captura-dia-espacamento); }
 .captura-dia__conteudo > .title { margin: 0; color: var(--cor-title); font-size: clamp(1.55rem, 4vw, 2.15rem); line-height: 1.2; }

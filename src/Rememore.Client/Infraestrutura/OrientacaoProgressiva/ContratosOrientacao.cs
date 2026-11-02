@@ -4,6 +4,7 @@ public static class ContextosOrientacao
 {
     public const string SelecaoCapturar = "capturar.selecao";
     public const string CapturaMemorar = "capturar.memorar";
+    public const string CategorizacaoCategoria = "capturar.categorizar.categoria";
 }
 
 public enum NivelOrientacao

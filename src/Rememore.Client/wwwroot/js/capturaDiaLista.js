@@ -40,6 +40,18 @@ export function desconectarOrdenacao() {
     ordenacaoConectada = false;
 }
 
+export function alinharMemoriaNoTopo(identidade, seletorBarraFixa) {
+    const elemento = document.querySelector(`[data-identidade-memoria="${CSS.escape(identidade)}"]`);
+    if (!(elemento instanceof HTMLElement)) return;
+
+    const barra = document.querySelector(seletorBarraFixa);
+    const topoUtil = barra instanceof HTMLElement
+        ? Math.max(0, barra.getBoundingClientRect().bottom)
+        : 0;
+    const deslocamento = elemento.getBoundingClientRect().top - topoUtil;
+    if (Math.abs(deslocamento) > 0.5) window.scrollBy(0, deslocamento);
+}
+
 export function focarEManterVisivel(identidade, elevar, seletorBarraFixa) {
     const seletor = `[data-identidade-memoria="${CSS.escape(identidade)}"]`;
     const elemento = document.querySelector(seletor);

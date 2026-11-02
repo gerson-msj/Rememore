@@ -14,7 +14,12 @@ public sealed class CatalogoOrientacoes
             ContextosOrientacao.CapturaMemorar,
             "Comece pelo que vier à memória. Pode ser uma frase curta, um detalhe ou algo que aconteceu hoje.",
             "Registre uma lembrança por vez. Memórias mais focadas ajudam a reencontrar melhor cada contexto depois.",
-            "Observe detalhes que normalmente passariam despercebidos: uma conversa, uma sensação, uma pequena mudança.")
+            "Observe detalhes que normalmente passariam despercebidos: uma conversa, uma sensação, uma pequena mudança."),
+        new DefinicaoOrientacao(
+            ContextosOrientacao.CategorizacaoCategoria,
+            "Escolha uma categoria que represente esta memória. Se ela ainda não existir, basta escrever o nome.",
+            "Escolha a categoria que melhor representa o contexto desta memória.",
+            "Categorias consistentes tornam mais perceptíveis os temas que atravessam suas memórias.")
     ]);
 
     public CatalogoOrientacoes(IEnumerable<DefinicaoOrientacao> definicoes)
