@@ -164,6 +164,14 @@
     }
 }
 
+/* Variante para popups com editor ou texto longo em viewports de pouca altura. */
+@media screen and (max-height: 40rem) {
+    .modal.modal--popup-compartilhado.modal--popup-conteudo-longo > .modal-card {
+        margin-top: 1rem;
+        max-height: calc(100dvh - 2rem);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .icone-acao-realce > i,
     .icone-acao-realce > .icon > i {

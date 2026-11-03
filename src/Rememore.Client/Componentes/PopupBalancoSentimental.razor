@@ -1,0 +1,294 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div @ref="modal" class="modal modal--popup-topo modal--popup-compartilhado modal--popup-conteudo-longo @(Aberto ? "is-active" : string.Empty)"
+     role="dialog" aria-modal="true" aria-labelledby="@idTitulo"
+     aria-describedby="@(fase == FasePopup.Editor ? null : idMensagem)">
+    <div class="modal-background" @onclick="SolicitarFechamentoAsync"></div>
+    <div class="modal-card balanco-popup__cartao">
+        <header class="modal-card-head">
+            <p id="@idTitulo" class="modal-card-title">@Titulo</p>
+        </header>
+        <section class="modal-card-body balanco-popup__corpo @(SomenteLeitura && fase == FasePopup.Editor ? "balanco-popup__corpo--leitura" : fase != FasePopup.Editor ? string.Empty : "balanco-popup__corpo--editor")">
+            @if (fase == FasePopup.ConfirmarDescarte)
+            {
+                <p id="@idMensagem">As alterações feitas no balanço sentimental ainda não foram salvas e serão perdidas.</p>
+            }
+            else if (fase == FasePopup.ConfirmarExclusao)
+            {
+                <p id="@idMensagem">O balanço sentimental desta memória será removido desta captura.</p>
+            }
+            else if (SomenteLeitura)
+            {
+                <div class="field">
+                    <div class="control">
+                        <textarea class="textarea has-fixed-size balanco-popup__campo balanco-popup__leitura"
+                                  aria-label="Balanço sentimental" readonly wrap="hard"
+                                  value="@TextoConfirmado"></textarea>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="field">
+                    <div class="control">
+                        <textarea class="textarea has-fixed-size balanco-popup__campo" rows="5"
+                                  aria-label="Balanço sentimental"
+                                  placeholder="Registre os sentimentos que esta memória despertou em você…"
+                                  value="@rascunho" @oninput="AtualizarRascunhoAsync" disabled="@ocupado"></textarea>
+                    </div>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(erro))
+            {
+                <p class="notification is-warning balanco-popup__erro" role="alert">@erro</p>
+            }
+        </section>
+        <footer class="modal-card-foot">
+            <div class="balanco-popup__acoes @(fase == FasePopup.ConfirmarDescarte ? "balanco-popup__acoes--descarte" : string.Empty)">
+                @if (fase == FasePopup.ConfirmarDescarte)
+                {
+                    <button class="button is-danger" type="button" data-foco-inicial disabled="@ocupado" @onclick="DescartarAsync">Descartar alterações</button>
+                    <button class="button" type="button" disabled="@ocupado" @onclick="ContinuarEditando">Continuar editando</button>
+                }
+                else if (fase == FasePopup.ConfirmarExclusao)
+                {
+                    <button class="button is-danger" type="button" data-foco-inicial disabled="@ocupado" @onclick="ExcluirAsync">Excluir</button>
+                    <button class="button" type="button" disabled="@ocupado" @onclick="ContinuarEditando">Manter</button>
+                }
+                else if (SomenteLeitura)
+                {
+                    <button class="button" type="button" data-foco-inicial @onclick="SolicitarFechamentoAsync">Fechar</button>
+                }
+                else
+                {
+                    <button class="button is-success" type="button" disabled="@(ocupado || string.IsNullOrWhiteSpace(rascunho))" @onclick="SalvarAsync">Salvar</button>
+                    <button class="button" type="button" disabled="@ocupado" @onclick="SolicitarFechamentoAsync">Cancelar</button>
+                    @if (TextoConfirmado is not null)
+                    {
+                        <button class="button is-danger" type="button" disabled="@ocupado" @onclick="ConfirmarExclusao">Excluir</button>
+                    }
+                }
+            </div>
+        </footer>
+    </div>
+</div>
+
+@code {
+    private enum FasePopup { Editor, ConfirmarDescarte, ConfirmarExclusao }
+
+    private readonly string idBase = $"balanco-popup-{Guid.NewGuid():N}";
+    private string idTitulo => $"{idBase}-titulo";
+    private string idMensagem => $"{idBase}-mensagem";
+    private ElementReference modal;
+    private IJSObjectReference? modulo;
+    private DotNetObjectReference<PopupBalancoSentimental>? referenciaJs;
+    private string rascunho = string.Empty;
+    private string? contextoAnterior;
+    private string? textoConfirmadoAnterior;
+    private bool somenteLeituraAnterior;
+    private bool abertoAnterior;
+    private bool jsRegistrado;
+    private bool ocupado;
+    private string? erro;
+    private FasePopup fase;
+    private FasePopup? faseFocada;
+
+    [Parameter, EditorRequired] public bool Aberto { get; set; }
+    [Parameter, EditorRequired] public string Contexto { get; set; } = string.Empty;
+    [Parameter] public string? TextoConfirmado { get; set; }
+    [Parameter] public string? RascunhoInicial { get; set; }
+    [Parameter] public bool SomenteLeitura { get; set; }
+    [Parameter] public EventCallback<string?> AoAtualizarRascunho { get; set; }
+    [Parameter] public Func<string, Task<bool>>? AoSalvar { get; set; }
+    [Parameter] public Func<Task<bool>>? AoExcluir { get; set; }
+    [Parameter] public EventCallback<ResultadoPopupBalanco> AoConcluir { get; set; }
+
+    private string Titulo => fase switch
+    {
+        FasePopup.ConfirmarDescarte => "Descartar as alterações?",
+        FasePopup.ConfirmarExclusao => "Excluir o balanço sentimental?",
+        _ when SomenteLeitura => "Balanço sentimental",
+        _ when TextoConfirmado is null => "Adicionar balanço sentimental",
+        _ => "Editar balanço sentimental"
+    };
+
+    private bool Alterado => rascunho != (TextoConfirmado ?? string.Empty);
+
+    protected override void OnParametersSet()
+    {
+        if (Aberto && (!abertoAnterior || contextoAnterior != Contexto ||
+            somenteLeituraAnterior != SomenteLeitura ||
+            (!ocupado && textoConfirmadoAnterior != TextoConfirmado &&
+             rascunho == (textoConfirmadoAnterior ?? string.Empty))))
+        {
+            rascunho = SomenteLeitura ? TextoConfirmado ?? string.Empty : RascunhoInicial ?? TextoConfirmado ?? string.Empty;
+            fase = FasePopup.Editor;
+            faseFocada = null;
+            erro = null;
+            ocupado = false;
+        }
+        abertoAnterior = Aberto;
+        contextoAnterior = Contexto;
+        textoConfirmadoAnterior = TextoConfirmado;
+        somenteLeituraAnterior = SomenteLeitura;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (primeiroRender)
+        {
+            modulo = await JS.InvokeAsync<IJSObjectReference>("import", "./js/popupBalancoSentimental.js");
+            referenciaJs = DotNetObjectReference.Create(this);
+        }
+        if (modulo is null) return;
+        if (Aberto && !jsRegistrado)
+        {
+            await modulo.InvokeVoidAsync("registrar", modal, referenciaJs, SeletorFoco);
+            jsRegistrado = true;
+            faseFocada = fase;
+        }
+        else if (Aberto && faseFocada != fase)
+        {
+            await modulo.InvokeVoidAsync("focar", modal, SeletorFoco);
+            faseFocada = fase;
+        }
+        else if (!Aberto && jsRegistrado)
+        {
+            await modulo.InvokeVoidAsync("remover", modal);
+            jsRegistrado = false;
+        }
+    }
+
+    private string SeletorFoco => fase == FasePopup.Editor && !SomenteLeitura ? "textarea" : "[data-foco-inicial]";
+
+    private async Task AtualizarRascunhoAsync(ChangeEventArgs evento)
+    {
+        if (ocupado) return;
+        rascunho = evento.Value?.ToString() ?? string.Empty;
+        erro = null;
+        await AoAtualizarRascunho.InvokeAsync(rascunho);
+    }
+
+    public async Task SolicitarSaidaAsync()
+    {
+        await SolicitarFechamentoAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SolicitarFechamentoAsync()
+    {
+        if (!Aberto || ocupado) return;
+        if (fase != FasePopup.Editor)
+        {
+            faseFocada = null;
+            return;
+        }
+        if (!SomenteLeitura && Alterado)
+        {
+            fase = FasePopup.ConfirmarDescarte;
+            erro = null;
+            return;
+        }
+        await AoConcluir.InvokeAsync(ResultadoPopupBalanco.FechadoSemAlteracao);
+    }
+
+    private void ContinuarEditando()
+    {
+        if (ocupado) return;
+        fase = FasePopup.Editor;
+        erro = null;
+    }
+
+    private async Task DescartarAsync()
+    {
+        if (ocupado || fase != FasePopup.ConfirmarDescarte) return;
+        ocupado = true;
+        try
+        {
+            await AoAtualizarRascunho.InvokeAsync(null);
+            await AoConcluir.InvokeAsync(ResultadoPopupBalanco.Descartado);
+        }
+        finally { ocupado = false; }
+    }
+
+    private void ConfirmarExclusao()
+    {
+        if (ocupado || fase != FasePopup.Editor || TextoConfirmado is null) return;
+        fase = FasePopup.ConfirmarExclusao;
+        erro = null;
+    }
+
+    private async Task SalvarAsync()
+    {
+        if (ocupado || fase != FasePopup.Editor || SomenteLeitura || string.IsNullOrWhiteSpace(rascunho)) return;
+        ocupado = true;
+        erro = null;
+        try
+        {
+            if (AoSalvar is null || !await AoSalvar(rascunho))
+            {
+                erro = "Não foi possível salvar o balanço sentimental. Seu texto continua aqui. Tente novamente.";
+                return;
+            }
+            await AoAtualizarRascunho.InvokeAsync(null);
+            await AoConcluir.InvokeAsync(ResultadoPopupBalanco.Salvo);
+        }
+        catch
+        {
+            erro = "Não foi possível salvar o balanço sentimental. Seu texto continua aqui. Tente novamente.";
+        }
+        finally
+        {
+            ocupado = false;
+            if (Aberto) faseFocada = null;
+        }
+    }
+
+    private async Task ExcluirAsync()
+    {
+        if (ocupado || fase != FasePopup.ConfirmarExclusao || SomenteLeitura || TextoConfirmado is null) return;
+        ocupado = true;
+        erro = null;
+        try
+        {
+            if (AoExcluir is null || !await AoExcluir())
+            {
+                erro = "Não foi possível excluir o balanço sentimental. Seu texto continua aqui. Tente novamente.";
+                fase = FasePopup.Editor;
+                return;
+            }
+            await AoAtualizarRascunho.InvokeAsync(null);
+            await AoConcluir.InvokeAsync(ResultadoPopupBalanco.Excluido);
+        }
+        catch
+        {
+            erro = "Não foi possível excluir o balanço sentimental. Seu texto continua aqui. Tente novamente.";
+            fase = FasePopup.Editor;
+        }
+        finally
+        {
+            ocupado = false;
+            if (Aberto) faseFocada = null;
+        }
+    }
+
+    [JSInvokable]
+    public async Task AoPressionarEscape()
+    {
+        await SolicitarFechamentoAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        referenciaJs?.Dispose();
+        if (modulo is null) return;
+        try
+        {
+            await modulo.InvokeVoidAsync("remover", modal);
+            await modulo.DisposeAsync();
+        }
+        catch (JSDisconnectedException) { }
+    }
+}

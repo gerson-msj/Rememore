@@ -1,0 +1,72 @@
+/* Conteudo proprio do CMP-036; moldura, backdrop e transicoes vêm de componentes.css. */
+.balanco-popup__cartao {
+    width: min(38rem, calc(100vw - 2rem));
+}
+
+.balanco-popup__cartao .modal-card-title {
+    flex-shrink: 1;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.balanco-popup__corpo {
+    padding-inline: 1rem;
+}
+
+.balanco-popup__corpo--editor {
+    padding: 0;
+}
+
+.balanco-popup__corpo--leitura {
+    padding: 0;
+}
+
+.balanco-popup__corpo--editor .field,
+.balanco-popup__corpo--leitura .field {
+    margin-bottom: 0;
+}
+
+.balanco-popup__campo {
+    height: 10rem;
+    min-height: 10rem;
+    max-height: 10rem;
+    margin-block: 0;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+    overflow-y: auto;
+    box-shadow: none;
+}
+
+.balanco-popup__campo:focus {
+    border: 0;
+    box-shadow: none;
+}
+
+.balanco-popup__campo:focus-visible {
+    outline: none;
+    background-color: transparent;
+}
+
+.balanco-popup__leitura {
+    overflow-x: hidden;
+}
+
+.balanco-popup__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.balanco-popup__acoes > .button {
+    width: 8rem;
+    max-width: 100%;
+    white-space: normal;
+}
+
+.balanco-popup__acoes--descarte > .button {
+    width: 12rem;
+}

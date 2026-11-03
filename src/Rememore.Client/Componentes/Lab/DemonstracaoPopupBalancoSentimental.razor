@@ -1,0 +1,142 @@
+<div class="buttons">
+    <button class="button is-link" type="button" @onclick="AbrirInclusao">@(balancoNovo is null ? "Abrir inclusão" : "Abrir balanço criado")</button>
+    <button class="button is-link" type="button" @onclick="AbrirEdicao">@(balancoExemplo is null ? "Recriar exemplo para edição" : "Abrir edição")</button>
+    <button class="button is-link" type="button" @onclick="AbrirLeitura">Abrir leitura histórica</button>
+    <button class="button is-link is-light" type="button" @onclick="AbrirRetomada">Retomar rascunho fornecido</button>
+</div>
+<div class="field">
+    <label class="label" for="cmp036-resultado">Próxima operação fake</label>
+    <div class="control">
+        <div class="select">
+            <select id="cmp036-resultado" @bind="proximoResultado">
+                <option value="sucesso">Sucesso</option>
+                <option value="falha">Falha</option>
+            </select>
+        </div>
+    </div>
+</div>
+<div class="content" role="status">
+    <p><strong>Texto confirmado:</strong> @Resumir(TextoAtual)</p>
+    <p><strong>Rascunho:</strong> @Resumir(RascunhoAtual)</p>
+    <p><strong>Último evento/resultado:</strong> @ultimoEvento</p>
+</div>
+
+<PopupBalancoSentimental Aberto="aberto" Contexto="@contexto"
+                         TextoConfirmado="@TextoAtual" RascunhoInicial="@RascunhoAtual"
+                         SomenteLeitura="@somenteLeitura"
+                         AoAtualizarRascunho="AtualizarRascunho"
+                         AoSalvar="SalvarFakeAsync" AoExcluir="ExcluirFakeAsync"
+                         AoConcluir="Concluir" />
+
+@code {
+    private const string textoExemplo = """
+        Hoje senti alegria ao reencontrar uma lembrança antiga. O detalhe do lugar e das pessoas trouxe de volta uma sensação de acolhimento.
+
+        Também houve saudade. Algumas coisas mudaram desde então, e vale registrar isso sem tentar resumir a experiência em uma palavra.
+
+        A memória continua com detalhes suficientes para ocupar várias linhas do editor e permitir a conferência da rolagem interna. Este trecho prolonga a leitura e mostra o comportamento de palavras e parágrafos em uma janela de tamanho limitado.
+        """;
+
+    private readonly Dictionary<string, string?> rascunhos = new();
+    private string? balancoNovo;
+    private string? balancoExemplo = textoExemplo;
+    private string? balancoRetomada = "Texto confirmado antes da retomada.";
+    private string contexto = "nova";
+    private string proximoResultado = "sucesso";
+    private string ultimoEvento = "Nenhuma operação.";
+    private bool aberto;
+    private bool somenteLeitura;
+
+    private string? TextoAtual => contexto switch
+    {
+        "nova" => balancoNovo,
+        "exemplo" => balancoExemplo,
+        "historico" => textoExemplo,
+        _ => balancoRetomada
+    };
+
+    private string? RascunhoAtual => rascunhos.GetValueOrDefault(contexto);
+
+    private static string Resumir(string? valor) => valor is null ? "(nenhum)" :
+        valor.Length <= 100 ? $"({valor.Length} caracteres) {valor}" :
+        $"({valor.Length} caracteres) {valor[..100]}…";
+
+    private void AbrirInclusao() => Abrir("nova", false);
+    private void AbrirEdicao()
+    {
+        balancoExemplo ??= textoExemplo;
+        Abrir("exemplo", false);
+    }
+    private void AbrirLeitura() => Abrir("historico", true);
+
+    private void AbrirRetomada()
+    {
+        rascunhos["retomada"] = "Rascunho retomado, com uma linha nova.\nO texto confirmado continua separado.";
+        Abrir("retomada", false);
+    }
+
+    private void Abrir(string novoContexto, bool leitura)
+    {
+        contexto = novoContexto;
+        somenteLeitura = leitura;
+        ultimoEvento = $"Abertura: {novoContexto}.";
+        aberto = true;
+    }
+
+    private void AtualizarRascunho(string? valor)
+    {
+        if (valor is null) rascunhos.Remove(contexto);
+        else rascunhos[contexto] = valor;
+    }
+
+    private async Task<bool> SalvarFakeAsync(string valor)
+    {
+        var falhar = ConsumirFalha();
+        await Task.Delay(500);
+        if (falhar)
+        {
+            ultimoEvento = "Falha fake ao salvar; confirmado preservado.";
+            return false;
+        }
+        AtribuirTexto(valor);
+        ultimoEvento = "Sucesso fake ao salvar.";
+        return true;
+    }
+
+    private async Task<bool> ExcluirFakeAsync()
+    {
+        var falhar = ConsumirFalha();
+        await Task.Delay(500);
+        if (falhar)
+        {
+            ultimoEvento = "Falha fake ao excluir; confirmado preservado.";
+            return false;
+        }
+        AtribuirTexto(null);
+        ultimoEvento = "Sucesso fake ao excluir.";
+        return true;
+    }
+
+    private bool ConsumirFalha()
+    {
+        var falhar = proximoResultado == "falha";
+        proximoResultado = "sucesso";
+        return falhar;
+    }
+
+    private void AtribuirTexto(string? valor)
+    {
+        switch (contexto)
+        {
+            case "nova": balancoNovo = valor; break;
+            case "exemplo": balancoExemplo = valor; break;
+            case "retomada": balancoRetomada = valor; break;
+        }
+    }
+
+    private void Concluir(ResultadoPopupBalanco resultado)
+    {
+        ultimoEvento = $"{ultimoEvento} Fechamento: {resultado}.";
+        aberto = false;
+    }
+}
