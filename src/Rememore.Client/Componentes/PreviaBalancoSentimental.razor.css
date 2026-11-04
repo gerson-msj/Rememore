@@ -1,0 +1,42 @@
+.previa-balanco {
+    box-sizing: border-box;
+    width: 100%;
+    height: calc(var(--texto-previa-altura-tres-linhas) + 0.5rem + 2px);
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--bulma-border-weak, var(--bulma-border));
+    border-radius: 0.4rem;
+    background-color: var(--bulma-scheme-main);
+    color: var(--bulma-text);
+}
+
+.previa-balanco__viewport {
+    display: block;
+    height: var(--texto-previa-altura-tres-linhas);
+    overflow: hidden;
+}
+
+.previa-balanco .texto-previa-conteudo {
+    max-height: none;
+    overflow: visible;
+}
+
+.previa-balanco__acao {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.previa-balanco__acao:focus-visible {
+    outline: 2px solid var(--bulma-link);
+    outline-offset: 2px;
+}

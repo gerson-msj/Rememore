@@ -1,0 +1,73 @@
+@using System.Globalization
+
+<section aria-labelledby="cmp037-demonstracao-titulo">
+    <h3 class="title is-5" id="cmp037-demonstracao-titulo">Demonstração da prévia</h3>
+    <p class="mb-4">Cenários locais; o texto é apenas demonstrativo e não é persistido.</p>
+
+    <div class="columns is-multiline">
+        <div class="column is-half">
+            <div class="field">
+                <label class="label" for="cmp037-cenario">Texto demonstrativo</label>
+                <div class="control">
+                    <div class="select is-fullwidth">
+                        <select id="cmp037-cenario" @bind="Cenario">
+                            <option value="vazio">Sem balanço</option>
+                            <option value="curto">Uma ou duas linhas</option>
+                            <option value="tres">Exatamente três linhas</option>
+                            <option value="longo">Texto excedente</option>
+                            <option value="quebras">Parágrafos e quebras explícitas</option>
+                            <option value="palavra">Palavra longa</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="column is-half">
+            <div class="field">
+                <label class="label" for="cmp037-largura">Largura da prévia: @Largura px</label>
+                <div class="control">
+                    <input id="cmp037-largura" type="range" min="240" max="720" step="10"
+                           @bind="Largura" @bind:event="oninput" />
+                </div>
+            </div>
+            <div class="field">
+                <label class="checkbox">
+                    <input type="checkbox" @bind="Acionavel" /> Habilitar acionamento delegado
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div style="max-width: @(Largura.ToString(CultureInfo.InvariantCulture))px">
+        <PreviaBalancoSentimental Texto="@TextoAtual" Acionavel="Acionavel" AoAcionar="AcionarPrevia" />
+    </div>
+    <p class="help mt-2" role="status" aria-live="polite">@UltimoAcionamento</p>
+</section>
+
+@code {
+    private const string textoTresLinhas = "Essa lembrança ainda me emociona e me faz sorrir.\nGuardo os detalhes, as conversas e o carinho daquele dia.\nRelembrar esse momento me traz alegria e gratidão.";
+    private const string textoLongo = "A lembrança despertou alegria e gratidão, mas também saudade. Quero conservar os detalhes deste dia e reconhecer como sentimentos diferentes podem coexistir. Ao reler esta memória, espero compreender melhor o que mudou e o que continua importante para mim.";
+    private const string textoParagrafos = "Um primeiro parágrafo, com uma pausa.\n\nUm segundo parágrafo que continua a reflexão com mais palavras para testar a altura disponível.";
+    private const string palavraLonga = "Uma palavra extensa: " + "extraordinariamente" + " extraordinariamente" + " extraordinariamente" + " extraordinariamente";
+
+    private string Cenario { get; set; } = "vazio";
+    private int Largura { get; set; } = 480;
+    private bool Acionavel { get; set; }
+    private int acionamentos;
+
+    private string? TextoAtual => Cenario switch
+    {
+        "curto" => "Uma reflexão breve sobre este momento e os sentimentos que ele despertou.",
+        "tres" => textoTresLinhas,
+        "longo" => textoLongo,
+        "quebras" => textoParagrafos,
+        "palavra" => palavraLonga,
+        _ => null
+    };
+
+    private string UltimoAcionamento => acionamentos == 0
+        ? "Nenhum acionamento recebido pelo chamador."
+        : $"Acionamento delegado recebido ({acionamentos}).";
+
+    private void AcionarPrevia() => acionamentos++;
+}

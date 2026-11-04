@@ -1,0 +1,72 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+@using Microsoft.JSInterop
+
+<div @ref="area"
+     class="previa-balanco texto-previa-limitada"
+     data-excedente="@excedente.ToString().ToLowerInvariant()">
+    @if (Acionavel)
+    {
+        <button class="previa-balanco__acao" type="button"
+                aria-label="@(string.IsNullOrEmpty(Texto) ? "Acionar balanço sentimental" : null)"
+                @onclick="AcionarAsync">
+            <span @ref="vista" class="previa-balanco__viewport @(excedente ? "texto-previa-esmaecida" : string.Empty)">
+                <span class="texto-previa-conteudo previa-balanco__texto">@Texto</span>
+            </span>
+        </button>
+    }
+    else
+    {
+        <span @ref="vista" class="previa-balanco__viewport @(excedente ? "texto-previa-esmaecida" : string.Empty)">
+            <span class="texto-previa-conteudo previa-balanco__texto">@Texto</span>
+        </span>
+    }
+</div>
+
+@code {
+    private ElementReference area;
+    private ElementReference vista;
+    private DotNetObjectReference<PreviaBalancoSentimental>? referencia;
+    private IJSObjectReference? modulo;
+    private bool excedente;
+
+    [Parameter] public string? Texto { get; set; }
+    [Parameter] public bool Acionavel { get; set; }
+    [Parameter] public EventCallback AoAcionar { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (primeiroRender)
+        {
+            modulo = await JS.InvokeAsync<IJSObjectReference>("import", "./js/previaBalancoSentimental.js");
+            referencia = DotNetObjectReference.Create(this);
+            await modulo.InvokeVoidAsync("observar", area, referencia);
+            return;
+        }
+
+        if (modulo is not null && referencia is not null)
+            await modulo.InvokeVoidAsync("medir", area, referencia);
+    }
+
+    [JSInvokable]
+    public Task AtualizarExcedente(bool temExcedente) => InvokeAsync(() =>
+    {
+        if (excedente == temExcedente) return;
+        excedente = temExcedente;
+        StateHasChanged();
+    });
+
+    private Task AcionarAsync() => AoAcionar.InvokeAsync();
+
+    public async ValueTask DisposeAsync()
+    {
+        if (modulo is not null)
+        {
+            try { await modulo.InvokeVoidAsync("parar", area); }
+            catch (JSDisconnectedException) { }
+            await modulo.DisposeAsync();
+        }
+        referencia?.Dispose();
+    }
+}

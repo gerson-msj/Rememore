@@ -41,16 +41,16 @@
             {
                 <button class="button is-ghost is-fullwidth memoria__principal" type="button" disabled="@Inativa"
                         @onclick="() => AoAcionar.InvokeAsync(Identificador)">
-                    <span class="memoria__texto @(Modo == ModoMemoria.Revisar ? "memoria__texto--integral" : string.Empty)">
-                        <span class="memoria__conteudo">@Conteudo</span>
+                    <span class="memoria__texto texto-previa-limitada @(Modo == ModoMemoria.Revisar ? "memoria__texto--integral" : "texto-previa-esmaecida")">
+                        <span class="texto-previa-conteudo memoria__conteudo">@Conteudo</span>
                     </span>
                 </button>
             }
             else
             {
                 <div class="memoria__principal memoria__principal--leitura">
-                    <span class="memoria__texto @(Modo == ModoMemoria.Revisar ? "memoria__texto--integral" : string.Empty)">
-                        <span class="memoria__conteudo">@Conteudo</span>
+                    <span class="memoria__texto texto-previa-limitada @(Modo == ModoMemoria.Revisar ? "memoria__texto--integral" : "texto-previa-esmaecida")">
+                        <span class="texto-previa-conteudo memoria__conteudo">@Conteudo</span>
                     </span>
                 </div>
             }
