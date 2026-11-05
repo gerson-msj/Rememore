@@ -5,6 +5,7 @@ namespace Rememore.Client.Infraestrutura.Capturar;
 public sealed record RascunhoInclusaoCaptura(bool InclusaoAberta, string Texto);
 public sealed record RascunhoEdicaoMemoria(string Texto, bool AutorizacaoConcedida,
     string Tipo = "MemoriaPrincipal", string? IdentidadeComplemento = null);
+public sealed record RascunhoBalancoSentimental(string Texto, string? TextoConfirmadoBase, bool AutorizacaoConcedida);
 
 public sealed class ContinuidadeCapturaSessionStorage(IJSRuntime js) : IAsyncDisposable
 {
@@ -109,6 +110,29 @@ public sealed class ContinuidadeCapturaSessionStorage(IJSRuntime js) : IAsyncDis
     public async Task LimparAutorizacaoCategoriaAsync()
     {
         try { await (await GarantirModuloAsync()).InvokeVoidAsync("limparAutorizacaoCategoria"); }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException) { }
+    }
+
+    public async Task<bool> RegistrarBalancoSentimentalAsync(string identidadeConta, DateOnly data, string identidadeMemoria,
+        string? textoConfirmadoBase, string texto, bool autorizacaoConcedida)
+    {
+        try { return await (await GarantirModuloAsync()).InvokeAsync<bool>("registrarBalancoSentimental", identidadeConta,
+            data.ToString("yyyy-MM-dd"), identidadeMemoria, textoConfirmadoBase, texto, autorizacaoConcedida); }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException) { return false; }
+    }
+
+    public async Task<RascunhoBalancoSentimental?> RecuperarBalancoSentimentalAsync(string identidadeConta, DateOnly data,
+        string identidadeMemoria)
+    {
+        try { return await (await GarantirModuloAsync()).InvokeAsync<RascunhoBalancoSentimental?>(
+            "recuperarBalancoSentimental", identidadeConta, data.ToString("yyyy-MM-dd"), identidadeMemoria); }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException) { return null; }
+    }
+
+    public async Task LimparBalancoSentimentalAsync(string identidadeConta, DateOnly data, string identidadeMemoria)
+    {
+        try { await (await GarantirModuloAsync()).InvokeVoidAsync("limparBalancoSentimental", identidadeConta,
+            data.ToString("yyyy-MM-dd"), identidadeMemoria); }
         catch (Exception ex) when (ex is JSException or InvalidOperationException) { }
     }
 

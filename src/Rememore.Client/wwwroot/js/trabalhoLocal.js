@@ -36,6 +36,8 @@ function validarCaptura(captura) {
     for (const memoria of captura.memorias) {
         if (typeof memoria.identidade !== "string" || !memoria.identidade.trim() || identidades.has(memoria.identidade)
             || typeof memoria.conteudo !== "string" || !Number.isInteger(memoria.ordem)) throw new TypeError("Memoria invalida.");
+        if (memoria.balancoSentimental != null && (typeof memoria.balancoSentimental !== "string" || !memoria.balancoSentimental.trim()))
+            throw new TypeError("Balanco sentimental invalido.");
         if (memoria.temporalidadeConhecida != null && typeof memoria.temporalidadeConhecida !== "boolean") throw new TypeError("Temporalidade de memoria invalida.");
         if (memoria.primeiraPreservacaoUtc != null && (typeof memoria.primeiraPreservacaoUtc !== "string" || !Number.isFinite(Date.parse(memoria.primeiraPreservacaoUtc)))) throw new TypeError("Marco de preservacao invalido.");
         if (memoria.complementos != null && !Array.isArray(memoria.complementos)) throw new TypeError("Complementos invalidos.");
@@ -351,6 +353,36 @@ export function confirmarTom(identidadeConta, data, identidadeMemoria, tomEspera
             }
             const memorias = captura.memorias.map(item => item.identidade === identidadeMemoria
                 ? { ...item, tom: tomNovo }
+                : item);
+            const atualizado = { ...captura, alterado: true, alteradoApenasPorCategorias: false, memorias };
+            store.put(atualizado);
+            concluir({ estado: "sucesso", valor: atualizado });
+        };
+    }));
+}
+
+export function confirmarBalancoSentimental(identidadeConta, data, identidadeMemoria, balancoEsperado, balancoNovo) {
+    return operacaoValidada("balancoSentimental", () => {
+        validarChave(identidadeConta, data);
+        if (typeof identidadeMemoria !== "string" || !identidadeMemoria.trim()) throw new TypeError("Memoria invalida.");
+        for (const valor of [balancoEsperado, balancoNovo])
+            if (valor != null && (typeof valor !== "string" || !valor.trim())) throw new TypeError("Balanco sentimental invalido.");
+    }, banco => transacionar(banco, ["capturas"], "readwrite", "balancoSentimental", (transacao, concluir) => {
+        const store = transacao.objectStore("capturas");
+        const pedido = store.get([identidadeConta, data]);
+        pedido.onsuccess = () => {
+            const captura = pedido.result;
+            const memoria = captura?.memorias?.find(item => item.identidade === identidadeMemoria);
+            if (!captura || !memoria || (memoria.balancoSentimental ?? null) !== balancoEsperado) {
+                concluir(falha("balancoSentimental", { name: "ContextoAlterado" }));
+                return;
+            }
+            if (balancoEsperado === balancoNovo) {
+                concluir({ estado: "sucesso", valor: captura });
+                return;
+            }
+            const memorias = captura.memorias.map(item => item.identidade === identidadeMemoria
+                ? { ...item, balancoSentimental: balancoNovo }
                 : item);
             const atualizado = { ...captura, alterado: true, alteradoApenasPorCategorias: false, memorias };
             store.put(atualizado);

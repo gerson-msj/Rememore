@@ -39,6 +39,9 @@ public sealed class TrabalhoLocalIndexedDb(IJSRuntime js) : IDiagnosticoTrabalho
     public Task<ResultadoLocal<WorkspaceCapturaLocal>> ConfirmarTomAsync(string identidadeConta, DateOnly data,
         string identidadeMemoria, int? tomEsperado, int? tomNovo) =>
         InvocarAsync<WorkspaceCapturaLocal>("confirmarTom", identidadeConta, data, identidadeMemoria, tomEsperado, tomNovo);
+    public Task<ResultadoLocal<WorkspaceCapturaLocal>> ConfirmarBalancoSentimentalAsync(string identidadeConta, DateOnly data,
+        string identidadeMemoria, string? balancoEsperado, string? balancoNovo) =>
+        InvocarAsync<WorkspaceCapturaLocal>("confirmarBalancoSentimental", identidadeConta, data, identidadeMemoria, balancoEsperado, balancoNovo);
     public Task<ResultadoLocal<CacheCatalogoCategoriasLocal>> RecuperarAsync(string identidadeConta) =>
         InvocarAsync<CacheCatalogoCategoriasLocal>("recuperarCacheCategorias", identidadeConta);
     public Task<ResultadoLocal<bool>> GravarAsync(CacheCatalogoCategoriasLocal cache) =>

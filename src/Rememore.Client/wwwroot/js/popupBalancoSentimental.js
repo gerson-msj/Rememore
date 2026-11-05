@@ -41,14 +41,26 @@ export function registrar(modal, referencia, seletor) {
         }
     };
     document.addEventListener('keydown', aoPressionarTecla, true);
-    modais.set(modal, { aoPressionarTecla, anterior });
+    const aoTentarSair = evento => {
+        if (!modal.classList.contains('is-active') || modal.dataset.rascunhoAlterado !== 'true') return;
+        evento.preventDefault();
+        evento.returnValue = '';
+    };
+    window.addEventListener('beforeunload', aoTentarSair);
+    modais.set(modal, { aoPressionarTecla, anterior, aoTentarSair });
     focar(modal, seletor);
+}
+
+export function definirRascunhoAlterado(modal, alterado) {
+    modal.dataset.rascunhoAlterado = alterado ? 'true' : 'false';
 }
 
 export function remover(modal, restaurar = true) {
     const estado = modais.get(modal);
     if (!estado) return;
     document.removeEventListener('keydown', estado.aoPressionarTecla, true);
+    window.removeEventListener('beforeunload', estado.aoTentarSair);
+    delete modal.dataset.rascunhoAlterado;
     modais.delete(modal);
     if (restaurar && estado.anterior?.isConnected && typeof estado.anterior.focus === 'function') {
         estado.anterior.focus({ preventScroll: true });

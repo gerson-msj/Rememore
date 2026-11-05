@@ -103,6 +103,7 @@
     [Parameter] public Func<string, Task<bool>>? AoSalvar { get; set; }
     [Parameter] public Func<Task<bool>>? AoExcluir { get; set; }
     [Parameter] public EventCallback<ResultadoPopupBalanco> AoConcluir { get; set; }
+    [Parameter] public EventCallback AoContinuarEditando { get; set; }
 
     private string Titulo => fase switch
     {
@@ -158,6 +159,8 @@
             await modulo.InvokeVoidAsync("remover", modal);
             jsRegistrado = false;
         }
+        if (Aberto && modulo is not null)
+            await modulo.InvokeVoidAsync("definirRascunhoAlterado", modal, !SomenteLeitura && Alterado);
     }
 
     private string SeletorFoco => fase == FasePopup.Editor && !SomenteLeitura ? "textarea" : "[data-foco-inicial]";
@@ -167,6 +170,7 @@
         if (ocupado) return;
         rascunho = evento.Value?.ToString() ?? string.Empty;
         erro = null;
+        if (modulo is not null) await modulo.InvokeVoidAsync("definirRascunhoAlterado", modal, !SomenteLeitura && Alterado);
         await AoAtualizarRascunho.InvokeAsync(rascunho);
     }
 
@@ -193,11 +197,12 @@
         await AoConcluir.InvokeAsync(ResultadoPopupBalanco.FechadoSemAlteracao);
     }
 
-    private void ContinuarEditando()
+    private async Task ContinuarEditando()
     {
         if (ocupado) return;
         fase = FasePopup.Editor;
         erro = null;
+        await AoContinuarEditando.InvokeAsync();
     }
 
     private async Task DescartarAsync()

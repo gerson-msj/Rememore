@@ -2,6 +2,7 @@ const chave = "rememore.captura.ativa.v1";
 const chaveRascunho = "rememore.captura.rascunho.v1";
 const chaveEdicaoMemoria = "rememore.editar-memoria.rascunho.v1";
 const chaveAutorizacaoCategoria = "rememore.categorizar.autorizacao.v1";
+const chaveBalancoSentimental = "rememore.categorizar.balanco.rascunho.v1";
 
 export function ehRecargaAtiva(identidadeConta, data) {
     try {
@@ -83,4 +84,30 @@ export function recuperarAutorizacaoCategoria(identidadeConta, data, identidadeM
 export function limparAutorizacaoCategoria() {
     try { sessionStorage.removeItem(chaveAutorizacaoCategoria); }
     catch { }
+}
+
+export function registrarBalancoSentimental(identidadeConta, data, identidadeMemoria, textoConfirmadoBase, texto, autorizacaoConcedida) {
+    try {
+        sessionStorage.setItem(chaveBalancoSentimental, JSON.stringify({ identidadeConta, data, identidadeMemoria, textoConfirmadoBase, texto, autorizacaoConcedida, aberto: true }));
+        return true;
+    } catch { return false; }
+}
+
+export function recuperarBalancoSentimental(identidadeConta, data, identidadeMemoria) {
+    try {
+        if (performance.getEntriesByType("navigation")[0]?.type !== "reload") return null;
+        const rascunho = JSON.parse(sessionStorage.getItem(chaveBalancoSentimental) ?? "null");
+        if (rascunho?.identidadeConta !== identidadeConta || rascunho?.data !== data || rascunho?.identidadeMemoria !== identidadeMemoria
+            || typeof rascunho.texto !== "string" || typeof rascunho.autorizacaoConcedida !== "boolean" || rascunho.aberto !== true
+            || !(rascunho.textoConfirmadoBase == null || typeof rascunho.textoConfirmadoBase === "string")) return null;
+        return { texto: rascunho.texto, textoConfirmadoBase: rascunho.textoConfirmadoBase, autorizacaoConcedida: rascunho.autorizacaoConcedida };
+    } catch { return null; }
+}
+
+export function limparBalancoSentimental(identidadeConta, data, identidadeMemoria) {
+    try {
+        const rascunho = JSON.parse(sessionStorage.getItem(chaveBalancoSentimental) ?? "null");
+        if (rascunho?.identidadeConta === identidadeConta && rascunho?.data === data && rascunho?.identidadeMemoria === identidadeMemoria)
+            sessionStorage.removeItem(chaveBalancoSentimental);
+    } catch { }
 }

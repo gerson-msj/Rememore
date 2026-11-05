@@ -101,6 +101,10 @@
                     </div>
                 </div>
             }
+            @if (falhaBalanco is not null)
+            {
+                <div class="notification elemento-falha-recuperavel" role="alert"><p>@falhaBalanco</p></div>
+            }
 
             <label class="label" for="categorizar-memoria-contexto">Memória</label>
             <textarea id="categorizar-memoria-contexto" class="textarea categorizar-memoria__contexto categorizar-memoria__superficie-tom @AparenciaTomAtual.Classes mb-4" style="@AparenciaTomAtual.Estilo" rows="4" readonly>@TextoContexto</textarea>
@@ -143,20 +147,33 @@
                             AoAlterar="AlterarTomTransitórioAsync" AoConcluir="ConcluirTomAsync" AoSolicitarDesativacao="SolicitarDesativacaoTomAsync" />
             </section>
 
+            @if (nivelOrientacaoAtual >= NivelOrientacao.Intermediario)
+            {
             <section class="block" aria-labelledby="categorizar-memoria-titulo-balanco">
                 <h2 class="label" id="categorizar-memoria-titulo-balanco">Balanço sentimental</h2>
-                <div class="notification elemento-orientacao-informativa" role="note">
-                    <span class="elemento-orientacao-informativa__texto">@OrientacaoBalancoVisual</span>
-                </div>
-                <PreviaBalancoSentimental Texto="@TextoBalancoVisual" />
-                <div class="buttons is-right mt-3">
-                    <button class="button is-link" type="button" disabled>
-                        @(TextoBalancoVisual is null ? "Adicionar balanço sentimental" : "Editar balanço sentimental")
-                    </button>
-                </div>
+                @if (!string.IsNullOrWhiteSpace(textoOrientacaoBalanco))
+                {
+                    <div class="notification elemento-orientacao-informativa" role="note">
+                        <span class="elemento-orientacao-informativa__texto">@textoOrientacaoBalanco</span>
+                    </div>
+                }
+                <PreviaBalancoSentimental Texto="@TextoBalancoConfirmado" Acionavel="@PodeAbrirBalanco"
+                                          AcionavelSomenteComExcedente="@SomenteLeitura" AoAcionar="AcionarBalancoAsync" />
+                @if (!SomenteLeitura)
+                {
+                    <div class="buttons is-right mt-3">
+                        <button class="button is-link" type="button" disabled="@(operacaoBalancoEmAndamento)" @onclick="AbrirBalancoAsync">
+                            @(TextoBalancoConfirmado is null ? "Adicionar balanço sentimental" : "Editar balanço sentimental")
+                        </button>
+                    </div>
+                }
             </section>
+            }
 
-            <PopupBalancoSentimental Aberto="false" Contexto="@identidadeMemoria" TextoConfirmado="@TextoBalancoVisual" />
+            <PopupBalancoSentimental @ref="popupBalanco" Aberto="@popupBalancoAberto" Contexto="@ContextoBalanco" TextoConfirmado="@TextoBalancoConfirmado"
+                                     RascunhoInicial="@rascunhoBalanco" SomenteLeitura="@popupBalancoSomenteLeitura"
+                                     AoAtualizarRascunho="AtualizarRascunhoBalancoAsync" AoSalvar="SalvarBalancoAsync" AoExcluir="ExcluirBalancoAsync"
+                                     AoConcluir="ConcluirPopupBalancoAsync" AoContinuarEditando="CancelarNavegacaoPendente" />
 
             <nav class="buttons is-centered categorizar-memoria__navegacao" aria-label="Navegação entre memórias">
                 <button class="button is-light elemento-botao-com-icone" type="button" aria-label="Memória anterior" disabled="@(EhPrimeiraMemoria || operacaoTomEmAndamento || interacaoTomEmAndamento || operacaoCategoriaEmAndamento)" @onclick="IrParaAnterior">
@@ -182,20 +199,31 @@
     private bool operacaoTomEmAndamento;
     private bool interacaoTomEmAndamento;
     private bool popupDesativarTomAberto;
+    private bool popupBalancoAberto;
+    private bool popupBalancoSomenteLeitura;
+    private bool operacaoBalancoEmAndamento;
     private DateOnly? dataCaptura;
     private string identidadeConta = string.Empty;
     private string identidadeMemoria = string.Empty;
     private string? falhaCatalogo;
     private string? falhaCategorias;
     private string? falhaTom;
+    private string? falhaBalanco;
     private string? textoOrientacao;
     private int? tomTransitório;
     private int? tomParaReintentar;
     private int? tomEsperadoReintento;
     private int chaveSeletorTom;
     private bool reintentarTomAusente;
-    private static readonly string? TextoBalancoVisual = null;
-    private static readonly string OrientacaoBalancoVisual = "O balanço sentimental é uma extensão opcional da memória para registrar, em palavras, os sentimentos que ela despertou em você, positivos e negativos.";
+    private string? TextoBalancoConfirmado => memoriaAtual?.BalancoSentimental;
+    private string ContextoBalanco => $"{identidadeConta}:{dataCaptura:yyyy-MM-dd}:{identidadeMemoria}:{(SomenteLeitura ? "leitura" : "edicao")}";
+    private string? textoOrientacaoBalanco;
+    private string? rascunhoBalanco;
+    private string? destinoNavegacaoPendente;
+    private bool retomarNavegacaoAposRender;
+    private PopupBalancoSentimental? popupBalanco;
+    private bool PodeAbrirBalanco => memoriaAtual is not null && (SomenteLeitura ? TextoBalancoConfirmado is not null : PodeEditarBalanco);
+    private bool PodeEditarBalanco => !SomenteLeitura && nivelOrientacaoAtual >= NivelOrientacao.Intermediario;
     private NivelOrientacao nivelOrientacaoAtual = NivelOrientacao.Iniciante;
     private MemoriaCapturaLocal? memoriaAtual;
     private WorkspaceCapturaLocal? workspaceCaptura;
@@ -226,6 +254,15 @@
     private bool EhPrimeiraMemoria => IndiceMemoriaAtual <= 0;
     private bool EhUltimaMemoria => IndiceMemoriaAtual < 0 || IndiceMemoriaAtual >= memoriasOrdenadas.Count - 1;
 
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (!retomarNavegacaoAposRender || destinoNavegacaoPendente is not { } destino) return;
+        retomarNavegacaoAposRender = false;
+        destinoNavegacaoPendente = null;
+        await Continuidade.LimparAutorizacaoCategoriaAsync();
+        Navegacao.NavigateTo(destino, replace: false);
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         var identidadeSolicitada = Uri.UnescapeDataString(IdentidadeMemoria);
@@ -238,6 +275,8 @@
             {
                 popupAberto = false;
                 popupDesativarTomAberto = false;
+                popupBalancoAberto = false;
+                popupBalancoSomenteLeitura = false;
                 tomTransitório = null;
                 interacaoTomEmAndamento = false;
                 identidadeMemoria = identidadeSolicitada;
@@ -259,7 +298,7 @@
         falhaCategorias = null;
         falhaTom = null;
         SomenteLeitura = false;
-        registroMudancaLocal ??= Navegacao.RegisterLocationChangingHandler(LimparAutorizacaoAoSairAsync);
+        registroMudancaLocal ??= Navegacao.RegisterLocationChangingHandler(InterceptarNavegacaoAsync);
 
         var moduloCalendario = await JS.InvokeAsync<IJSObjectReference>("import", "./js/calendarioCaptura.js");
         try
@@ -312,15 +351,37 @@
             else await Continuidade.RegistrarAutorizacaoCategoriaAsync(identidadeConta, dataAtual, memoria.Identidade);
         }
 
+        nivelOrientacaoAtual = await FonteNivelOrientacao.ObterNivelAsync();
         if (!SomenteLeitura)
         {
-            nivelOrientacaoAtual = await FonteNivelOrientacao.ObterNivelAsync();
             textoOrientacao = ResolvedorOrientacao.ObterTextoAsync(ContextosOrientacao.CategorizacaoCategoria, nivelOrientacaoAtual);
         }
         else
         {
             nivelOrientacaoAtual = await FonteNivelOrientacao.ObterNivelAsync();
             textoOrientacao = null;
+        }
+        textoOrientacaoBalanco = nivelOrientacaoAtual switch
+        {
+            NivelOrientacao.Intermediario => "O balanço sentimental é uma extensão opcional da memória para registrar, em palavras, os sentimentos que ela despertou em você, positivos e negativos.",
+            NivelOrientacao.Avancado => "Use o balanço sentimental para registrar os sentimentos que esta memória despertou em você.",
+            _ => null
+        };
+        if (restaurarAutorizacao && dataCaptura is { } dataRascunho)
+        {
+            var recuperado = await Continuidade.RecuperarBalancoSentimentalAsync(identidadeConta, dataRascunho, memoria.Identidade);
+            if (recuperado is not null && recuperado.AutorizacaoConcedida && PodeEditarBalanco
+                && recuperado.TextoConfirmadoBase == memoria.BalancoSentimental)
+            {
+                rascunhoBalanco = recuperado.Texto;
+                popupBalancoSomenteLeitura = false;
+                popupBalancoAberto = true;
+            }
+            else if (recuperado is not null)
+            {
+                falhaBalanco = "Não foi possível retomar este rascunho porque a memória ou a autorização mudou. O balanço confirmado foi preservado.";
+                await Continuidade.LimparBalancoSentimentalAsync(identidadeConta, dataRascunho, memoria.Identidade);
+            }
         }
     }
 
@@ -341,6 +402,146 @@
     }
 
     private Task RecarregarCatalogoAsync() => CarregarCatalogoAsync();
+
+    private async Task AbrirBalancoAsync()
+    {
+        if (!PodeEditarBalanco || operacaoBalancoEmAndamento || memoriaAtual is null || dataCaptura is not { } data) return;
+        popupAberto = false;
+        rascunhoBalanco = memoriaAtual.BalancoSentimental;
+        popupBalancoSomenteLeitura = false;
+        falhaBalanco = null;
+        popupBalancoAberto = true;
+        var protegido = await Continuidade.RegistrarBalancoSentimentalAsync(identidadeConta, data, identidadeMemoria,
+            memoriaAtual.BalancoSentimental, rascunhoBalanco ?? string.Empty, autorizacaoConcedida: true);
+        if (!protegido) falhaBalanco = "Não foi possível proteger o rascunho nesta sessão. Mantenha o editor aberto até salvar ou copiar seu texto.";
+    }
+
+    private Task AcionarBalancoAsync() => SomenteLeitura ? AbrirBalancoLeituraAsync() : AbrirBalancoAsync();
+
+    private Task AbrirBalancoLeituraAsync()
+    {
+        if (!SomenteLeitura || memoriaAtual?.BalancoSentimental is null) return Task.CompletedTask;
+        popupAberto = false;
+        popupBalancoSomenteLeitura = true;
+        popupBalancoAberto = true;
+        return Task.CompletedTask;
+    }
+
+    private async Task AtualizarRascunhoBalancoAsync(string? texto)
+    {
+        rascunhoBalanco = texto;
+        if (dataCaptura is not { } data || memoriaAtual is null) return;
+        if (texto is null)
+            await Continuidade.LimparBalancoSentimentalAsync(identidadeConta, data, identidadeMemoria);
+        else if (!await Continuidade.RegistrarBalancoSentimentalAsync(identidadeConta, data, identidadeMemoria,
+                     memoriaAtual.BalancoSentimental, texto, PodeEditarBalanco))
+            falhaBalanco = "Não foi possível proteger o rascunho nesta sessão. Mantenha o editor aberto até salvar ou copiar seu texto.";
+    }
+
+    private async Task<bool> SalvarBalancoAsync(string texto)
+    {
+        if (!PodeEditarBalanco || operacaoBalancoEmAndamento || dataCaptura is not { } data || memoriaAtual is null
+            || string.IsNullOrWhiteSpace(texto)) return false;
+        operacaoBalancoEmAndamento = true;
+        falhaBalanco = null;
+        try
+        {
+            var atual = memoriaAtual;
+            var resultado = await CapturasLocais.ConfirmarBalancoSentimentalAsync(identidadeConta, data,
+                atual.Identidade, atual.BalancoSentimental, texto);
+            if (resultado.Sucesso && resultado.Valor is { } workspace)
+            {
+                workspaceCaptura = workspace;
+                AtualizarMemorias(workspace);
+                memoriaAtual = memoriasOrdenadas.SingleOrDefault(item => item.Identidade == atual.Identidade);
+                return memoriaAtual?.BalancoSentimental == texto;
+            }
+            if (resultado.Falha?.Codigo == "ContextoAlterado")
+            {
+                await RecarregarWorkspaceBalancoAsync(data, atual.Identidade);
+                falhaBalanco = "O balanço mudou em outra aba. O estado protegido foi recarregado; confira e tente novamente.";
+            }
+            else falhaBalanco = "Não foi possível salvar o balanço sentimental. Seu texto continua aqui. Tente novamente.";
+            return false;
+        }
+        finally { operacaoBalancoEmAndamento = false; }
+    }
+
+    private Task<bool> ExcluirBalancoAsync() => SalvarAusenciaBalancoAsync();
+
+    private async Task<bool> SalvarAusenciaBalancoAsync()
+    {
+        if (!PodeEditarBalanco || operacaoBalancoEmAndamento || dataCaptura is not { } data || memoriaAtual?.BalancoSentimental is not { } confirmado) return false;
+        operacaoBalancoEmAndamento = true;
+        falhaBalanco = null;
+        try
+        {
+            var atual = memoriaAtual;
+            var resultado = await CapturasLocais.ConfirmarBalancoSentimentalAsync(identidadeConta, data,
+                atual.Identidade, confirmado, null);
+            if (resultado.Sucesso && resultado.Valor is { } workspace)
+            {
+                workspaceCaptura = workspace;
+                AtualizarMemorias(workspace);
+                memoriaAtual = memoriasOrdenadas.SingleOrDefault(item => item.Identidade == atual.Identidade);
+                return memoriaAtual?.BalancoSentimental is null;
+            }
+            if (resultado.Falha?.Codigo == "ContextoAlterado") await RecarregarWorkspaceBalancoAsync(data, atual.Identidade);
+            falhaBalanco = "Não foi possível excluir o balanço sentimental. Seu texto continua aqui. Tente novamente.";
+            return false;
+        }
+        finally { operacaoBalancoEmAndamento = false; }
+    }
+
+    private async Task RecarregarWorkspaceBalancoAsync(DateOnly data, string idMemoria)
+    {
+        var recuperacao = await CapturasLocais.RecuperarAsync(identidadeConta, data);
+        if (!recuperacao.Sucesso || recuperacao.Valor is not { } workspace) return;
+        workspaceCaptura = workspace;
+        AtualizarMemorias(workspace);
+        memoriaAtual = memoriasOrdenadas.SingleOrDefault(item => item.Identidade == idMemoria);
+    }
+
+    private async Task ConcluirPopupBalancoAsync(ResultadoPopupBalanco resultado)
+    {
+        popupBalancoAberto = false;
+        popupBalancoSomenteLeitura = false;
+        if (resultado is ResultadoPopupBalanco.Salvo or ResultadoPopupBalanco.Excluido or ResultadoPopupBalanco.Descartado or ResultadoPopupBalanco.FechadoSemAlteracao)
+        {
+            rascunhoBalanco = null;
+            if (dataCaptura is { } data) await Continuidade.LimparBalancoSentimentalAsync(identidadeConta, data, identidadeMemoria);
+        }
+        if ((resultado is ResultadoPopupBalanco.Descartado or ResultadoPopupBalanco.FechadoSemAlteracao) && destinoNavegacaoPendente is not null)
+        {
+            retomarNavegacaoAposRender = true;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private Task CancelarNavegacaoPendente()
+    {
+        destinoNavegacaoPendente = null;
+        return Task.CompletedTask;
+    }
+
+    private async ValueTask InterceptarNavegacaoAsync(LocationChangingContext contexto)
+    {
+        if (operacaoCategoriaEmAndamento || operacaoTomEmAndamento || interacaoTomEmAndamento || operacaoBalancoEmAndamento)
+        {
+            contexto.PreventNavigation();
+            return;
+        }
+        if (popupBalancoAberto && !popupBalancoSomenteLeitura && !string.IsNullOrEmpty(contexto.TargetLocation))
+        {
+            contexto.PreventNavigation();
+            destinoNavegacaoPendente = contexto.TargetLocation;
+            if (popupBalanco is not null) await popupBalanco.SolicitarSaidaAsync();
+            return;
+        }
+        var destino = Navegacao.ToAbsoluteUri(contexto.TargetLocation).AbsolutePath;
+        if (!destino.Contains("/categorizar/", StringComparison.OrdinalIgnoreCase))
+            await Continuidade.LimparAutorizacaoCategoriaAsync();
+    }
 
     private Task AtualizarPopupAsync(bool aberto)
     {
@@ -568,18 +769,6 @@
         if (operacaoCategoriaEmAndamento || operacaoTomEmAndamento || interacaoTomEmAndamento) return;
         await Continuidade.LimparAutorizacaoCategoriaAsync();
         Navegacao.NavigateTo($"capturar/{Uri.EscapeDataString(DataRota)}?aba=categorizar&memoria={Uri.EscapeDataString(identidadeMemoria)}");
-    }
-
-    private async ValueTask LimparAutorizacaoAoSairAsync(LocationChangingContext contexto)
-    {
-        if (operacaoCategoriaEmAndamento || operacaoTomEmAndamento || interacaoTomEmAndamento)
-        {
-            contexto.PreventNavigation();
-            return;
-        }
-        var destino = Navegacao.ToAbsoluteUri(contexto.TargetLocation).AbsolutePath;
-        if (!destino.Contains("/categorizar/", StringComparison.OrdinalIgnoreCase))
-            await Continuidade.LimparAutorizacaoCategoriaAsync();
     }
 
     private static bool Equivalentes(string primeira, string segunda) =>
