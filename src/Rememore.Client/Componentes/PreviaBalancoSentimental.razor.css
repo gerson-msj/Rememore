@@ -1,12 +1,9 @@
 .previa-balanco {
     box-sizing: border-box;
     width: 100%;
-    height: calc(var(--texto-previa-altura-tres-linhas) + 0.5rem + 2px);
-    padding: 0.25rem 0.5rem;
-    border: 1px solid var(--bulma-border-weak, var(--bulma-border));
-    border-radius: 0.4rem;
-    background-color: var(--bulma-scheme-main);
-    color: var(--bulma-text);
+    height: calc(var(--texto-previa-altura-tres-linhas) + var(--bulma-control-padding-horizontal) + var(--bulma-control-padding-horizontal) + var(--bulma-control-border-width) + var(--bulma-control-border-width));
+    padding: var(--bulma-control-padding-horizontal);
+    transition-timing-function: ease;
 }
 
 .previa-balanco__viewport {
