@@ -56,17 +56,6 @@
     else
     {
         <section class="container is-max-desktop p-4 categorizar-memoria__conteudo">
-            @if (!SomenteLeitura)
-            {
-                <section class="block" aria-label="Orientação de categorização">
-                    <div class="notification elemento-orientacao-informativa" role="status">
-                        <span class="elemento-orientacao-informativa__texto">@textoOrientacao</span>
-                    </div>
-                </section>
-            }
-
-            <textarea class="textarea categorizar-memoria__contexto mb-4" rows="5" readonly aria-label="Contexto da memória">@TextoContexto</textarea>
-
             @if (falhaCatalogo is not null)
             {
                 <div class="notification elemento-falha-recuperavel" role="alert" aria-atomic="true">
@@ -96,8 +85,17 @@
                 </div>
             }
 
+            <label class="label" for="categorizar-memoria-contexto">Memória</label>
+            <textarea id="categorizar-memoria-contexto" class="textarea categorizar-memoria__contexto mb-4" rows="5" readonly>@TextoContexto</textarea>
+
             <section class="block" aria-labelledby="categorizar-memoria-titulo-categorias">
-                <h2 class="title is-6" id="categorizar-memoria-titulo-categorias">Categorias</h2>
+                <h2 class="label" id="categorizar-memoria-titulo-categorias">Categorias</h2>
+                @if (!SomenteLeitura)
+                {
+                    <div class="notification elemento-orientacao-informativa" role="status">
+                        <span class="elemento-orientacao-informativa__texto">@textoOrientacao</span>
+                    </div>
+                }
                 <SeletorCategoria Categorias="CategoriasSelecionadas"
                                   CategoriasDisponiveis="CategoriasDisponiveis"
                                   SomenteLeitura="@SomenteLeitura"
@@ -114,6 +112,29 @@
                     <span class="elemento-orientacao-informativa__texto">Tente representar esta memória com uma única categoria sempre que possível. Use mais de uma apenas quando isso fizer diferença para você.</span>
                 </div>
             }
+
+            <section class="block" aria-labelledby="categorizar-memoria-titulo-tom">
+                <h2 class="label" id="categorizar-memoria-titulo-tom">Tom</h2>
+                <div class="notification elemento-orientacao-informativa" role="note">
+                    <span class="elemento-orientacao-informativa__texto">@OrientacaoTomVisual</span>
+                </div>
+                <SeletorTom Valor="@TomVisual" Desabilitado="true" />
+            </section>
+
+            <section class="block" aria-labelledby="categorizar-memoria-titulo-balanco">
+                <h2 class="label" id="categorizar-memoria-titulo-balanco">Balanço sentimental</h2>
+                <div class="notification elemento-orientacao-informativa" role="note">
+                    <span class="elemento-orientacao-informativa__texto">@OrientacaoBalancoVisual</span>
+                </div>
+                <PreviaBalancoSentimental Texto="@TextoBalancoVisual" />
+                <div class="buttons is-right mt-3">
+                    <button class="button is-link" type="button" disabled>
+                        @(TextoBalancoVisual is null ? "Adicionar balanço sentimental" : "Editar balanço sentimental")
+                    </button>
+                </div>
+            </section>
+
+            <PopupBalancoSentimental Aberto="false" Contexto="@identidadeMemoria" TextoConfirmado="@TextoBalancoVisual" />
 
             <nav class="buttons is-centered categorizar-memoria__navegacao" aria-label="Navegação entre memórias">
                 <button class="button is-light elemento-botao-com-icone" type="button" aria-label="Memória anterior" disabled="@EhPrimeiraMemoria" @onclick="IrParaAnterior">
@@ -140,6 +161,10 @@
     private string? falhaCatalogo;
     private string? falhaCategorias;
     private string? textoOrientacao;
+    private static readonly int? TomVisual = null;
+    private static readonly string? TextoBalancoVisual = null;
+    private static readonly string OrientacaoBalancoVisual = "O balanço sentimental é uma extensão opcional da memória para registrar, em palavras, os sentimentos que ela despertou em você, positivos e negativos.";
+    private static readonly string OrientacaoTomVisual = "O Tom registra a impressão geral que esta memória deixa em você. Ative-o para indicar essa percepção entre negativo, neutro e positivo.";
     private NivelOrientacao nivelOrientacaoAtual = NivelOrientacao.Iniciante;
     private MemoriaCapturaLocal? memoriaAtual;
     private WorkspaceCapturaLocal? workspaceCaptura;

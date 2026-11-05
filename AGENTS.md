@@ -11,11 +11,12 @@ A especificação pode já existir na raiz do diretório de especificações, se
 ## Autoridade e limites
 
 - Esclareça dúvidas funcionais antes de executar a parte afetada. Não invente regras, textos, navegação, estados, mensagens ou comportamento.
-- Antes de editar, confira o estado do Git e os arquivos e consumidores envolvidos. O operador avisará quando tiver feito alterações manuais; preserve-as.
+- O operador avisará quando tiver feito alterações manuais; preserve-as.
 - Não amplie o escopo, faça refatorações gerais, altere contratos ou crie infraestrutura futura sem necessidade e autorização.
 - ELMs, CMPs, estilos compartilhados e seus contratos não devem ser alterados durante uma tarefa de página por iniciativa própria.
 - `Stack1/` é referência histórica. Não a altere, leia ou exclua sem autorização específica.
 - Não abra `Anotações.md` nem arquivos de credenciais; nunca exponha segredos. Alterações em publicação, pipelines, segredos, dados remotos ou backend real exigem autorização específica.
+- Não acesse o Google Drive, solicite ao operador se precisar de alguma informação relativa a documentação utilizada para elaboração das especificações.
 
 ## Execução e validação
 

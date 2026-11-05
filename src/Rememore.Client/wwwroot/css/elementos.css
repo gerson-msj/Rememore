@@ -53,6 +53,9 @@
 .notification.elemento-orientacao-informativa {
     border-inline-start: 0.2rem solid var(--bulma-info);
     height: auto;
+    background-color: var(--cor-main);
+    padding-block: 0.4em;
+    font-size: 0.8rem;
 }
 
 .elemento-orientacao-informativa__texto {
