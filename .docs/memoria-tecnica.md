@@ -29,6 +29,10 @@ Reaproveite classes e estilos existentes antes de criar outros. Não reproduza e
 
 No ambiente Windows do ChatGPT Desktop, não execute comandos `dotnet` dentro do sandbox: suas restrições de acesso impedem a execução correta. Execute restauração, build, testes e aplicação fora do sandbox.
 
+## Nível do usuário em testes
+
+Quando o operador solicitar ou for necessário para testes, altere o nível inicial em `FonteNivelOrientacaoSimulada.NivelAtual`, no arquivo `src/Rememore.Client/Infraestrutura/OrientacaoProgressiva/ResolvedorOrientacaoProgressiva.cs`.
+
 ## Convenções de código
 
 Use português brasileiro em nomes autorais, com identificadores ASCII e convenções usuais da linguagem. Preserve a grafia de APIs, bibliotecas, atributos, rotas e contratos externos. Separe regras de negócio da apresentação quando isso ajudar a manter comportamento reutilizável e testável; não crie camadas ou abstrações sem necessidade concreta.
