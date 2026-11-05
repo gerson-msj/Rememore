@@ -135,17 +135,20 @@
                 </div>
             }
 
-            <section class="block" aria-labelledby="categorizar-memoria-titulo-tom">
-                <h2 class="label" id="categorizar-memoria-titulo-tom">Tom</h2>
-                @if (!SomenteLeitura && nivelOrientacaoAtual >= NivelOrientacao.Intermediario)
-                {
-                    <div class="notification elemento-orientacao-informativa" role="note">
-                        <span class="elemento-orientacao-informativa__texto">@OrientacaoTomVisual</span>
-                    </div>
-                }
-                <SeletorTom @key="ChaveSeletorTom" Valor="@TomConfirmado" Desabilitado="@(!PodeEditarTom || operacaoTomEmAndamento || popupDesativarTomAberto)"
-                            AoAlterar="AlterarTomTransitórioAsync" AoConcluir="ConcluirTomAsync" AoSolicitarDesativacao="SolicitarDesativacaoTomAsync" />
-            </section>
+            @if (nivelOrientacaoAtual >= NivelOrientacao.Intermediario)
+            {
+                <section class="block" aria-labelledby="categorizar-memoria-titulo-tom">
+                    <h2 class="label" id="categorizar-memoria-titulo-tom">Tom</h2>
+                    @if (!SomenteLeitura)
+                    {
+                        <div class="notification elemento-orientacao-informativa" role="note">
+                            <span class="elemento-orientacao-informativa__texto">@OrientacaoTomVisual</span>
+                        </div>
+                    }
+                    <SeletorTom @key="ChaveSeletorTom" Valor="@TomConfirmado" Desabilitado="@(!PodeEditarTom || operacaoTomEmAndamento || popupDesativarTomAberto)"
+                                AoAlterar="AlterarTomTransitórioAsync" AoConcluir="ConcluirTomAsync" AoSolicitarDesativacao="SolicitarDesativacaoTomAsync" />
+                </section>
+            }
 
             @if (nivelOrientacaoAtual >= NivelOrientacao.Intermediario)
             {
