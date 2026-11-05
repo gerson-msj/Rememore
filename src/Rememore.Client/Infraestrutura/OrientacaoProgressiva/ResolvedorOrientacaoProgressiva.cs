@@ -26,7 +26,7 @@ public sealed class ResolvedorOrientacaoProgressiva(
 
 public sealed class FonteNivelOrientacaoSimulada : IFonteNivelOrientacao
 {
-    public NivelOrientacao NivelAtual { get; set; } = NivelOrientacao.Iniciante;
+    public NivelOrientacao NivelAtual { get; set; } = NivelOrientacao.Intermediario;
 
     public Task<NivelOrientacao> ObterNivelAsync() => Task.FromResult(NivelAtual);
 }
