@@ -7,6 +7,7 @@
 @using Rememore.Client.Infraestrutura.Categorias
 @using Rememore.Client.Infraestrutura.OrientacaoProgressiva
 @using Rememore.Client.Infraestrutura.TrabalhoLocal
+@using Rememore.Client.Componentes
 @inject NavigationManager Navegacao
 @inject IJSRuntime JS
 @inject EstadoAutenticacaoProvider EstadoAutenticacao
@@ -85,8 +86,24 @@
                 </div>
             }
 
+            @if (falhaTom is not null)
+            {
+                <div class="notification elemento-falha-recuperavel" role="alert" aria-atomic="true">
+                    <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                    <div class="elemento-falha-recuperavel__conteudo">
+                        <p class="elemento-falha-recuperavel__mensagem"><strong>@falhaTom</strong></p>
+                        @if (tomParaReintentar.HasValue || reintentarTomAusente)
+                        {
+                            <button class="button is-light elemento-botao-com-icone" type="button" disabled="@operacaoTomEmAndamento" @onclick="RepetirOperacaoTomAsync">
+                                <span class="icon" aria-hidden="true"><i class="fa-solid fa-rotate"></i></span><span>Tentar novamente</span>
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+
             <label class="label" for="categorizar-memoria-contexto">Memória</label>
-            <textarea id="categorizar-memoria-contexto" class="textarea categorizar-memoria__contexto mb-4" rows="4" readonly>@TextoContexto</textarea>
+            <textarea id="categorizar-memoria-contexto" class="textarea categorizar-memoria__contexto categorizar-memoria__superficie-tom @AparenciaTomAtual.Classes mb-4" style="@AparenciaTomAtual.Estilo" rows="4" readonly>@TextoContexto</textarea>
 
             <section class="block" aria-labelledby="categorizar-memoria-titulo-categorias">
                 <h2 class="label" id="categorizar-memoria-titulo-categorias">Categorias</h2>
@@ -98,6 +115,7 @@
                 }
                 <SeletorCategoria Categorias="CategoriasSelecionadas"
                                   CategoriasDisponiveis="CategoriasDisponiveis"
+                                  Tom="@TomVisual"
                                   SomenteLeitura="@SomenteLeitura"
                                   PopupAberto="@popupAberto"
                                   PopupAbertoChanged="AtualizarPopupAsync"
@@ -115,10 +133,14 @@
 
             <section class="block" aria-labelledby="categorizar-memoria-titulo-tom">
                 <h2 class="label" id="categorizar-memoria-titulo-tom">Tom</h2>
-                <div class="notification elemento-orientacao-informativa" role="note">
-                    <span class="elemento-orientacao-informativa__texto">@OrientacaoTomVisual</span>
-                </div>
-                <SeletorTom Valor="@TomVisual" Desabilitado="true" />
+                @if (!SomenteLeitura && nivelOrientacaoAtual >= NivelOrientacao.Intermediario)
+                {
+                    <div class="notification elemento-orientacao-informativa" role="note">
+                        <span class="elemento-orientacao-informativa__texto">@OrientacaoTomVisual</span>
+                    </div>
+                }
+                <SeletorTom @key="ChaveSeletorTom" Valor="@TomConfirmado" Desabilitado="@(!PodeEditarTom || operacaoTomEmAndamento || popupDesativarTomAberto)"
+                            AoAlterar="AlterarTomTransitórioAsync" AoConcluir="ConcluirTomAsync" AoSolicitarDesativacao="SolicitarDesativacaoTomAsync" />
             </section>
 
             <section class="block" aria-labelledby="categorizar-memoria-titulo-balanco">
@@ -137,15 +159,17 @@
             <PopupBalancoSentimental Aberto="false" Contexto="@identidadeMemoria" TextoConfirmado="@TextoBalancoVisual" />
 
             <nav class="buttons is-centered categorizar-memoria__navegacao" aria-label="Navegação entre memórias">
-                <button class="button is-light elemento-botao-com-icone" type="button" aria-label="Memória anterior" disabled="@EhPrimeiraMemoria" @onclick="IrParaAnterior">
+                <button class="button is-light elemento-botao-com-icone" type="button" aria-label="Memória anterior" disabled="@(EhPrimeiraMemoria || operacaoTomEmAndamento || interacaoTomEmAndamento || operacaoCategoriaEmAndamento)" @onclick="IrParaAnterior">
                     <span class="icon" aria-hidden="true"><i class="fa-solid fa-chevron-left"></i></span><span>Anterior</span>
                 </button>
-                <button class="button is-light elemento-botao-com-icone" type="button" aria-label="Próxima memória" disabled="@EhUltimaMemoria" @onclick="IrParaProxima">
+                <button class="button is-light elemento-botao-com-icone" type="button" aria-label="Próxima memória" disabled="@(EhUltimaMemoria || operacaoTomEmAndamento || interacaoTomEmAndamento || operacaoCategoriaEmAndamento)" @onclick="IrParaProxima">
                     <span>Próxima</span><span class="icon" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
                 </button>
             </nav>
         </section>
     }
+    <Popup Aberto="@popupDesativarTomAberto" Titulo="Desativar o Tom?" Mensagem="O Tom selecionado será apagado. Deseja continuar?"
+           TextoConfirmar="Desativar" TextoCancelar="Cancelar" ClasseBotaoConfirmar="is-danger is-light" ClasseBotaoCancelar="is-info" AoResponder="ResponderDesativacaoTomAsync" />
 </main>
 
 @code {
@@ -155,16 +179,23 @@
     private bool preparando = true;
     private bool popupAberto;
     private bool operacaoCategoriaEmAndamento;
+    private bool operacaoTomEmAndamento;
+    private bool interacaoTomEmAndamento;
+    private bool popupDesativarTomAberto;
     private DateOnly? dataCaptura;
     private string identidadeConta = string.Empty;
     private string identidadeMemoria = string.Empty;
     private string? falhaCatalogo;
     private string? falhaCategorias;
+    private string? falhaTom;
     private string? textoOrientacao;
-    private static readonly int? TomVisual = null;
+    private int? tomTransitório;
+    private int? tomParaReintentar;
+    private int? tomEsperadoReintento;
+    private int chaveSeletorTom;
+    private bool reintentarTomAusente;
     private static readonly string? TextoBalancoVisual = null;
     private static readonly string OrientacaoBalancoVisual = "O balanço sentimental é uma extensão opcional da memória para registrar, em palavras, os sentimentos que ela despertou em você, positivos e negativos.";
-    private static readonly string OrientacaoTomVisual = "O Tom registra a impressão geral que esta memória deixa em você. Ative-o para indicar essa percepção entre negativo, neutro e positivo.";
     private NivelOrientacao nivelOrientacaoAtual = NivelOrientacao.Iniciante;
     private MemoriaCapturaLocal? memoriaAtual;
     private WorkspaceCapturaLocal? workspaceCaptura;
@@ -174,6 +205,14 @@
     private IDisposable? registroMudancaLocal;
 
     private bool SomenteLeitura { get; set; }
+    private bool PodeEditarTom => !SomenteLeitura && nivelOrientacaoAtual >= NivelOrientacao.Intermediario;
+    private int? TomConfirmado => memoriaAtual?.Tom;
+    private int? TomVisual => tomTransitório ?? TomConfirmado;
+    private string ChaveSeletorTom => $"{identidadeMemoria}:{chaveSeletorTom}";
+    private AparenciaTomVisual AparenciaTomAtual => AparenciaTom.Obter(TomVisual);
+    private string OrientacaoTomVisual => nivelOrientacaoAtual == NivelOrientacao.Avancado
+        ? "Use o Tom para registrar a impressão geral que esta memória deixa em você."
+        : "O Tom registra a impressão geral que esta memória deixa em você. Ative-o para indicar essa percepção entre negativo, neutro e positivo.";
     private IReadOnlyList<CategoriaAssociadaLocal> AssociacoesSelecionadas => memoriaAtual?.Categorias ?? [];
     private IReadOnlyList<string> CategoriasSelecionadas => AssociacoesSelecionadas.Select(categoria => categoria.Nome).ToArray();
     private IReadOnlyList<string> CategoriasDisponiveis => categoriasCatalogo.Where(categoria => categoria.Ativa)
@@ -198,6 +237,9 @@
             if (destino is not null)
             {
                 popupAberto = false;
+                popupDesativarTomAberto = false;
+                tomTransitório = null;
+                interacaoTomEmAndamento = false;
                 identidadeMemoria = identidadeSolicitada;
                 await DefinirMemoriaAtualAsync(destino, restaurarAutorizacao: false);
                 return;
@@ -206,12 +248,16 @@
 
         preparando = true;
         popupAberto = false;
+        popupDesativarTomAberto = false;
+        tomTransitório = null;
+        interacaoTomEmAndamento = false;
         memoriaAtual = null;
         workspaceCaptura = null;
         dataCaptura = null;
         textoOrientacao = null;
         falhaCatalogo = null;
         falhaCategorias = null;
+        falhaTom = null;
         SomenteLeitura = false;
         registroMudancaLocal ??= Navegacao.RegisterLocationChangingHandler(LimparAutorizacaoAoSairAsync);
 
@@ -271,7 +317,11 @@
             nivelOrientacaoAtual = await FonteNivelOrientacao.ObterNivelAsync();
             textoOrientacao = ResolvedorOrientacao.ObterTextoAsync(ContextosOrientacao.CategorizacaoCategoria, nivelOrientacaoAtual);
         }
-        else textoOrientacao = null;
+        else
+        {
+            nivelOrientacaoAtual = await FonteNivelOrientacao.ObterNivelAsync();
+            textoOrientacao = null;
+        }
     }
 
     private void AtualizarMemorias(WorkspaceCapturaLocal workspace)
@@ -378,6 +428,113 @@
         }
     }
 
+    private Task AlterarTomTransitórioAsync(int? tom)
+    {
+        if (!PodeEditarTom || operacaoTomEmAndamento || memoriaAtual is null) return Task.CompletedTask;
+        tomTransitório = tom;
+        interacaoTomEmAndamento = true;
+        falhaTom = null;
+        return Task.CompletedTask;
+    }
+
+    private async Task ConcluirTomAsync(int? tom)
+    {
+        if (!PodeEditarTom || operacaoTomEmAndamento || memoriaAtual is null) return;
+        var valor = Math.Clamp(tom ?? 0, -100, 100);
+        interacaoTomEmAndamento = false;
+        if (valor == memoriaAtual.Tom)
+        {
+            tomTransitório = null;
+            return;
+        }
+        await PersistirTomAsync(valor);
+    }
+
+    private Task SolicitarDesativacaoTomAsync()
+    {
+        if (!PodeEditarTom || operacaoTomEmAndamento || interacaoTomEmAndamento || memoriaAtual?.Tom is null)
+            return Task.CompletedTask;
+        popupDesativarTomAberto = true;
+        return Task.CompletedTask;
+    }
+
+    private async Task ResponderDesativacaoTomAsync(RespostaPopup resposta)
+    {
+        popupDesativarTomAberto = false;
+        if (resposta != RespostaPopup.Confirmacao || memoriaAtual?.Tom is not { } tom) return;
+        tomEsperadoReintento = tom;
+        reintentarTomAusente = true;
+        tomParaReintentar = null;
+        await PersistirTomAsync(null);
+    }
+
+    private async Task PersistirTomAsync(int? novoTom)
+    {
+        if (!PodeEditarTom || operacaoTomEmAndamento || dataCaptura is not { } data || memoriaAtual is null) return;
+        var memoriaDaOperacao = memoriaAtual;
+        var tomEsperado = memoriaDaOperacao.Tom;
+        if (novoTom is < -100 or > 100 || novoTom == tomEsperado)
+        {
+            tomTransitório = null;
+            interacaoTomEmAndamento = false;
+            return;
+        }
+
+        operacaoTomEmAndamento = true;
+        falhaTom = null;
+        try
+        {
+            var gravacao = await CapturasLocais.ConfirmarTomAsync(identidadeConta, data,
+                memoriaDaOperacao.Identidade, tomEsperado, novoTom);
+            if (gravacao.Sucesso && gravacao.Valor is { } atualizado)
+            {
+                workspaceCaptura = atualizado;
+                AtualizarMemorias(atualizado);
+                memoriaAtual = memoriasOrdenadas.SingleOrDefault(item => item.Identidade == memoriaDaOperacao.Identidade);
+                tomTransitório = null;
+                tomParaReintentar = null;
+                reintentarTomAusente = false;
+                falhaTom = null;
+            }
+            else if (gravacao.Falha?.Codigo == "ContextoAlterado")
+            {
+                var atual = await CapturasLocais.RecuperarAsync(identidadeConta, data);
+                if (atual.Sucesso && atual.Valor is { } workspace)
+                {
+                    workspaceCaptura = workspace;
+                    AtualizarMemorias(workspace);
+                    memoriaAtual = memoriasOrdenadas.SingleOrDefault(item => item.Identidade == memoriaDaOperacao.Identidade);
+                }
+                tomTransitório = null;
+                tomParaReintentar = null;
+                reintentarTomAusente = false;
+                falhaTom = "O Tom mudou em outra aba. O estado protegido foi recarregado; confira e tente novamente.";
+                chaveSeletorTom++;
+            }
+            else
+            {
+                tomTransitório = null;
+                tomParaReintentar = novoTom;
+                tomEsperadoReintento = tomEsperado;
+                reintentarTomAusente = novoTom is null;
+                falhaTom = "Não foi possível confirmar o Tom no armazenamento local. O valor confirmado foi mantido.";
+                chaveSeletorTom++;
+            }
+        }
+        finally
+        {
+            interacaoTomEmAndamento = false;
+            operacaoTomEmAndamento = false;
+        }
+    }
+
+    private Task RepetirOperacaoTomAsync()
+    {
+        if (tomEsperadoReintento != memoriaAtual?.Tom) return Task.CompletedTask;
+        var valor = reintentarTomAusente ? (int?)null : tomParaReintentar;
+        return PersistirTomAsync(valor);
+    }
+
     private async Task RepetirOperacaoCategoriaAsync()
     {
         var repetir = repetirOperacaoCategoria;
@@ -400,7 +557,7 @@
 
     private Task NavegarParaMemoriaAsync(MemoriaCapturaLocal memoria)
     {
-        if (operacaoCategoriaEmAndamento) return Task.CompletedTask;
+        if (operacaoCategoriaEmAndamento || operacaoTomEmAndamento || interacaoTomEmAndamento) return Task.CompletedTask;
         popupAberto = false;
         Navegacao.NavigateTo($"categorizar/{Uri.EscapeDataString(DataRota)}/{Uri.EscapeDataString(memoria.Identidade)}");
         return Task.CompletedTask;
@@ -408,14 +565,14 @@
 
     private async Task VoltarParaListaAsync()
     {
-        if (operacaoCategoriaEmAndamento) return;
+        if (operacaoCategoriaEmAndamento || operacaoTomEmAndamento || interacaoTomEmAndamento) return;
         await Continuidade.LimparAutorizacaoCategoriaAsync();
         Navegacao.NavigateTo($"capturar/{Uri.EscapeDataString(DataRota)}?aba=categorizar&memoria={Uri.EscapeDataString(identidadeMemoria)}");
     }
 
     private async ValueTask LimparAutorizacaoAoSairAsync(LocationChangingContext contexto)
     {
-        if (operacaoCategoriaEmAndamento)
+        if (operacaoCategoriaEmAndamento || operacaoTomEmAndamento || interacaoTomEmAndamento)
         {
             contexto.PreventNavigation();
             return;

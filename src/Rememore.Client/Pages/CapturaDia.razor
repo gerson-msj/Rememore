@@ -111,6 +111,7 @@
                                      Identificador="@memoria.Identidade"
                                      Conteudo="@memoria.Conteudo"
                                      Categorias="@(memoria.Categorias?.Select(categoria => categoria.Nome).ToArray() ?? [])"
+                                     Tom="@memoria.Tom"
                                      Modo="@(AbaCategorizar ? ModoMemoria.Categorizar : ModoMemoria.Memorar)"
                                      Primeira="@(indice == 0)"
                                      Ultima="@(indice == Memorias.Count - 1)"

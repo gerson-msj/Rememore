@@ -332,6 +332,33 @@ export function confirmarCategorias(identidadeConta, data, identidadeMemoria, ca
     }));
 }
 
+export function confirmarTom(identidadeConta, data, identidadeMemoria, tomEsperado, tomNovo) {
+    return operacaoValidada("tom", () => {
+        validarChave(identidadeConta, data);
+        if (typeof identidadeMemoria !== "string" || !identidadeMemoria.trim()) throw new TypeError("Memoria invalida.");
+        for (const tom of [tomEsperado, tomNovo]) {
+            if (tom != null && (!Number.isInteger(tom) || tom < -100 || tom > 100)) throw new TypeError("Tom invalido.");
+        }
+    }, banco => transacionar(banco, ["capturas"], "readwrite", "tom", (transacao, concluir) => {
+        const store = transacao.objectStore("capturas");
+        const pedido = store.get([identidadeConta, data]);
+        pedido.onsuccess = () => {
+            const captura = pedido.result;
+            const memoria = captura?.memorias?.find(item => item.identidade === identidadeMemoria);
+            if (!captura || !memoria || (memoria.tom ?? null) !== tomEsperado) {
+                concluir(falha("tom", { name: "ContextoAlterado" }));
+                return;
+            }
+            const memorias = captura.memorias.map(item => item.identidade === identidadeMemoria
+                ? { ...item, tom: tomNovo }
+                : item);
+            const atualizado = { ...captura, alterado: true, alteradoApenasPorCategorias: false, memorias };
+            store.put(atualizado);
+            concluir({ estado: "sucesso", valor: atualizado });
+        };
+    }));
+}
+
 export function recuperarCacheCategorias(identidadeConta) {
     return operacaoValidada("cacheCategorias", () => validarConta(identidadeConta), banco =>
         transacionar(banco, ["catalogosCategorias"], "readonly", "cacheCategorias", (transacao, concluir) => {

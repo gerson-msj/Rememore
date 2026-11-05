@@ -1,8 +1,9 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JS
+@using Rememore.Client.Infraestrutura
 
 <div>
-    <div class="control has-icons-right seletor-categoria__campo" @onclick="AbrirPopupAsync">
+    <div class="control has-icons-right seletor-categoria__campo @AparenciaClasses" style="@AparenciaEstilo" @onclick="AbrirPopupAsync">
         <div class="seletor-categoria__categorias">
             @if (Categorias.Count == 0)
             {
@@ -134,9 +135,12 @@
     private string consultaAplicada = string.Empty;
     private bool popupEstavaAberto;
     private bool contencaoFocoAtiva;
+    private string AparenciaClasses => Tom.HasValue ? AparenciaTom.Obter(Tom).Classes : string.Empty;
+    private string? AparenciaEstilo => Tom.HasValue ? AparenciaTom.Obter(Tom).Estilo : null;
 
     [Parameter] public IReadOnlyList<string> Categorias { get; set; } = Array.Empty<string>();
     [Parameter] public IReadOnlyList<string> CategoriasDisponiveis { get; set; } = Array.Empty<string>();
+    [Parameter] public int? Tom { get; set; }
     [Parameter] public bool SomenteLeitura { get; set; }
     [Parameter] public bool PopupAberto { get; set; }
     [Parameter] public EventCallback<bool> PopupAbertoChanged { get; set; }

@@ -35,6 +35,12 @@
     white-space: pre-wrap;
 }
 
+.categorizar-memoria__superficie-tom {
+    background-color: var(--tom-fundo);
+    border-color: var(--tom-borda);
+    transition: background-color 180ms ease, border-color 180ms ease;
+}
+
 .categorizar-memoria__navegacao {
     margin-block: 2rem 4rem;
 }

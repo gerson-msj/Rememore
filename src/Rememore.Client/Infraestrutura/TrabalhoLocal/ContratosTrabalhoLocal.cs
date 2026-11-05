@@ -24,7 +24,8 @@ public sealed record MemoriaCapturaLocal(
     bool TemporalidadeConhecida = false,
     IReadOnlyList<ComplementoCapturaLocal>? Complementos = null,
     IReadOnlyList<CategoriaAssociadaLocal>? Categorias = null,
-    IReadOnlyList<CategoriaAssociadaLocal>? CategoriasOriginais = null);
+    IReadOnlyList<CategoriaAssociadaLocal>? CategoriasOriginais = null,
+    int? Tom = null);
 
 public enum OrigemCapturaLocal { Desconhecida, Ausente, Presente }
 
@@ -55,4 +56,6 @@ public interface ICapturasLocais
     Task<ResultadoLocal<WorkspaceCapturaLocal>> ConfirmarCategoriasAsync(string identidadeConta, DateOnly data,
         string identidadeMemoria, IReadOnlyList<CategoriaAssociadaLocal> categoriasEsperadas,
         IReadOnlyList<CategoriaAssociadaLocal> categoriasNovas);
+    Task<ResultadoLocal<WorkspaceCapturaLocal>> ConfirmarTomAsync(string identidadeConta, DateOnly data,
+        string identidadeMemoria, int? tomEsperado, int? tomNovo);
 }
