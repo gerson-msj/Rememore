@@ -16,6 +16,14 @@ public interface IComposicaoCapturaRemota
     Task<ComposicaoCapturaRemota> ObterCompletaAsync(string identidadeConta, DateOnly data);
 }
 
+public sealed record ResultadoPreservacaoRemota(EstadoComposicaoRemota Estado, string? Revisao = null,
+    IReadOnlyList<MemoriaCapturaLocal>? Memorias = null);
+
+public interface IAutoridadeCapturaFake : IComposicaoCapturaRemota
+{
+    Task<ResultadoPreservacaoRemota> PreservarAsync(WorkspaceCapturaLocal captura);
+}
+
 public sealed record ConfiguracaoCapturar(int PrazoEdicaoMemoriaDias);
 
 public interface IConfiguracaoCapturar

@@ -10,6 +10,7 @@
 @inject AberturaCaptura Abertura
 @inject ICapturasLocais CapturasLocais
 @inject ContinuidadeCapturaSessionStorage Continuidade
+@inject IAutoridadeCapturaFake AutoridadeFake
 @inject IOrientacaoProgressiva Orientacao
 @inject IFonteNivelOrientacao FonteNivelOrientacao
 @using System.Globalization
@@ -32,21 +33,26 @@
             <nav class="tabs is-fullwidth captura-dia__abas" aria-label="Etapas da captura">
                 <ul>
                     <li class="@(!AbaCategorizar && !AbaRevisar ? "is-active" : string.Empty)">
-                        <a href="@UrlAbaMemorar" aria-current="@(!AbaCategorizar && !AbaRevisar ? "step" : null)">
+                        <a href="@UrlAbaMemorar" aria-current="@(!AbaCategorizar && !AbaRevisar ? "step" : null)"
+                           aria-disabled="@(operacaoEmAndamento ? "true" : null)" tabindex="@(operacaoEmAndamento ? -1 : null)"
+                           @onclick:preventDefault="@operacaoEmAndamento">
                             <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-feather-pointed"></i></span>
                             <span>Memorar</span>
                         </a>
                     </li>
                     <li class="@(AbaCategorizar ? "is-active" : string.Empty)">
                         <a href="@UrlAbaCategorizar" aria-current="@(AbaCategorizar ? "step" : null)"
-                           aria-disabled="@(inclusaoAberta ? "true" : null)" tabindex="@(inclusaoAberta ? -1 : null)"
-                           @onclick:preventDefault="@inclusaoAberta">
+                           aria-disabled="@(inclusaoAberta || operacaoEmAndamento ? "true" : null)"
+                           tabindex="@(inclusaoAberta || operacaoEmAndamento ? -1 : null)"
+                           @onclick:preventDefault="@(inclusaoAberta || operacaoEmAndamento)">
                             <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-layer-group"></i></span>
                             <span>Categorizar</span>
                         </a>
                     </li>
                     <li class="@(AbaRevisar ? "is-active" : string.Empty)">
-                        <a href="@UrlAbaRevisar" aria-current="@(AbaRevisar ? "step" : null)">
+                        <a href="@UrlAbaRevisar" aria-current="@(AbaRevisar ? "step" : null)"
+                           aria-disabled="@(operacaoEmAndamento ? "true" : null)" tabindex="@(operacaoEmAndamento ? -1 : null)"
+                           @onclick:preventDefault="@operacaoEmAndamento">
                             <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-bookmark"></i></span>
                             <span>Revisar</span>
                         </a>
@@ -91,15 +97,21 @@
             @if (AbaRevisar)
             {
                 <div class="buttons captura-dia__acoes-revisao" role="group" aria-label="Ações da revisão">
-                    <button class="button is-link elemento-botao-com-icone" type="button" @onclick="ValidarCategoriasParaPreservarAsync">
+                    <button class="button is-link elemento-botao-com-icone" type="button" disabled="@operacaoEmAndamento" @onclick="ValidarCategoriasParaPreservarAsync">
                         <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-bookmark"></i></span>
-                        <span>Preservar</span>
+                        <span>@(preservacaoEmAndamento ? "Preservando…" : "Preservar")</span>
                     </button>
-                    <button class="button is-light elemento-botao-com-icone" type="button" disabled>
+                    <button class="button is-light elemento-botao-com-icone" type="button"
+                            disabled="@(operacaoEmAndamento || resultado?.Workspace?.Alterado != true)"
+                            @onclick="SolicitarDescarteAsync">
                         <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-trash-can"></i></span>
                         <span>Descartar alterações</span>
                     </button>
                 </div>
+                @if (preservacaoEmAndamento)
+                {
+                    <p class="help" role="status" aria-live="polite" aria-busy="true">Preservando…</p>
+                }
                 @if (textoOrientacao is not null)
                 {
                     <div class="notification elemento-orientacao-informativa" role="status">
@@ -116,6 +128,7 @@
                                      Tom="@memoria.Tom"
                                      Modo="ModoMemoria.Revisar"
                                      CategoriaEmAtencao="@identidadesSemCategoriaEmAtencao.Contains(memoria.Identidade)"
+                                     Inativa="@operacaoEmAndamento"
                                      AoAcionar="AcionarMemoria" />
                         </div>
                     }
@@ -242,6 +255,34 @@
            TextoConfirmar="Ok"
            ClasseBotaoConfirmar="is-info"
            AoResponder="ResponderCategoriasAusentesAsync" />
+    <Popup Aberto="@popupConfirmarDescarte"
+           Titulo="@TituloDescarte"
+           Mensagem="@MensagemDescarte"
+           TextoConfirmar="Descartar"
+           TextoCancelar="Cancelar"
+           ClasseBotaoConfirmar="is-danger is-light"
+           ClasseBotaoCancelar="is-info"
+           AoResponder="ResponderConfirmacaoDescarteAsync" />
+    <Popup Aberto="@popupFalhaDescarte"
+           Titulo="Não foi possível descartar"
+           Mensagem="Suas alterações continuam protegidas neste dispositivo. Tente novamente."
+           TextoConfirmar="OK"
+           ClasseBotaoConfirmar="is-info"
+           AoResponder="ResponderFalhaDescarteAsync" />
+    <Popup Aberto="@popupConfirmarPreservacao"
+           Titulo="@tituloConfirmacaoPreservacao"
+           Mensagem="@mensagemConfirmacaoPreservacao"
+           TextoConfirmar="@rotuloConfirmacaoPreservacao"
+           TextoCancelar="@rotuloCancelamentoPreservacao"
+           ClasseBotaoConfirmar="@classeBotaoConfirmacaoPreservacao"
+           ClasseBotaoCancelar="is-info"
+           AoResponder="ResponderConfirmacaoPreservacaoAsync" />
+    <Popup Aberto="@popupFalhaPreservacao"
+           Titulo="@tituloFalhaPreservacao"
+           Mensagem="@mensagemFalhaPreservacao"
+           TextoConfirmar="OK"
+           ClasseBotaoConfirmar="is-info"
+           AoResponder="ResponderFalhaPreservacaoAsync" />
 </main>
 
 @code {
@@ -251,6 +292,7 @@
     [SupplyParameterFromQuery(Name = "atencao")] public bool AtencaoRota { get; set; }
 
     private enum TipoPopupNavegacao { Nenhum, VoltarCabecalho, SairSemTexto, SairComTexto, NavegacaoInterna }
+    private enum TipoDecisaoPreservacao { Nenhuma, Normal, ExclusaoTotal, ConflitoComposicao, ConflitoVazio }
 
     private const string MensagemCancelamentoInclusao = "A memória que você está escrevendo ainda não foi incluída. Se cancelar agora, esse texto será perdido.";
     private const string MensagemFalhaOrdenacao = "Não foi possível atualizar a ordem das memórias. A ordem anterior foi mantida. Tente novamente.";
@@ -278,6 +320,19 @@
     private string? textoOrientacao;
     private readonly HashSet<string> identidadesSemCategoriaEmAtencao = new(StringComparer.Ordinal);
     private bool popupCategoriasAusentes;
+    private bool popupConfirmarDescarte;
+    private bool popupFalhaDescarte;
+    private bool popupConfirmarPreservacao;
+    private bool popupFalhaPreservacao;
+    private bool preservacaoEmAndamento;
+    private TipoDecisaoPreservacao tipoDecisaoPreservacao;
+    private string tituloConfirmacaoPreservacao = "Preservar as memórias deste dia?";
+    private string mensagemConfirmacaoPreservacao = "A composição atual deste dia será preservada. Se já existir uma versão preservada, ela será substituída.";
+    private string rotuloConfirmacaoPreservacao = "Preservar";
+    private string rotuloCancelamentoPreservacao = "Cancelar";
+    private string classeBotaoConfirmacaoPreservacao = "is-link";
+    private string? tituloFalhaPreservacao;
+    private string mensagemFalhaPreservacao = "Suas alterações continuam protegidas neste dispositivo. Tente preservar novamente.";
     private bool alinharPrimeiraMemoriaSemCategoria;
     private string? primeiraMemoriaSemCategoria;
     private bool revisaoRolavel;
@@ -302,6 +357,7 @@
         Navegacao.NavigateTo(ContextoEdicaoCaptura.RotaCategorizacao(DataRota, identidade, origem, categoriaEmAtencao));
     private void AcionarMemoria(string identidade)
     {
+        if (operacaoEmAndamento) return;
         if (AbaCategorizar) AbrirCategorizacaoMemoria(identidade, AbaOrigemEdicaoCaptura.Categorizar);
         else if (AbaRevisar)
         {
@@ -317,6 +373,19 @@
     private const string DicaAtalhos = "Enter cria uma nova linha.\nShift+Enter inclui a memória.\nCtrl+Enter inclui e permite registrar outra.\nEsc cancela.";
     private bool ExibirDicaAtalhos => inclusaoAberta && Memorias.Count == 0 && nivelOrientacaoAtual == NivelOrientacao.Iniciante;
     private IReadOnlyList<MemoriaCapturaLocal> Memorias => resultado?.Workspace?.Memorias.OrderBy(memoria => memoria.Ordem).ToList() ?? [];
+    private WorkspaceCapturaLocal? WorkspaceAtual => resultado?.Workspace;
+    private string TituloDescarte => WorkspaceAtual?.Origem switch
+    {
+        OrigemCapturaLocal.Presente => "Descartar as alterações deste dia?",
+        OrigemCapturaLocal.Ausente => "Descartar esta captura?",
+        _ => "Descartar alterações deste dia?"
+    };
+    private string MensagemDescarte => WorkspaceAtual?.Origem switch
+    {
+        OrigemCapturaLocal.Presente => "Todo o trabalho ainda não preservado será removido. A versão já preservada deste dia será mantida sem alterações.",
+        OrigemCapturaLocal.Ausente => "Todo o trabalho deste dia ainda não preservado será removido.",
+        _ => "Todo o trabalho ainda não preservado será removido deste dispositivo. A existência de uma versão preservada para este dia é desconhecida."
+    };
     private string ComporConteudoRevisao(MemoriaCapturaLocal memoria)
     {
         var blocos = new List<string> { memoria.Conteudo };
@@ -453,31 +522,293 @@
             : ContextosOrientacao.CapturaMemorar);
     }
 
-    private async Task AtualizarRevisaoLocalAsync()
+    private async Task<bool> AtualizarRevisaoLocalAsync()
     {
-        if (resultado?.Workspace is not { } workspace) return;
+        if (resultado?.Workspace is not { } workspace) return false;
         var atual = await CapturasLocais.RecuperarAsync(workspace.IdentidadeConta, workspace.Data);
         if (atual.Sucesso && atual.Valor is { } confirmado)
         {
             resultado = resultado with { Workspace = confirmado };
             identidadesSemCategoriaEmAtencao.RemoveWhere(id => confirmado.Memorias
                 .Any(memoria => memoria.Identidade == id && memoria.Categorias is { Count: > 0 }));
+            return true;
         }
+        return false;
     }
 
     private async Task ValidarCategoriasParaPreservarAsync()
     {
         if (operacaoEmAndamento) return;
-        await AtualizarRevisaoLocalAsync();
-        var invalidas = Memorias.Where(memoria => memoria.Categorias is not { Count: > 0 }).ToArray();
-        if (invalidas.Length == 0) return;
+        if (!await AtualizarRevisaoLocalAsync())
+        {
+            ExibirFalhaPreservacao("Não foi possível preservar",
+                "Suas alterações continuam protegidas neste dispositivo. Tente preservar novamente.");
+            return;
+        }
 
-        if (resultado?.Workspace is { } workspace)
+        if (WorkspaceAtual is not { } workspace) return;
+        if (workspace.Memorias.Count == 0)
+        {
+            if (workspace.Origem == OrigemCapturaLocal.Presente && workspace.Alterado)
+            {
+                PrepararDecisaoPreservacao(TipoDecisaoPreservacao.ExclusaoTotal,
+                    "Confirmar a exclusão de todas as memórias?",
+                    "Você removeu todas as memórias deste dia. Ao preservar, essa exclusão será confirmada e nenhuma memória ficará preservada para esta data.",
+                    "Confirmar exclusão", "Cancelar", "is-danger is-light");
+                return;
+            }
+
+            if (workspace.Origem == OrigemCapturaLocal.Desconhecida)
+                ExibirFalhaPreservacao(null,
+                    "Não foi possível confirmar a versão preservada deste dia. Suas alterações continuam protegidas neste dispositivo. Tente preservar novamente.");
+            else
+                ExibirFalhaPreservacao("Não foi possível preservar", "Não há memórias nesta captura para preservar.");
+            return;
+        }
+
+        var invalidas = Memorias.Where(memoria => memoria.Categorias is not { Count: > 0 }).ToArray();
+        if (invalidas.Length > 0)
+        {
             await Continuidade.RegistrarTentativaPreservarAsync(workspace.IdentidadeConta, workspace.Data);
-        identidadesSemCategoriaEmAtencao.Clear();
-        foreach (var memoria in invalidas) identidadesSemCategoriaEmAtencao.Add(memoria.Identidade);
-        primeiraMemoriaSemCategoria = invalidas[0].Identidade;
-        popupCategoriasAusentes = true;
+            identidadesSemCategoriaEmAtencao.Clear();
+            foreach (var memoria in invalidas) identidadesSemCategoriaEmAtencao.Add(memoria.Identidade);
+            primeiraMemoriaSemCategoria = invalidas[0].Identidade;
+            popupCategoriasAusentes = true;
+            return;
+        }
+
+        await IniciarConferenciaPreservacaoAsync(workspace);
+    }
+
+    private async Task IniciarConferenciaPreservacaoAsync(WorkspaceCapturaLocal workspace, bool exclusaoTotalConfirmada = false)
+    {
+        if (operacaoEmAndamento) return;
+        operacaoEmAndamento = true;
+        preservacaoEmAndamento = true;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var verificacao = await AutoridadeFake.VerificarAsync(workspace.IdentidadeConta, workspace.Data);
+            if (!VerificacaoPreservacaoValida(verificacao))
+            {
+                ExibirFalhaPreservacao("Não foi possível preservar",
+                    "Suas alterações continuam protegidas neste dispositivo. Tente preservar novamente.");
+                return;
+            }
+
+            if (workspace.Origem == OrigemCapturaLocal.Desconhecida)
+            {
+                ExibirFalhaPreservacao(null,
+                    "Não foi possível confirmar a versão preservada deste dia. Suas alterações continuam protegidas neste dispositivo. Tente preservar novamente.");
+                return;
+            }
+
+            if (!OrigemCompativel(workspace, verificacao))
+            {
+                if (workspace.Memorias.Count == 0)
+                    PrepararDecisaoPreservacao(TipoDecisaoPreservacao.ConflitoVazio,
+                        "Este dia possui memórias mais recentes.",
+                        "As memórias preservadas deste dia mudaram desde que você começou esta captura. Se confirmar a exclusão, essas memórias mais recentes também serão apagadas.",
+                        "Excluir mesmo assim", "Não excluir", "is-danger");
+                else
+                    PrepararDecisaoPreservacao(TipoDecisaoPreservacao.ConflitoComposicao,
+                        "Este dia possui alterações mais recentes.",
+                        "As memórias preservadas deste dia mudaram desde que você começou esta captura. Se continuar, suas alterações substituirão o que está preservado atualmente.",
+                        "Preservar minhas alterações", "Não substituir", "is-danger is-light");
+                return;
+            }
+
+            if (exclusaoTotalConfirmada)
+            {
+                await GravarPreservacaoConfirmadaAsync(workspace);
+                return;
+            }
+
+            PrepararDecisaoPreservacao(TipoDecisaoPreservacao.Normal,
+                "Preservar as memórias deste dia?",
+                "A composição atual deste dia será preservada. Se já existir uma versão preservada, ela será substituída.",
+                "Preservar", "Cancelar", "is-link");
+        }
+        catch
+        {
+            ExibirFalhaPreservacao("Não foi possível preservar",
+                "Suas alterações continuam protegidas neste dispositivo. Tente preservar novamente.");
+        }
+        finally
+        {
+            operacaoEmAndamento = false;
+            preservacaoEmAndamento = false;
+        }
+    }
+
+    private static bool VerificacaoPreservacaoValida(VerificacaoComposicaoRemota verificacao) => verificacao.Estado switch
+    {
+        EstadoComposicaoRemota.Ausente => verificacao.Revisao is null,
+        EstadoComposicaoRemota.Presente => !string.IsNullOrWhiteSpace(verificacao.Revisao),
+        _ => false
+    };
+
+    private static bool OrigemCompativel(WorkspaceCapturaLocal workspace, VerificacaoComposicaoRemota verificacao) =>
+        workspace.Origem == OrigemCapturaLocal.Ausente && verificacao.Estado == EstadoComposicaoRemota.Ausente
+        || workspace.Origem == OrigemCapturaLocal.Presente && verificacao.Estado == EstadoComposicaoRemota.Presente
+            && string.Equals(workspace.RevisaoOrigem, verificacao.Revisao, StringComparison.Ordinal);
+
+    private void ExibirFalhaPreservacao(string? titulo, string mensagem)
+    {
+        tituloFalhaPreservacao = titulo;
+        mensagemFalhaPreservacao = mensagem;
+        popupFalhaPreservacao = true;
+    }
+
+    private void PrepararDecisaoPreservacao(TipoDecisaoPreservacao tipo, string titulo,
+        string mensagem, string confirmar, string cancelar, string classeConfirmar)
+    {
+        tipoDecisaoPreservacao = tipo;
+        tituloConfirmacaoPreservacao = titulo;
+        mensagemConfirmacaoPreservacao = mensagem;
+        rotuloConfirmacaoPreservacao = confirmar;
+        rotuloCancelamentoPreservacao = cancelar;
+        classeBotaoConfirmacaoPreservacao = classeConfirmar;
+        popupConfirmarPreservacao = true;
+    }
+
+    private async Task ResponderConfirmacaoPreservacaoAsync(RespostaPopup resposta)
+    {
+        var tipo = tipoDecisaoPreservacao;
+        tipoDecisaoPreservacao = TipoDecisaoPreservacao.Nenhuma;
+        popupConfirmarPreservacao = false;
+        if (resposta != RespostaPopup.Confirmacao)
+        {
+            if (tipo is TipoDecisaoPreservacao.ConflitoComposicao or TipoDecisaoPreservacao.ConflitoVazio)
+                ExibirFalhaPreservacao("Alterações mantidas",
+                    "Nada foi substituído. Suas alterações continuam nesta captura. Se não quiser mais mantê-las, você pode usar Descartar alterações.");
+            return;
+        }
+
+        if (operacaoEmAndamento || WorkspaceAtual is not { } workspace) return;
+
+        if (tipo == TipoDecisaoPreservacao.ExclusaoTotal)
+        {
+            await IniciarConferenciaPreservacaoAsync(workspace, exclusaoTotalConfirmada: true);
+            return;
+        }
+
+        if (tipo is not (TipoDecisaoPreservacao.Normal or TipoDecisaoPreservacao.ConflitoComposicao
+            or TipoDecisaoPreservacao.ConflitoVazio)) return;
+
+        operacaoEmAndamento = true;
+        preservacaoEmAndamento = true;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            await GravarPreservacaoConfirmadaAsync(workspace);
+        }
+        catch
+        {
+            ExibirFalhaPreservacao("Não foi possível preservar",
+                "Suas alterações continuam protegidas neste dispositivo. Tente preservar novamente.");
+        }
+        finally
+        {
+            operacaoEmAndamento = false;
+            preservacaoEmAndamento = false;
+        }
+    }
+
+    private async Task GravarPreservacaoConfirmadaAsync(WorkspaceCapturaLocal workspace)
+    {
+        var preservacaoConfirmada = false;
+        try
+        {
+            var gravacao = await AutoridadeFake.PreservarAsync(workspace);
+            if (gravacao.Estado != EstadoComposicaoRemota.Presente
+                || string.IsNullOrWhiteSpace(gravacao.Revisao) || gravacao.Memorias is null)
+            {
+                ExibirFalhaPreservacao("Não foi possível preservar",
+                    "Suas alterações continuam protegidas neste dispositivo. Tente preservar novamente.");
+                return;
+            }
+
+            preservacaoConfirmada = true;
+            var remocao = await CapturasLocais.RemoverAsync(workspace.IdentidadeConta, workspace.Data);
+            var workspaceRemovido = remocao.Sucesso && remocao.Valor == true
+                || remocao.Estado == EstadoOperacaoLocal.Ausente;
+
+            await Continuidade.LimparAsync();
+            await Continuidade.LimparRascunhoAsync();
+            operacaoEmAndamento = false;
+            permitirProximaNavegacao = true;
+            Navegacao.NavigateTo(workspaceRemovido
+                ? "capturar?resultadoPreservacao=sucesso"
+                : "capturar?resultadoPreservacao=falha-local");
+        }
+        catch
+        {
+            if (preservacaoConfirmada)
+            {
+                await Continuidade.LimparAsync();
+                await Continuidade.LimparRascunhoAsync();
+                operacaoEmAndamento = false;
+                permitirProximaNavegacao = true;
+                Navegacao.NavigateTo("capturar?resultadoPreservacao=falha-local");
+            }
+            else
+            {
+                ExibirFalhaPreservacao("Não foi possível preservar",
+                    "Suas alterações continuam protegidas neste dispositivo. Tente preservar novamente.");
+            }
+        }
+    }
+
+    private Task ResponderFalhaPreservacaoAsync(RespostaPopup _)
+    {
+        popupFalhaPreservacao = false;
+        return Task.CompletedTask;
+    }
+
+    private Task SolicitarDescarteAsync()
+    {
+        if (operacaoEmAndamento || WorkspaceAtual is not { Alterado: true }) return Task.CompletedTask;
+        popupConfirmarDescarte = true;
+        return Task.CompletedTask;
+    }
+
+    private async Task ResponderConfirmacaoDescarteAsync(RespostaPopup resposta)
+    {
+        popupConfirmarDescarte = false;
+        if (resposta != RespostaPopup.Confirmacao || operacaoEmAndamento
+            || WorkspaceAtual is not { Alterado: true } workspace) return;
+
+        operacaoEmAndamento = true;
+        try
+        {
+            var remocao = await CapturasLocais.RemoverSeAlteradoAsync(workspace.IdentidadeConta, workspace.Data);
+            if (!remocao.Sucesso || remocao.Valor != true)
+            {
+                popupFalhaDescarte = true;
+                return;
+            }
+
+            await Continuidade.LimparAsync();
+            await Continuidade.LimparRascunhoAsync();
+            operacaoEmAndamento = false;
+            permitirProximaNavegacao = true;
+            Navegacao.NavigateTo("capturar");
+        }
+        catch
+        {
+            popupFalhaDescarte = true;
+        }
+        finally
+        {
+            operacaoEmAndamento = false;
+        }
+    }
+
+    private Task ResponderFalhaDescarteAsync(RespostaPopup _)
+    {
+        popupFalhaDescarte = false;
+        return Task.CompletedTask;
     }
 
     private Task ResponderCategoriasAusentesAsync(RespostaPopup _)
@@ -653,6 +984,7 @@
 
     private async Task SolicitarVoltarCabecalhoAsync()
     {
+        if (operacaoEmAndamento) return;
         if (TemTextoUtil)
         {
             tipoPopupNavegacao = TipoPopupNavegacao.VoltarCabecalho;
@@ -667,6 +999,7 @@
 
     private Task SolicitarSaidaAsync()
     {
+        if (operacaoEmAndamento) return Task.CompletedTask;
         tipoPopupNavegacao = TemTextoUtil
             ? TipoPopupNavegacao.SairComTexto
             : TipoPopupNavegacao.SairSemTexto;
@@ -715,6 +1048,11 @@
 
     private async ValueTask TratarMudancaInternaAsync(LocationChangingContext contexto)
     {
+        if (operacaoEmAndamento)
+        {
+            contexto.PreventNavigation();
+            return;
+        }
         if (permitirProximaNavegacao)
         {
             permitirProximaNavegacao = false;

@@ -82,9 +82,18 @@
     <Popup Aberto="@popupSaidaAberto" Mensagem="Deseja realmente sair?"
            TextoConfirmar="Sim" TextoCancelar="Não" ClasseBotaoConfirmar="is-link"
            AoResponder="ResponderSaidaAsync" />
+    <Popup Aberto="@popupResultadoPreservacao"
+           Titulo="@TituloResultadoPreservacao"
+           Mensagem="@MensagemResultadoPreservacao"
+           TextoConfirmar="OK"
+           ClasseBotaoConfirmar="is-info"
+           AoResponder="ResponderResultadoPreservacaoAsync" />
 </main>
 
 @code {
+    [SupplyParameterFromQuery(Name = "resultadoPreservacao")]
+    public string? ResultadoPreservacao { get; set; }
+
     private IJSObjectReference? moduloCalendario;
     private DateOnly hoje;
     private string hojeTexto = "";
@@ -97,6 +106,12 @@
     private bool falhaRemocao;
     private bool popupAberto;
     private bool popupSaidaAberto;
+    private bool popupResultadoPreservacao;
+    private bool FalhaAtualizacaoLocal => string.Equals(ResultadoPreservacao, "falha-local", StringComparison.Ordinal);
+    private string TituloResultadoPreservacao => "Memórias preservadas";
+    private string MensagemResultadoPreservacao => FalhaAtualizacaoLocal
+        ? "Suas memórias foram preservadas, mas não foi possível atualizar esta captura neste dispositivo. Ela poderá continuar aparecendo como pendente até que o armazenamento local volte a funcionar corretamente."
+        : "As memórias deste dia foram preservadas com sucesso.";
     private bool DataValida => valorData.Length > 0;
     private string DataExclusao => pendenciaSelecionada is null ? "" : DatasCaptura.Apresentar(pendenciaSelecionada.Data);
     private string MensagemExclusaoPopup => string.Join("\n\n", MensagemExclusao);
@@ -122,6 +137,7 @@
         textoOrientacao = await Orientacao.ObterTextoAsync(ContextosOrientacao.SelecaoCapturar);
         await CarregarPendenciasAsync();
         carregando = false;
+        popupResultadoPreservacao = ResultadoPreservacao is "sucesso" or "falha-local";
     }
 
     private async Task CarregarPendenciasAsync()
@@ -187,6 +203,13 @@
 
         await EstadoAutenticacao.EncerrarSessaoAsync();
         Navegacao.NavigateTo(new Uri(new Uri(Navegacao.BaseUri), "").ToString());
+    }
+
+    private Task ResponderResultadoPreservacaoAsync(RespostaPopup _)
+    {
+        popupResultadoPreservacao = false;
+        Navegacao.NavigateTo("capturar", replace: true);
+        return Task.CompletedTask;
     }
 
     private void VoltarPrincipal() => Navegacao.NavigateTo("principal");

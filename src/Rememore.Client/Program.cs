@@ -38,9 +38,10 @@ builder.Services.AddScoped<IContextoChavePendente, ContextoChavePendenteSessionS
 builder.Services.AddScoped<CapacidadesAmbienteSimuladas>();
 builder.Services.AddScoped<ICapacidadesAmbiente>(servicos => servicos.GetRequiredService<CapacidadesAmbienteSimuladas>());
 builder.Services.AddScoped<IPendenciaCapturaLocal, PendenciaCapturaLocalIndexedDb>();
-builder.Services.AddScoped<ComposicaoCapturaRemotaSimulada>();
-builder.Services.AddScoped<IComposicaoCapturaRemota>(servicos => servicos.GetRequiredService<ComposicaoCapturaRemotaSimulada>());
-builder.Services.AddScoped<ICatalogoCategoriasRemoto, CatalogoCategoriasRemotoSimulado>();
+builder.Services.AddScoped<AutoridadeCapturaFakePersistente>();
+builder.Services.AddScoped<IAutoridadeCapturaFake>(servicos => servicos.GetRequiredService<AutoridadeCapturaFakePersistente>());
+builder.Services.AddScoped<IComposicaoCapturaRemota>(servicos => servicos.GetRequiredService<AutoridadeCapturaFakePersistente>());
+builder.Services.AddScoped<ICatalogoCategoriasRemoto>(servicos => servicos.GetRequiredService<AutoridadeCapturaFakePersistente>());
 builder.Services.AddScoped<CatalogoCategoriasPorConta>();
 builder.Services.AddScoped<ConfiguracaoCapturarSimulada>();
 builder.Services.AddScoped<IConfiguracaoCapturar>(servicos => servicos.GetRequiredService<ConfiguracaoCapturarSimulada>());
