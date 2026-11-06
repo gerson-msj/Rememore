@@ -31,8 +31,8 @@
             </div>
             <nav class="tabs is-fullwidth captura-dia__abas" aria-label="Etapas da captura">
                 <ul>
-                    <li class="@(!AbaCategorizar ? "is-active" : string.Empty)">
-                        <a href="@UrlAbaMemorar" aria-current="@(!AbaCategorizar ? "step" : null)">
+                    <li class="@(!AbaCategorizar && !AbaRevisar ? "is-active" : string.Empty)">
+                        <a href="@UrlAbaMemorar" aria-current="@(!AbaCategorizar && !AbaRevisar ? "step" : null)">
                             <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-feather-pointed"></i></span>
                             <span>Memorar</span>
                         </a>
@@ -45,8 +45,8 @@
                             <span>Categorizar</span>
                         </a>
                     </li>
-                    <li>
-                        <a aria-disabled="true" tabindex="-1">
+                    <li class="@(AbaRevisar ? "is-active" : string.Empty)">
+                        <a href="@UrlAbaRevisar" aria-current="@(AbaRevisar ? "step" : null)">
                             <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-bookmark"></i></span>
                             <span>Revisar</span>
                         </a>
@@ -56,7 +56,7 @@
         </div>
         <div class="captura-dia__espacador-barra" aria-hidden="true"></div>
     }
-    <div class="captura-dia__conteudo">
+    <div class="captura-dia__conteudo @(AbaRevisar ? "captura-dia__conteudo--revisao" : string.Empty)">
         @if (dataInvalida)
         {
             <h2 class="title is-3">Data inválida</h2>
@@ -88,18 +88,53 @@
         }
         else
         {
-            @if (AbaCategorizar && Memorias.Count == 0)
+            @if (AbaRevisar)
+            {
+                <div class="buttons captura-dia__acoes-revisao" role="group" aria-label="Ações da revisão">
+                    <button class="button is-link elemento-botao-com-icone" type="button">
+                        <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-bookmark"></i></span>
+                        <span>Preservar</span>
+                    </button>
+                    <button class="button is-light elemento-botao-com-icone" type="button" disabled>
+                        <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-trash-can"></i></span>
+                        <span>Descartar alterações</span>
+                    </button>
+                </div>
+                <div class="notification elemento-orientacao-informativa" role="status">
+                    <span class="elemento-orientacao-informativa__texto">Confira se esta composição representa bem o seu dia. Você ainda pode ajustar qualquer memória antes de preservar.</span>
+                </div>
+                <div class="lista-memorias captura-dia__lista-memorias" role="list" aria-label="Memórias da revisão">
+                    @foreach (var memoria in MemoriasDemonstrativasRevisao)
+                    {
+                        <div @key="memoria.Identidade" class="captura-dia__item-memoria" role="listitem" data-identidade-memoria="@memoria.Identidade">
+                            <Memoria Identificador="@memoria.Identidade"
+                                     Conteudo="@memoria.Conteudo"
+                                     Categorias="@memoria.Categorias"
+                                     Tom="@memoria.Tom"
+                                     Modo="ModoMemoria.Revisar"
+                                     AoAcionar="IgnorarAcionamentoMemoria" />
+                        </div>
+                    }
+                </div>
+                <p class="captura-dia__voltar-topo">
+                    <a class="has-text-link" href="#" @onclick:preventDefault="true">
+                        <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-arrow-up"></i></span>
+                        <span>Voltar ao topo</span>
+                    </a>
+                </p>
+            }
+            else if (AbaCategorizar && Memorias.Count == 0)
             {
                 <p role="status">Não há memórias para categorizar.</p>
             }
-            else if (!AbaCategorizar && Memorias.Count == 0 && textoOrientacao is not null)
+            else if (!AbaCategorizar && !AbaRevisar && Memorias.Count == 0 && textoOrientacao is not null)
             {
                 <div class="notification elemento-orientacao-informativa" role="status">
                     <span class="elemento-orientacao-informativa__texto">@textoOrientacao</span>
                 </div>
             }
 
-            @if (Memorias.Count > 0)
+            @if (!AbaRevisar && Memorias.Count > 0)
             {
                 <div class="lista-memorias captura-dia__lista-memorias" role="list" aria-label="@(AbaCategorizar ? "Memórias para categorizar" : "Memórias da captura")">
                     @for (var indice = 0; indice < Memorias.Count; indice++)
@@ -163,7 +198,7 @@
                     }
                 </section>
             }
-            else if (!AbaCategorizar)
+            else if (!AbaCategorizar && !AbaRevisar)
             {
                 <div class="buttons is-right captura-dia__acao-incluir">
                     <button class="button is-link" type="button" @onclick="AbrirInclusao">
@@ -218,8 +253,10 @@
     private bool dataInvalida;
     private string? identidadeMemoriaParaAlinhar;
     private bool AbaCategorizar => !inclusaoAberta && string.Equals(Aba, "categorizar", StringComparison.OrdinalIgnoreCase);
+    private bool AbaRevisar => !inclusaoAberta && string.Equals(Aba, "revisar", StringComparison.OrdinalIgnoreCase);
     private string UrlAbaMemorar => $"capturar/{Uri.EscapeDataString(DataRota)}";
     private string UrlAbaCategorizar => $"capturar/{Uri.EscapeDataString(DataRota)}?aba=categorizar";
+    private string UrlAbaRevisar => $"capturar/{Uri.EscapeDataString(DataRota)}?aba=revisar";
     private bool preparando = true;
     private ResultadoAberturaCaptura? resultado;
     private NivelOrientacao nivelOrientacaoAtual = NivelOrientacao.Iniciante;
@@ -252,6 +289,16 @@
     private const string DicaAtalhos = "Enter cria uma nova linha.\nShift+Enter inclui a memória.\nCtrl+Enter inclui e permite registrar outra.\nEsc cancela.";
     private bool ExibirDicaAtalhos => inclusaoAberta && Memorias.Count == 0 && nivelOrientacaoAtual == NivelOrientacao.Iniciante;
     private IReadOnlyList<MemoriaCapturaLocal> Memorias => resultado?.Workspace?.Memorias.OrderBy(memoria => memoria.Ordem).ToList() ?? [];
+    private static readonly IReadOnlyList<MemoriaDemonstrativaRevisao> MemoriasDemonstrativasRevisao =
+    [
+        new("revisao-01", "Hoje tomei café com a minha irmã antes do trabalho.", ["Família"], 72),
+        new("revisao-02", "A chuva começou pouco antes de sairmos para caminhar.\n\nEncontramos um caminho coberto entre as árvores e fomos sem pressa, conversando sobre as pequenas mudanças deste ano. No meio do percurso, paramos para observar os ipês e ouvir os pássaros.\n\nNa volta, compramos pão quentinho na padaria da esquina e dividimos ainda no carro. Foi um passeio simples, mas me fez muito bem.", ["Amizade", "Natureza", "Pequenas alegrias"], -28),
+        new("revisao-03", "Consegui terminar a leitura que vinha adiando.\n\nComplemento adicionado em 03/11/2026\nTambém anotei algumas ideias para conversar com a equipe.\n\nComplemento adicionado em 04/11/2026\nUma das sugestões já virou um plano para a próxima semana.", ["Aprendizado", "Trabalho"], 86),
+        new("revisao-04", "Fiquei pensando bastante no que aconteceu durante a reunião.\n\nApesar de ter me preparado, não consegui explicar tudo como gostaria. Quero rever minhas anotações com calma e decidir como retomar o assunto.", [], -84),
+        new("revisao-05", "À noite, fizemos uma receita nova juntos. O resultado ficou diferente da foto, mas rimos bastante e repetimos o prato no almoço de hoje.", ["Casa", "Família"], null)
+    ];
+    private sealed record MemoriaDemonstrativaRevisao(string Identidade, string Conteudo, IReadOnlyList<string> Categorias, int? Tom);
+    private static Task IgnorarAcionamentoMemoria(string _) => Task.CompletedTask;
     private bool TemTextoUtil => inclusaoAberta && !string.IsNullOrWhiteSpace(textoInclusao);
     private bool ExigirConfirmacaoAbandono => TemTextoUtil;
 

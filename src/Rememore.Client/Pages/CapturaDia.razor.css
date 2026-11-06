@@ -6,6 +6,7 @@
 .captura-dia__barra-fixa .tabs.captura-dia__abas { width: min(100%, 60rem); margin: 0 auto; }
 .captura-dia__espacador-barra { height: 5.25rem; }
 .captura-dia__conteudo { --captura-dia-espacamento: 1.4rem; display: grid; width: min(100%, 60rem); margin-inline: auto; padding-block: clamp(1.25rem, 3vw, 2.5rem) 4rem; padding-inline: clamp(1rem, 4vw, 2.5rem); gap: var(--captura-dia-espacamento); }
+.captura-dia__conteudo--revisao { padding-block-start: var(--captura-dia-espacamento); }
 .captura-dia__conteudo > .title { margin: 0; color: var(--cor-title); font-size: clamp(1.55rem, 4vw, 2.15rem); line-height: 1.2; }
 .captura-dia__conteudo > p { margin: 0; color: var(--cor-text-strong); line-height: 1.6; }
 .captura-dia__botao-retorno { justify-self: start; min-height: 2.8rem; margin-block-start: 0.75rem; }
@@ -19,7 +20,12 @@
 .captura-dia__acao-incluir { margin: 0; }
 .captura-dia__falha-inclusao { margin: 0; }
 .captura-dia__dica-atalhos { margin: 0; border-inline-start-color: var(--bulma-warning); }
+.captura-dia__acoes-revisao { display: grid; width: min(100%, 30rem); grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 0.75rem; margin: 0 auto; }
+.captura-dia__acoes-revisao .button { width: 100%; min-height: 2.8rem; max-width: 100%; white-space: normal; }
+.captura-dia__voltar-topo { margin: 0; text-align: center; }
+.captura-dia__voltar-topo a { display: inline-flex; align-items: center; gap: 0.35rem; }
 @media (max-width: 480px) {
+    .captura-dia__acoes-revisao { grid-template-columns: 1fr; }
     .captura-dia__barra-fixa .tabs.captura-dia__abas li a { gap: 0.25rem; padding-inline: 0.25rem; font-size: 0.8rem; white-space: nowrap; }
     .captura-dia__barra-fixa .tabs.captura-dia__abas .icon { margin-inline-end: 0; }
 }
