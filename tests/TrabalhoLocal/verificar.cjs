@@ -36,9 +36,14 @@ const captura = { identidadeConta: contaA, data: '2026-10-14', alterado: false,
     memorias: [{ identidade: '21c9e8bb-fd2f-409e-a88c-1dfc6e42aa70', conteudo: 'Primeira', ordem: 0 },
         { identidade: '643a3c38-e9e7-4ef7-ac89-884e244b6717', conteudo: 'Segunda', ordem: 1 }] };
 async function verificarCaptura(esperada = captura) {
-    const r = await chamar('Recuperar', contaA, captura.data);
+    const r = await chamar('Recuperar', contaA, esperada.data);
     assert.equal(r.estado, 0);
-    assert.deepEqual(r.valor, esperada);
+    assert.deepEqual({ identidadeConta: r.valor.identidadeConta, data: r.valor.data, alterado: r.valor.alterado,
+        origem: r.valor.origem, revisaoOrigem: r.valor.revisaoOrigem,
+        memorias: r.valor.memorias.map(({ identidade, conteudo, ordem }) => ({ identidade, conteudo, ordem })) },
+    { identidadeConta: esperada.identidadeConta, data: esperada.data, alterado: esperada.alterado,
+        origem: esperada.origem, revisaoOrigem: esperada.revisaoOrigem,
+        memorias: esperada.memorias.map(({ identidade, conteudo, ordem }) => ({ identidade, conteudo, ordem })) });
 }
 (async () => {
     try {
@@ -83,7 +88,7 @@ async function verificarCaptura(esperada = captura) {
             const outraData = { ...captura, data: '2026-10-15' };
             assert.equal((await chamar('Gravar', outraData)).estado, 0);
             assert.equal((await chamar('Consultar', contaA)).valor.length, 2);
-            assert.deepEqual((await chamar('Recuperar', contaA, outraData.data)).valor, outraData);
+            await verificarCaptura(outraData);
             assert.equal((await chamar('Remover', contaA, outraData.data)).estado, 0);
             await verificarCaptura();
         });
@@ -202,6 +207,66 @@ async function verificarCaptura(esperada = captura) {
             await visitar();
             await verificarCaptura(alterada);
             assert.equal(await chamar('IdentidadeConta'), contaA);
+        });
+        const capturaFake = { identidadeConta: contaA, data: '2026-10-20', alterado: true,
+            origem: 1, revisaoOrigem: null,
+            memorias: [{ identidade: 'memoria-b1', conteudo: 'Texto integral preservado', ordem: 0,
+                temporalidadeConhecida: true, complementos: [{ identidade: 'complemento-b1', conteudo: 'Complemento persistente', ordem: 0, temporalidadeConhecida: true }],
+                categorias: [{ identidade: 'local-categoria-b1', nome: 'Categoria B1', origem: 1 }],
+                tom: -2, balancoSentimental: 'Um registro de teste técnico.' }] };
+        await cenario('Autoridade fake grava composição integral, revisão e categoria canônica', async () => {
+            const inicial = await chamar('ConsultarCatalogoFake', contaA, null);
+            assert.equal(inicial.estado, 0);
+            assert.equal(inicial.categorias.length, 3);
+            assert.equal((await chamar('Gravar', capturaFake)).estado, 0);
+            const gravacao = await chamar('PreservarFake', capturaFake);
+            assert.equal(gravacao.estado, 0);
+            assert.equal(gravacao.revisao, '1');
+            const conferencia = await chamar('VerificarFake', contaA, capturaFake.data);
+            assert.deepEqual(conferencia, { estado: 0, revisao: '1' });
+            const leitura = await chamar('LerFake', contaA, capturaFake.data);
+            assert.equal(leitura.memorias[0].conteudo, 'Texto integral preservado');
+            assert.equal(leitura.memorias[0].tom, -2);
+            assert.equal(leitura.memorias[0].balancoSentimental, 'Um registro de teste técnico.');
+            assert.match(leitura.memorias[0].primeiraPreservacaoUtc, /^\d{4}-/);
+            assert.match(leitura.memorias[0].complementos[0].primeiraPreservacaoUtc, /^\d{4}-/);
+            assert.match(leitura.memorias[0].categorias[0].identidade, /^categoria-/);
+            const delta = await chamar('ConsultarCatalogoFake', contaA, inicial.revisao);
+            assert.equal(delta.estado, 2);
+            assert.ok(delta.alteracoes.some(item => item.categoria.nome === 'Categoria B1'));
+            assert.equal((await chamar('Remover', contaA, '2026-10-20')).estado, 0);
+            assert.equal((await chamar('LerFake', contaA, capturaFake.data)).estado, 0);
+            const abertura = await chamar('AbrirFake', contaA, capturaFake.data);
+            assert.equal(abertura.estado, 0);
+            assert.equal(abertura.workspace.origem, 2);
+            assert.equal(abertura.workspace.revisaoOrigem, '1');
+            assert.equal(abertura.workspace.memorias[0].conteudo, 'Texto integral preservado');
+        });
+        await cenario('Autoridade fake sobrevive a F5 e reabertura física do navegador', async () => {
+            await pagina.reload();
+            await pagina.waitForFunction(() => !!window.verificacao);
+            assert.equal((await chamar('LerFake', contaA, capturaFake.data)).revisao, '1');
+            await contexto.close();
+            await abrir();
+            await visitar();
+            assert.equal((await chamar('LerFake', contaA, capturaFake.data)).revisao, '1');
+        });
+        await cenario('Abort transacional não persiste captura nem categoria parcial', async () => {
+            const resultado = await pagina.evaluate(async registro => {
+                const original = IDBObjectStore.prototype.put;
+                IDBObjectStore.prototype.put = function (...args) {
+                    const pedido = original.apply(this, args);
+                    pedido.addEventListener('success', () => this.transaction.abort());
+                    return pedido;
+                };
+                try { return await window.verificacao.invokeMethodAsync('PreservarFake', registro); }
+                finally { IDBObjectStore.prototype.put = original; }
+            }, { ...capturaFake, data: '2026-10-21', memorias: capturaFake.memorias.map(m => ({ ...m,
+                identidade: 'memoria-b1-falha', categorias: [{ identidade: 'categoria-parcial', nome: 'Categoria Parcial', origem: 1 }] })) });
+            assert.equal(resultado.estado, 2);
+            assert.equal((await chamar('LerFake', contaA, '2026-10-21')).estado, 1);
+            const catalogo = await chamar('ConsultarCatalogoFake', contaA, null);
+            assert.ok(!catalogo.categorias.some(item => item.nome === 'Categoria Parcial'));
         });
         await cenario('API indisponível e abertura negada são resultados explícitos em C#', async () => {
             const respostas = await pagina.evaluate(async () => {

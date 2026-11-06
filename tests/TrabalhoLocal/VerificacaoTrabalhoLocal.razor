@@ -1,6 +1,7 @@
 @page "/verificacao-trabalho-local"
 @using Rememore.Client.Infraestrutura.TrabalhoLocal
 @using Rememore.Client.Infraestrutura.Categorias
+@using Rememore.Client.Infraestrutura.Capturar
 @using Microsoft.JSInterop
 @implements IDisposable
 @inject IDiagnosticoTrabalhoLocal Diagnostico
@@ -8,6 +9,9 @@
 @inject ICacheCatalogoCategoriasLocal CacheCategorias
 @inject EstadoAutenticacaoProvider Autenticacao
 @inject IJSRuntime Js
+@inject IAutoridadeCapturaFake AutoridadeFake
+@inject ICatalogoCategoriasRemoto CatalogoRemoto
+@inject AberturaCaptura Abertura
 
 @* Andaime temporário: copiar para Pages somente durante a execução técnica. *@
 @code {
@@ -33,5 +37,10 @@
     [JSInvokable] public Task<ResultadoLocal<bool>> Remover(string conta, string data) => Capturas.RemoverAsync(conta, DateOnly.Parse(data));
     [JSInvokable] public Task<ResultadoLocal<IReadOnlyList<WorkspaceCapturaLocal>>> Consultar(string conta) => Capturas.ConsultarAsync(conta);
     [JSInvokable] public string? IdentidadeConta() => Autenticacao.IdentidadeConta;
+    [JSInvokable] public Task<ResultadoPreservacaoRemota> PreservarFake(WorkspaceCapturaLocal captura) => AutoridadeFake.PreservarAsync(captura);
+    [JSInvokable] public Task<VerificacaoComposicaoRemota> VerificarFake(string conta, string data) => AutoridadeFake.VerificarAsync(conta, DateOnly.Parse(data));
+    [JSInvokable] public Task<ComposicaoCapturaRemota> LerFake(string conta, string data) => AutoridadeFake.ObterCompletaAsync(conta, DateOnly.Parse(data));
+    [JSInvokable] public Task<RespostaCatalogoCategoriasRemoto> ConsultarCatalogoFake(string conta, string? revisao) => CatalogoRemoto.ConsultarAsync(conta, revisao);
+    [JSInvokable] public Task<ResultadoAberturaCaptura> AbrirFake(string conta, string data) => Abertura.AbrirAsync(conta, DateOnly.Parse(data), false);
     public void Dispose() => referencia?.Dispose();
 }

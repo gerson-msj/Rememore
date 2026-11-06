@@ -1,6 +1,6 @@
 # Verificação da fundação local
 
-Testes direcionados contra Chrome real e o cliente Blazor. Não usam IndexedDB em memória nem acessam a API experimental. Cada execução cria um perfil técnico próprio em `artifacts/verificacao-trabalho-local/`; `resultado.json` registra os cenários aprovados. O teste encerra e reabre o navegador com o mesmo perfil para comprovar persistência física e sessão. A regressão cobre as migrações dos schemas 1 a 3, proteção transacional de workspaces Alterados, associação imediata de categorias, concorrência, falha de escrita e cache por conta.
+Testes direcionados contra Chrome real e o cliente Blazor. Não usam IndexedDB em memória nem acessam a API experimental. Cada execução cria um perfil técnico próprio em `artifacts/verificacao-trabalho-local/`; `resultado.json` registra os cenários aprovados. O teste encerra e reabre o navegador com o mesmo perfil para comprovar persistência física e sessão. A regressão cobre as migrações dos schemas 1 a 3, proteção transacional de workspaces Alterados, associação imediata de categorias, concorrência, falha de escrita, cache por conta e a autoridade fake persistente: composição integral, revisão, categorias canônicas, historicidade, isolamento do workspace, reabertura de datas e atomicidade diante de aborto.
 
 Requisitos: .NET 10, Chrome instalado e módulo Playwright disponível. Nenhuma dependência foi adicionada à aplicação. No ambiente Codex, o módulo usado foi o Playwright do runtime fornecido por `load_workspace_dependencies`.
 
