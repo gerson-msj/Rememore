@@ -116,7 +116,7 @@
                                      Tom="@memoria.Tom"
                                      Modo="ModoMemoria.Revisar"
                                      CategoriaEmAtencao="@identidadesSemCategoriaEmAtencao.Contains(memoria.Identidade)"
-                                     AoAcionar="IgnorarAcionamentoMemoria" />
+                                     AoAcionar="AcionarMemoria" />
                         </div>
                     }
                 </div>
@@ -248,6 +248,7 @@
     [Parameter] public string DataRota { get; set; } = "";
     [SupplyParameterFromQuery(Name = "aba")] public string? Aba { get; set; }
     [SupplyParameterFromQuery(Name = "memoria")] public string? MemoriaFocoRota { get; set; }
+    [SupplyParameterFromQuery(Name = "atencao")] public bool AtencaoRota { get; set; }
 
     private enum TipoPopupNavegacao { Nenhum, VoltarCabecalho, SairSemTexto, SairComTexto, NavegacaoInterna }
 
@@ -289,18 +290,26 @@
     private bool popupNavegacaoAberto;
     private bool permitirProximaNavegacao;
     private bool focarInclusaoAposRenderizar;
+    private bool rolarPaginaAoAbrirInclusao;
+    private bool rolarPaginaAposInclusao;
     private string? identidadeFocoOrdenacao;
     private bool focarElevarAposOrdenacao;
     private bool popupFalhaOrdenacao;
     private bool restaurarFocoOrdenacaoAposRenderizar;
-    private void AbrirEdicaoMemoria(string identidade) =>
-        Navegacao.NavigateTo($"editar-memoria/{Uri.EscapeDataString(DataRota)}/{Uri.EscapeDataString(identidade)}");
-    private void AbrirCategorizacaoMemoria(string identidade) =>
-        Navegacao.NavigateTo($"categorizar/{Uri.EscapeDataString(DataRota)}/{Uri.EscapeDataString(identidade)}");
+    private void AbrirEdicaoMemoria(string identidade, AbaOrigemEdicaoCaptura origem, bool categoriaEmAtencao = false) =>
+        Navegacao.NavigateTo(ContextoEdicaoCaptura.RotaEdicaoMemoria(DataRota, identidade, origem, categoriaEmAtencao));
+    private void AbrirCategorizacaoMemoria(string identidade, AbaOrigemEdicaoCaptura origem, bool categoriaEmAtencao = false) =>
+        Navegacao.NavigateTo(ContextoEdicaoCaptura.RotaCategorizacao(DataRota, identidade, origem, categoriaEmAtencao));
     private void AcionarMemoria(string identidade)
     {
-        if (AbaCategorizar) AbrirCategorizacaoMemoria(identidade);
-        else AbrirEdicaoMemoria(identidade);
+        if (AbaCategorizar) AbrirCategorizacaoMemoria(identidade, AbaOrigemEdicaoCaptura.Categorizar);
+        else if (AbaRevisar)
+        {
+            var emAtencao = identidadesSemCategoriaEmAtencao.Contains(identidade);
+            if (emAtencao) AbrirCategorizacaoMemoria(identidade, AbaOrigemEdicaoCaptura.Revisar, categoriaEmAtencao: true);
+            else AbrirEdicaoMemoria(identidade, AbaOrigemEdicaoCaptura.Revisar);
+        }
+        else AbrirEdicaoMemoria(identidade, AbaOrigemEdicaoCaptura.Memorar);
     }
     private TipoPopupNavegacao tipoPopupNavegacao;
     private TaskCompletionSource<bool>? decisaoNavegacaoInterna;
@@ -364,7 +373,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        identidadeMemoriaParaAlinhar = AbaCategorizar && !string.IsNullOrWhiteSpace(MemoriaFocoRota)
+        identidadeMemoriaParaAlinhar = !string.IsNullOrWhiteSpace(MemoriaFocoRota)
             ? Uri.UnescapeDataString(MemoriaFocoRota)
             : null;
         if (ultimaDataRota is not null && ultimaDataRota != DataRota)
@@ -415,7 +424,22 @@
 
             await Continuidade.RegistrarAsync(identidadeConta, data);
             registroMudancaLocal ??= Navegacao.RegisterLocationChangingHandler(TratarMudancaInternaAsync);
-            if (AbaRevisar) await AtualizarRevisaoLocalAsync();
+            if (AbaRevisar)
+            {
+                await AtualizarRevisaoLocalAsync();
+                var tentativaRegistrada = AtencaoRota || await Continuidade.TentouPreservarAsync(identidadeConta, data);
+                if (AtencaoRota && !tentativaRegistrada)
+                {
+                    await Continuidade.RegistrarTentativaPreservarAsync(identidadeConta, data);
+                    tentativaRegistrada = true;
+                }
+                identidadesSemCategoriaEmAtencao.Clear();
+                if (tentativaRegistrada)
+                {
+                    foreach (var memoria in Memorias.Where(item => item.Categorias is not { Count: > 0 }))
+                        identidadesSemCategoriaEmAtencao.Add(memoria.Identidade);
+                }
+            }
             await AtualizarOrientacaoAsync();
         }
         preparando = false;
@@ -448,6 +472,8 @@
         var invalidas = Memorias.Where(memoria => memoria.Categorias is not { Count: > 0 }).ToArray();
         if (invalidas.Length == 0) return;
 
+        if (resultado?.Workspace is { } workspace)
+            await Continuidade.RegistrarTentativaPreservarAsync(workspace.IdentidadeConta, workspace.Data);
         identidadesSemCategoriaEmAtencao.Clear();
         foreach (var memoria in invalidas) identidadesSemCategoriaEmAtencao.Add(memoria.Identidade);
         primeiraMemoriaSemCategoria = invalidas[0].Identidade;
@@ -471,6 +497,7 @@
         inclusaoAberta = true;
         mensagemFalhaInclusao = null;
         focarInclusaoAposRenderizar = true;
+        rolarPaginaAoAbrirInclusao = true;
         await RegistrarRascunhoAsync();
     }
 
@@ -580,6 +607,7 @@
             inclusaoAberta = continuar;
             if (continuar) await RegistrarRascunhoAsync();
             else await Continuidade.LimparRascunhoAsync();
+            rolarPaginaAposInclusao = true;
             if (continuar) focarInclusaoAposRenderizar = true;
             await AtualizarOrientacaoAsync();
         }
@@ -755,7 +783,7 @@
         }
 
         if (!preparando && resultado?.Estado == EstadoAberturaCaptura.Aberta
-            && AbaCategorizar && identidadeMemoriaParaAlinhar is { } identidade
+            && identidadeMemoriaParaAlinhar is { } identidade
             && Memorias.Any(memoria => memoria.Identidade == identidade)
             && moduloLista is not null)
         {
@@ -774,9 +802,23 @@
             }
         }
 
-        if (!focarInclusaoAposRenderizar || campoInclusao is null) return;
-        focarInclusaoAposRenderizar = false;
-        await campoInclusao.FocarAsync();
+        if (focarInclusaoAposRenderizar && campoInclusao is not null)
+        {
+            focarInclusaoAposRenderizar = false;
+            await campoInclusao.FocarAsync();
+        }
+
+        if (rolarPaginaAoAbrirInclusao && inclusaoAberta && moduloLista is not null)
+        {
+            rolarPaginaAoAbrirInclusao = false;
+            await moduloLista.InvokeVoidAsync("rolarConteudoAteFim");
+        }
+
+        if (rolarPaginaAposInclusao && !preparando && resultado?.Estado == EstadoAberturaCaptura.Aberta && moduloLista is not null)
+        {
+            rolarPaginaAposInclusao = false;
+            await moduloLista.InvokeVoidAsync("rolarPaginaAteFim");
+        }
     }
 
     [JSInvokable]

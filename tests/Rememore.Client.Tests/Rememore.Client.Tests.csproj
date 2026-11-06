@@ -32,5 +32,6 @@
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/RegraEdicaoMemoria.cs" Link="Infraestrutura/RegraEdicaoMemoria.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/RegraEdicaoComplemento.cs" Link="Infraestrutura/RegraEdicaoComplemento.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/EstadoEdicaoMemoria.cs" Link="Infraestrutura/EstadoEdicaoMemoria.cs" />
+    <Compile Include="../../src/Rememore.Client/Infraestrutura/Capturar/ContextoEdicaoCaptura.cs" Link="Infraestrutura/ContextoEdicaoCaptura.cs" />
   </ItemGroup>
 </Project>

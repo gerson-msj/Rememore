@@ -1,4 +1,5 @@
 const chave = "rememore.captura.ativa.v1";
+const chaveTentativaPreservar = "rememore.captura.revisar-preservacao.v1";
 const chaveRascunho = "rememore.captura.rascunho.v1";
 const chaveEdicaoMemoria = "rememore.editar-memoria.rascunho.v1";
 const chaveAutorizacaoCategoria = "rememore.categorizar.autorizacao.v1";
@@ -18,6 +19,17 @@ export function registrar(identidadeConta, data) {
 
 export function limpar() {
     sessionStorage.removeItem(chave);
+}
+
+export function registrarTentativaPreservar(identidadeConta, data) {
+    try { sessionStorage.setItem(`${chaveTentativaPreservar}:${encodeURIComponent(identidadeConta)}:${data}`, "true"); }
+    catch { }
+}
+
+export function tentouPreservar(identidadeConta, data) {
+    try {
+        return sessionStorage.getItem(`${chaveTentativaPreservar}:${encodeURIComponent(identidadeConta)}:${data}`) === "true";
+    } catch { return false; }
 }
 
 export function registrarRascunho(identidadeConta, data, inclusaoAberta, texto) {

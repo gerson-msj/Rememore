@@ -68,6 +68,23 @@ export function alinharMemoriaNoTopo(identidade, seletorBarraFixa) {
     if (Math.abs(deslocamento) > 0.5) window.scrollBy(0, deslocamento);
 }
 
+export async function rolarPaginaAteFim() {
+    const aguardarLayout = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await aguardarLayout();
+    // Mantém a rolagem do fluxo que deixa o campo aberto após a inclusão.
+    for (let tentativa = 0; tentativa < 4; tentativa++) {
+        const alturaDocumento = document.documentElement.scrollHeight;
+        window.scrollTo(window.scrollX, alturaDocumento);
+        await aguardarLayout();
+        if (document.documentElement.scrollHeight === alturaDocumento) break;
+    }
+}
+
+export function rolarConteudoAteFim() {
+    const conteudo = document.querySelector(".captura-dia__conteudo");
+    if (conteudo instanceof HTMLElement) conteudo.scrollIntoView({ block: "end" });
+}
+
 export function focarEManterVisivel(identidade, elevar, seletorBarraFixa) {
     const seletor = `[data-identidade-memoria="${CSS.escape(identidade)}"]`;
     const elemento = document.querySelector(seletor);

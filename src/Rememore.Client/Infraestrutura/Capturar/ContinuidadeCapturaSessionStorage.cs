@@ -63,6 +63,18 @@ public sealed class ContinuidadeCapturaSessionStorage(IJSRuntime js) : IAsyncDis
         catch (Exception ex) when (ex is JSException or InvalidOperationException) { }
     }
 
+    public async Task RegistrarTentativaPreservarAsync(string identidadeConta, DateOnly data)
+    {
+        try { await (await GarantirModuloAsync()).InvokeVoidAsync("registrarTentativaPreservar", identidadeConta, data.ToString("yyyy-MM-dd")); }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException) { }
+    }
+
+    public async Task<bool> TentouPreservarAsync(string identidadeConta, DateOnly data)
+    {
+        try { return await (await GarantirModuloAsync()).InvokeAsync<bool>("tentouPreservar", identidadeConta, data.ToString("yyyy-MM-dd")); }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException) { return false; }
+    }
+
     public async Task RegistrarEdicaoMemoriaAsync(string identidadeConta, DateOnly data, string identidadeMemoria, string texto, bool autorizacaoConcedida)
     {
         await RegistrarEdicaoAsync(identidadeConta, data, identidadeMemoria, "MemoriaPrincipal", null, texto, autorizacaoConcedida);

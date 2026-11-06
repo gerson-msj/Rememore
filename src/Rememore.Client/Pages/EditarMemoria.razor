@@ -13,10 +13,10 @@
 @inject ContinuidadeCapturaSessionStorage Continuidade
 @inject TimeProvider Relogio
 
-<PageTitle>Editar Memória</PageTitle>
+<PageTitle>@TituloDaPagina</PageTitle>
 <main class="container is-max-desktop">
     <NavigationLock ConfirmExternalNavigation="@EstadoReal.ExigeConfirmacaoDeSaida" />
-    <CabecalhoPagina Titulo="Editar Memória" MostrarVoltar MostrarSair
+    <CabecalhoPagina Titulo="@TituloDaPagina" MostrarVoltar MostrarSair
                      AoRetornar="SolicitarVoltarAsync" AoSair="SolicitarSairAsync" />
     @if (dataCaptura is { } data)
     {
@@ -28,6 +28,15 @@
         <div class="editar-memoria__espacador-data" aria-hidden="true"></div>
     }
     else { <div class="editar-memoria__espacador-cabecalho" aria-hidden="true"></div> }
+    @if (OrigemEdicao == AbaOrigemEdicaoCaptura.Revisar && pronta && memoria is not null)
+    {
+        <nav class="tabs is-centered" aria-label="Perspectiva da edição">
+            <ul>
+                <li class="is-active"><a aria-current="page">Memória</a></li>
+                <li><a href="#" @onclick="AlternarParaCategorizacaoAsync" @onclick:preventDefault>Categorização</a></li>
+            </ul>
+        </nav>
+    }
     @if (!pronta)
     {
         <p class="section" role="status">Preparando memória…</p>
@@ -111,8 +120,13 @@
 @code {
     [Parameter] public string DataRota { get; set; } = "";
     [Parameter] public string IdentidadeMemoria { get; set; } = "";
+    [SupplyParameterFromQuery(Name = "origem")] public string? OrigemRota { get; set; }
+    [SupplyParameterFromQuery(Name = "atencao")] public bool CategoriaEmAtencaoRota { get; set; }
+    private AbaOrigemEdicaoCaptura OrigemEdicao => ContextoEdicaoCaptura.InterpretarOrigem(OrigemRota, AbaOrigemEdicaoCaptura.Memorar);
+    private string TituloDaPagina => OrigemEdicao == AbaOrigemEdicaoCaptura.Revisar ? "Revisar Memória" : "Editar Memória";
+    private Task AlternarParaCategorizacaoAsync() => SolicitarAsync(Acao.AlternarParaCategorizacao);
     private enum TipoConteudoEdicao { Nenhum, MemoriaPrincipal, ComplementoNovo, ComplementoExistente }
-    private enum Acao { Nenhuma, Voltar, Sair, ExcluirMemoria, ExcluirComplemento, CancelarComplemento, CancelarEdicaoComplemento }
+    private enum Acao { Nenhuma, Voltar, Sair, AlternarParaCategorizacao, ExcluirMemoria, ExcluirComplemento, CancelarComplemento, CancelarEdicaoComplemento }
     private TipoConteudoEdicao tipoConteudoAtivo;
     private MemoriaCapturaLocal? memoria;
     private DateOnly? dataCaptura;
@@ -292,7 +306,7 @@
     {
         if (!PodeExcluirMemoria || memoria is null || dataCaptura is null) return;
         CancelarDebounceRascunho(); operacaoEmAndamento = true;
-        try { var r = await CapturasLocais.ExcluirMemoriaSemComplementosAsync(identidadeConta, dataCaptura.Value, memoria.Identidade, textoConfirmado); if (!r.Sucesso) { Falhar(r.Falha?.Codigo == "PossuiComplementos" ? "Esta memória possui complementos e não pode ser excluída nesta etapa." : "A memória mudou ou não foi possível excluí-la. Tente novamente."); return; } await Continuidade.LimparEdicaoMemoriaAsync(identidadeConta, dataCaptura.Value, memoria.Identidade); Navegacao.NavigateTo($"capturar/{Uri.EscapeDataString(DataRota)}"); }
+        try { var r = await CapturasLocais.ExcluirMemoriaSemComplementosAsync(identidadeConta, dataCaptura.Value, memoria.Identidade, textoConfirmado); if (!r.Sucesso) { Falhar(r.Falha?.Codigo == "PossuiComplementos" ? "Esta memória possui complementos e não pode ser excluída nesta etapa." : "A memória mudou ou não foi possível excluí-la. Tente novamente."); return; } await Continuidade.LimparEdicaoMemoriaAsync(identidadeConta, dataCaptura.Value, memoria.Identidade); VoltarCaptura(); }
         finally { operacaoEmAndamento = false; }
     }
     private async Task ExcluirComplementoAsync()
@@ -318,17 +332,23 @@
     private Task SolicitarSairAsync() => SolicitarAsync(Acao.Sair);
     private async Task SolicitarAsync(Acao destino)
     {
+        if (destino == Acao.AlternarParaCategorizacao && OrigemEdicao != AbaOrigemEdicaoCaptura.Revisar) return;
         acao = destino;
         if (Sujo)
         {
-            var compNovo = tipoConteudoAtivo == TipoConteudoEdicao.ComplementoNovo; var compExistente = tipoConteudoAtivo == TipoConteudoEdicao.ComplementoExistente; var sair = destino == Acao.Sair;
-            tituloPopup = (sair ? "Sair" : "Voltar") + (compNovo ? " sem confirmar o complemento?" : compExistente ? " sem confirmar a edição do complemento?" : " sem confirmar a edição?");
+            var compNovo = tipoConteudoAtivo == TipoConteudoEdicao.ComplementoNovo; var compExistente = tipoConteudoAtivo == TipoConteudoEdicao.ComplementoExistente; var sair = destino == Acao.Sair; var alternar = destino == Acao.AlternarParaCategorizacao;
+            var verbo = alternar ? "Alternar" : "Voltar";
+            tituloPopup = (sair ? "Sair" : verbo) + (compNovo ? " sem confirmar o complemento?" : compExistente ? " sem confirmar a edição do complemento?" : " sem confirmar a edição?");
             mensagemPopup = compNovo ? (sair ? "O complemento que você está escrevendo ainda não foi confirmado. Se sair agora, esse texto será perdido e sua sessão será encerrada." : "O complemento que você está escrevendo ainda não foi confirmado. Se voltar agora, esse texto será perdido.")
-                : sair ? "As alterações feitas " + (compExistente ? "neste complemento" : "nesta memória") + " ainda não foram confirmadas. Se sair agora, elas serão perdidas e sua sessão será encerrada." : "As alterações feitas " + (compExistente ? "neste complemento" : "nesta memória") + " ainda não foram confirmadas. Se voltar agora, elas serão perdidas.";
-            textoConfirmar = sair ? "Sair sem confirmar" : "Voltar sem confirmar"; textoCancelar = compNovo ? "Continuar escrevendo" : "Continuar editando"; classeConfirmar = "is-danger"; classeCancelar = "is-link";
+                : sair ? "As alterações feitas " + (compExistente ? "neste complemento" : "nesta memória") + " ainda não foram confirmadas. Se sair agora, elas serão perdidas e sua sessão será encerrada."
+                : alternar ? "As alterações feitas " + (compExistente ? "neste complemento" : "nesta memória") + " ainda não foram confirmadas. Se alternar, elas serão perdidas."
+                : "As alterações feitas " + (compExistente ? "neste complemento" : "nesta memória") + " ainda não foram confirmadas. Se voltar agora, elas serão perdidas.";
+            textoConfirmar = sair ? "Sair sem confirmar" : alternar ? "Alternar sem confirmar" : "Voltar sem confirmar"; textoCancelar = compNovo ? "Continuar escrevendo" : "Continuar editando"; classeConfirmar = "is-danger"; classeCancelar = "is-link";
         }
         else if (destino == Acao.Sair)
         { tituloPopup = "Sair do Rememore?"; mensagemPopup = "Deseja encerrar sua sessão?"; textoConfirmar = "Sair"; textoCancelar = "Cancelar"; classeConfirmar = "is-link"; classeCancelar = "is-light"; }
+        else if (destino == Acao.AlternarParaCategorizacao)
+        { NavegarParaCategorizacao(); return; }
         else { await DescartarRascunhoSaidaAsync(); VoltarCaptura(); return; }
         popup = true;
     }
@@ -342,9 +362,14 @@
         if (acao == Acao.CancelarComplemento || acao == Acao.CancelarEdicaoComplemento) { await EncerrarEdicaoComplementoAsync(); return; }
         if (Sujo) await DescartarRascunhoSaidaAsync();
         else if (memoria is not null && dataCaptura is not null) await Continuidade.LimparEdicaoMemoriaAsync(identidadeConta, dataCaptura.Value, memoria.Identidade);
-        if (acao == Acao.Voltar) VoltarCaptura(); else { await EstadoAutenticacao.EncerrarSessaoAsync(); Navegacao.NavigateTo(Navegacao.BaseUri); }
+        if (acao == Acao.Voltar) VoltarCaptura();
+        else if (acao == Acao.AlternarParaCategorizacao) NavegarParaCategorizacao();
+        else { await EstadoAutenticacao.EncerrarSessaoAsync(); Navegacao.NavigateTo(Navegacao.BaseUri); }
     }
-    private void VoltarCaptura() => Navegacao.NavigateTo($"capturar/{Uri.EscapeDataString(DataRota)}");
+    private void VoltarCaptura() => Navegacao.NavigateTo(ContextoEdicaoCaptura.RotaRetorno(
+        DataRota, OrigemEdicao, Uri.UnescapeDataString(IdentidadeMemoria), CategoriaEmAtencaoRota));
+    private void NavegarParaCategorizacao() => Navegacao.NavigateTo(ContextoEdicaoCaptura.RotaCategorizacao(
+        DataRota, Uri.UnescapeDataString(IdentidadeMemoria), OrigemEdicao, CategoriaEmAtencaoRota));
     private void CancelarDebounceRascunho() { debounceRascunho?.Cancel(); debounceRascunho?.Dispose(); debounceRascunho = null; }
     public ValueTask DisposeAsync() { CancelarDebounceRascunho(); return ValueTask.CompletedTask; }
 }

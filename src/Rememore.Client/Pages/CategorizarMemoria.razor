@@ -20,10 +20,10 @@
 @inject IFonteNivelOrientacao FonteNivelOrientacao
 @inject ResolvedorOrientacaoProgressiva ResolvedorOrientacao
 
-<PageTitle>Categorização</PageTitle>
+<PageTitle>@TituloDaPagina</PageTitle>
 
 <main class="pagina-categorizar-memoria">
-    <CabecalhoAmbiente Titulo="Categorização" MostrarRetorno AoRetornar="VoltarParaListaAsync" />
+    <CabecalhoAmbiente Titulo="@TituloDaPagina" MostrarRetorno AoRetornar="VoltarParaListaAsync" />
     <div class="categorizar-memoria__espacador-cabecalho" aria-hidden="true"></div>
 
     @if (dataCaptura is { } data)
@@ -38,6 +38,17 @@
     else
     {
         <div class="categorizar-memoria__espacador-cabecalho" aria-hidden="true"></div>
+    }
+
+    @if (OrigemEdicao == AbaOrigemEdicaoCaptura.Revisar && memoriaAtual is not null)
+    {
+        <nav class="tabs is-centered" aria-label="Perspectiva da edição">
+            <ul>
+                <li><a href="@ContextoEdicaoCaptura.RotaEdicaoMemoria(DataRota, identidadeMemoria, OrigemEdicao, CategoriaEmAtencaoRota)"
+                       @onclick="AlternarParaMemoria" @onclick:preventDefault>Memória</a></li>
+                <li class="is-active"><a aria-current="page">Categorização</a></li>
+            </ul>
+        </nav>
     }
 
     @if (preparando)
@@ -178,6 +189,8 @@
                                      AoAtualizarRascunho="AtualizarRascunhoBalancoAsync" AoSalvar="SalvarBalancoAsync" AoExcluir="ExcluirBalancoAsync"
                                      AoConcluir="ConcluirPopupBalancoAsync" AoContinuarEditando="CancelarNavegacaoPendente" />
 
+            @if (OrigemEdicao != AbaOrigemEdicaoCaptura.Revisar)
+            {
             <nav class="buttons is-centered categorizar-memoria__navegacao" aria-label="Navegação entre memórias">
                 <button class="button is-light elemento-botao-com-icone" type="button" aria-label="Memória anterior" disabled="@(EhPrimeiraMemoria || operacaoTomEmAndamento || interacaoTomEmAndamento || operacaoCategoriaEmAndamento)" @onclick="IrParaAnterior">
                     <span class="icon" aria-hidden="true"><i class="fa-solid fa-chevron-left"></i></span><span>Anterior</span>
@@ -186,6 +199,7 @@
                     <span>Próxima</span><span class="icon" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
                 </button>
             </nav>
+            }
         </section>
     }
     <Popup Aberto="@popupDesativarTomAberto" Titulo="Desativar o Tom?" Mensagem="O Tom selecionado será apagado. Deseja continuar?"
@@ -195,6 +209,16 @@
 @code {
     [Parameter] public string DataRota { get; set; } = string.Empty;
     [Parameter] public string IdentidadeMemoria { get; set; } = string.Empty;
+    [SupplyParameterFromQuery(Name = "origem")] public string? OrigemRota { get; set; }
+    [SupplyParameterFromQuery(Name = "atencao")] public bool CategoriaEmAtencaoRota { get; set; }
+    private AbaOrigemEdicaoCaptura OrigemEdicao => ContextoEdicaoCaptura.InterpretarOrigem(OrigemRota, AbaOrigemEdicaoCaptura.Categorizar);
+    private string TituloDaPagina => OrigemEdicao == AbaOrigemEdicaoCaptura.Revisar ? "Revisar Categorização" : "Categorização";
+    private void AlternarParaMemoria()
+    {
+        if (operacaoCategoriaEmAndamento || operacaoTomEmAndamento || interacaoTomEmAndamento || popupDesativarTomAberto) return;
+        Navegacao.NavigateTo(ContextoEdicaoCaptura.RotaEdicaoMemoria(DataRota,
+            Uri.UnescapeDataString(IdentidadeMemoria), OrigemEdicao, CategoriaEmAtencaoRota));
+    }
 
     private bool preparando = true;
     private bool popupAberto;
@@ -262,7 +286,9 @@
         if (!retomarNavegacaoAposRender || destinoNavegacaoPendente is not { } destino) return;
         retomarNavegacaoAposRender = false;
         destinoNavegacaoPendente = null;
-        await Continuidade.LimparAutorizacaoCategoriaAsync();
+        var destinoEhOutraPerspectivaDaRevisao = OrigemEdicao == AbaOrigemEdicaoCaptura.Revisar
+            && Navegacao.ToAbsoluteUri(destino).AbsolutePath.Contains("/editar-memoria/", StringComparison.OrdinalIgnoreCase);
+        if (!destinoEhOutraPerspectivaDaRevisao) await Continuidade.LimparAutorizacaoCategoriaAsync();
         Navegacao.NavigateTo(destino, replace: false);
     }
 
@@ -514,7 +540,7 @@
             rascunhoBalanco = null;
             if (dataCaptura is { } data) await Continuidade.LimparBalancoSentimentalAsync(identidadeConta, data, identidadeMemoria);
         }
-        if ((resultado is ResultadoPopupBalanco.Descartado or ResultadoPopupBalanco.FechadoSemAlteracao) && destinoNavegacaoPendente is not null)
+        if (destinoNavegacaoPendente is not null)
         {
             retomarNavegacaoAposRender = true;
             await InvokeAsync(StateHasChanged);
@@ -542,7 +568,9 @@
             return;
         }
         var destino = Navegacao.ToAbsoluteUri(contexto.TargetLocation).AbsolutePath;
-        if (!destino.Contains("/categorizar/", StringComparison.OrdinalIgnoreCase))
+        var destinoEhOutraPerspectivaDaRevisao = OrigemEdicao == AbaOrigemEdicaoCaptura.Revisar
+            && destino.Contains("/editar-memoria/", StringComparison.OrdinalIgnoreCase);
+        if (!destinoEhOutraPerspectivaDaRevisao && !destino.Contains("/categorizar/", StringComparison.OrdinalIgnoreCase))
             await Continuidade.LimparAutorizacaoCategoriaAsync();
     }
 
@@ -763,7 +791,7 @@
     {
         if (operacaoCategoriaEmAndamento || operacaoTomEmAndamento || interacaoTomEmAndamento) return Task.CompletedTask;
         popupAberto = false;
-        Navegacao.NavigateTo($"categorizar/{Uri.EscapeDataString(DataRota)}/{Uri.EscapeDataString(memoria.Identidade)}");
+        Navegacao.NavigateTo(ContextoEdicaoCaptura.RotaCategorizacao(DataRota, memoria.Identidade, OrigemEdicao, CategoriaEmAtencaoRota));
         return Task.CompletedTask;
     }
 
@@ -771,7 +799,7 @@
     {
         if (operacaoCategoriaEmAndamento || operacaoTomEmAndamento || interacaoTomEmAndamento) return;
         await Continuidade.LimparAutorizacaoCategoriaAsync();
-        Navegacao.NavigateTo($"capturar/{Uri.EscapeDataString(DataRota)}?aba=categorizar&memoria={Uri.EscapeDataString(identidadeMemoria)}");
+        Navegacao.NavigateTo(ContextoEdicaoCaptura.RotaRetorno(DataRota, OrigemEdicao, identidadeMemoria, CategoriaEmAtencaoRota));
     }
 
     private static bool Equivalentes(string primeira, string segunda) =>
