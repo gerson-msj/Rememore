@@ -91,7 +91,7 @@
             @if (AbaRevisar)
             {
                 <div class="buttons captura-dia__acoes-revisao" role="group" aria-label="Ações da revisão">
-                    <button class="button is-link elemento-botao-com-icone" type="button">
+                    <button class="button is-link elemento-botao-com-icone" type="button" @onclick="ValidarCategoriasParaPreservarAsync">
                         <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-bookmark"></i></span>
                         <span>Preservar</span>
                     </button>
@@ -100,28 +100,35 @@
                         <span>Descartar alterações</span>
                     </button>
                 </div>
-                <div class="notification elemento-orientacao-informativa" role="status">
-                    <span class="elemento-orientacao-informativa__texto">Confira se esta composição representa bem o seu dia. Você ainda pode ajustar qualquer memória antes de preservar.</span>
-                </div>
+                @if (textoOrientacao is not null)
+                {
+                    <div class="notification elemento-orientacao-informativa" role="status">
+                        <span class="elemento-orientacao-informativa__texto">@textoOrientacao</span>
+                    </div>
+                }
                 <div class="lista-memorias captura-dia__lista-memorias" role="list" aria-label="Memórias da revisão">
-                    @foreach (var memoria in MemoriasDemonstrativasRevisao)
+                    @foreach (var memoria in Memorias)
                     {
                         <div @key="memoria.Identidade" class="captura-dia__item-memoria" role="listitem" data-identidade-memoria="@memoria.Identidade">
                             <Memoria Identificador="@memoria.Identidade"
-                                     Conteudo="@memoria.Conteudo"
-                                     Categorias="@memoria.Categorias"
+                                     Conteudo="@ComporConteudoRevisao(memoria)"
+                                     Categorias="@(memoria.Categorias?.Select(categoria => categoria.Nome).ToArray() ?? [])"
                                      Tom="@memoria.Tom"
                                      Modo="ModoMemoria.Revisar"
+                                     CategoriaEmAtencao="@identidadesSemCategoriaEmAtencao.Contains(memoria.Identidade)"
                                      AoAcionar="IgnorarAcionamentoMemoria" />
                         </div>
                     }
                 </div>
-                <p class="captura-dia__voltar-topo">
-                    <a class="has-text-link" href="#" @onclick:preventDefault="true">
+                @if (revisaoRolavel)
+                {
+                    <p class="captura-dia__voltar-topo">
+                    <a class="has-text-link" href="#" @onclick="VoltarAoTopoRevisaoAsync">
                         <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-arrow-up"></i></span>
                         <span>Voltar ao topo</span>
                     </a>
-                </p>
+                    </p>
+                }
             }
             else if (AbaCategorizar && Memorias.Count == 0)
             {
@@ -230,6 +237,11 @@
            TextoConfirmar="Ok"
            ClasseBotaoConfirmar="is-info"
            AoResponder="ResponderFalhaOrdenacaoAsync" />
+    <Popup Aberto="@popupCategoriasAusentes"
+           Mensagem="Há memórias sem categoria. Adicione pelo menos uma categoria a cada memória antes de preservar."
+           TextoConfirmar="Ok"
+           ClasseBotaoConfirmar="is-info"
+           AoResponder="ResponderCategoriasAusentesAsync" />
 </main>
 
 @code {
@@ -245,7 +257,9 @@
     private IJSObjectReference? moduloCalendario;
     private IJSObjectReference? moduloNavegacao;
     private IJSObjectReference? moduloLista;
+    private IJSObjectReference? moduloRevisao;
     private DotNetObjectReference<CapturaDia>? referenciaNavegacao;
+    private DotNetObjectReference<CapturaDia>? referenciaRevisao;
     private IDisposable? registroMudancaLocal;
     private string? ultimaDataRota;
     private DateOnly data;
@@ -261,6 +275,11 @@
     private ResultadoAberturaCaptura? resultado;
     private NivelOrientacao nivelOrientacaoAtual = NivelOrientacao.Iniciante;
     private string? textoOrientacao;
+    private readonly HashSet<string> identidadesSemCategoriaEmAtencao = new(StringComparer.Ordinal);
+    private bool popupCategoriasAusentes;
+    private bool alinharPrimeiraMemoriaSemCategoria;
+    private string? primeiraMemoriaSemCategoria;
+    private bool revisaoRolavel;
     private CampoMultilinhaAtalhos? campoInclusao;
     private string textoInclusao = string.Empty;
     private string? mensagemFalhaInclusao;
@@ -289,15 +308,18 @@
     private const string DicaAtalhos = "Enter cria uma nova linha.\nShift+Enter inclui a memória.\nCtrl+Enter inclui e permite registrar outra.\nEsc cancela.";
     private bool ExibirDicaAtalhos => inclusaoAberta && Memorias.Count == 0 && nivelOrientacaoAtual == NivelOrientacao.Iniciante;
     private IReadOnlyList<MemoriaCapturaLocal> Memorias => resultado?.Workspace?.Memorias.OrderBy(memoria => memoria.Ordem).ToList() ?? [];
-    private static readonly IReadOnlyList<MemoriaDemonstrativaRevisao> MemoriasDemonstrativasRevisao =
-    [
-        new("revisao-01", "Hoje tomei café com a minha irmã antes do trabalho.", ["Família"], 72),
-        new("revisao-02", "A chuva começou pouco antes de sairmos para caminhar.\n\nEncontramos um caminho coberto entre as árvores e fomos sem pressa, conversando sobre as pequenas mudanças deste ano. No meio do percurso, paramos para observar os ipês e ouvir os pássaros.\n\nNa volta, compramos pão quentinho na padaria da esquina e dividimos ainda no carro. Foi um passeio simples, mas me fez muito bem.", ["Amizade", "Natureza", "Pequenas alegrias"], -28),
-        new("revisao-03", "Consegui terminar a leitura que vinha adiando.\n\nComplemento adicionado em 03/11/2026\nTambém anotei algumas ideias para conversar com a equipe.\n\nComplemento adicionado em 04/11/2026\nUma das sugestões já virou um plano para a próxima semana.", ["Aprendizado", "Trabalho"], 86),
-        new("revisao-04", "Fiquei pensando bastante no que aconteceu durante a reunião.\n\nApesar de ter me preparado, não consegui explicar tudo como gostaria. Quero rever minhas anotações com calma e decidir como retomar o assunto.", [], -84),
-        new("revisao-05", "À noite, fizemos uma receita nova juntos. O resultado ficou diferente da foto, mas rimos bastante e repetimos o prato no almoço de hoje.", ["Casa", "Família"], null)
-    ];
-    private sealed record MemoriaDemonstrativaRevisao(string Identidade, string Conteudo, IReadOnlyList<string> Categorias, int? Tom);
+    private string ComporConteudoRevisao(MemoriaCapturaLocal memoria)
+    {
+        var blocos = new List<string> { memoria.Conteudo };
+        foreach (var complemento in (memoria.Complementos ?? []).OrderBy(item => item.Ordem))
+        {
+            var titulo = complemento.PrimeiraPreservacaoUtc is { } marco
+                ? $"Complemento adicionado em {marco.ToLocalTime().ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("pt-BR"))}"
+                : "Complemento";
+            blocos.Add($"{titulo}\n{complemento.Conteudo}");
+        }
+        return string.Join("\n\n", blocos);
+    }
     private static Task IgnorarAcionamentoMemoria(string _) => Task.CompletedTask;
     private bool TemTextoUtil => inclusaoAberta && !string.IsNullOrWhiteSpace(textoInclusao);
     private bool ExigirConfirmacaoAbandono => TemTextoUtil;
@@ -393,6 +415,7 @@
 
             await Continuidade.RegistrarAsync(identidadeConta, data);
             registroMudancaLocal ??= Navegacao.RegisterLocationChangingHandler(TratarMudancaInternaAsync);
+            if (AbaRevisar) await AtualizarRevisaoLocalAsync();
             await AtualizarOrientacaoAsync();
         }
         preparando = false;
@@ -401,7 +424,46 @@
     private async Task AtualizarOrientacaoAsync()
     {
         nivelOrientacaoAtual = await FonteNivelOrientacao.ObterNivelAsync();
-        textoOrientacao = await Orientacao.ObterTextoAsync(ContextosOrientacao.CapturaMemorar);
+        textoOrientacao = await Orientacao.ObterTextoAsync(AbaRevisar
+            ? ContextosOrientacao.CapturaRevisar
+            : ContextosOrientacao.CapturaMemorar);
+    }
+
+    private async Task AtualizarRevisaoLocalAsync()
+    {
+        if (resultado?.Workspace is not { } workspace) return;
+        var atual = await CapturasLocais.RecuperarAsync(workspace.IdentidadeConta, workspace.Data);
+        if (atual.Sucesso && atual.Valor is { } confirmado)
+        {
+            resultado = resultado with { Workspace = confirmado };
+            identidadesSemCategoriaEmAtencao.RemoveWhere(id => confirmado.Memorias
+                .Any(memoria => memoria.Identidade == id && memoria.Categorias is { Count: > 0 }));
+        }
+    }
+
+    private async Task ValidarCategoriasParaPreservarAsync()
+    {
+        if (operacaoEmAndamento) return;
+        await AtualizarRevisaoLocalAsync();
+        var invalidas = Memorias.Where(memoria => memoria.Categorias is not { Count: > 0 }).ToArray();
+        if (invalidas.Length == 0) return;
+
+        identidadesSemCategoriaEmAtencao.Clear();
+        foreach (var memoria in invalidas) identidadesSemCategoriaEmAtencao.Add(memoria.Identidade);
+        primeiraMemoriaSemCategoria = invalidas[0].Identidade;
+        popupCategoriasAusentes = true;
+    }
+
+    private Task ResponderCategoriasAusentesAsync(RespostaPopup _)
+    {
+        popupCategoriasAusentes = false;
+        alinharPrimeiraMemoriaSemCategoria = primeiraMemoriaSemCategoria is not null;
+        return Task.CompletedTask;
+    }
+
+    private async Task VoltarAoTopoRevisaoAsync()
+    {
+        if (moduloRevisao is not null) await moduloRevisao.InvokeVoidAsync("voltarAoTopo");
     }
 
     private async Task AbrirInclusao()
@@ -678,8 +740,12 @@
             moduloNavegacao = await JS.InvokeAsync<IJSObjectReference>("import", "./js/capturaDiaNavegacao.js");
             moduloLista = await JS.InvokeAsync<IJSObjectReference>("import", "./js/capturaDiaLista.js");
             await moduloLista.InvokeVoidAsync("conectarOrdenacao");
+            moduloRevisao = await JS.InvokeAsync<IJSObjectReference>("import", "./js/capturaDiaRevisao.js");
+            await moduloRevisao.InvokeVoidAsync("conectar", AbaRevisar);
             referenciaNavegacao = DotNetObjectReference.Create(this);
             await moduloNavegacao.InvokeVoidAsync("conectar", referenciaNavegacao);
+            referenciaRevisao = DotNetObjectReference.Create(this);
+            await moduloRevisao.InvokeVoidAsync("conectar", AbaRevisar, referenciaRevisao);
         }
 
         if (restaurarFocoOrdenacaoAposRenderizar && !popupFalhaOrdenacao)
@@ -697,6 +763,17 @@
             await moduloLista.InvokeVoidAsync("alinharMemoriaNoTopo", identidade, ".captura-dia__barra-fixa");
         }
 
+        if (!preparando && resultado?.Estado == EstadoAberturaCaptura.Aberta && AbaRevisar && moduloRevisao is not null)
+        {
+            await moduloRevisao.InvokeVoidAsync("atualizarVisibilidadeVoltarTopo");
+            if (alinharPrimeiraMemoriaSemCategoria && primeiraMemoriaSemCategoria is { } invalida)
+            {
+                alinharPrimeiraMemoriaSemCategoria = false;
+                primeiraMemoriaSemCategoria = null;
+                await moduloLista!.InvokeVoidAsync("alinharMemoriaNoTopo", invalida, ".captura-dia__barra-fixa");
+            }
+        }
+
         if (!focarInclusaoAposRenderizar || campoInclusao is null) return;
         focarInclusaoAposRenderizar = false;
         await campoInclusao.FocarAsync();
@@ -709,6 +786,14 @@
         popupNavegacaoAberto = false;
         popupCancelamentoInclusao = false;
         await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public Task AtualizarVisibilidadeVoltarTopo(bool visivel)
+    {
+        if (revisaoRolavel == visivel) return Task.CompletedTask;
+        revisaoRolavel = visivel;
+        return InvokeAsync(StateHasChanged);
     }
 
     private void VoltarSelecao() => Navegacao.NavigateTo("capturar");
@@ -734,6 +819,14 @@
             try { await moduloLista.DisposeAsync(); }
             catch (JSDisconnectedException) { }
         }
+        if (moduloRevisao is not null)
+        {
+            try { await moduloRevisao.InvokeVoidAsync("desconectar"); }
+            catch (JSDisconnectedException) { }
+            try { await moduloRevisao.DisposeAsync(); }
+            catch (JSDisconnectedException) { }
+        }
         referenciaNavegacao?.Dispose();
+        referenciaRevisao?.Dispose();
     }
 }

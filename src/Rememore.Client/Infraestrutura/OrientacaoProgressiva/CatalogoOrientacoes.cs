@@ -19,7 +19,12 @@ public sealed class CatalogoOrientacoes
             ContextosOrientacao.CategorizacaoCategoria,
             "Escolha uma categoria que represente esta memória. Se ela ainda não existir, basta escrever o nome.",
             "Escolha a categoria que melhor representa o contexto desta memória.",
-            "Categorias consistentes tornam mais perceptíveis os temas que atravessam suas memórias.")
+            "Categorias consistentes tornam mais perceptíveis os temas que atravessam suas memórias."),
+        new DefinicaoOrientacao(
+            ContextosOrientacao.CapturaRevisar,
+            "Revise suas memórias antes de preservar. Confira o texto, as categorias e os demais detalhes. Se precisar, você ainda pode ajustar qualquer memória.",
+            "Confira se esta composição representa bem o seu dia. Você ainda pode ajustar qualquer memória antes de preservar.",
+            "Revise se esta composição representa bem o que você quer preservar deste dia.")
     ]);
 
     public CatalogoOrientacoes(IEnumerable<DefinicaoOrientacao> definicoes)
