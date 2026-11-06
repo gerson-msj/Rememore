@@ -20,7 +20,7 @@ A especificação pode já existir na raiz do diretório de especificações, se
 
 ## Runbook (Execução e validação)
 
-Faça verificações proporcionais aos requisitos e registre o que foi realmente validado e o que não foi. No ChatGPT Desktop/Windows, comandos .NET devem ser executados fora do sandbox e utilize aba do navegador interno.
+Faça verificações proporcionais aos requisitos e registre o que foi realmente validado e o que não foi. No ChatGPT Desktop/Windows, comandos .NET devem ser executados fora do sandbox e utilize aba do navegador interno. Comandos Git que alterem o repositório, como `git add` e `git commit`, também devem ser executados fora do sandbox para evitar falhas de permissão no `.git/index.lock`; comandos somente de leitura podem continuar no sandbox.
 Gerencie o uso dos comandos `dotnet`, execute ou interrompa `dotnet run` ou `dotnet watch` quando necessário, tenha sido ele iniciado por você ou não, acompanhe os logs e em caso de falha após alteração de arquivos do projeto interrompa e execute novamente, de preferência ao uso de `dotnet watch` e garanta que o site esteja aberto no local necessário antes de aguardar validações do site pelo operador.
 
 ## Encerramento
