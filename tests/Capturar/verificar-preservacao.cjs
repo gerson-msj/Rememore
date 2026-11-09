@@ -48,6 +48,14 @@ async function lerCatalogo() {
 async function fecharPopupFalha() {
     await pagina.getByRole('dialog').getByRole('button', { name: 'OK' }).click();
 }
+async function conferirVarianteDanger(dialog) {
+    assert.match(await dialog.locator('.modal-card').getAttribute('class'), /popup--sombra-danger/);
+    const destrutivo = dialog.getByRole('button', { name: 'Preservar minhas alterações' });
+    assert.match(await destrutivo.getAttribute('class'), /\bis-danger\b/);
+    assert.doesNotMatch(await destrutivo.getAttribute('class'), /\bis-light\b/);
+    const neutro = dialog.getByRole('button', { name: 'Não substituir' });
+    assert.doesNotMatch(await neutro.getAttribute('class'), /\bis-(?:info|danger|link|success|warning)\b/);
+}
 
 (async () => {
     try {
@@ -64,13 +72,72 @@ async function fecharPopupFalha() {
         await pagina.goto(`${origem}/verificacao-trabalho-local`);
         await pagina.waitForFunction(() => !!window.verificacao);
 
+        const dataNovaVazia = '2026-10-27';
+        const aberturaVaziaNova = await chamar('AbrirFake', conta, dataNovaVazia);
+        assert.equal(aberturaVaziaNova.workspace.origem, 1);
+        assert.equal(aberturaVaziaNova.workspace.tinhaMemoriasPreservadasNaOrigem, false);
+        await abrirRevisao(dataNovaVazia);
+        await pagina.getByText('Este dia ainda não possui memórias. Você pode voltar a Memorar para registrar uma.', { exact: true }).waitFor();
+        const botaoPreservarVazioNovo = pagina.getByRole('group', { name: 'Ações da revisão' }).getByRole('button', { name: 'Preservar' });
+        assert.equal(await botaoPreservarVazioNovo.isDisabled(), true);
+        await botaoPreservarVazioNovo.focus();
+        assert.equal(await botaoPreservarVazioNovo.evaluate(botao => document.activeElement === botao), false);
+        await pagina.keyboard.press('Enter');
+        assert.equal(await pagina.getByRole('dialog').count(), 0);
+        assert.equal(await lerFake(dataNovaVazia).then(resultado => resultado.estado), 1);
+        console.log('OK: revisão vazia de captura nova informa o motivo e mantém Preservar indisponível sem diálogo ou gravação');
+
+        await pagina.goto(`${origem}/verificacao-trabalho-local`);
+        await pagina.waitForFunction(() => !!window.verificacao);
+        const dataPreservadaVazia = '2026-10-26';
+        const versaoInicial = fixture(dataPreservadaVazia, 1, null, 'Memória preservada removida localmente');
+        versaoInicial.memorias[0].complementos = [];
+        await preservarFake(versaoInicial);
+        const versaoRemota = await lerFake(dataPreservadaVazia);
+        const aberturaPreservada = await chamar('AbrirFake', conta, dataPreservadaVazia);
+        assert.equal(aberturaPreservada.workspace.tinhaMemoriasPreservadasNaOrigem, true);
+        const exclusaoLocal = await pagina.evaluate(async ({ conta, data, identidade, conteudo }) =>
+            (await import('/js/trabalhoLocal.js')).excluirMemoriaSemComplementos(conta, data, identidade, conteudo), {
+                conta, data: dataPreservadaVazia, identidade: versaoRemota.memorias[0].identidade,
+                conteudo: versaoRemota.memorias[0].conteudo
+            });
+        assert.equal(exclusaoLocal.estado, 'sucesso');
+        assert.equal((await lerLocal(dataPreservadaVazia)).valor.tinhaMemoriasPreservadasNaOrigem, true);
+        await abrirRevisao(dataPreservadaVazia);
+        await pagina.getByText('Todas as memórias deste dia foram removidas da captura. Para confirmar a exclusão das memórias preservadas, utilize Preservar.', { exact: true }).waitFor();
+        console.log('OK: exclusão local total mantém origem com memórias preservadas e mostra orientação específica');
+
+        await pagina.goto(`${origem}/verificacao-trabalho-local`);
+        await pagina.waitForFunction(() => !!window.verificacao);
+        const dataTombstoneVazio = '2026-10-25';
+        await preservarFake({ identidadeConta: conta, data: dataTombstoneVazio, alterado: true, origem: 1,
+            revisaoOrigem: null, memorias: [] });
+        const aberturaTombstone = await chamar('AbrirFake', conta, dataTombstoneVazio);
+        assert.equal(aberturaTombstone.workspace.origem, 2);
+        assert.equal(aberturaTombstone.workspace.tinhaMemoriasPreservadasNaOrigem, false);
+        await chamar('MarcarAlterado', conta, dataTombstoneVazio);
+        await abrirRevisao(dataTombstoneVazio);
+        assert.equal(await pagina.getByText('Todas as memórias deste dia foram removidas da captura. Para confirmar a exclusão das memórias preservadas, utilize Preservar.', { exact: true }).count(), 0);
+        console.log('OK: tombstone remoto vazio não é descrito como memórias anteriormente preservadas');
+
+        await pagina.goto(`${origem}/verificacao-trabalho-local`);
+        await pagina.waitForFunction(() => !!window.verificacao);
+        const origemSemHistoricoP02 = fixture('2026-10-24', 0, null, null);
+        await gravarLocal(origemSemHistoricoP02);
+        await abrirRevisao(origemSemHistoricoP02.data);
+        assert.equal(await pagina.getByText('Este dia ainda não possui memórias. Você pode voltar a Memorar para registrar uma.', { exact: true }).count(), 0);
+        assert.equal(await pagina.getByText('Todas as memórias deste dia foram removidas da captura. Para confirmar a exclusão das memórias preservadas, utilize Preservar.', { exact: true }).count(), 0);
+        console.log('OK: origem desconhecida preserva orientação anterior sem afirmar histórico');
+
+        await pagina.goto(`${origem}/verificacao-trabalho-local`);
+        await pagina.waitForFunction(() => !!window.verificacao);
         const nova = fixture('2026-11-01', 1, null, 'Memória nova integral');
         await gravarLocal(nova);
         await abrirRevisao(nova.data);
         await pagina.getByRole('group', { name: 'Ações da revisão' }).getByRole('button', { name: 'Preservar' }).click();
         const confirmacaoNova = pagina.getByRole('dialog');
         await confirmacaoNova.getByText('Preservar as memórias deste dia?').waitFor();
-        await confirmacaoNova.getByText('A composição atual deste dia será preservada. Se já existir uma versão preservada, ela será substituída.').waitFor();
+        await confirmacaoNova.getByText('A composição atual deste dia será preservada.').waitFor();
         await confirmacaoNova.getByRole('button', { name: 'Cancelar' }).click();
         assert.equal((await lerLocal(nova.data)).valor.alterado, true);
         assert.equal((await lerFake(nova.data)).estado, 1);
@@ -122,8 +189,10 @@ async function fecharPopupFalha() {
         await gravarLocal(localDesatualizada);
         await abrirRevisao(divergente);
         await pagina.getByRole('group', { name: 'Ações da revisão' }).getByRole('button', { name: 'Preservar' }).click();
-        await pagina.getByRole('dialog').getByText('Este dia possui alterações mais recentes.').waitFor();
-        await pagina.getByRole('dialog').getByText('As memórias preservadas deste dia mudaram desde que você começou esta captura. Se continuar, suas alterações substituirão o que está preservado atualmente.').waitFor();
+        const conflitoRecusado = pagina.getByRole('dialog');
+        await conflitoRecusado.getByText('Este dia possui alterações mais recentes.').waitFor();
+        await conflitoRecusado.getByText('As memórias preservadas deste dia mudaram desde que você começou esta captura. Se continuar, suas alterações substituirão o que está preservado atualmente.').waitFor();
+        await conferirVarianteDanger(conflitoRecusado);
         assert.equal((await lerLocal(divergente)).valor.alterado, true);
         assert.equal((await lerFake(divergente)).memorias[0].conteudo, 'Remoto mais recente');
         await pagina.getByRole('dialog').getByRole('button', { name: 'Não substituir' }).click();
@@ -180,8 +249,10 @@ async function fecharPopupFalha() {
         await gravarLocal(fixture(conflitoAceitoData, 2, remotoAceitoInicial.revisao, 'Minha composição substituta', 'memoria-substituida'));
         await abrirRevisao(conflitoAceitoData);
         await pagina.getByRole('group', { name: 'Ações da revisão' }).getByRole('button', { name: 'Preservar' }).click();
-        await pagina.getByRole('dialog').getByText('Este dia possui alterações mais recentes.').waitFor();
-        await pagina.getByRole('dialog').getByRole('button', { name: 'Preservar minhas alterações' }).click();
+        const conflitoAceito = pagina.getByRole('dialog');
+        await conflitoAceito.getByText('Este dia possui alterações mais recentes.').waitFor();
+        await conferirVarianteDanger(conflitoAceito);
+        await conflitoAceito.getByRole('button', { name: 'Preservar minhas alterações' }).click();
         await pagina.waitForURL('**/capturar?resultadoPreservacao=sucesso');
         await pagina.getByRole('dialog').getByText('As memórias deste dia foram preservadas com sucesso.').waitFor();
         await fecharPopupFalha();
@@ -202,18 +273,20 @@ async function fecharPopupFalha() {
         await abrirRevisao(vaziaPreservadaData);
         await pagina.getByRole('group', { name: 'Ações da revisão' }).getByRole('button', { name: 'Preservar' }).click();
         const confirmarExclusaoTotal = pagina.getByRole('dialog');
-        await confirmarExclusaoTotal.getByText('Confirmar a exclusão de todas as memórias?').waitFor();
-        await confirmarExclusaoTotal.getByText('Você removeu todas as memórias deste dia. Ao preservar, essa exclusão será confirmada e nenhuma memória ficará preservada para esta data.').waitFor();
+        await confirmarExclusaoTotal.getByText('Excluir as memórias preservadas deste dia?').waitFor();
+        await confirmarExclusaoTotal.getByText('A composição atual está vazia. Se você continuar, as memórias anteriormente preservadas neste dia serão excluídas.').waitFor();
         await confirmarExclusaoTotal.getByRole('button', { name: 'Cancelar' }).click();
         assert.equal((await lerFake(vaziaPreservadaData)).memorias.length, 1);
         assert.equal((await lerLocal(vaziaPreservadaData)).valor.alterado, true);
         await pagina.getByRole('group', { name: 'Ações da revisão' }).getByRole('button', { name: 'Preservar' }).click();
-        await pagina.getByRole('dialog').getByRole('button', { name: 'Confirmar exclusão' }).click();
-        await pagina.waitForURL('**/capturar?resultadoPreservacao=sucesso');
+        await pagina.getByRole('dialog').getByRole('button', { name: 'Excluir memórias' }).click();
+        await pagina.waitForURL('**/capturar?resultadoPreservacao=exclusao');
         const preservacaoVazia = await lerFake(vaziaPreservadaData);
         assert.equal(preservacaoVazia.revisao, '2');
         assert.deepEqual(preservacaoVazia.memorias, []);
         assert.equal((await lerLocal(vaziaPreservadaData)).estado, 'ausente');
+        await pagina.getByRole('dialog').getByText('Memórias excluídas.').waitFor();
+        await pagina.getByRole('dialog').getByText('As memórias preservadas deste dia foram excluídas com sucesso.').waitFor();
         const categoriasAposExclusao = await lerCatalogo();
         assert.equal(categoriasAposExclusao.categorias.find(item => item.identidade === 'categoria-familia').ativa, true);
         await fecharPopupFalha();
@@ -227,24 +300,15 @@ async function fecharPopupFalha() {
         await gravarLocal(fixture(conflitoVazioData, 2, remotoVazioInicial.revisao, null));
         await abrirRevisao(conflitoVazioData);
         await pagina.getByRole('group', { name: 'Ações da revisão' }).getByRole('button', { name: 'Preservar' }).click();
-        await pagina.getByRole('dialog').getByRole('button', { name: 'Confirmar exclusão' }).click();
-        const decisaoVazia = pagina.getByRole('dialog');
-        await decisaoVazia.getByText('Este dia possui memórias mais recentes.').waitFor();
-        await decisaoVazia.getByText('As memórias preservadas deste dia mudaram desde que você começou esta captura. Se confirmar a exclusão, essas memórias mais recentes também serão apagadas.').waitFor();
-        await decisaoVazia.getByRole('button', { name: 'Não excluir' }).click();
-        await pagina.getByRole('dialog').getByText('Alterações mantidas').waitFor();
-        assert.equal((await lerFake(conflitoVazioData)).memorias[0].conteudo, 'Versão remota mais recente');
-        assert.deepEqual((await lerLocal(conflitoVazioData)).valor.memorias, []);
-        await fecharPopupFalha();
-        await pagina.getByRole('group', { name: 'Ações da revisão' }).getByRole('button', { name: 'Preservar' }).click();
-        await pagina.getByRole('dialog').getByRole('button', { name: 'Confirmar exclusão' }).click();
-        await pagina.getByRole('dialog').getByRole('button', { name: 'Excluir mesmo assim' }).click();
-        await pagina.waitForURL('**/capturar?resultadoPreservacao=sucesso');
+        await pagina.getByRole('dialog').getByRole('button', { name: 'Excluir memórias' }).click();
+        await pagina.waitForURL('**/capturar?resultadoPreservacao=exclusao');
         const exclusaoConflitante = await lerFake(conflitoVazioData);
         assert.equal(exclusaoConflitante.revisao, '3');
         assert.deepEqual(exclusaoConflitante.memorias, []);
+        await pagina.getByRole('dialog').getByText('Memórias excluídas.').waitFor();
+        await pagina.getByRole('dialog').getByText('As memórias preservadas deste dia foram excluídas com sucesso.').waitFor();
         await fecharPopupFalha();
-        console.log('OK: conflito de exclusão total permite recusar sem alteração ou excluir com confirmação explícita');
+        console.log('OK: a única autorização inicial permite excluir revisão divergente sem segundo popup');
 
         await pagina.goto(`${origem}/verificacao-trabalho-local`);
         await pagina.waitForFunction(() => !!window.verificacao);

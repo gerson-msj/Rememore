@@ -70,3 +70,7 @@
 .balanco-popup__acoes--descarte > .button {
     width: 12rem;
 }
+
+.modal--popup-fechando .modal-card-foot {
+    visibility: hidden;
+}

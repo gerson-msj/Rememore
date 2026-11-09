@@ -97,8 +97,8 @@
             @if (AbaRevisar)
             {
                 <div class="buttons captura-dia__acoes-revisao" role="group" aria-label="Ações da revisão">
-                    <button class="button is-link elemento-botao-com-icone" type="button" disabled="@operacaoEmAndamento" @onclick="ValidarCategoriasParaPreservarAsync">
-                        <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-bookmark"></i></span>
+                    <button class="button is-link elemento-botao-com-icone" type="button" aria-busy="@(preservacaoEmAndamento ? "true" : null)" disabled="@(operacaoEmAndamento || PreservacaoIndisponivelPorComposicaoVaziaNova)" @onclick="ValidarCategoriasParaPreservarAsync">
+                        <span class="icon is-small" aria-hidden="true"><i class="fa-solid @(preservacaoEmAndamento ? "fa-spinner fa-spin" : "fa-bookmark")"></i></span>
                         <span>@(preservacaoEmAndamento ? "Preservando…" : "Preservar")</span>
                     </button>
                     <button class="button is-light elemento-botao-com-icone" type="button"
@@ -112,10 +112,10 @@
                 {
                     <p class="help" role="status" aria-live="polite" aria-busy="true">Preservando…</p>
                 }
-                @if (textoOrientacao is not null)
+                @if (TextoOrientacaoRevisao is { } orientacaoRevisao)
                 {
                     <div class="notification elemento-orientacao-informativa" role="status">
-                        <span class="elemento-orientacao-informativa__texto">@textoOrientacao</span>
+                        <span class="elemento-orientacao-informativa__texto">@orientacaoRevisao</span>
                     </div>
                 }
                 <div class="lista-memorias captura-dia__lista-memorias" role="list" aria-label="Memórias da revisão">
@@ -274,8 +274,9 @@
            Mensagem="@mensagemConfirmacaoPreservacao"
            TextoConfirmar="@rotuloConfirmacaoPreservacao"
            TextoCancelar="@rotuloCancelamentoPreservacao"
+           ClassePopup="@classePopupConfirmacaoPreservacao"
            ClasseBotaoConfirmar="@classeBotaoConfirmacaoPreservacao"
-           ClasseBotaoCancelar="is-info"
+           ClasseBotaoCancelar="@classeBotaoCancelamentoPreservacao"
            AoResponder="ResponderConfirmacaoPreservacaoAsync" />
     <Popup Aberto="@popupFalhaPreservacao"
            Titulo="@tituloFalhaPreservacao"
@@ -318,6 +319,15 @@
     private ResultadoAberturaCaptura? resultado;
     private NivelOrientacao nivelOrientacaoAtual = NivelOrientacao.Iniciante;
     private string? textoOrientacao;
+    private string? TextoOrientacaoRevisao => Memorias.Count == 0
+        ? WorkspaceAtual switch
+        {
+            { Origem: OrigemCapturaLocal.Ausente } => "Este dia ainda não possui memórias. Você pode voltar a Memorar para registrar uma.",
+            { Origem: OrigemCapturaLocal.Presente, Alterado: true, TinhaMemoriasPreservadasNaOrigem: true } => "Todas as memórias deste dia foram removidas da captura. Para confirmar a exclusão das memórias preservadas, utilize Preservar.",
+            _ => textoOrientacao
+        }
+        : textoOrientacao;
+    private bool PreservacaoIndisponivelPorComposicaoVaziaNova => WorkspaceAtual is { Memorias.Count: 0, Origem: OrigemCapturaLocal.Ausente };
     private readonly HashSet<string> identidadesSemCategoriaEmAtencao = new(StringComparer.Ordinal);
     private bool popupCategoriasAusentes;
     private bool popupConfirmarDescarte;
@@ -327,9 +337,11 @@
     private bool preservacaoEmAndamento;
     private TipoDecisaoPreservacao tipoDecisaoPreservacao;
     private string tituloConfirmacaoPreservacao = "Preservar as memórias deste dia?";
-    private string mensagemConfirmacaoPreservacao = "A composição atual deste dia será preservada. Se já existir uma versão preservada, ela será substituída.";
+    private string mensagemConfirmacaoPreservacao = "A composição atual deste dia será preservada.";
     private string rotuloConfirmacaoPreservacao = "Preservar";
     private string rotuloCancelamentoPreservacao = "Cancelar";
+    private string classeBotaoCancelamentoPreservacao = "is-info";
+    private string? classePopupConfirmacaoPreservacao;
     private string classeBotaoConfirmacaoPreservacao = "is-link";
     private string? tituloFalhaPreservacao;
     private string mensagemFalhaPreservacao = "Suas alterações continuam protegidas neste dispositivo. Tente preservar novamente.";
@@ -547,14 +559,15 @@
         }
 
         if (WorkspaceAtual is not { } workspace) return;
+        if (workspace.Memorias.Count == 0 && workspace.Origem == OrigemCapturaLocal.Ausente) return;
         if (workspace.Memorias.Count == 0)
         {
             if (workspace.Origem == OrigemCapturaLocal.Presente && workspace.Alterado)
             {
                 PrepararDecisaoPreservacao(TipoDecisaoPreservacao.ExclusaoTotal,
-                    "Confirmar a exclusão de todas as memórias?",
-                    "Você removeu todas as memórias deste dia. Ao preservar, essa exclusão será confirmada e nenhuma memória ficará preservada para esta data.",
-                    "Confirmar exclusão", "Cancelar", "is-danger is-light");
+                    "Excluir as memórias preservadas deste dia?",
+                    "A composição atual está vazia. Se você continuar, as memórias anteriormente preservadas neste dia serão excluídas.",
+                    "Excluir memórias", "Cancelar", "is-danger is-light");
                 return;
             }
 
@@ -606,27 +619,36 @@
             if (!OrigemCompativel(workspace, verificacao))
             {
                 if (workspace.Memorias.Count == 0)
+                {
+                    if (exclusaoTotalConfirmada)
+                    {
+                        await GravarPreservacaoConfirmadaAsync(workspace, exclusaoTotal: true);
+                        return;
+                    }
+
                     PrepararDecisaoPreservacao(TipoDecisaoPreservacao.ConflitoVazio,
                         "Este dia possui memórias mais recentes.",
                         "As memórias preservadas deste dia mudaram desde que você começou esta captura. Se confirmar a exclusão, essas memórias mais recentes também serão apagadas.",
                         "Excluir mesmo assim", "Não excluir", "is-danger");
+                }
                 else
                     PrepararDecisaoPreservacao(TipoDecisaoPreservacao.ConflitoComposicao,
                         "Este dia possui alterações mais recentes.",
                         "As memórias preservadas deste dia mudaram desde que você começou esta captura. Se continuar, suas alterações substituirão o que está preservado atualmente.",
-                        "Preservar minhas alterações", "Não substituir", "is-danger is-light");
+                        "Preservar minhas alterações", "Não substituir", "is-danger",
+                        classeCancelar: string.Empty, classePopup: "popup--sombra-danger");
                 return;
             }
 
             if (exclusaoTotalConfirmada)
             {
-                await GravarPreservacaoConfirmadaAsync(workspace);
+                await GravarPreservacaoConfirmadaAsync(workspace, exclusaoTotal: true);
                 return;
             }
 
             PrepararDecisaoPreservacao(TipoDecisaoPreservacao.Normal,
                 "Preservar as memórias deste dia?",
-                "A composição atual deste dia será preservada. Se já existir uma versão preservada, ela será substituída.",
+                "A composição atual deste dia será preservada.",
                 "Preservar", "Cancelar", "is-link");
         }
         catch
@@ -661,13 +683,16 @@
     }
 
     private void PrepararDecisaoPreservacao(TipoDecisaoPreservacao tipo, string titulo,
-        string mensagem, string confirmar, string cancelar, string classeConfirmar)
+        string mensagem, string confirmar, string cancelar, string classeConfirmar,
+        string classeCancelar = "is-info", string? classePopup = null)
     {
         tipoDecisaoPreservacao = tipo;
         tituloConfirmacaoPreservacao = titulo;
         mensagemConfirmacaoPreservacao = mensagem;
         rotuloConfirmacaoPreservacao = confirmar;
         rotuloCancelamentoPreservacao = cancelar;
+        classeBotaoCancelamentoPreservacao = classeCancelar;
+        classePopupConfirmacaoPreservacao = classePopup;
         classeBotaoConfirmacaoPreservacao = classeConfirmar;
         popupConfirmarPreservacao = true;
     }
@@ -715,7 +740,7 @@
         }
     }
 
-    private async Task GravarPreservacaoConfirmadaAsync(WorkspaceCapturaLocal workspace)
+    private async Task GravarPreservacaoConfirmadaAsync(WorkspaceCapturaLocal workspace, bool exclusaoTotal = false)
     {
         var preservacaoConfirmada = false;
         try
@@ -739,7 +764,7 @@
             operacaoEmAndamento = false;
             permitirProximaNavegacao = true;
             Navegacao.NavigateTo(workspaceRemovido
-                ? "capturar?resultadoPreservacao=sucesso"
+                ? (exclusaoTotal ? "capturar?resultadoPreservacao=exclusao" : "capturar?resultadoPreservacao=sucesso")
                 : "capturar?resultadoPreservacao=falha-local");
         }
         catch

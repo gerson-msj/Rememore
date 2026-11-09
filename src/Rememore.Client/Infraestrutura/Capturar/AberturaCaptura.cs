@@ -22,19 +22,20 @@ public sealed class AberturaCaptura(
 
         var leitura = await capturas.RecuperarAsync(identidadeConta, data);
         if (leitura.Sucesso && leitura.Valor is { Alterado: true } alterado)
-            return new(EstadoAberturaCaptura.Aberta, alterado);
+            return new(EstadoAberturaCaptura.Aberta, CompletarConhecimentoDeOrigem(alterado));
         if (leitura.Estado != EstadoOperacaoLocal.Ausente && (!leitura.Sucesso || leitura.Valor is null))
             return new(EstadoAberturaCaptura.FalhaPreparacao);
 
         var limpo = leitura.Valor;
         if (limpo is not null && continuidadeAtiva)
-            return new(EstadoAberturaCaptura.Aberta, limpo);
+            return new(EstadoAberturaCaptura.Aberta, CompletarConhecimentoDeOrigem(limpo));
 
         var verificacao = await remoto.VerificarAsync(identidadeConta, data);
         if (!Valida(verificacao)) return new(EstadoAberturaCaptura.FalhaPreparacao);
 
         if (limpo is not null && OrigemCoincide(limpo, verificacao))
-            return new(EstadoAberturaCaptura.Aberta, limpo);
+            return new(EstadoAberturaCaptura.Aberta,
+                limpo with { TinhaMemoriasPreservadasNaOrigem = limpo.Memorias.Count > 0 });
 
         ComposicaoCapturaRemota composicao;
         if (limpo is null && verificacao.Estado == EstadoComposicaoRemota.Ausente)
@@ -46,8 +47,10 @@ public sealed class AberturaCaptura(
 
         var novo = composicao.Estado == EstadoComposicaoRemota.Presente
             ? new WorkspaceCapturaLocal(identidadeConta, data, false, composicao.Memorias!,
-                OrigemCapturaLocal.Presente, composicao.Revisao)
-            : new WorkspaceCapturaLocal(identidadeConta, data, false, [], OrigemCapturaLocal.Ausente);
+                OrigemCapturaLocal.Presente, composicao.Revisao,
+                TinhaMemoriasPreservadasNaOrigem: composicao.Memorias!.Count > 0)
+            : new WorkspaceCapturaLocal(identidadeConta, data, false, [], OrigemCapturaLocal.Ausente,
+                TinhaMemoriasPreservadasNaOrigem: false);
 
         var gravacao = await capturas.GravarSeLimpoAsync(novo);
         if (gravacao.Sucesso) return new(EstadoAberturaCaptura.Aberta, novo);
@@ -68,6 +71,18 @@ public sealed class AberturaCaptura(
         || (local.Origem == OrigemCapturaLocal.Presente
             && remota.Estado == EstadoComposicaoRemota.Presente
             && local.RevisaoOrigem == remota.Revisao);
+
+    private static WorkspaceCapturaLocal CompletarConhecimentoDeOrigem(WorkspaceCapturaLocal workspace)
+    {
+        if (workspace.TinhaMemoriasPreservadasNaOrigem is not null) return workspace;
+        if (workspace.Origem == OrigemCapturaLocal.Ausente)
+            return workspace with { TinhaMemoriasPreservadasNaOrigem = false };
+        if (workspace.Origem == OrigemCapturaLocal.Presente
+            && (workspace.AlteradoApenasPorCategorias
+                || workspace.Memorias.Any(memoria => memoria.PrimeiraPreservacaoUtc is not null)))
+            return workspace with { TinhaMemoriasPreservadasNaOrigem = true };
+        return workspace;
+    }
 
     private static bool Valida(VerificacaoComposicaoRemota resposta) => resposta.Estado switch
     {

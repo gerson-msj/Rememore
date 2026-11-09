@@ -32,6 +32,8 @@ function validarCaptura(captura) {
     if (![0, 1, 2].includes(origem)
         || (origem === 2 && (typeof captura.revisaoOrigem !== "string" || !captura.revisaoOrigem.trim()))
         || (origem !== 2 && captura.revisaoOrigem != null)) throw new TypeError("Origem invalida.");
+    if (captura.tinhaMemoriasPreservadasNaOrigem != null
+        && typeof captura.tinhaMemoriasPreservadasNaOrigem !== "boolean") throw new TypeError("Historico de memoria preservada invalido.");
     const identidades = new Set();
     for (const memoria of captura.memorias) {
         if (typeof memoria.identidade !== "string" || !memoria.identidade.trim() || identidades.has(memoria.identidade)
@@ -197,7 +199,13 @@ export function excluirMemoriaSemComplementos(identidadeConta, data, identidadeM
             if (memoria.temporalidadeConhecida !== true || !Array.isArray(memoria.complementos)) { concluir(falha("exclusaoMemoria", { name: "MetadadosAusentes" })); return; }
             if (memoria.complementos.length !== 0) { concluir(falha("exclusaoMemoria", { name: "PossuiComplementos" })); return; }
             const memorias = captura.memorias.filter(item => item.identidade !== identidadeMemoria).map((item, ordem) => ({ ...item, ordem }));
-            const atualizado = { ...captura, alterado: true, alteradoApenasPorCategorias: false, memorias };
+            const tinhaMemoriasPreservadasNaOrigem = captura.tinhaMemoriasPreservadasNaOrigem
+                ?? (captura.origem === 1 ? false
+                    : captura.origem === 2 && (captura.alterado !== true && captura.memorias.length > 0
+                        || captura.alteradoApenasPorCategorias === true
+                        || captura.memorias.some(item => item.primeiraPreservacaoUtc != null)) ? true : null);
+            const atualizado = { ...captura, alterado: true, alteradoApenasPorCategorias: false,
+                tinhaMemoriasPreservadasNaOrigem, memorias };
             store.put(atualizado);
             concluir({ estado: "sucesso", valor: atualizado });
         };

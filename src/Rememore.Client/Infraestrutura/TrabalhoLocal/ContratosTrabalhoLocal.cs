@@ -33,7 +33,7 @@ public enum OrigemCapturaLocal { Desconhecida, Ausente, Presente }
 public sealed record WorkspaceCapturaLocal(
     string IdentidadeConta, DateOnly Data, bool Alterado, IReadOnlyList<MemoriaCapturaLocal> Memorias,
     OrigemCapturaLocal Origem = OrigemCapturaLocal.Desconhecida, string? RevisaoOrigem = null,
-    bool AlteradoApenasPorCategorias = false);
+    bool AlteradoApenasPorCategorias = false, bool? TinhaMemoriasPreservadasNaOrigem = null);
 
 public interface IDiagnosticoTrabalhoLocal
 {

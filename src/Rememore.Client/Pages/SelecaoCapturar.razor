@@ -108,10 +108,13 @@
     private bool popupSaidaAberto;
     private bool popupResultadoPreservacao;
     private bool FalhaAtualizacaoLocal => string.Equals(ResultadoPreservacao, "falha-local", StringComparison.Ordinal);
-    private string TituloResultadoPreservacao => "Memórias preservadas";
+    private bool ExclusaoTotalConfirmada => string.Equals(ResultadoPreservacao, "exclusao", StringComparison.Ordinal);
+    private string TituloResultadoPreservacao => ExclusaoTotalConfirmada ? "Memórias excluídas." : "Memórias preservadas";
     private string MensagemResultadoPreservacao => FalhaAtualizacaoLocal
         ? "Suas memórias foram preservadas, mas não foi possível atualizar esta captura neste dispositivo. Ela poderá continuar aparecendo como pendente até que o armazenamento local volte a funcionar corretamente."
-        : "As memórias deste dia foram preservadas com sucesso.";
+        : ExclusaoTotalConfirmada
+            ? "As memórias preservadas deste dia foram excluídas com sucesso."
+            : "As memórias deste dia foram preservadas com sucesso.";
     private bool DataValida => valorData.Length > 0;
     private string DataExclusao => pendenciaSelecionada is null ? "" : DatasCaptura.Apresentar(pendenciaSelecionada.Data);
     private string MensagemExclusaoPopup => string.Join("\n\n", MensagemExclusao);
@@ -137,7 +140,7 @@
         textoOrientacao = await Orientacao.ObterTextoAsync(ContextosOrientacao.SelecaoCapturar);
         await CarregarPendenciasAsync();
         carregando = false;
-        popupResultadoPreservacao = ResultadoPreservacao is "sucesso" or "falha-local";
+        popupResultadoPreservacao = ResultadoPreservacao is "sucesso" or "exclusao" or "falha-local";
     }
 
     private async Task CarregarPendenciasAsync()

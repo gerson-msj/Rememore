@@ -180,6 +180,10 @@
     overflow: visible;
 }
 
+.memoria[data-modo="Revisar"] .memoria__texto--integral {
+    padding-block-end: 0.75rem;
+}
+
 .memoria__texto--integral .memoria__conteudo {
     max-height: none;
     overflow: visible;

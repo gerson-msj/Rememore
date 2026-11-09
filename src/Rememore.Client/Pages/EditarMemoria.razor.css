@@ -42,7 +42,22 @@
     white-space: pre-wrap;
 }
 
+.editar-memoria__campo-rotulado,
+.editar-memoria__grupo-complementos {
+    display: grid;
+    gap: 0;
+}
+
 .editar-memoria__complementos {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.editar-memoria__complementos--um {
+    gap: 0.5rem;
+}
+
+.editar-memoria__lista-complementos {
     display: grid;
     gap: 0.75rem;
 }
@@ -85,6 +100,10 @@
 .editar-memoria__acoes {
     margin: 0;
     gap: 0;
+}
+
+.editar-memoria__acoes--vazias {
+    display: none;
 }
 
 .editar-memoria__complemento-ativo > .editar-memoria__acoes,

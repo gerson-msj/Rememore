@@ -47,7 +47,29 @@
 
 .elemento-botao-com-icone > .icon {
     margin-inline: 0;
-    color: var(--cor-link);
+    color: currentColor;
+}
+
+.button:disabled,
+.button[disabled],
+fieldset[disabled] .button,
+.button:disabled:is(.is-white, .is-black, .is-light, .is-dark, .is-text, .is-primary, .is-link, .is-info, .is-success, .is-warning, .is-danger, .is-outlined),
+.button[disabled]:is(.is-white, .is-black, .is-light, .is-dark, .is-text, .is-primary, .is-link, .is-info, .is-success, .is-warning, .is-danger, .is-outlined),
+fieldset[disabled] .button:is(.is-white, .is-black, .is-light, .is-dark, .is-text, .is-primary, .is-link, .is-info, .is-success, .is-warning, .is-danger, .is-outlined),
+.button.elemento-botao-com-icone:disabled,
+.button.elemento-botao-com-icone[disabled],
+fieldset[disabled] .button.elemento-botao-com-icone {
+    background-color: var(--cor-ter);
+    border-color: var(--cor-border);
+    box-shadow: none;
+    color: var(--cor-text-strong);
+    opacity: 1;
+}
+
+.button.elemento-botao-com-icone:disabled > .icon,
+.button.elemento-botao-com-icone[disabled] > .icon,
+fieldset[disabled] .button.elemento-botao-com-icone > .icon {
+    color: currentColor;
 }
 
 .notification.elemento-orientacao-informativa {

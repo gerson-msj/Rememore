@@ -1,11 +1,11 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 
-<div @ref="modal" class="modal modal--popup-topo modal--popup-compartilhado modal--popup-conteudo-longo @(Aberto ? "is-active" : string.Empty)"
-     role="dialog" aria-modal="true" aria-labelledby="@idTitulo"
+<div @ref="modal" class="modal modal--popup-topo modal--popup-compartilhado modal--popup-conteudo-longo @(Aberto ? "is-active" : string.Empty) @(fechando ? "modal--popup-fechando" : string.Empty)"
+     role="dialog" aria-modal="true" aria-hidden="@(Aberto ? "false" : "true")" aria-labelledby="@idTitulo"
      aria-describedby="@(fase == FasePopup.Editor ? null : idMensagem)">
     <div class="modal-background" @onclick="SolicitarFechamentoAsync"></div>
-    <div class="modal-card balanco-popup__cartao">
+    <div class="modal-card balanco-popup__cartao" inert="@(!Aberto || fechando)">
         <header class="modal-card-head">
             <p id="@idTitulo" class="modal-card-title">@Titulo</p>
         </header>
@@ -90,6 +90,7 @@
     private bool abertoAnterior;
     private bool jsRegistrado;
     private bool ocupado;
+    private bool fechando;
     private string? erro;
     private FasePopup fase;
     private FasePopup? faseFocada;
@@ -123,6 +124,7 @@
             (!ocupado && textoConfirmadoAnterior != TextoConfirmado &&
              rascunho == (textoConfirmadoAnterior ?? string.Empty))))
         {
+            fechando = false;
             rascunho = SomenteLeitura ? TextoConfirmado ?? string.Empty : RascunhoInicial ?? TextoConfirmado ?? string.Empty;
             fase = FasePopup.Editor;
             faseFocada = null;
@@ -167,7 +169,7 @@
 
     private async Task AtualizarRascunhoAsync(ChangeEventArgs evento)
     {
-        if (ocupado) return;
+        if (ocupado || fechando || !Aberto) return;
         rascunho = evento.Value?.ToString() ?? string.Empty;
         erro = null;
         if (modulo is not null) await modulo.InvokeVoidAsync("definirRascunhoAlterado", modal, !SomenteLeitura && Alterado);
@@ -182,7 +184,7 @@
 
     private async Task SolicitarFechamentoAsync()
     {
-        if (!Aberto || ocupado) return;
+        if (!Aberto || ocupado || fechando) return;
         if (fase != FasePopup.Editor)
         {
             faseFocada = null;
@@ -199,7 +201,7 @@
 
     private async Task ContinuarEditando()
     {
-        if (ocupado) return;
+        if (ocupado || fechando || !Aberto) return;
         fase = FasePopup.Editor;
         erro = null;
         await AoContinuarEditando.InvokeAsync();
@@ -219,14 +221,14 @@
 
     private void ConfirmarExclusao()
     {
-        if (ocupado || fase != FasePopup.Editor || TextoConfirmado is null) return;
+        if (ocupado || fechando || !Aberto || fase != FasePopup.Editor || TextoConfirmado is null) return;
         fase = FasePopup.ConfirmarExclusao;
         erro = null;
     }
 
     private async Task SalvarAsync()
     {
-        if (ocupado || fase != FasePopup.Editor || SomenteLeitura || string.IsNullOrWhiteSpace(rascunho)) return;
+        if (ocupado || fechando || !Aberto || fase != FasePopup.Editor || SomenteLeitura || string.IsNullOrWhiteSpace(rascunho)) return;
         ocupado = true;
         erro = null;
         try
@@ -237,6 +239,7 @@
                 return;
             }
             await AoAtualizarRascunho.InvokeAsync(null);
+            fechando = true;
             await AoConcluir.InvokeAsync(ResultadoPopupBalanco.Salvo);
         }
         catch
@@ -252,7 +255,7 @@
 
     private async Task ExcluirAsync()
     {
-        if (ocupado || fase != FasePopup.ConfirmarExclusao || SomenteLeitura || TextoConfirmado is null) return;
+        if (ocupado || fechando || !Aberto || fase != FasePopup.ConfirmarExclusao || SomenteLeitura || TextoConfirmado is null) return;
         ocupado = true;
         erro = null;
         try
@@ -264,6 +267,7 @@
                 return;
             }
             await AoAtualizarRascunho.InvokeAsync(null);
+            fechando = true;
             await AoConcluir.InvokeAsync(ResultadoPopupBalanco.Excluido);
         }
         catch

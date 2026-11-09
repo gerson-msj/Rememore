@@ -139,7 +139,7 @@
                                   AoRemoverCategoria="RemoverCategoriaAsync" />
             </section>
 
-            @if (CategoriasSelecionadas.Count >= 2)
+            @if (!MemoriaHistorica && CategoriasSelecionadas.Count >= 2)
             {
                 <div class="notification elemento-orientacao-informativa" role="note" style="border-inline-start-color: var(--bulma-warning);">
                     <span class="elemento-orientacao-informativa__texto">Tente representar esta memória com uma única categoria sempre que possível. Use mais de uma apenas quando isso fizer diferença para você.</span>
@@ -165,7 +165,7 @@
             {
             <section class="block" aria-labelledby="categorizar-memoria-titulo-balanco">
                 <h2 class="label" id="categorizar-memoria-titulo-balanco">Balanço sentimental</h2>
-                @if (!string.IsNullOrWhiteSpace(textoOrientacaoBalanco))
+                @if (!MemoriaHistorica && !string.IsNullOrWhiteSpace(textoOrientacaoBalanco))
                 {
                     <div class="notification elemento-orientacao-informativa" role="note">
                         <span class="elemento-orientacao-informativa__texto">@textoOrientacaoBalanco</span>
@@ -199,6 +199,13 @@
                     <span>Próxima</span><span class="icon" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
                 </button>
             </nav>
+            }
+
+            @if (MemoriaHistorica)
+            {
+                <div class="notification elemento-orientacao-informativa" role="note">
+                    <span class="elemento-orientacao-informativa__texto">Esta memória é histórica. Suas categorias, Tom e balanço sentimental estão disponíveis apenas para consulta.</span>
+                </div>
             }
         </section>
     }
@@ -260,6 +267,7 @@
     private IDisposable? registroMudancaLocal;
 
     private bool SomenteLeitura { get; set; }
+    private bool MemoriaHistorica { get; set; }
     private bool PodeEditarTom => !SomenteLeitura && nivelOrientacaoAtual >= NivelOrientacao.Intermediario;
     private int? TomConfirmado => memoriaAtual?.Tom;
     private int? TomVisual => tomTransitório ?? TomConfirmado;
@@ -327,6 +335,7 @@
         falhaCategorias = null;
         falhaTom = null;
         SomenteLeitura = false;
+        MemoriaHistorica = false;
         registroMudancaLocal ??= Navegacao.RegisterLocationChangingHandler(InterceptarNavegacaoAsync);
 
         var moduloCalendario = await JS.InvokeAsync<IJSObjectReference>("import", "./js/calendarioCaptura.js");
@@ -369,6 +378,9 @@
     {
         memoriaAtual = memoria;
         var configuracao = await ConfiguracaoCapturar.ObterAsync();
+        MemoriaHistorica = memoria.TemporalidadeConhecida && memoria.PrimeiraPreservacaoUtc is { } marco
+            && configuracao is { PrazoEdicaoMemoriaDias: > 0 }
+            && Relogio.GetUtcNow() >= marco.AddDays(configuracao.PrazoEdicaoMemoriaDias);
         var autorizacaoDaSessao = restaurarAutorizacao && dataCaptura is { } data
             && await Continuidade.RecuperarAutorizacaoCategoriaAsync(identidadeConta, data, memoria.Identidade);
         var autorizacao = RegraEdicaoMemoria.Resolver(memoria, configuracao, Relogio.GetUtcNow(),

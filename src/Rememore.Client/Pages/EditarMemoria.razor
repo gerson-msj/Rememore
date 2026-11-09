@@ -49,9 +49,12 @@
     {
         <section class="editar-memoria__conteudo">
             @if (!string.IsNullOrEmpty(erroContexto)) { <div class="notification is-warning" role="alert">@erroContexto</div> }
-            <textarea id="texto-memoria" class="textarea editar-memoria__campo" rows="5" readonly="@(!EstadoReal.PermiteEditar)" value="@texto" @oninput="TextoAlterado"></textarea>
+            <div class="editar-memoria__campo-rotulado">
+                <label class="label" for="texto-memoria">Memória</label>
+                <textarea id="texto-memoria" class="textarea editar-memoria__campo" rows="5" readonly="@(!EstadoReal.PermiteEditar)" value="@texto" @oninput="TextoAlterado"></textarea>
+            </div>
             @if (falhaOperacao && !string.IsNullOrEmpty(mensagemOperacao)) { <div class="notification is-danger" role="alert">@mensagemOperacao</div> }
-            <div class="buttons is-right editar-memoria__acoes" role="group" aria-label="Ações da memória">
+            <div class="buttons is-right editar-memoria__acoes @(EstadoReal.PermiteEditar || AdicionarComplementoNaLinhaMemoria || PodeExcluirMemoria ? "" : "editar-memoria__acoes--vazias")" role="group" aria-label="Ações da memória">
                 <button class="button is-link editar-memoria__acao @(EstadoReal.PermiteEditar ? "editar-memoria__acao--visivel" : "editar-memoria__acao--oculta")" type="button" aria-hidden="@(EstadoReal.PermiteEditar ? "false" : "true")" inert="@(!EstadoReal.PermiteEditar)" disabled="@(!EstadoReal.PermiteEditar || !EstadoReal.PermiteConfirmar)" @onclick="ConfirmarMemoriaAsync">
                     <span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-check"></i></span><span>Confirmar Memória</span>
                 </button>
@@ -66,21 +69,36 @@
 
             @if (PodeMostrarComplementos)
             {
-                <section class="editar-memoria__complementos" aria-label="Complementos da memória">
-                    @foreach (var complemento in ComplementosOrdenados.Take(Math.Max(0, ComplementosOrdenados.Count - (ModoComplementoEditavel ? 1 : 0))))
-                    {
-                        <article class="editar-memoria__complemento-historico">
-                            @if (complemento.PrimeiraPreservacaoUtc is { } marco)
+                <section class="editar-memoria__complementos @(QuantidadeComplementos == 1 ? "editar-memoria__complementos--um" : "")" aria-label="Complementos da memória">
+                    <div class="editar-memoria__grupo-complementos">
+                        @if (QuantidadeComplementos > 1)
+                        {
+                            <h2 class="label">Complementos</h2>
+                        }
+                        <div class="editar-memoria__lista-complementos">
+                            @foreach (var complemento in ComplementosOrdenados.Take(Math.Max(0, ComplementosOrdenados.Count - (ModoComplementoEditavel ? 1 : 0))))
                             {
-                                <p class="editar-memoria__rotulo-complemento">Complemento adicionado em <time datetime="@marco.ToString("O", CultureInfo.InvariantCulture)">@marco.ToLocalTime().ToString("d 'de' MMMM 'de' yyyy", CultureInfo.GetCultureInfo("pt-BR"))</time></p>
+                                <article class="editar-memoria__complemento-historico">
+                                    @if (ComplementoEhAtual(complemento))
+                                    {
+                                        <p class="editar-memoria__rotulo-complemento">@(QuantidadeComplementos > 1 ? "Complemento atual" : "Complemento")</p>
+                                    }
+                                    @if (complemento.PrimeiraPreservacaoUtc is { } marco)
+                                    {
+                                        <p class="editar-memoria__rotulo-complemento">Complemento adicionado em <time datetime="@marco.ToString("O", CultureInfo.InvariantCulture)">@marco.ToLocalTime().ToString("d 'de' MMMM 'de' yyyy", CultureInfo.GetCultureInfo("pt-BR"))</time></p>
+                                    }
+                                    <p class="editar-memoria__texto-complemento">@complemento.Conteudo</p>
+                                </article>
                             }
-                            <p class="editar-memoria__texto-complemento">@complemento.Conteudo</p>
-                        </article>
-                    }
+                        </div>
+                    </div>
                     @if (ModoComplementoEditavel || criandoComplemento)
                     {
                         <div class="editar-memoria__complemento-ativo">
-                            <textarea id="texto-complemento" class="textarea editar-memoria__campo-complemento" rows="3" placeholder="@(criandoComplemento ? "Novo complemento" : "Complemento")" aria-label="@(criandoComplemento ? "Novo complemento" : RotuloComplementoAtivo)" value="@textoComplemento" @oninput="ComplementoAlterado" disabled="@operacaoEmAndamento"></textarea>
+                            <div class="editar-memoria__campo-rotulado">
+                                <label class="label" for="texto-complemento">@(criandoComplemento ? "Novo complemento" : RotuloComplementoAtivo)</label>
+                                <textarea id="texto-complemento" class="textarea editar-memoria__campo-complemento" rows="3" placeholder="@(criandoComplemento ? "Novo complemento" : RotuloComplementoAtivo)" aria-label="@(criandoComplemento ? "Novo complemento" : RotuloComplementoAtivo)" value="@textoComplemento" @oninput="ComplementoAlterado" disabled="@operacaoEmAndamento"></textarea>
+                            </div>
                             @if (falhaOperacao && !string.IsNullOrEmpty(mensagemOperacao)) { <div class="notification is-danger" role="alert">@mensagemOperacao</div> }
                             <div class="buttons is-right editar-memoria__acoes" role="group" aria-label="Ações do complemento">
                                 <button class="button is-link editar-memoria__acao @(PodeConfirmarComplemento ? "editar-memoria__acao--visivel" : "editar-memoria__acao--oculta")" type="button" aria-hidden="@(PodeConfirmarComplemento ? "false" : "true")" inert="@(!PodeConfirmarComplemento)" disabled="@(!PodeConfirmarComplemento)" @onclick="ConfirmarComplementoAsync"><span class="icon is-small" aria-hidden="true"><i class="fa-solid fa-check"></i></span><span>Confirmar Complemento</span></button>
@@ -111,6 +129,13 @@
                 </section>
             }
 
+            @if (MemoriaHistorica)
+            {
+                <div class="notification elemento-orientacao-informativa" role="note">
+                    <span class="elemento-orientacao-informativa__texto">Esta memória é histórica e seu registro original não pode mais ser alterado. Você ainda pode acrescentar um complemento, conforme as regras de edição.</span>
+                </div>
+            }
+
         </section>
     }
 </main>
@@ -138,6 +163,9 @@
     private string tituloPopup = "", mensagemPopup = "", textoConfirmar = "", textoCancelar = "", classeConfirmar = "", classeCancelar = "", mensagemPopupSucesso = "";
     private CancellationTokenSource? debounceRascunho;
     private bool CapturaFoiAlterada { get; set; }
+    private bool MemoriaHistorica => memoria is { TemporalidadeConhecida: true, PrimeiraPreservacaoUtc: { } marco }
+        && configuracaoAtual is { PrazoEdicaoMemoriaDias: > 0 } configuracao
+        && Relogio.GetUtcNow() >= marco.AddDays(configuracao.PrazoEdicaoMemoriaDias);
     private bool TextoValido => !string.IsNullOrWhiteSpace(texto);
     private bool TextoComplementoValido => !string.IsNullOrWhiteSpace(textoComplemento);
     private bool ComplementosConhecidos => memoria?.Complementos is not null;
@@ -167,9 +195,9 @@
     private bool PodeConfirmarComplemento => string.IsNullOrEmpty(erroContexto) && DadosComplementosValidos && !operacaoEmAndamento && TextoComplementoValido
         && (criandoComplemento || (tipoConteudoAtivo == TipoConteudoEdicao.ComplementoExistente && autorizadaComplemento && Sujo));
     private bool BotaoComplementoEhExcluir => !criandoComplemento && tipoConteudoAtivo != TipoConteudoEdicao.ComplementoExistente || (tipoConteudoAtivo == TipoConteudoEdicao.ComplementoExistente && !Sujo);
-    private string RotuloComplementoAtivo => complementoAtivo?.PrimeiraPreservacaoUtc is { } marco
-        ? $"Complemento de {marco.ToLocalTime().ToString("d 'de' MMMM 'de' yyyy", CultureInfo.GetCultureInfo("pt-BR"))}"
-        : "Complemento";
+    private string RotuloComplementoAtivo => QuantidadeComplementos > 1 ? "Complemento atual" : "Complemento";
+    private bool ComplementoEhAtual(ComplementoCapturaLocal complemento) =>
+        complemento.Identidade == ComplementosOrdenados.LastOrDefault()?.Identidade;
 
     protected override async Task OnParametersSetAsync()
     {
