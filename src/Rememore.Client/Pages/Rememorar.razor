@@ -1,82 +1,152 @@
 @page "/rememorar"
 @attribute [Authorize]
+@using System.Globalization
+@using Rememore.Client.Infraestrutura.Rememorar
 @inject NavigationManager Navegacao
+@inject EstadoAutenticacaoProvider EstadoAutenticacao
+@inject SincronizadorProjecaoPanorama Sincronizador
 
 <PageTitle>Rememorar</PageTitle>
 
 <main class="pagina-rememorar">
     <CabecalhoAmbiente Titulo="Rememorar" MostrarRetorno AoRetornar="VoltarPrincipal" />
 
-    <section class="rememorar-controles" aria-label="Período e ordenação">
-        <div class="rememorar-controles__conteudo">
-            <JanelaTemporal Modelo="@modelo" />
-            <div class="rememorar-ordenacao">
-                <span class="rememorar-ordenacao__rotulo">Ordenar por</span>
-                <div class="rememorar-ordenacao__acoes" role="group" aria-label="Ordenar categorias">
-                    <button type="button" class="rememorar-ordenacao__acao @(criterio == Criterio.Representatividade ? "rememorar-ordenacao__acao--ativa" : string.Empty)"
-                            aria-pressed="@(criterio == Criterio.Representatividade ? "true" : "false")"
-                            @onclick="() => criterio = Criterio.Representatividade">Representatividade @(criterio == Criterio.Representatividade ? "+" : string.Empty)</button>
-                    <button type="button" class="rememorar-ordenacao__acao @(criterio == Criterio.Tom ? "rememorar-ordenacao__acao--ativa" : string.Empty)"
-                            aria-pressed="@(criterio == Criterio.Tom ? "true" : "false")"
-                            @onclick="AlternarTom">Tom @IndicadorTom</button>
-                </div>
+    @if (carregando)
+    {
+        <p class="rememorar-estado" aria-busy="true" role="status">Preparando o Panorama…</p>
+    }
+    else if (falhaPreparacao)
+    {
+        <div class="notification elemento-falha-recuperavel rememorar-estado" role="alert" aria-atomic="true">
+            <span class="icon elemento-falha-recuperavel__icone" aria-hidden="true">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </span>
+            <div class="elemento-falha-recuperavel__conteudo">
+                <p class="elemento-falha-recuperavel__mensagem"><strong>Não foi possível preparar os dados do Panorama. Tente novamente.</strong></p>
+                <button class="button is-link elemento-botao-com-icone mt-3" type="button" @onclick="PrepararAsync">
+                    <span>Tentar novamente</span>
+                </button>
             </div>
         </div>
-    </section>
+    }
+    else if (modelo is null)
+    {
+        <p class="rememorar-estado" role="status">Ainda não há dois dias preservados para formar um período.</p>
+    }
+    else
+    {
+        <section class="rememorar-controles" aria-label="Período e ordenação">
+            <div class="rememorar-controles__conteudo">
+                <JanelaTemporal Modelo="@modelo" TomPreciso="@resultado.TomMedioJanela" AoAtualizar="AtualizarPanoramaAsync" />
+                <div class="rememorar-ordenacao">
+                    <span class="rememorar-ordenacao__rotulo">Ordenar por</span>
+                    <div class="rememorar-ordenacao__acoes" role="group" aria-label="Ordenar categorias">
+                        <button type="button" class="rememorar-ordenacao__acao @(criterio == Criterio.Representatividade ? "rememorar-ordenacao__acao--ativa" : string.Empty)"
+                                aria-pressed="@(criterio == Criterio.Representatividade ? "true" : "false")"
+                                @onclick="() => criterio = Criterio.Representatividade">Representatividade @(criterio == Criterio.Representatividade ? "+" : string.Empty)</button>
+                        <button type="button" class="rememorar-ordenacao__acao @(criterio == Criterio.Tom ? "rememorar-ordenacao__acao--ativa" : string.Empty)"
+                                aria-pressed="@(criterio == Criterio.Tom ? "true" : "false")"
+                                @onclick="AlternarTom">Tom @IndicadorTom</button>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    <section class="rememorar-lista" aria-label="Categorias do panorama">
-        <ul class="rememorar-lista__itens">
-            @foreach (var categoria in amostras)
+        <section class="rememorar-lista" aria-label="Categorias do panorama">
+            @if (resultado.Categorias.Count == 0)
             {
-                <li @key="categoria.Id">
-                    <CategoriaPanorama Identificador="@categoria.Id" Nome="@categoria.Nome"
-                                       Representatividade="@categoria.Representatividade" Tom="@categoria.Tom"
-                                       RotuloTom="@categoria.RotuloTom" Aparencia="@AparenciaTom.ObterPrecisao(categoria.Tom)"
-                                       AnimarApresentacao="true" AoSelecionar="SelecionarCategoria" />
-                </li>
+                <p role="status">Nenhuma categoria possui associações neste período.</p>
             }
-        </ul>
-        <p class="is-sr-only" aria-live="polite">@mensagemSelecao</p>
-    </section>
+            else
+            {
+                <ul class="rememorar-lista__itens">
+                    @foreach (var categoria in resultado.Categorias)
+                    {
+                        <li @key="categoria.Identidade">
+                            <CategoriaPanorama Identificador="@categoria.Identidade" Nome="@categoria.Nome"
+                                               Representatividade="@categoria.Representatividade" Tom="@categoria.TomMedio"
+                                               RotuloTom="@RotuloTom(categoria.TomMedio)" Aparencia="@AparenciaTom.ObterPrecisao(categoria.TomMedio)"
+                                               AnimarApresentacao="true" AoSelecionar="SelecionarCategoria" />
+                        </li>
+                    }
+                </ul>
+            }
+            <p class="is-sr-only" aria-live="polite">@mensagemSelecao</p>
+        </section>
+    }
 </main>
 
 @code {
-    private readonly ModeloJanelaTemporal modelo = new(
-    [
-        new DateOnly(2025, 1, 2), new DateOnly(2025, 1, 5), new DateOnly(2025, 1, 12),
-        new DateOnly(2025, 1, 19), new DateOnly(2025, 1, 26), new DateOnly(2025, 2, 2)
-    ]);
-    private readonly AmostraCategoria[] amostras =
-    [
-        new("rotina", "Rotina", 74, 1, "Tom positivo, 74"),
-        new("projetos", "Projetos e ideias", -48, .82, "Tom negativo, menos 48"),
-        new("familia", "Família", 61, .68, "Tom positivo, 61"),
-        new("saude", "Saúde e bem-estar", 0, .54, "Tom neutro, 0"),
-        new("estudos", "Estudos", -72, .43, "Tom negativo, menos 72"),
-        new("criatividade", "Criatividade", 36, .32, "Tom positivo, 36"),
-        new("casa", "Casa", null, .25, "Sem Tom definido"),
-        new("amizades", "Amizades", 19, .18, "Tom positivo, 19"),
-        new("financas", "Finanças", -25, .12, "Tom negativo, menos 25"),
-        new("longa", "Uma categoria com um nome propositalmente longo para conferir truncamento e acesso ao rótulo completo", null, .07, "Sem Tom definido"),
-        new("lazer", "Lazer", 88, .045, "Tom positivo, 88"),
-        new("pausa", "Pausas", -8, .02, "Tom negativo, menos 8"),
-        new("trabalho", "Trabalho", 42, .73, "Tom positivo, 42"),
-        new("alimentacao", "Alimentação", -31, .61, "Tom negativo, menos 31"),
-        new("leituras", "Leituras", 0, .52, "Tom neutro, 0"),
-        new("viagens", "Viagens e lugares", 79, .46, "Tom positivo, 79"),
-        new("conversas", "Conversas importantes", null, .39, "Sem Tom definido"),
-        new("natureza", "Natureza", 55, .34, "Tom positivo, 55"),
-        new("decisoes", "Decisões difíceis", -63, .28, "Tom negativo, menos 63"),
-        new("aprendizado", "Aprendizado cotidiano", 24, .23, "Tom positivo, 24"),
-        new("celebracoes", "Celebrações", 96, .17, "Tom positivo, 96"),
-        new("mudancas", "Mudanças", -5, .11, "Tom negativo, menos 5"),
-        new("planos", "Planos para o futuro", null, .06, "Sem Tom definido"),
-        new("pequenas_coisas", "Pequenas coisas boas", 12, .035, "Tom positivo, 12")
-    ];
+    private readonly CultureInfo culturaPtBr = CultureInfo.GetCultureInfo("pt-BR");
+    private IReadOnlyList<BlocoDiaPanoramaRemoto> dias = [];
+    private IReadOnlyList<Rememore.Client.Infraestrutura.Categorias.CategoriaPreservadaRemota> categoriasCatalogo = [];
+    private ModeloJanelaTemporal? modelo;
+    private ResultadoCalculoPanorama resultado = new([], null);
+    private IntervaloJanelaTemporal? intervaloCalculado;
+    private bool carregando = true;
+    private bool falhaPreparacao;
     private Criterio criterio = Criterio.Representatividade;
     private SentidoTom sentidoTom = SentidoTom.Positivo;
-    private string mensagemSelecao = "";
+    private string mensagemSelecao = string.Empty;
     private string IndicadorTom => sentidoTom switch { SentidoTom.Positivo => "+", SentidoTom.Negativo => "−", _ => "∅" };
+
+    protected override async Task OnInitializedAsync() => await PrepararAsync();
+
+    private async Task PrepararAsync()
+    {
+        carregando = true;
+        falhaPreparacao = false;
+        modelo = null;
+        dias = [];
+        categoriasCatalogo = [];
+        resultado = new([], null);
+
+        try
+        {
+            if (EstadoAutenticacao.IdentidadeConta is not { } identidadeConta)
+            {
+                falhaPreparacao = true;
+                return;
+            }
+
+            var preparacao = await Sincronizador.PrepararAsync(identidadeConta);
+            if (!preparacao.Disponivel)
+            {
+                falhaPreparacao = true;
+                return;
+            }
+
+            dias = preparacao.Dias.OrderBy(dia => dia.Data, StringComparer.Ordinal).ToArray();
+            categoriasCatalogo = preparacao.Categorias;
+            var datas = dias.Select(dia => DateOnly.ParseExact(dia.Data, "yyyy-MM-dd", CultureInfo.InvariantCulture)).ToArray();
+            if (datas.Length < 2) return;
+
+            modelo = new ModeloJanelaTemporal(datas);
+            intervaloCalculado = null;
+            AtualizarResultado(modelo.Estado.IntervaloValidoAtual);
+        }
+        catch (Exception ex) when (ex is FormatException or InvalidOperationException or ArgumentException)
+        {
+            falhaPreparacao = true;
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private Task AtualizarPanoramaAsync()
+    {
+        AtualizarResultado(modelo?.Estado.IntervaloValidoAtual);
+        return Task.CompletedTask;
+    }
+
+    private void AtualizarResultado(IntervaloJanelaTemporal? intervalo)
+    {
+        if (intervalo is null || intervalo == intervaloCalculado) return;
+        resultado = CalculosPanorama.Calcular(dias, categoriasCatalogo, intervalo.DataInicio, intervalo.DataFim);
+        intervaloCalculado = intervalo;
+    }
 
     private void AlternarTom()
     {
@@ -87,7 +157,13 @@
     private void SelecionarCategoria(string id) => mensagemSelecao = $"Categoria selecionada: {id}";
     private void VoltarPrincipal() => Navegacao.NavigateTo("principal");
 
-    private sealed record AmostraCategoria(string Id, string Nome, double? Tom, double Representatividade, string RotuloTom);
+    private string RotuloTom(double? tom)
+    {
+        if (!tom.HasValue) return "Sem Tom definido";
+        var valor = tom.Value.ToString("0.##", culturaPtBr);
+        return $"Tom médio, {(tom.Value > 0 ? "+" : string.Empty)}{valor}";
+    }
+
     private enum Criterio { Representatividade, Tom }
     private enum SentidoTom { Positivo, Negativo, Nulo }
 }
