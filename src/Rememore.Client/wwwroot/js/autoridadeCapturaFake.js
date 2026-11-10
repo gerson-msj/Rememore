@@ -1,3 +1,5 @@
+import { consultarEstadoPanorama, registrarAlteracaoPanorama } from "./contratoPanoramaFake.mjs";
+
 const bancoNome = "rememore.autoridade.fake";
 const bancoVersao = 1;
 
@@ -33,6 +35,9 @@ async function transacionar(conta, modo, executar) {
                             { identidade: "categoria-trabalho", nome: "Trabalho", versao: 2, ativa: true, everAssociated: false },
                             { identidade: "categoria-viagens", nome: "Viagens", versao: 3, ativa: true, everAssociated: false }
                         ], alteracoes: [], capturas: {} };
+                    // Compatibilidade aditiva com registros de conta criados antes da revisão global.
+                    estado.revisaoPanorama ??= 0;
+                    estado.alteracoesPanorama ??= [];
                     resultado = executar(estado, store);
                 } catch (erro) { try { tx.abort(); } catch { } reject(erro); }
             };
@@ -111,10 +116,17 @@ export async function preservar(captura) {
         }
         const revisao = anterior ? String(Number(anterior.revisao) + 1) : "1";
         estado.categorias = categorias; estado.revisaoCatalogo = revisaoCatalogo;
-        estado.capturas[data] = { revisao, memorias };
+        if (memorias.length) estado.capturas[data] = { revisao, memorias };
+        else delete estado.capturas[data];
+        registrarAlteracaoPanorama(estado, data, memorias.length ? { memorias } : null);
         store.put(estado);
         return { estado: 0, revisao, memorias };
     });
+}
+
+export async function consultarPanorama(conta, revisaoConhecida) {
+    if (typeof conta !== "string" || !conta.trim()) return { estado: 5 };
+    return transacionar(conta, "readonly", estado => consultarEstadoPanorama(estado, revisaoConhecida));
 }
 
 export async function consultarCatalogo(conta, cursorConhecido) {

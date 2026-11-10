@@ -1,10 +1,11 @@
 using Microsoft.JSInterop;
 using Rememore.Client.Infraestrutura.Categorias;
+using Rememore.Client.Infraestrutura.Rememorar;
 
 namespace Rememore.Client.Infraestrutura.TrabalhoLocal;
 
 public sealed class TrabalhoLocalIndexedDb(IJSRuntime js) : IDiagnosticoTrabalhoLocal, ICapturasLocais,
-    ICacheCatalogoCategoriasLocal, IAsyncDisposable
+    ICacheCatalogoCategoriasLocal, ICacheProjecaoPanoramaLocal, IAsyncDisposable
 {
     private Task<IJSObjectReference>? modulo;
     private bool descartado;
@@ -46,6 +47,10 @@ public sealed class TrabalhoLocalIndexedDb(IJSRuntime js) : IDiagnosticoTrabalho
         InvocarAsync<CacheCatalogoCategoriasLocal>("recuperarCacheCategorias", identidadeConta);
     public Task<ResultadoLocal<bool>> GravarAsync(CacheCatalogoCategoriasLocal cache) =>
         InvocarAsync<bool>("gravarCacheCategorias", cache);
+    public Task<ResultadoLocal<CacheProjecaoPanoramaLocal>> RecuperarProjecaoAsync(string identidadeConta) =>
+        InvocarAsync<CacheProjecaoPanoramaLocal>("recuperarProjecaoPanorama", identidadeConta);
+    public Task<ResultadoLocal<bool>> GravarProjecaoAsync(CacheProjecaoPanoramaLocal cache) =>
+        InvocarAsync<bool>("gravarProjecaoPanorama", cache);
 
     private async Task<ResultadoLocal<T>> InvocarAsync<T>(string operacao, params object?[] argumentos)
     {

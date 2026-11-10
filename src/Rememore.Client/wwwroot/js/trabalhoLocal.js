@@ -417,3 +417,38 @@ export function gravarCacheCategorias(cache) {
         transacao.objectStore("catalogosCategorias").put(cache);
     }));
 }
+
+export function recuperarProjecaoPanorama(identidadeConta) {
+    return operacaoValidada("projecaoPanorama", () => validarConta(identidadeConta), banco =>
+        transacionar(banco, ["projecoesPanorama"], "readonly", "projecaoPanorama", (transacao, concluir) => {
+            const pedido = transacao.objectStore("projecoesPanorama").get(identidadeConta);
+            pedido.onsuccess = () => concluir(pedido.result === undefined
+                ? { estado: "ausente" } : { estado: "sucesso", valor: pedido.result });
+        }));
+}
+
+function validarProjecaoPanorama(cache) {
+    validarConta(cache.identidadeConta);
+    if (typeof cache.revisao !== "string" || !/^\d+$/.test(cache.revisao) || !Array.isArray(cache.dias))
+        throw new TypeError("Projecao de Panorama invalida.");
+    const datas = new Set();
+    for (const dia of cache.dias) {
+        if (typeof dia.data !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(dia.data)
+            || !Array.isArray(dia.associacoes) || datas.has(dia.data))
+            throw new TypeError("Bloco diario de Panorama invalido.");
+        datas.add(dia.data);
+        for (const associacao of dia.associacoes) {
+            if (typeof associacao.identidadeCategoria !== "string" || !associacao.identidadeCategoria.trim()
+                || associacao.tom != null && (!Number.isInteger(associacao.tom) || associacao.tom < -100 || associacao.tom > 100))
+                throw new TypeError("Associacao do Panorama invalida.");
+        }
+    }
+}
+
+export function gravarProjecaoPanorama(cache) {
+    return operacaoValidada("projecaoPanorama", () => validarProjecaoPanorama(cache), banco =>
+        transacionar(banco, ["projecoesPanorama"], "readwrite", "projecaoPanorama", transacao => {
+            // Um único registro por conta publica os blocos e a revisão no mesmo commit.
+            transacao.objectStore("projecoesPanorama").put(cache);
+        }));
+}
