@@ -1,5 +1,6 @@
 @using System.Globalization
 @using Rememore.Client.Infraestrutura
+@using Rememore.Client.Infraestrutura.Rememorar
 @using Rememore.Client.Componentes.Lab
 @implements IDisposable
 
@@ -13,21 +14,8 @@
                              TomPreciso="@resultadoPanorama.TomMedioPonderado"
                              AoAtualizar="AtualizarJanelaAsync" />
 
-            <section aria-labelledby="cmp009-ordenacao-title">
-                <h4 class="title is-5" id="cmp009-ordenacao-title">Ordenação da demonstração</h4>
-                <div class="buttons has-addons cmp009-ordenacao__acoes" role="group" aria-label="Ordenar categorias">
-                    <button type="button"
-                            class="button is-small @(ordenacao.Criterio == CriterioOrdenacaoPanorama.Representatividade ? "is-link is-selected" : string.Empty)"
-                            aria-pressed="@(ordenacao.Criterio == CriterioOrdenacaoPanorama.Representatividade ? "true" : "false")"
-                            aria-label="@RotuloRepresentatividade"
-                            @onclick="() => AlterarOrdenacaoAsync(CriterioOrdenacaoPanorama.Representatividade)">@IndicadorRepresentatividade</button>
-                    <button type="button"
-                            class="button is-small @(ordenacao.Criterio == CriterioOrdenacaoPanorama.Tom ? "is-link is-selected" : string.Empty)"
-                            aria-pressed="@(ordenacao.Criterio == CriterioOrdenacaoPanorama.Tom ? "true" : "false")"
-                            aria-label="@RotuloTom"
-                            @onclick="() => AlterarOrdenacaoAsync(CriterioOrdenacaoPanorama.Tom)">@IndicadorTom</button>
-                </div>
-                <p class="help cmp009-ordenacao__estado">@DescricaoOrdenacao</p>
+            <section class="cmp009-ordenacao" aria-label="Ordenação da demonstração">
+                <ControlesOrdenacaoPanorama Estado="@ordenacao" AoAlterar="AlterarOrdenacaoAsync" />
             </section>
         </section>
 
@@ -250,38 +238,6 @@
         modoVisualizacao == ModoVisualizacaoPanoramaDemonstrativa.CompararCurvas
         || politicaCromatica == PoliticaCromaticaPanoramaDemonstrativa.Limiar;
 
-    private string IndicadorRepresentatividade => ordenacao.SentidoRepresentatividade == SentidoOrdenacaoPanorama.Decrescente
-        ? "Representatividade ↓"
-        : "Representatividade ↑";
-
-    private string IndicadorTom => ordenacao.SentidoTom switch
-    {
-        SentidoOrdenacaoPanorama.Decrescente => "Tom +",
-        SentidoOrdenacaoPanorama.Crescente => "Tom −",
-        _ => "Tom ∅"
-    };
-
-    private string RotuloRepresentatividade => ordenacao.Criterio == CriterioOrdenacaoPanorama.Representatividade
-        ? $"Ordenar por representatividade, {(ordenacao.SentidoRepresentatividade == SentidoOrdenacaoPanorama.Decrescente ? "decrescente" : "crescente")}; critério ativo"
-        : "Ordenar por representatividade decrescente";
-
-    private string RotuloTom => ordenacao.Criterio == CriterioOrdenacaoPanorama.Tom
-        ? $"Ordenar por Tom, {DescricaoSentidoTom}; critério ativo"
-        : "Ordenar por Tom positivo";
-
-    private string DescricaoSentidoTom => ordenacao.SentidoTom switch
-    {
-        SentidoOrdenacaoPanorama.Decrescente => "definidos decrescentes",
-        SentidoOrdenacaoPanorama.Crescente => "definidos crescentes",
-        _ => "Sem Tom primeiro"
-    };
-
-    private string DescricaoOrdenacao => ordenacao.Criterio switch
-    {
-        CriterioOrdenacaoPanorama.Representatividade => $"Representatividade: {ordenacao.SentidoRepresentatividade}; empates pelo nome e ID. A intensidade cromática não altera a ordem.",
-        _ => $"Tom: {DescricaoSentidoTom}; empates pela representatividade. Nulos são {(ordenacao.SentidoTom == SentidoOrdenacaoPanorama.SemTomPrimeiro ? "priorizados" : "mantidos no final")}."
-    };
-
     protected override void OnInitialized()
     {
         modelo.IntervaloAlterado += AtualizarIntervalo;
@@ -332,10 +288,12 @@
         return Task.CompletedTask;
     }
 
-    private async Task AlterarOrdenacaoAsync(CriterioOrdenacaoPanorama criterio)
+    private async Task AlterarOrdenacaoAsync(string criterio)
     {
         await PrepararMudancaVisualAsync();
-        ordenacao = OrdenacaoPanoramaDemonstrativo.Avancar(ordenacao, criterio);
+        ordenacao = criterio == "Representatividade"
+            ? ordenacao.AlternarRepresentatividade()
+            : ordenacao.AlternarTom();
     }
 
     private async Task AlterarAnimacaoAsync(ChangeEventArgs args)

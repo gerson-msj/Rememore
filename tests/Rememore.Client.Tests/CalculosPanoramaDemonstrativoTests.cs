@@ -1,5 +1,6 @@
 using Rememore.Client.Componentes.Lab;
 using Rememore.Client.Componentes;
+using Rememore.Client.Infraestrutura.Rememorar;
 
 namespace Rememore.Client.Tests;
 
@@ -192,10 +193,7 @@ public sealed class CalculosPanoramaDemonstrativoTests
         var datasIniciais = datasCompletas.Take(3).ToArray();
         var resultadoCompleto = CalculosPanoramaDemonstrativo.Calcular(datasCompletas, MassaPanoramaDemonstrativa.Ocorrencias);
         var resultadoInicial = CalculosPanoramaDemonstrativo.Calcular(datasIniciais, MassaPanoramaDemonstrativa.Ocorrencias);
-        var ordenacaoTomCrescente = new EstadoOrdenacaoPanorama(
-            CriterioOrdenacaoPanorama.Tom,
-            SentidoOrdenacaoPanorama.Decrescente,
-            SentidoOrdenacaoPanorama.Crescente);
+        var ordenacaoTomCrescente = new EstadoOrdenacaoPanorama("Tom", "Negativo");
 
         var ordemCompleta = OrdenacaoPanoramaDemonstrativo.Ordenar(
             resultadoCompleto.Categorias,

@@ -68,7 +68,16 @@ public sealed class SincronizadorProjecaoPanorama(
         // Primeiro reconciliamos a projeção mínima; depois atualizamos o catálogo compartilhado.
         var resultadoCatalogo = await catalogo.AtualizarAsync(identidadeConta);
         if (!resultadoCatalogo.Disponivel)
+        {
+            var identidadesAssociadas = atualizado.Dias.SelectMany(dia => dia.Associacoes)
+                .Select(associacao => associacao.IdentidadeCategoria).Distinct(StringComparer.Ordinal).ToArray();
+            var identidadesResolvidas = resultadoCatalogo.Categorias.Select(categoria => categoria.Identidade)
+                .ToHashSet(StringComparer.Ordinal);
+            if (!resultadoCatalogo.FalhaCache
+                && identidadesAssociadas.All(identidadesResolvidas.Contains))
+                return new(true, atualizado.Dias, resultadoCatalogo.Categorias, true);
             return new(false, atualizado.Dias, resultadoCatalogo.Categorias, usouCache, "catalogoIndisponivel");
+        }
         return new(true, atualizado.Dias, resultadoCatalogo.Categorias, usouCache);
     }
 

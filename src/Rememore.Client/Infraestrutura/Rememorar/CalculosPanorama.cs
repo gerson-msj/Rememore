@@ -11,6 +11,18 @@ public sealed record ResultadoCalculoPanorama(
 
 public static class CalculosPanorama
 {
+    public static bool AcervoDisponivel(IEnumerable<BlocoDiaPanoramaRemoto> dias)
+    {
+        ArgumentNullException.ThrowIfNull(dias);
+        var blocos = dias.ToArray();
+        var datas = blocos.Select(dia => dia.Data).Distinct(StringComparer.Ordinal).Count();
+        var categorias = blocos.SelectMany(dia => dia.Associacoes)
+            .Select(associacao => associacao.IdentidadeCategoria)
+            .Where(identidade => !string.IsNullOrWhiteSpace(identidade))
+            .Distinct(StringComparer.Ordinal).Count();
+        return datas >= 2 && categorias >= 2;
+    }
+
     public static ResultadoCalculoPanorama Calcular(
         IEnumerable<BlocoDiaPanoramaRemoto> dias,
         IReadOnlyList<CategoriaPreservadaRemota> catalogo,

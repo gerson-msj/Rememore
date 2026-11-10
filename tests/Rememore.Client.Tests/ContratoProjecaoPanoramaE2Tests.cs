@@ -106,6 +106,23 @@ public sealed class ContratoProjecaoPanoramaE2Tests
     }
 
     [Fact]
+    public async Task FalhaRemotaUsaProjecaoECatalogoCacheadosQuandoTodasAsIdentidadesEstaoResolvidas()
+    {
+        var store = new CachePanoramaEmMemoria { Valor = new("conta-a", "7", [Dia("2026-11-01", ("categoria-familia", 0))]) };
+        var catalogoLocal = new CacheCatalogoEmMemoria();
+        await catalogoLocal.GravarAsync(new("conta-a", "3", [new("categoria-familia", "Família", 1, true)]));
+        var sincronizador = new SincronizadorProjecaoPanorama(new AutoridadePanoramaEmMemoria(new(EstadoConsultaPanoramaRemota.Falha)),
+            store, new(new CatalogoComFalha(), catalogoLocal));
+
+        var resultado = await sincronizador.PrepararAsync("conta-a");
+
+        Assert.True(resultado.Disponivel);
+        Assert.True(resultado.UsouCache);
+        Assert.Equal("7", store.Valor!.Revisao);
+        Assert.Equal("Família", Assert.Single(resultado.Categorias).Nome);
+    }
+
+    [Fact]
     public async Task PrimeiraPreparacaoIsolaContaEAtualizaCatalogoCompartilhadoAposProjecao()
     {
         var store = new CachePanoramaEmMemoria();
@@ -166,5 +183,11 @@ public sealed class ContratoProjecaoPanoramaE2Tests
             Valor = cache;
             return Task.FromResult(new ResultadoLocal<bool>(EstadoOperacaoLocal.Sucesso, true));
         }
+    }
+
+    private sealed class CatalogoComFalha : ICatalogoCategoriasRemoto
+    {
+        public Task<RespostaCatalogoCategoriasRemoto> ConsultarAsync(string identidadeConta, string? revisaoConhecida) =>
+            throw new HttpRequestException("Falha técnica do teste.");
     }
 }

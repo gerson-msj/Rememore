@@ -1,10 +1,14 @@
 @page "/rememorar"
 @attribute [Authorize]
 @using System.Globalization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.JSInterop
 @using Rememore.Client.Infraestrutura.Rememorar
 @inject NavigationManager Navegacao
 @inject EstadoAutenticacaoProvider EstadoAutenticacao
 @inject SincronizadorProjecaoPanorama Sincronizador
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
 <PageTitle>Rememorar</PageTitle>
 
@@ -31,24 +35,14 @@
     }
     else if (modelo is null)
     {
-        <p class="rememorar-estado" role="status">Ainda não há dois dias preservados para formar um período.</p>
+        <p class="rememorar-estado" role="status">@mensagemAcervoIndisponivel</p>
     }
     else
     {
         <section class="rememorar-controles" aria-label="Período e ordenação">
             <div class="rememorar-controles__conteudo">
                 <JanelaTemporal Modelo="@modelo" TomPreciso="@resultado.TomMedioJanela" AoAtualizar="AtualizarPanoramaAsync" />
-                <div class="rememorar-ordenacao">
-                    <span class="rememorar-ordenacao__rotulo">Ordenar por</span>
-                    <div class="rememorar-ordenacao__acoes" role="group" aria-label="Ordenar categorias">
-                        <button type="button" class="rememorar-ordenacao__acao @(criterio == Criterio.Representatividade ? "rememorar-ordenacao__acao--ativa" : string.Empty)"
-                                aria-pressed="@(criterio == Criterio.Representatividade ? "true" : "false")"
-                                @onclick="() => criterio = Criterio.Representatividade">Representatividade @(criterio == Criterio.Representatividade ? "+" : string.Empty)</button>
-                        <button type="button" class="rememorar-ordenacao__acao @(criterio == Criterio.Tom ? "rememorar-ordenacao__acao--ativa" : string.Empty)"
-                                aria-pressed="@(criterio == Criterio.Tom ? "true" : "false")"
-                                @onclick="AlternarTom">Tom @IndicadorTom</button>
-                    </div>
-                </div>
+                <ControlesOrdenacaoPanorama Estado="@ordenacao" AoAlterar="AlterarOrdenacaoAsync" />
             </div>
         </section>
 
@@ -59,13 +53,13 @@
             }
             else
             {
-                <ul class="rememorar-lista__itens">
-                    @foreach (var categoria in resultado.Categorias)
+                <ul @ref="raizCategorias" class="rememorar-lista__itens">
+                    @foreach (var categoria in categoriasOrdenadas)
                     {
-                        <li @key="categoria.Identidade">
+                        <li @key="categoria.Identidade" data-categoria-id="@categoria.Identidade">
                             <CategoriaPanorama Identificador="@categoria.Identidade" Nome="@categoria.Nome"
                                                Representatividade="@categoria.Representatividade" Tom="@categoria.TomMedio"
-                                               RotuloTom="@RotuloTom(categoria.TomMedio)" Aparencia="@AparenciaTom.ObterPrecisao(categoria.TomMedio)"
+                                               RotuloTom="@RotuloTom(categoria.TomMedio)" Aparencia="@AparenciaTom.ObterPrecisao(categoria.TomMedio, limiar: 20, intensidadeNoLimiar: 50)"
                                                AnimarApresentacao="true" AoSelecionar="SelecionarCategoria" />
                         </li>
                     }
@@ -83,14 +77,61 @@
     private ModeloJanelaTemporal? modelo;
     private ResultadoCalculoPanorama resultado = new([], null);
     private IntervaloJanelaTemporal? intervaloCalculado;
+    private EstadoOrdenacaoPanorama ordenacao = EstadoOrdenacaoPanorama.Inicial;
+    private IJSObjectReference? moduloEstado;
+    private IJSObjectReference? moduloLista;
+    private IJSObjectReference? controladorLista;
+    private ElementReference raizCategorias;
+    private bool animacaoListaPendente;
+    private string? identidadeContaAtual;
+    private ContextoJornadaPanorama? contextoRestaurado;
+    private string? categoriaSelecionada;
+    private string mensagemAcervoIndisponivel = "Rememorar ficará disponível quando houver pelo menos dois dias preservados e duas categorias distintas.";
+    private bool rolagemConectada;
+    private bool rolagemRestaurada;
+    private bool sessaoEncerrada;
     private bool carregando = true;
     private bool falhaPreparacao;
-    private Criterio criterio = Criterio.Representatividade;
-    private SentidoTom sentidoTom = SentidoTom.Positivo;
     private string mensagemSelecao = string.Empty;
-    private string IndicadorTom => sentidoTom switch { SentidoTom.Positivo => "+", SentidoTom.Negativo => "−", _ => "∅" };
+    private IReadOnlyList<CategoriaPanoramaCalculada> categoriasOrdenadas => OrdenacaoPanorama.Ordenar(resultado.Categorias, ordenacao);
 
-    protected override async Task OnInitializedAsync() => await PrepararAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        EstadoAutenticacao.AuthenticationStateChanged += AoMudarAutenticacao;
+        await PrepararAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool primeiroRender)
+    {
+        if (primeiroRender)
+        {
+            await GarantirModuloEstadoAsync();
+            if (identidadeContaAtual is not null)
+            {
+                await moduloEstado!.InvokeVoidAsync("conectarRolagem", identidadeContaAtual, EstadoAutenticacao.IdentidadeSessao);
+                rolagemConectada = true;
+            }
+        }
+
+        if (controladorLista is null && modelo is not null && resultado.Categorias.Count > 0)
+        {
+            moduloLista = await JS.InvokeAsync<IJSObjectReference>("import", "./js/listaPanorama.js?cmp009=1");
+            controladorLista = await moduloLista.InvokeAsync<IJSObjectReference>("conectar", raizCategorias);
+        }
+
+        if (animacaoListaPendente && controladorLista is not null)
+        {
+            animacaoListaPendente = false;
+            await controladorLista.InvokeVoidAsync("aplicar", true, false, 180);
+        }
+
+        if (!rolagemRestaurada && !carregando && modelo is not null && contextoRestaurado is not null
+            && moduloEstado is not null && rolagemConectada)
+        {
+            await moduloEstado.InvokeVoidAsync("restaurarRolagem", identidadeContaAtual, contextoRestaurado.Rolagem);
+            rolagemRestaurada = true;
+        }
+    }
 
     private async Task PrepararAsync()
     {
@@ -100,14 +141,34 @@
         dias = [];
         categoriasCatalogo = [];
         resultado = new([], null);
+        intervaloCalculado = null;
 
         try
         {
             if (EstadoAutenticacao.IdentidadeConta is not { } identidadeConta)
             {
+                identidadeContaAtual = EstadoAutenticacaoProvider.IdentidadeContaSimulada;
+                await LimparContextoJornadaAsync(true);
                 falhaPreparacao = true;
                 return;
             }
+
+            identidadeContaAtual = identidadeConta;
+            await GarantirModuloEstadoAsync();
+            ordenacao = await moduloEstado!.InvokeAsync<EstadoOrdenacaoPanorama?>("lerOrdenacao", identidadeConta)
+                ?? EstadoOrdenacaoPanorama.Inicial;
+            if (!ordenacao.Valido) ordenacao = EstadoOrdenacaoPanorama.Inicial;
+            var identidadeSessao = EstadoAutenticacao.IdentidadeSessao;
+            contextoRestaurado = await moduloEstado!.InvokeAsync<ContextoJornadaPanorama?>("lerContexto", identidadeConta, identidadeSessao);
+            if (contextoRestaurado is not null && contextoRestaurado.Versao == 1
+                && contextoRestaurado.IdentidadeConta == identidadeConta
+                && contextoRestaurado.IdentidadeSessao == identidadeSessao)
+            {
+                categoriaSelecionada = contextoRestaurado.CategoriaSelecionada;
+                if (categoriaSelecionada is not null)
+                    mensagemSelecao = $"Categoria selecionada: {categoriaSelecionada}";
+            }
+            else contextoRestaurado = null;
 
             var preparacao = await Sincronizador.PrepararAsync(identidadeConta);
             if (!preparacao.Disponivel)
@@ -119,11 +180,18 @@
             dias = preparacao.Dias.OrderBy(dia => dia.Data, StringComparer.Ordinal).ToArray();
             categoriasCatalogo = preparacao.Categorias;
             var datas = dias.Select(dia => DateOnly.ParseExact(dia.Data, "yyyy-MM-dd", CultureInfo.InvariantCulture)).ToArray();
-            if (datas.Length < 2) return;
+            if (datas.Length < 2 || !CalculosPanorama.AcervoDisponivel(dias))
+            {
+                mensagemAcervoIndisponivel = "Rememorar ficará disponível quando houver pelo menos dois dias preservados e duas categorias distintas.";
+                contextoRestaurado = null;
+                await LimparContextoJornadaAsync();
+                return;
+            }
 
-            modelo = new ModeloJanelaTemporal(datas);
-            intervaloCalculado = null;
-            AtualizarResultado(modelo.Estado.IntervaloValidoAtual);
+            modelo = CriarModelo(datas, contextoRestaurado);
+            AtualizarResultado(modelo.Estado.IntervaloValidoAtual ?? modelo.Estado.UltimoIntervaloValido);
+            if (contextoRestaurado is null)
+                await PersistirContextoAsync();
         }
         catch (Exception ex) when (ex is FormatException or InvalidOperationException or ArgumentException)
         {
@@ -135,10 +203,11 @@
         }
     }
 
-    private Task AtualizarPanoramaAsync()
+    private async Task AtualizarPanoramaAsync()
     {
+        await PrepararAnimacaoListaAsync();
         AtualizarResultado(modelo?.Estado.IntervaloValidoAtual);
-        return Task.CompletedTask;
+        await PersistirContextoAsync();
     }
 
     private void AtualizarResultado(IntervaloJanelaTemporal? intervalo)
@@ -148,14 +217,115 @@
         intervaloCalculado = intervalo;
     }
 
-    private void AlternarTom()
+    private async Task AlterarOrdenacaoAsync(string criterio)
     {
-        if (criterio != Criterio.Tom) { criterio = Criterio.Tom; sentidoTom = SentidoTom.Positivo; return; }
-        sentidoTom = sentidoTom switch { SentidoTom.Positivo => SentidoTom.Negativo, SentidoTom.Negativo => SentidoTom.Nulo, _ => SentidoTom.Positivo };
+        await PrepararAnimacaoListaAsync();
+        ordenacao = criterio == "Representatividade"
+            ? ordenacao.AlternarRepresentatividade()
+            : ordenacao.AlternarTom();
+        await PersistirOrdenacaoAsync();
     }
 
-    private void SelecionarCategoria(string id) => mensagemSelecao = $"Categoria selecionada: {id}";
-    private void VoltarPrincipal() => Navegacao.NavigateTo("principal");
+    private async Task PersistirOrdenacaoAsync()
+    {
+        if (identidadeContaAtual is not null && moduloEstado is not null)
+            await moduloEstado.InvokeVoidAsync("gravarOrdenacao", identidadeContaAtual, ordenacao);
+    }
+
+    private async Task PrepararAnimacaoListaAsync()
+    {
+        if (controladorLista is null) return;
+        try
+        {
+            await controladorLista.InvokeVoidAsync("capturar");
+            animacaoListaPendente = true;
+        }
+        catch (Exception ex) when (ex is JSDisconnectedException or ObjectDisposedException) { }
+    }
+
+    private async Task PersistirContextoAsync()
+    {
+        if (sessaoEncerrada || identidadeContaAtual is null || moduloEstado is null || modelo is null) return;
+        var estado = modelo.Estado;
+        var ultimoIntervalo = estado.UltimoIntervaloValido;
+        var identidadeSessao = EstadoAutenticacao.IdentidadeSessao;
+        if (identidadeSessao is null) return;
+        var contexto = new ContextoJornadaPanorama(1, identidadeContaAtual, identidadeSessao,
+            estado.PosicaoInicio, estado.PosicaoFim,
+            ultimoIntervalo?.DataInicio.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            ultimoIntervalo?.DataFim.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            categoriaSelecionada);
+        await moduloEstado.InvokeVoidAsync("gravarContexto", identidadeContaAtual, identidadeSessao, contexto);
+    }
+
+    private async Task SelecionarCategoria(string id)
+    {
+        categoriaSelecionada = id;
+        mensagemSelecao = $"Categoria selecionada: {id}";
+        await PersistirContextoAsync();
+    }
+
+    private async Task VoltarPrincipal()
+    {
+        await LimparContextoJornadaAsync(true);
+        Navegacao.NavigateTo("principal");
+    }
+
+    private ModeloJanelaTemporal CriarModelo(IReadOnlyList<DateOnly> datas, ContextoJornadaPanorama? contexto)
+    {
+        EstadoJanelaTemporalRestaurado? restauracao = null;
+        if (contexto is not null && contexto.Versao == 1 && contexto.IdentidadeConta == identidadeContaAtual
+            && contexto.IdentidadeSessao == EstadoAutenticacao.IdentidadeSessao
+            && double.IsFinite(contexto.PosicaoInicio) && double.IsFinite(contexto.PosicaoFim)
+            && contexto.PosicaoInicio is >= 0 and <= 1 && contexto.PosicaoFim is >= 0 and <= 1
+            && contexto.PosicaoInicio <= contexto.PosicaoFim)
+        {
+            IntervaloJanelaTemporal? ultimo = null;
+            if (DateOnly.TryParseExact(contexto.UltimaDataInicio, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var inicio)
+                && DateOnly.TryParseExact(contexto.UltimaDataFim, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var fim))
+            {
+                var indiceInicio = Array.IndexOf(datas.ToArray(), inicio);
+                var indiceFim = Array.IndexOf(datas.ToArray(), fim);
+                if (indiceInicio >= 0 && indiceFim > indiceInicio)
+                    ultimo = new(indiceInicio, indiceFim, inicio, fim);
+            }
+            restauracao = new(contexto.PosicaoInicio, contexto.PosicaoFim, ultimo);
+        }
+        return new ModeloJanelaTemporal(datas, restauracao);
+    }
+
+    private void AoMudarAutenticacao(Task<AuthenticationState> tarefaEstado)
+    {
+        _ = LimparJornadaSeAnonimaAsync(tarefaEstado);
+    }
+
+    private async Task LimparJornadaSeAnonimaAsync(Task<AuthenticationState> tarefaEstado)
+    {
+        try
+        {
+            var estado = await tarefaEstado;
+            if (estado.User.Identity?.IsAuthenticated != true)
+                await LimparContextoJornadaAsync(true);
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException or TaskCanceledException) { }
+    }
+
+    private async Task LimparContextoJornadaAsync(bool encerrarSessao = false)
+    {
+        sessaoEncerrada |= encerrarSessao;
+        if (identidadeContaAtual is null) return;
+        try
+        {
+            await GarantirModuloEstadoAsync();
+            await moduloEstado!.InvokeVoidAsync("removerContexto", identidadeContaAtual);
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException or TaskCanceledException) { }
+    }
+
+    private async Task GarantirModuloEstadoAsync()
+    {
+        moduloEstado ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/estadoRememorar.js");
+    }
 
     private string RotuloTom(double? tom)
     {
@@ -164,6 +334,34 @@
         return $"Tom médio, {(tom.Value > 0 ? "+" : string.Empty)}{valor}";
     }
 
-    private enum Criterio { Representatividade, Tom }
-    private enum SentidoTom { Positivo, Negativo, Nulo }
+    public async ValueTask DisposeAsync()
+    {
+        EstadoAutenticacao.AuthenticationStateChanged -= AoMudarAutenticacao;
+        if (controladorLista is not null)
+        {
+            try { await controladorLista.InvokeVoidAsync("descartar"); }
+            catch (Exception ex) when (ex is JSDisconnectedException or ObjectDisposedException) { }
+            try { await controladorLista.DisposeAsync(); }
+            catch (Exception ex) when (ex is JSDisconnectedException or ObjectDisposedException) { }
+        }
+        if (moduloLista is not null)
+        {
+            try { await moduloLista.DisposeAsync(); }
+            catch (Exception ex) when (ex is JSDisconnectedException or ObjectDisposedException) { }
+        }
+        if (moduloEstado is not null)
+        {
+            if (rolagemConectada && identidadeContaAtual is not null)
+            {
+                try { await moduloEstado.InvokeVoidAsync("desconectarRolagem", identidadeContaAtual); }
+                catch (JSDisconnectedException) { }
+            }
+            await moduloEstado.DisposeAsync();
+        }
+    }
+
+    private sealed record ContextoJornadaPanorama(
+        int Versao, string IdentidadeConta, string IdentidadeSessao, double PosicaoInicio, double PosicaoFim,
+        string? UltimaDataInicio, string? UltimaDataFim, string? CategoriaSelecionada,
+        double Rolagem = 0);
 }

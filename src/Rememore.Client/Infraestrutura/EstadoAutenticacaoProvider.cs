@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Globalization;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
@@ -23,6 +24,7 @@ public sealed class EstadoAutenticacaoProvider(IJSRuntime js, TimeProvider relog
     public bool Inicializado { get; private set; }
     public bool Autenticado => usuario.Identity?.IsAuthenticated == true;
     public string? IdentidadeConta => Autenticado ? IdentidadeContaSimulada : null;
+    public string? IdentidadeSessao => Autenticado ? sessao?.CriadaEmUtc.ToString("O", CultureInfo.InvariantCulture) : null;
 
     public override Task<AuthenticationState> GetAuthenticationStateAsync() => Task.FromResult(new AuthenticationState(usuario));
 

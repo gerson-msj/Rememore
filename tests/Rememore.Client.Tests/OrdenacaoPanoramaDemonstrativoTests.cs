@@ -1,73 +1,65 @@
 using Rememore.Client.Componentes.Lab;
+using Rememore.Client.Infraestrutura.Rememorar;
 
 namespace Rememore.Client.Tests;
 
 public sealed class OrdenacaoPanoramaDemonstrativoTests
 {
     [Fact]
-    public void CicloDeRepresentatividadeAlternaDecrescenteECrescente()
+    public void LaboratorioUsaOsMesmoEstadosDeTransicaoDaPagina()
     {
         var estado = EstadoOrdenacaoPanorama.Inicial;
-
-        estado = OrdenacaoPanoramaDemonstrativo.Avancar(estado, CriterioOrdenacaoPanorama.Representatividade);
-        Assert.Equal(SentidoOrdenacaoPanorama.Crescente, estado.SentidoRepresentatividade);
-
-        estado = OrdenacaoPanoramaDemonstrativo.Avancar(estado, CriterioOrdenacaoPanorama.Representatividade);
-        Assert.Equal(SentidoOrdenacaoPanorama.Decrescente, estado.SentidoRepresentatividade);
+        Assert.Equal(EstadoOrdenacaoPanorama.Inicial.AlternarRepresentatividade(),
+            OrdenacaoPanoramaDemonstrativo.Avancar(estado, CriterioOrdenacaoPanorama.Representatividade));
+        Assert.Equal(new("Tom", "Positivo"),
+            OrdenacaoPanoramaDemonstrativo.Avancar(estado, CriterioOrdenacaoPanorama.Tom));
+        estado = new("Tom", "Positivo");
+        Assert.Equal(estado.AlternarTom(),
+            OrdenacaoPanoramaDemonstrativo.Avancar(estado, CriterioOrdenacaoPanorama.Tom));
+        Assert.Equal(new("Representatividade", "Positivo"),
+            OrdenacaoPanoramaDemonstrativo.Avancar(new("Tom", "Nulo"), CriterioOrdenacaoPanorama.Representatividade));
     }
 
     [Fact]
-    public void CicloDeTomIncluiSemTomPrimeiroEReiniciaAoTrocarCriterio()
+    public void LaboratorioEPaginaAplicamAsMesmasRegrasDeOrdenacao()
     {
-        var estado = EstadoOrdenacaoPanorama.Inicial;
-        estado = OrdenacaoPanoramaDemonstrativo.Avancar(estado, CriterioOrdenacaoPanorama.Tom);
+        var demonstrativas = Categorias();
+        var pagina = demonstrativas.Select(categoria => new CategoriaPanoramaCalculada(
+            categoria.IdentificadorCategoria, categoria.NomeCategoria, categoria.QuantidadeAssociacoes,
+            categoria.Representatividade, categoria.TomMedio)).ToArray();
 
-        Assert.Equal(SentidoOrdenacaoPanorama.Decrescente, estado.SentidoTom);
-        estado = OrdenacaoPanoramaDemonstrativo.Avancar(estado, CriterioOrdenacaoPanorama.Tom);
-        Assert.Equal(SentidoOrdenacaoPanorama.Crescente, estado.SentidoTom);
-        estado = OrdenacaoPanoramaDemonstrativo.Avancar(estado, CriterioOrdenacaoPanorama.Tom);
-        Assert.Equal(SentidoOrdenacaoPanorama.SemTomPrimeiro, estado.SentidoTom);
-        estado = OrdenacaoPanoramaDemonstrativo.Avancar(estado, CriterioOrdenacaoPanorama.Representatividade);
-
-        Assert.Equal(SentidoOrdenacaoPanorama.Decrescente, estado.SentidoRepresentatividade);
-        Assert.Equal(SentidoOrdenacaoPanorama.Decrescente, estado.SentidoTom);
+        foreach (var estado in new[]
+                 {
+                     new EstadoOrdenacaoPanorama("Representatividade", "Positivo"),
+                     new EstadoOrdenacaoPanorama("Representatividade", "Negativo"),
+                     new EstadoOrdenacaoPanorama("Tom", "Positivo"),
+                     new EstadoOrdenacaoPanorama("Tom", "Negativo"),
+                     new EstadoOrdenacaoPanorama("Tom", "Nulo")
+                 })
+        {
+            var naPagina = OrdenacaoPanorama.Ordenar(pagina, estado).Select(categoria => categoria.Identidade);
+            var noLab = OrdenacaoPanoramaDemonstrativo.Ordenar(demonstrativas, estado, categoria => categoria.TomMedio)
+                .Select(categoria => categoria.IdentificadorCategoria);
+            Assert.Equal(naPagina, noLab);
+        }
     }
 
     [Fact]
-    public void OrdenacaoPorTomUsaValorFuncionalEMantemNulosNoFimOuNoInicio()
+    public void LaboratorioUsaTomDaOrigemEscolhidaSemMudarAsRegrasCompartilhadas()
     {
-        var categorias = Categorias();
-        var estado = new EstadoOrdenacaoPanorama(
-            CriterioOrdenacaoPanorama.Tom,
-            SentidoOrdenacaoPanorama.Decrescente,
-            SentidoOrdenacaoPanorama.Decrescente);
+        var estado = new EstadoOrdenacaoPanorama("Tom", "Positivo");
+        var direto = OrdenacaoPanoramaDemonstrativo.Ordenar(Categorias(), estado, categoria => categoria.TomDireto);
+        var medio = OrdenacaoPanoramaDemonstrativo.Ordenar(Categorias(), estado, categoria => categoria.TomMedio);
 
-        var decrescente = OrdenacaoPanoramaDemonstrativo.Ordenar(categorias, estado, categoria => categoria.TomDireto);
-        var crescente = OrdenacaoPanoramaDemonstrativo.Ordenar(categorias,
-            estado with { SentidoTom = SentidoOrdenacaoPanorama.Crescente }, categoria => categoria.TomDireto);
-        var semTomPrimeiro = OrdenacaoPanoramaDemonstrativo.Ordenar(categorias,
-            estado with { SentidoTom = SentidoOrdenacaoPanorama.SemTomPrimeiro }, categoria => categoria.TomDireto);
-
-        Assert.Equal(new[] { "alto", "zero", "baixo", "ausente" }, decrescente.Select(categoria => categoria.IdentificadorCategoria));
-        Assert.Equal(new[] { "baixo", "zero", "alto", "ausente" }, crescente.Select(categoria => categoria.IdentificadorCategoria));
-        Assert.Equal(new[] { "ausente", "alto", "baixo", "zero" }, semTomPrimeiro.Select(categoria => categoria.IdentificadorCategoria));
-    }
-
-    [Fact]
-    public void RepresentatividadeEDesempatesIgnoramTomEIntensidadeVisual()
-    {
-        var categorias = Categorias();
-        var estado = EstadoOrdenacaoPanorama.Inicial;
-        var resultado = OrdenacaoPanoramaDemonstrativo.Ordenar(categorias, estado, categoria => categoria.TomDireto);
-
-        Assert.Equal(new[] { "alto", "ausente", "baixo", "zero" }, resultado.Select(categoria => categoria.IdentificadorCategoria));
+        Assert.NotEqual(direto.Select(categoria => categoria.IdentificadorCategoria),
+            medio.Select(categoria => categoria.IdentificadorCategoria));
     }
 
     private static ResumoCategoriaPanoramaDemonstrativo[] Categorias() =>
     [
-        new("alto", "Alto", 1, 1, 100, 0.8d) { TomDireto = 100 },
-        new("baixo", "Baixo", 1, 1, -20, 0.7d) { TomDireto = -20 },
-        new("zero", "Zero", 1, 1, 0, 0.5d) { TomDireto = 0 },
-        new("ausente", "Ausente", 1, 0, null, 0.8d)
+        new("alto", "Alto", 4, 1, 100, 0.8d) { TomDireto = -20 },
+        new("baixo", "Baixo", 1, 1, -20, 0.2d) { TomDireto = 70 },
+        new("zero", "Zero", 2, 1, 0, 0.4d) { TomDireto = 0 },
+        new("ausente", "Ausente", 2, 0, null, 0.4d)
     ];
 }

@@ -4,12 +4,15 @@
 <button type="button"
         class="button is-fullwidth categoria-panorama @Aparencia.Classes @(Tom.HasValue ? string.Empty : "categoria-panorama--tom-ausente") @(AnimarApresentacao ? "categoria-panorama--transicao" : string.Empty) @(MovimentoReduzido ? "categoria-panorama--movimento-reduzido" : string.Empty)"
         style="--categoria-panorama-representatividade: @RepresentatividadePercentual; @Aparencia.Estilo"
-        aria-label="@($"{Nome}; {RotuloTom}")"
+        aria-label="@(MostrarDescricaoTom ? $"{Nome}; {RotuloTom}" : Nome)"
         @onclick="SelecionarAsync">
     <span class="categoria-panorama__barra" aria-hidden="true"></span>
     <span class="categoria-panorama__linha">
         <span class="categoria-panorama__nome">@Nome</span>
-        <span class="categoria-panorama__tom">@RotuloTom</span>
+        @if (MostrarDescricaoTom)
+        {
+            <span class="categoria-panorama__tom">@RotuloTom</span>
+        }
     </span>
 </button>
 
@@ -28,6 +31,9 @@
 
     [Parameter, EditorRequired]
     public string RotuloTom { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool MostrarDescricaoTom { get; set; }
 
     [Parameter, EditorRequired]
     public AparenciaTomVisual Aparencia { get; set; } = new("aparencia-tom", string.Empty);

@@ -109,17 +109,8 @@
     margin-top: 0.15em;
 }
 
-.cmp009-ordenacao__acoes {
-    margin-bottom: 0.25rem;
-}
-
-.cmp009-ordenacao__acoes .button {
-    min-width: 0;
-    white-space: normal;
-}
-
-.cmp009-ordenacao__estado {
-    margin-top: 0;
+.cmp009-ordenacao {
+    width: 100%;
 }
 
 .cmp009-paineis--lista {

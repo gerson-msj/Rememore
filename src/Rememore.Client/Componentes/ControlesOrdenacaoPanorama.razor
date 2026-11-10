@@ -1,0 +1,39 @@
+@using Rememore.Client.Infraestrutura.Rememorar
+
+<div class="ordenacao-panorama" role="group" aria-label="Ordenar categorias">
+    <span class="ordenacao-panorama__rotulo">Ordenar por</span>
+    <div class="ordenacao-panorama__acoes">
+        <button type="button" class="ordenacao-panorama__acao @(Estado.Criterio == "Representatividade" ? "ordenacao-panorama__acao--ativa" : string.Empty)"
+                aria-pressed="@(Estado.Criterio == "Representatividade" ? "true" : "false")"
+                aria-label="@RotuloRepresentatividade"
+                @onclick="OrdenarRepresentatividadeAsync">Representatividade @(Estado.Criterio == "Representatividade" ? IndicadorRepresentatividade : string.Empty)</button>
+        <button type="button" class="ordenacao-panorama__acao @(Estado.Criterio == "Tom" ? "ordenacao-panorama__acao--ativa" : string.Empty)"
+                aria-pressed="@(Estado.Criterio == "Tom" ? "true" : "false")"
+                aria-label="@RotuloTom"
+                @onclick="OrdenarTomAsync">Tom @(Estado.Criterio == "Tom" ? IndicadorTom : string.Empty)</button>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public EstadoOrdenacaoPanorama Estado { get; set; } = EstadoOrdenacaoPanorama.Inicial;
+
+    [Parameter, EditorRequired]
+    public EventCallback<string> AoAlterar { get; set; }
+
+    private string IndicadorRepresentatividade => Estado.Sentido == "Positivo" ? "+" : "−";
+    private string IndicadorTom => Estado.Sentido switch { "Positivo" => "+", "Negativo" => "−", _ => "∅" };
+    private Task OrdenarRepresentatividadeAsync() => AoAlterar.InvokeAsync("Representatividade");
+    private Task OrdenarTomAsync() => AoAlterar.InvokeAsync("Tom");
+    private string RotuloRepresentatividade => Estado.Criterio == "Representatividade"
+        ? $"Representatividade {IndicadorRepresentatividade}, {(IndicadorRepresentatividade == "+" ? "maior para menor" : "menor para maior")}. Ativo."
+        : "Ordenar por representatividade; ao selecionar, maior para menor.";
+    private string RotuloTom => Estado.Criterio != "Tom"
+        ? "Ordenar por Tom; ao selecionar, do mais positivo ao mais negativo."
+        : Estado.Sentido switch
+        {
+            "Positivo" => "Tom, do mais positivo ao mais negativo, Tons nulos ao final. Ativo.",
+            "Negativo" => "Tom, do mais negativo ao mais positivo, Tons nulos ao final. Ativo.",
+            _ => "Tom nulo primeiro; os demais por representatividade decrescente. Ativo."
+        };
+}
