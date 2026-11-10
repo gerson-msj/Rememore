@@ -12,7 +12,13 @@
 }
 
 .container.cabecalho-pagina {
-    width: calc(100% - 4rem);
+    width: 100%;
+    max-width: none;
+    margin-inline: auto;
+}
+
+.cabecalho-pagina > .section {
+    box-sizing: border-box;
     margin-inline: auto;
 }
 

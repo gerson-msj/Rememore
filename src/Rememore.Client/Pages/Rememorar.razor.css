@@ -1,0 +1,107 @@
+.pagina-rememorar {
+    min-height: 100vh;
+    padding-top: 4rem;
+}
+
+.rememorar-controles {
+    position: sticky;
+    top: 4rem;
+    z-index: 29;
+    background: var(--cor-main);
+}
+
+.rememorar-controles__conteudo {
+    width: min(100%, 60rem);
+    margin-inline: auto;
+    padding-block: 0.65rem 0.75rem;
+    padding-inline: clamp(1rem, 4vw, 2.5rem);
+    border-bottom: 1px solid var(--cor-border);
+}
+
+.rememorar-ordenacao {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.5rem;
+    margin-top: 0.35rem;
+}
+
+.rememorar-ordenacao__rotulo {
+    color: var(--bulma-text-weak);
+    font-size: 0.85rem;
+}
+
+.rememorar-ordenacao__acoes {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0;
+}
+
+.rememorar-ordenacao__acao {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--bulma-text-weak);
+    font: inherit;
+    font-size: 0.85rem;
+    line-height: 1.35;
+    text-align: start;
+    cursor: pointer;
+}
+
+.rememorar-ordenacao__acao:hover {
+    background: transparent;
+    color: var(--cor-link);
+    text-decoration: underline;
+}
+
+.rememorar-ordenacao__acao--ativa {
+    color: var(--cor-link);
+    font-weight: var(--bulma-weight-semibold);
+}
+
+.rememorar-ordenacao__acao:focus-visible {
+    border-radius: 0.15rem;
+    outline: 2px solid var(--cor-link);
+    outline-offset: 3px;
+}
+
+.rememorar-lista {
+    width: min(100%, 60rem);
+    margin-inline: auto;
+    padding: 1rem clamp(1rem, 4vw, 2.5rem) 2rem;
+}
+
+.rememorar-lista__itens {
+    display: grid;
+    gap: 0.6rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.rememorar-lista__itens > li {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.rememorar-lista__itens ::deep .categoria-panorama__tom {
+    flex: 0 1 38%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rememorar-lista__itens ::deep .categoria-panorama {
+        transition: none;
+    }
+}
