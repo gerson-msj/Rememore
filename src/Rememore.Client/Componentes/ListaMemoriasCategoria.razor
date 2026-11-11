@@ -1,0 +1,23 @@
+@if (Itens.Count == 0)
+{
+    <p>Nenhuma memória neste período para esta categoria.</p>
+}
+else
+{
+    <ul class="lista-memorias cmp014-lista" aria-label="@NomeAcessivel">
+        @foreach (var item in Itens)
+        {
+            <li @key="item.Identificador">
+                <Memoria Identificador="@item.Identificador"
+                         Conteudo="@item.Conteudo"
+                         Tom="@item.Tom"
+                         Modo="ModoMemoria.RememorarDetalheCategoria" />
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<ItemListaMemoriasCategoria> Itens { get; set; } = Array.Empty<ItemListaMemoriasCategoria>();
+    [Parameter, EditorRequired] public string NomeAcessivel { get; set; } = string.Empty;
+}

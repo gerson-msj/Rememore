@@ -1,0 +1,77 @@
+<section aria-labelledby="cmp014-titulo">
+    <h3 class="title is-5" id="cmp014-titulo">Lista de Memórias da Categoria</h3>
+    <p class="mb-4">A demonstração fornece itens prontos ao CMP-014. A ordem e as trocas de coleção são controladas aqui.</p>
+
+    <div class="field">
+        <label class="label" for="cmp014-largura">Largura da lista: @largura px</label>
+        <div class="control">
+            <input id="cmp014-largura" type="range" min="220" max="900" step="10"
+                   @bind="largura" @bind:event="oninput" />
+        </div>
+    </div>
+
+    <div class="buttons">
+        <button class="button is-light" type="button" @onclick="MostrarVazia">Vazia</button>
+        <button class="button is-light" type="button" @onclick="MostrarUnica">Uma memória</button>
+        <button class="button is-light" type="button" @onclick="MostrarMultiplas">Várias memórias</button>
+        <button class="button is-light" type="button" @onclick="AcrescentarLote" disabled="@loteAcrescentado">Acrescentar lote</button>
+        <button class="button is-light" type="button" @onclick="SubstituirRecorte">Substituir recorte</button>
+    </div>
+
+    <div style="width: @largura.ToString(System.Globalization.CultureInfo.InvariantCulture)px; max-width: 100%;">
+        <ListaMemoriasCategoria Itens="@itens" NomeAcessivel="Memórias demonstrativas da categoria" />
+    </div>
+
+    <p class="help mt-4" aria-live="polite">@descricao · @itens.Count memória(s).</p>
+</section>
+
+@code {
+    private static readonly ItemListaMemoriasCategoria[] Amostras =
+    [
+        new("memoria-01", "Uma lembrança breve.", 65),
+        new("memoria-02", "Um texto mais longo para conferir a prévia limitada em espaços estreitos.\nAinda há outras linhas que não precisam ser abertas pela lista.", null),
+        new("memoria-03", "Uma memória com Tom neutro.", 0),
+        new("memoria-04", "Última memória do lote adicional.", -40)
+    ];
+
+    private List<ItemListaMemoriasCategoria> itens = [.. Amostras.Take(3)];
+    private int largura = 640;
+    private bool loteAcrescentado;
+    private string descricao = "Coleção inicial na ordem recebida";
+
+    private void MostrarVazia()
+    {
+        itens = [];
+        loteAcrescentado = false;
+        descricao = "Coleção vazia";
+    }
+
+    private void MostrarUnica()
+    {
+        itens = [Amostras[0]];
+        loteAcrescentado = false;
+        descricao = "Uma memória";
+    }
+
+    private void MostrarMultiplas()
+    {
+        itens = [.. Amostras.Take(3)];
+        loteAcrescentado = false;
+        descricao = "Três memórias na ordem recebida";
+    }
+
+    private void AcrescentarLote()
+    {
+        if (loteAcrescentado) return;
+        itens = [.. itens, Amostras[3]];
+        loteAcrescentado = true;
+        descricao = "Lote acrescentado ao final";
+    }
+
+    private void SubstituirRecorte()
+    {
+        itens = [Amostras[2], Amostras[1]];
+        loteAcrescentado = false;
+        descricao = "Coleção substituída; ordem definida pelo chamador";
+    }
+}
