@@ -6,6 +6,7 @@ export function conectarJanelaTemporal(raiz, area, referenciaDotNet) {
     let sincronizacaoEmAndamento = false;
     let sincronizacaoPendente = null;
     let descartado = false;
+    let geracaoGesto = 0;
 
     const limitar = valor => Number.isFinite(valor) ? Math.max(0, Math.min(1, valor)) : 0;
     const arredondarIndice = posicao => Math.floor(posicao * (Math.max(2, Number(raiz.dataset.quantidadeDias) || 2) - 1) + 0.5);
@@ -153,11 +154,13 @@ export function conectarJanelaTemporal(raiz, area, referenciaDotNet) {
 
     const concluirMovimento = async atual => {
         if (movimento !== atual || !atual.finalizar || !atual.concluido) return;
+        const geracao = geracaoGesto;
         movimento = null;
         instanteAnterior = null;
         if (!atual.alterado) return;
         try {
             if (sincronizacaoPendente) await sincronizacaoPendente;
+            if (descartado || geracao !== geracaoGesto) return;
             await referenciaDotNet.invokeMethodAsync('ConcluirArraste', atual.posicoes.inicio, atual.posicoes.fim);
         } catch (erro) {
             if (!descartado) console.error('Falha ao concluir o arraste da janela temporal.', erro);
@@ -273,6 +276,7 @@ export function conectarJanelaTemporal(raiz, area, referenciaDotNet) {
             const posicaoVisual = obterPosicaoVisualAlca(alca);
             if (posicaoVisual !== null) deslocamento = posicaoVisual - medidas.posicao;
         }
+        geracaoGesto++;
         ponteiroAtivo = {
             id: evento.pointerId,
             tipo,
@@ -317,6 +321,7 @@ export function conectarJanelaTemporal(raiz, area, referenciaDotNet) {
 
     return {
         async sincronizarEstadoChamador() {
+            geracaoGesto++;
             const ativo = ponteiroAtivo;
             ponteiroAtivo = null;
             cancelarQuadro();
@@ -337,6 +342,7 @@ export function conectarJanelaTemporal(raiz, area, referenciaDotNet) {
         },
         async dispose() {
             descartado = true;
+            geracaoGesto++;
             cancelarQuadro();
             raiz.removeEventListener('pointerdown', aoIniciarPonteiro);
             raiz.removeEventListener('pointermove', atualizarAlvoPonteiro);
@@ -351,9 +357,6 @@ export function conectarJanelaTemporal(raiz, area, referenciaDotNet) {
                     ? 'janela-temporal__faixa--arrastando'
                     : 'janela-temporal__alca--arrastando');
                 try { if (ativo.alvo.hasPointerCapture(ativo.id)) ativo.alvo.releasePointerCapture(ativo.id); } catch { }
-            }
-            if (movimento?.alterado) {
-                await referenciaDotNet.invokeMethodAsync('ConcluirArraste', movimento.posicoes.inicio, movimento.posicoes.fim).catch(() => { });
             }
             movimento = null;
         }

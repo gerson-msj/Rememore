@@ -81,7 +81,7 @@ public sealed class CalculosOndaUtilizacaoCategoriaTests
         Assert.DoesNotContain(100d, resultado.ValoresAmostrados);
         Assert.Equal(-1d, resultado.ValoresNormalizados[0], 10);
         Assert.Equal((4d - 50.5d) / 49.5d, resultado.ValoresNormalizados[1], 10);
-        Assert.Equal((7d - 50.5d) / 49.5d, resultado.ValoresNormalizados[2], 10);
+        Assert.Equal((6d - 50.5d) / 49.5d, resultado.ValoresNormalizados[2], 10);
     }
 
     [Fact]

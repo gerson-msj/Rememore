@@ -147,7 +147,7 @@
     {
         if (primeiroRender)
         {
-            modulo = await JS.InvokeAsync<IJSObjectReference>("import", "./js/janelaTemporal.js?cmp008=4");
+            modulo = await JS.InvokeAsync<IJSObjectReference>("import", "./js/janelaTemporal.js?cmp008=5");
             referencia = DotNetObjectReference.Create(this);
             controlador = await modulo.InvokeAsync<IJSObjectReference>("conectarJanelaTemporal", raiz, area, referencia);
             modeloControlador = Modelo;
