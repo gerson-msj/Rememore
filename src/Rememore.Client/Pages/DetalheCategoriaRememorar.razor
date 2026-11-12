@@ -9,6 +9,7 @@
 @inject NavigationManager Navegacao
 @inject EstadoAutenticacaoProvider EstadoAutenticacao
 @inject SincronizadorProjecaoPanorama Sincronizador
+@inject CoordenadorConsultaMemoriasCategoria Coordenador
 @inject IJSRuntime JS
 @implements IAsyncDisposable
 
@@ -16,7 +17,9 @@
 
 @if (carregando)
 {
-    <main class="pagina-detalhe-categoria" aria-busy="true"></main>
+    <main class="pagina-detalhe-categoria" aria-busy="true">
+        <p class="rememorar-estado" role="status">Carregando...</p>
+    </main>
 }
 else if (categoriaAtual is not null && modeloTemporal is not null)
 {
@@ -25,26 +28,54 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
 
         <section class="detalhe-categoria-controles" aria-label="Período">
             <div class="detalhe-categoria-controles__conteudo">
-                <JanelaTemporal Modelo="@modeloTemporal" />
+                <JanelaTemporal Modelo="@modeloTemporal" TomPreciso="@tomPublicado" />
             </div>
         </section>
 
-        <section class="detalhe-categoria-graficos-area" aria-label="Sínteses da categoria">
-            <div class="columns is-mobile is-variable is-1 variacao-tom-comparacao">
-                <div class="column">
-                    <OndaUtilizacaoCategoria Serie="serieUtilizacao" Tom="3" />
+        @if (Coordenador.Publicado is not null)
+        {
+            <section class="detalhe-categoria-graficos-area" aria-label="Sínteses da categoria">
+                <div class="columns is-mobile is-variable is-1 variacao-tom-comparacao">
+                    <div class="column">
+                        <OndaUtilizacaoCategoria Serie="@serieUtilizacaoPublicada" Tom="@tomPublicado" />
+                    </div>
+                    <div class="column">
+                        <VariacaoTomCategoria Tons="@tonsPublicados" />
+                    </div>
                 </div>
-                <div class="column">
-                    <VariacaoTomCategoria Tons="tons" />
-                </div>
-            </div>
-        </section>
-
-        <div class="detalhe-categoria-conteudo">
-            <section class="detalhe-categoria-memorias" aria-label="Memórias da categoria">
-                <ListaMemoriasCategoria Itens="memorias" NomeAcessivel="@NomeAcessivelMemorias" />
             </section>
-        </div>
+
+            <div class="detalhe-categoria-conteudo">
+                @if (Coordenador.Falha is not null)
+                {
+                    <div class="notification is-danger is-light" role="alert" aria-atomic="true">
+                        <p>Não foi possível carregar as memórias. Tente novamente.</p>
+                        <button class="button is-link mt-3" type="button" @onclick="TentarNovamenteAsync"
+                                disabled="@Coordenador.Carregando">Tentar novamente</button>
+                    </div>
+                }
+                <section class="detalhe-categoria-memorias" aria-label="Memórias da categoria">
+                    <ListaMemoriasCategoria Itens="@memoriasPublicadas" NomeAcessivel="@NomeAcessivelMemorias" />
+                </section>
+            </div>
+        }
+        else
+        {
+            <div class="detalhe-categoria-conteudo">
+                @if (Coordenador.Falha is not null)
+                {
+                    <div class="notification is-danger is-light" role="alert" aria-atomic="true">
+                        <p>Não foi possível carregar as memórias. Tente novamente.</p>
+                        <button class="button is-link mt-3" type="button" @onclick="TentarNovamenteAsync"
+                                disabled="@Coordenador.Carregando">Tentar novamente</button>
+                    </div>
+                }
+                else
+                {
+                    <p class="rememorar-estado" role="status" aria-busy="@Coordenador.Carregando">Carregando...</p>
+                }
+            </div>
+        }
     </main>
 }
 
@@ -54,26 +85,36 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
     private IJSObjectReference? moduloEstado;
     private CategoriaPreservadaRemota? categoriaAtual;
     private ModeloJanelaTemporal? modeloTemporal;
+    private IReadOnlyList<BlocoDiaPanoramaRemoto> diasPreservados = [];
+    private IReadOnlyList<double> serieUtilizacaoPublicada = [];
+    private IReadOnlyList<double?> tonsPublicados = [];
+    private IReadOnlyList<ItemListaMemoriasCategoria> memoriasPublicadas = [];
+    private PublicacaoMemoriasCategoria? publicacaoMaterializada;
+    private IntervaloJanelaTemporal? intervaloSolicitado;
+    private double? tomPublicado;
     private bool carregando = true;
+    private bool inscritoModelo;
+    private bool inscritoCoordenador;
+    private long geracaoCarregamento;
     private string TituloPagina => categoriaAtual is null ? "Rememorar" : $"{categoriaAtual.Nome} — Rememorar";
     private string NomeAcessivelMemorias => categoriaAtual is null
         ? "Memórias da categoria"
         : $"Memórias da categoria {categoriaAtual.Nome}";
 
-    private readonly IReadOnlyList<double> serieUtilizacao = [1, 3, 2, 4];
-    private readonly IReadOnlyList<double?> tons = [-2, 1, 4, 3];
-    private readonly IReadOnlyList<ItemListaMemoriasCategoria> memorias =
-    [
-        new("demonstracao-1", "Passeio no parque.", 2),
-        new("demonstracao-2", "Conversamos durante a tarde e lembramos de momentos especiais.", 4),
-        new("demonstracao-3", "Uma lembrança mais longa para observar como o cartão apresenta e limita textos que ocupam várias linhas.", 3)
-    ];
-
     protected override async Task OnParametersSetAsync()
     {
+        var geracao = ++geracaoCarregamento;
+        DesinscreverEventos();
         carregando = true;
         categoriaAtual = null;
         modeloTemporal = null;
+        diasPreservados = [];
+        serieUtilizacaoPublicada = [];
+        tonsPublicados = [];
+        memoriasPublicadas = [];
+        publicacaoMaterializada = null;
+        intervaloSolicitado = null;
+        tomPublicado = null;
 
         try
         {
@@ -96,6 +137,7 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
             }
 
             var preparacao = await Sincronizador.PrepararAsync(identidadeConta);
+            if (geracao != geracaoCarregamento) return;
             if (!preparacao.Disponivel)
             {
                 NavegarAoPanoramaSeguro();
@@ -110,11 +152,12 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
                 return;
             }
 
-            var datas = preparacao.Dias
-                .OrderBy(dia => dia.Data, StringComparer.Ordinal)
+            diasPreservados = preparacao.Dias.OrderBy(dia => dia.Data, StringComparer.Ordinal).ToArray();
+            var datas = diasPreservados
                 .Select(dia => DateOnly.ParseExact(dia.Data, "yyyy-MM-dd", CultureInfo.InvariantCulture))
                 .ToArray();
-            if (datas.Length < 2 || !CriarModeloTemporal(datas, contexto!, out var modeloRestaurado))
+            if (datas.Length < 2 || !CriarModeloTemporal(datas, contexto!, out var modeloRestaurado)
+                || modeloRestaurado is null)
             {
                 categoriaAtual = null;
                 NavegarAoPanoramaSeguro();
@@ -122,6 +165,24 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
             }
 
             modeloTemporal = modeloRestaurado;
+            modeloTemporal.OperacaoConcluida += AoConcluirOperacaoTemporal;
+            inscritoModelo = true;
+            Coordenador.Atualizado += AoAtualizarConsulta;
+            inscritoCoordenador = true;
+
+            var intervaloInicial = modeloTemporal.Estado.IntervaloValidoAtual
+                ?? modeloTemporal.Estado.UltimoIntervaloValido;
+            if (intervaloInicial is null)
+            {
+                categoriaAtual = null;
+                NavegarAoPanoramaSeguro();
+                return;
+            }
+
+            intervaloSolicitado = intervaloInicial;
+            await Coordenador.AbrirAsync(identidadeConta, identidadeSessao, categoriaAtual.Identidade, intervaloInicial);
+            if (geracao != geracaoCarregamento) return;
+            MaterializarPublicacao();
         }
         catch (Exception ex) when (ex is JSException or InvalidOperationException or ArgumentException
             or FormatException or TaskCanceledException)
@@ -132,7 +193,8 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
         }
         finally
         {
-            carregando = false;
+            if (geracao == geracaoCarregamento)
+                carregando = false;
         }
     }
 
@@ -175,12 +237,96 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
         return true;
     }
 
+    private void AoConcluirOperacaoTemporal(ConclusaoOperacaoJanelaTemporal conclusao)
+    {
+        if (conclusao.Invalida || conclusao.IntervaloValido is not { } intervalo) return;
+        _ = InvokeAsync(() => ConfirmarIntervaloAsync(intervalo));
+    }
+
+    private async Task ConfirmarIntervaloAsync(IntervaloJanelaTemporal intervalo)
+    {
+        intervaloSolicitado = intervalo;
+        await Coordenador.ConfirmarIntervaloAsync(intervalo);
+    }
+
+    private async Task TentarNovamenteAsync()
+    {
+        if (intervaloSolicitado is { } intervalo)
+            await Coordenador.ConfirmarIntervaloAsync(intervalo);
+    }
+
+    private void AoAtualizarConsulta()
+    {
+        _ = InvokeAsync(() =>
+        {
+            MaterializarPublicacao();
+            StateHasChanged();
+        });
+    }
+
+    private void MaterializarPublicacao()
+    {
+        var publicado = Coordenador.Publicado;
+        if (ReferenceEquals(publicado, publicacaoMaterializada)) return;
+        publicacaoMaterializada = publicado;
+        if (publicado is null)
+        {
+            serieUtilizacaoPublicada = [];
+            tonsPublicados = [];
+            memoriasPublicadas = [];
+            tomPublicado = null;
+            return;
+        }
+
+        var diasDoRecorte = diasPreservados
+            .Select(dia => new
+            {
+                Data = DateOnly.ParseExact(dia.Data, "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                Associacoes = dia.Associacoes
+                    .Where(associacao => string.Equals(associacao.IdentidadeCategoria,
+                        publicado.IdentidadeCategoria, StringComparison.Ordinal))
+                    .ToArray()
+            })
+            .Where(dia => dia.Data >= publicado.Intervalo.DataInicio && dia.Data <= publicado.Intervalo.DataFim)
+            .ToArray();
+
+        serieUtilizacaoPublicada = diasDoRecorte
+            .Where(dia => dia.Associacoes.Length > 0)
+            .Select(dia => (double)dia.Associacoes.Length)
+            .ToArray();
+        tonsPublicados = diasDoRecorte
+            .SelectMany(dia => dia.Associacoes)
+            .Select(associacao => associacao.Tom is { } tom ? (double?)tom : null)
+            .ToArray();
+        var tonsDefinidos = tonsPublicados.Where(tom => tom.HasValue).Select(tom => tom!.Value).ToArray();
+        tomPublicado = tonsDefinidos.Length == 0 ? null : tonsDefinidos.Average();
+        memoriasPublicadas = publicado.Itens
+            .Select(item => new ItemListaMemoriasCategoria(item.Identidade, item.Conteudo, item.Tom))
+            .ToArray();
+    }
+
+    private void DesinscreverEventos()
+    {
+        if (inscritoModelo && modeloTemporal is not null)
+        {
+            modeloTemporal.OperacaoConcluida -= AoConcluirOperacaoTemporal;
+            inscritoModelo = false;
+        }
+        if (inscritoCoordenador)
+        {
+            Coordenador.Atualizado -= AoAtualizarConsulta;
+            inscritoCoordenador = false;
+        }
+    }
+
     private void VoltarAoPanorama() => Navegacao.NavigateTo("/rememorar");
 
     private void NavegarAoPanoramaSeguro() => Navegacao.NavigateTo("/rememorar", replace: true);
 
     public async ValueTask DisposeAsync()
     {
+        geracaoCarregamento++;
+        DesinscreverEventos();
         if (moduloEstado is not null)
             await moduloEstado.DisposeAsync();
     }
