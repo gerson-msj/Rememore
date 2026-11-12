@@ -1,4 +1,5 @@
 import { consultarEstadoPanorama, registrarAlteracaoPanorama } from "./contratoPanoramaFake.mjs";
+import { consultarEstadoMemoriasCategoria } from "./contratoMemoriasCategoriaFake.mjs";
 
 const bancoNome = "rememore.autoridade.fake";
 const bancoVersao = 1;
@@ -127,6 +128,13 @@ export async function preservar(captura) {
 export async function consultarPanorama(conta, revisaoConhecida) {
     if (typeof conta !== "string" || !conta.trim()) return { estado: 5 };
     return transacionar(conta, "readonly", estado => consultarEstadoPanorama(estado, revisaoConhecida));
+}
+
+export async function consultarMemoriasCategoria(conta, categoria, inicio, fim, cursor) {
+    if (typeof conta !== "string" || !conta.trim() || typeof categoria !== "string" || !categoria.trim())
+        return { estado: 3 };
+    return transacionar(conta, "readonly", estado =>
+        consultarEstadoMemoriasCategoria(estado, conta, categoria, inicio, fim, cursor));
 }
 
 export async function consultarCatalogo(conta, cursorConhecido) {

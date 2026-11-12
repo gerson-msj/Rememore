@@ -7,7 +7,7 @@ namespace Rememore.Client.Infraestrutura.Capturar;
 
 /// <summary>Autoridade remota simulada, durável no navegador e separada dos workspaces locais.</summary>
 public sealed class AutoridadeCapturaFakePersistente(IJSRuntime js) : IAutoridadeCapturaFake,
-    ICatalogoCategoriasRemoto, IProjecaoPanoramaRemota, IAsyncDisposable
+    ICatalogoCategoriasRemoto, IProjecaoPanoramaRemota, IConsultaMemoriasCategoriaRemota, IAsyncDisposable
 {
     private Task<IJSObjectReference>? modulo;
 
@@ -41,9 +41,19 @@ public sealed class AutoridadeCapturaFakePersistente(IJSRuntime js) : IAutoridad
         catch { return new(EstadoConsultaPanoramaRemota.Falha); }
     }
 
+    public async Task<RespostaMemoriasCategoria> ConsultarMemoriasCategoriaAsync(PedidoMemoriasCategoria pedido)
+    {
+        try
+        {
+            return await InvocarAsync<RespostaMemoriasCategoria>("consultarMemoriasCategoria",
+                pedido.IdentidadeConta, pedido.IdentidadeCategoria, pedido.DataInicio, pedido.DataFim, pedido.Cursor);
+        }
+        catch { return new(EstadoConsultaMemoriasCategoria.Falha); }
+    }
+
     private async Task<T> InvocarAsync<T>(string operacao, params object?[] argumentos)
     {
-        modulo ??= js.InvokeAsync<IJSObjectReference>("import", "./js/autoridadeCapturaFake.js").AsTask();
+        modulo ??= js.InvokeAsync<IJSObjectReference>("import", "./js/autoridadeCapturaFake.js?e3=1").AsTask();
         var referencia = await modulo;
         return await referencia.InvokeAsync<T>(operacao, argumentos);
     }

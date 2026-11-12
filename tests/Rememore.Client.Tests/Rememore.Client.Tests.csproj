@@ -27,6 +27,7 @@
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Categorias/CatalogoCategoriasRemoto.cs" Link="Infraestrutura/CatalogoCategoriasRemoto.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Categorias/CatalogoCategoriasPorConta.cs" Link="Infraestrutura/CatalogoCategoriasPorConta.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Rememorar/ContratosProjecaoPanorama.cs" Link="Infraestrutura/ContratosProjecaoPanorama.cs" />
+    <Compile Include="../../src/Rememore.Client/Infraestrutura/Rememorar/ContratosConsultaMemoriasCategoria.cs" Link="Infraestrutura/ContratosConsultaMemoriasCategoria.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Rememorar/CalculosPanorama.cs" Link="Infraestrutura/CalculosPanorama.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/Rememorar/OrdenacaoPanorama.cs" Link="Infraestrutura/OrdenacaoPanorama.cs" />
     <Compile Include="../../src/Rememore.Client/Infraestrutura/OrientacaoProgressiva/ContratosOrientacao.cs" Link="Infraestrutura/Orientacao/ContratosOrientacao.cs" />

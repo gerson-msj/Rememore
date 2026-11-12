@@ -45,6 +45,7 @@ builder.Services.AddScoped<IAutoridadeCapturaFake>(servicos => servicos.GetRequi
 builder.Services.AddScoped<IComposicaoCapturaRemota>(servicos => servicos.GetRequiredService<AutoridadeCapturaFakePersistente>());
 builder.Services.AddScoped<ICatalogoCategoriasRemoto>(servicos => servicos.GetRequiredService<AutoridadeCapturaFakePersistente>());
 builder.Services.AddScoped<IProjecaoPanoramaRemota>(servicos => servicos.GetRequiredService<AutoridadeCapturaFakePersistente>());
+builder.Services.AddScoped<IConsultaMemoriasCategoriaRemota>(servicos => servicos.GetRequiredService<AutoridadeCapturaFakePersistente>());
 builder.Services.AddScoped<CatalogoCategoriasPorConta>();
 builder.Services.AddScoped<SincronizadorProjecaoPanorama>();
 builder.Services.AddScoped<ConfiguracaoCapturarSimulada>();
