@@ -1,5 +1,5 @@
 export const nomeBanco = "rememore.trabalho.local.dotnet";
-export const versaoSchema = 4;
+export const versaoSchema = 5;
 
 // Migrações são sequenciais e executadas na transação de upgrade do navegador.
 // Próximas versões acrescentam entradas; não reescrevem a abertura nem apagam dados.
@@ -23,7 +23,8 @@ export const migracoes = [
         };
     },
     (banco) => banco.createObjectStore("catalogosCategorias", { keyPath: "identidadeConta" }),
-    (banco) => banco.createObjectStore("projecoesPanorama", { keyPath: "identidadeConta" })
+    (banco) => banco.createObjectStore("projecoesPanorama", { keyPath: "identidadeConta" }),
+    (banco) => banco.createObjectStore("consultasMemoriasCategoria", { keyPath: ["identidadeConta", "identidadeJornada"] })
 ];
 
 export function falha(etapa, erro) {

@@ -32,6 +32,7 @@ builder.Services.AddScoped<IDiagnosticoTrabalhoLocal>(servicos => servicos.GetRe
 builder.Services.AddScoped<ICapturasLocais>(servicos => servicos.GetRequiredService<TrabalhoLocalIndexedDb>());
 builder.Services.AddScoped<ICacheCatalogoCategoriasLocal>(servicos => servicos.GetRequiredService<TrabalhoLocalIndexedDb>());
 builder.Services.AddScoped<ICacheProjecaoPanoramaLocal>(servicos => servicos.GetRequiredService<TrabalhoLocalIndexedDb>());
+builder.Services.AddScoped<ICacheConsultaMemoriasCategoriaLocal>(servicos => servicos.GetRequiredService<TrabalhoLocalIndexedDb>());
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<IAutenticador, AutenticadorSimulado>();
 builder.Services.AddScoped<ICadastroPorConvite, CadastroPorConviteSimulado>();
@@ -48,6 +49,7 @@ builder.Services.AddScoped<IProjecaoPanoramaRemota>(servicos => servicos.GetRequ
 builder.Services.AddScoped<IConsultaMemoriasCategoriaRemota>(servicos => servicos.GetRequiredService<AutoridadeCapturaFakePersistente>());
 builder.Services.AddScoped<CatalogoCategoriasPorConta>();
 builder.Services.AddScoped<SincronizadorProjecaoPanorama>();
+builder.Services.AddScoped<CoordenadorConsultaMemoriasCategoria>();
 builder.Services.AddScoped<ConfiguracaoCapturarSimulada>();
 builder.Services.AddScoped<IConfiguracaoCapturar>(servicos => servicos.GetRequiredService<ConfiguracaoCapturarSimulada>());
 builder.Services.AddScoped<AberturaCaptura>();

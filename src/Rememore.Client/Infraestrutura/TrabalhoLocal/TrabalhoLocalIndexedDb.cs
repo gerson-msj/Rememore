@@ -5,7 +5,7 @@ using Rememore.Client.Infraestrutura.Rememorar;
 namespace Rememore.Client.Infraestrutura.TrabalhoLocal;
 
 public sealed class TrabalhoLocalIndexedDb(IJSRuntime js) : IDiagnosticoTrabalhoLocal, ICapturasLocais,
-    ICacheCatalogoCategoriasLocal, ICacheProjecaoPanoramaLocal, IAsyncDisposable
+    ICacheCatalogoCategoriasLocal, ICacheProjecaoPanoramaLocal, ICacheConsultaMemoriasCategoriaLocal, IAsyncDisposable
 {
     private Task<IJSObjectReference>? modulo;
     private bool descartado;
@@ -51,12 +51,18 @@ public sealed class TrabalhoLocalIndexedDb(IJSRuntime js) : IDiagnosticoTrabalho
         InvocarAsync<CacheProjecaoPanoramaLocal>("recuperarProjecaoPanorama", identidadeConta);
     public Task<ResultadoLocal<bool>> GravarProjecaoAsync(CacheProjecaoPanoramaLocal cache) =>
         InvocarAsync<bool>("gravarProjecaoPanorama", cache);
+    public Task<ResultadoLocal<CacheConsultaMemoriasCategoriaLocal>> RecuperarConsultaMemoriasCategoriaAsync(string identidadeConta, string identidadeJornada) =>
+        InvocarAsync<CacheConsultaMemoriasCategoriaLocal>("recuperarConsultaMemoriasCategoria", identidadeConta, identidadeJornada);
+    public Task<ResultadoLocal<bool>> GravarConsultaMemoriasCategoriaAsync(CacheConsultaMemoriasCategoriaLocal cache) =>
+        InvocarAsync<bool>("gravarConsultaMemoriasCategoria", cache);
+    public Task<ResultadoLocal<bool>> RemoverConsultaMemoriasCategoriaAsync(string identidadeConta, string identidadeJornada) =>
+        InvocarAsync<bool>("removerConsultaMemoriasCategoria", identidadeConta, identidadeJornada);
 
     private async Task<ResultadoLocal<T>> InvocarAsync<T>(string operacao, params object?[] argumentos)
     {
         try
         {
-            modulo ??= js.InvokeAsync<IJSObjectReference>("import", "./js/trabalhoLocal.js").AsTask();
+            modulo ??= js.InvokeAsync<IJSObjectReference>("import", "./js/trabalhoLocal.js?e4=1").AsTask();
             var referencia = await modulo;
             var resposta = await referencia.InvokeAsync<RespostaInterop<T>>(operacao, argumentos);
             var estado = resposta.Estado switch

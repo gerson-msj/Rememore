@@ -88,7 +88,7 @@ test("revisão atual não retransmite blocos e histórico vencido pede reconstru
     assert.equal(resposta.dias.length, 1);
 });
 
-test("migração v3 para v4 acrescenta a store e preserva dados locais existentes", async () => {
+test("migração v3 para v5 acrescenta as stores e preserva dados locais existentes", async () => {
     const caminhoBanco = new URL("../../src/Rememore.Client/wwwroot/js/bancoTrabalhoLocal.js", import.meta.url);
     const codigoBanco = await readFile(fileURLToPath(caminhoBanco), "utf8");
     const { abrirBanco } = await import(`data:text/javascript;base64,${Buffer.from(codigoBanco).toString("base64")}`);
@@ -112,11 +112,42 @@ test("migração v3 para v4 acrescenta a store e preserva dados locais existente
     } };
 
     const aberto = await abrirBanco();
-    assert.equal(aberto.version, 4);
+    assert.equal(aberto.version, 5);
     assert.equal(stores.get("capturas"), capturaStore);
     assert.equal(capturaStore.dado.memorias[0].conteudo, "preservada");
     assert.ok(stores.has("catalogosCategorias"));
     assert.ok(stores.has("projecoesPanorama"));
+    assert.ok(stores.has("consultasMemoriasCategoria"));
+    aberto.close();
+    delete globalThis.indexedDB;
+});
+
+test("migração v4 para v5 preserva projeção e acrescenta somente a consulta ativa", async () => {
+    const caminhoBanco = new URL("../../src/Rememore.Client/wwwroot/js/bancoTrabalhoLocal.js", import.meta.url);
+    const codigoBanco = await readFile(fileURLToPath(caminhoBanco), "utf8");
+    const { abrirBanco } = await import(`data:text/javascript;base64,${Buffer.from(codigoBanco).toString("base64")}`);
+    const projecao = { dado: { identidadeConta: "a", revisao: "4" } };
+    const stores = new Map([["capturas", {}], ["diagnostico", {}],
+        ["catalogosCategorias", {}], ["projecoesPanorama", projecao]]);
+    const banco = {
+        version: 4,
+        createObjectStore(nome) { const store = {}; stores.set(nome, store); return store; },
+        close() { }
+    };
+    globalThis.indexedDB = { open(_nome, versao) {
+        const request = { result: banco, transaction: {} };
+        queueMicrotask(() => {
+            if (versao > banco.version) request.onupgradeneeded({ oldVersion: banco.version });
+            banco.version = versao;
+            request.onsuccess();
+        });
+        return request;
+    } };
+    const aberto = await abrirBanco();
+    assert.equal(aberto.version, 5);
+    assert.equal(stores.get("projecoesPanorama"), projecao);
+    assert.equal(stores.get("projecoesPanorama").dado.revisao, "4");
+    assert.ok(stores.has("consultasMemoriasCategoria"));
     aberto.close();
     delete globalThis.indexedDB;
 });

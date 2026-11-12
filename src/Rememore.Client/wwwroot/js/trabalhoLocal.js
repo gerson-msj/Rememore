@@ -1,4 +1,4 @@
-import { executarNoBanco, transacionar, falha } from "./bancoTrabalhoLocal.js";
+import { executarNoBanco, transacionar, falha } from "./bancoTrabalhoLocal.js?e4=1";
 
 export function diagnosticar() {
     return executarNoBanco("diagnostico", (banco) => transacionar(banco, ["diagnostico"], "readwrite", "diagnostico", (transacao) => {
@@ -450,5 +450,46 @@ export function gravarProjecaoPanorama(cache) {
         transacionar(banco, ["projecoesPanorama"], "readwrite", "projecaoPanorama", transacao => {
             // Um único registro por conta publica os blocos e a revisão no mesmo commit.
             transacao.objectStore("projecoesPanorama").put(cache);
+        }));
+}
+
+function validarIdentidadeJornada(identidadeConta, identidadeJornada) {
+    validarConta(identidadeConta);
+    if (typeof identidadeJornada !== "string" || !identidadeJornada.trim())
+        throw new TypeError("Identidade de jornada obrigatoria.");
+}
+
+function validarCacheMemoriasCategoria(cache) {
+    validarIdentidadeJornada(cache.identidadeConta, cache.identidadeJornada);
+    if (typeof cache.identidadeCategoria !== "string" || !cache.identidadeCategoria.trim()
+        || typeof cache.dataInicio !== "string" || typeof cache.dataFim !== "string"
+        || !/^\d{4}-\d{2}-\d{2}$/.test(cache.dataInicio) || !/^\d{4}-\d{2}-\d{2}$/.test(cache.dataFim)
+        || cache.dataInicio > cache.dataFim || typeof cache.revisao !== "string"
+        || !/^\d+$/.test(cache.revisao) || !Array.isArray(cache.itens)
+        || typeof cache.temMais !== "boolean"
+        || cache.temMais !== (typeof cache.proximoCursor === "string" && !!cache.proximoCursor))
+        throw new TypeError("Cache de memorias da categoria invalido.");
+}
+
+export function recuperarConsultaMemoriasCategoria(identidadeConta, identidadeJornada) {
+    return operacaoValidada("consultaMemoriasCategoria", () => validarIdentidadeJornada(identidadeConta, identidadeJornada), banco =>
+        transacionar(banco, ["consultasMemoriasCategoria"], "readonly", "consultaMemoriasCategoria", (transacao, concluir) => {
+            const pedido = transacao.objectStore("consultasMemoriasCategoria").get([identidadeConta, identidadeJornada]);
+            pedido.onsuccess = () => concluir(pedido.result === undefined
+                ? { estado: "ausente" } : { estado: "sucesso", valor: pedido.result });
+        }));
+}
+
+export function gravarConsultaMemoriasCategoria(cache) {
+    return operacaoValidada("consultaMemoriasCategoria", () => validarCacheMemoriasCategoria(cache), banco =>
+        transacionar(banco, ["consultasMemoriasCategoria"], "readwrite", "consultaMemoriasCategoria", transacao => {
+            transacao.objectStore("consultasMemoriasCategoria").put(cache);
+        }));
+}
+
+export function removerConsultaMemoriasCategoria(identidadeConta, identidadeJornada) {
+    return operacaoValidada("consultaMemoriasCategoria", () => validarIdentidadeJornada(identidadeConta, identidadeJornada), banco =>
+        transacionar(banco, ["consultasMemoriasCategoria"], "readwrite", "consultaMemoriasCategoria", transacao => {
+            transacao.objectStore("consultasMemoriasCategoria").delete([identidadeConta, identidadeJornada]);
         }));
 }

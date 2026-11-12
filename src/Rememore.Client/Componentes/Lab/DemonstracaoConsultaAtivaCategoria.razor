@@ -1,0 +1,184 @@
+@using Rememore.Client.Infraestrutura.Rememorar
+@using Rememore.Client.Infraestrutura.TrabalhoLocal
+@inject ICacheConsultaMemoriasCategoriaLocal CacheLocal
+@implements IDisposable
+
+<section aria-labelledby="consulta-ativa-titulo">
+    <h3 class="title is-5" id="consulta-ativa-titulo">Consulta ativa da categoria</h3>
+    <p>Arraste a janela e solte para consultar. Gráfico e lista abaixo identificam sempre o mesmo período publicado.</p>
+    <div class="buttons">
+        <button class="button is-light" @onclick="() => Selecionar(0, 11)">Período completo</button>
+        <button class="button is-light" @onclick="() => Selecionar(0, 5)">Primeira metade</button>
+        <button class="button is-light" @onclick="() => Selecionar(6, 11)">Segunda metade</button>
+        <button class="button is-light" @onclick="FalharProxima">Falhar próxima consulta</button>
+        <button class="button is-light" @onclick="VencerProximoCursor">Vencer próximo cursor</button>
+        <button class="button is-light" @onclick="AlterarRevisao">Alterar revisão da autoridade</button>
+    </div>
+    <div class="field">
+        <label class="label" for="consulta-ativa-latencia">Latência simulada: @latencia ms</label>
+        <input id="consulta-ativa-latencia" type="range" min="0" max="2500" step="100" @bind="latencia" @bind:event="oninput" />
+    </div>
+    @if (modelo is not null)
+    {
+        <div style="max-width: 640px">
+            <JanelaTemporal Modelo="modelo" LarguraDisponivel="640" AoAtualizar="AtualizarJanela" />
+        </div>
+    }
+    <p class="help" aria-live="polite">@estado</p>
+    @if (coordenador?.Publicado is { } publicado)
+    {
+        <div class="box">
+            <p><strong>Síntese gráfica do recorte:</strong> @publicado.Intervalo.DataInicio.ToString("dd/MM/yyyy") a @publicado.Intervalo.DataFim.ToString("dd/MM/yyyy") · revisão @publicado.Revisao</p>
+            <p class="help">@publicado.Intervalo.QuantidadeDias dias · @(publicado.RestauradaDoCache ? "cache confirmado pela autoridade" : "resposta remota")</p>
+            <div role="img" aria-label="Faixa demonstrativa de @publicado.Intervalo.QuantidadeDias dias do recorte publicado"
+                 style="display:flex;align-items:flex-end;gap:4px;height:42px;max-width:640px;margin:0.75rem 0 1rem">
+                @foreach (var data in Dias.Where(data => data >= publicado.Intervalo.DataInicio && data <= publicado.Intervalo.DataFim))
+                {
+                    <span style="flex:1;height:@(14 + data.Day % 5 * 5)px;background:var(--bulma-info, #3e8ed0);border-radius:3px"></span>
+                }
+            </div>
+            <div style="max-width: 640px">
+                <ListaMemoriasCategoria Itens="@publicado.Itens.Select(item => new ItemListaMemoriasCategoria(item.Identidade, item.Conteudo, item.Tom)).ToArray()"
+                                         NomeAcessivel="Memórias da consulta ativa demonstrativa" />
+            </div>
+            <button class="button is-light mt-3" disabled="@(!publicado.TemMais || coordenador.Carregando)" @onclick="CarregarMais">Carregar mais</button>
+            <span class="ml-2">@publicado.Itens.Count memória(s); @(publicado.TemMais ? "há mais itens" : "fim da consulta")</span>
+        </div>
+    }
+    <div class="buttons mt-4">
+        <button class="button is-light" @onclick="Restaurar">Simular restauração nesta jornada</button>
+        <button class="button is-light" @onclick="Encerrar">Encerrar jornada demonstrativa</button>
+        <button class="button is-light" @onclick="NovaJornada">Iniciar outra jornada demonstrativa</button>
+    </div>
+    <p class="help">Recarregar a página também restaura a consulta da jornada atual após conferir a revisão. O encerramento remove somente o registro desta jornada.</p>
+</section>
+
+@code {
+    private static readonly DateOnly[] Dias = Enumerable.Range(0, 12).Select(indice => new DateOnly(2025, 1, 1).AddDays(indice)).ToArray();
+    private const string Conta = "lab-e4-conta";
+    private const string Categoria = "lab-e4-categoria";
+    private string jornada = "lab-e4-jornada-1";
+    private int numeroJornada = 1;
+    private int latencia { get => autoridade.Latencia; set => autoridade.Latencia = value; }
+    private string estado = "Preparando consulta.";
+    private ModeloJanelaTemporal? modelo;
+    private CoordenadorConsultaMemoriasCategoria? coordenador;
+    private readonly AutoridadeDemonstrativa autoridade = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var inicio = 0;
+        var fim = Dias.Length - 1;
+        try
+        {
+            var leitura = await CacheLocal.RecuperarConsultaMemoriasCategoriaAsync(Conta, jornada);
+            if (leitura.Sucesso && leitura.Valor is { } registro && registro.IdentidadeCategoria == Categoria)
+            {
+                var indiceInicio = Array.IndexOf(Dias, registro.DataInicio);
+                var indiceFim = Array.IndexOf(Dias, registro.DataFim);
+                if (indiceInicio >= 0 && indiceFim >= indiceInicio) { inicio = indiceInicio; fim = indiceFim; }
+            }
+        }
+        catch { }
+        CriarModelo(inicio, fim);
+        await CriarCoordenadorAsync();
+    }
+
+    private void CriarModelo(int inicio, int fim)
+    {
+        modelo = new ModeloJanelaTemporal(Dias, new EstadoJanelaTemporalRestaurado(
+            inicio / 11d, fim / 11d, null));
+        modelo.OperacaoConcluida += conclusao =>
+        {
+            if (conclusao.IntervaloValido is { } intervalo && !conclusao.Invalida)
+                _ = InvokeAsync(() => coordenador?.ConfirmarIntervaloAsync(intervalo) ?? Task.CompletedTask);
+        };
+    }
+
+    private async Task CriarCoordenadorAsync()
+    {
+        coordenador = new CoordenadorConsultaMemoriasCategoria(autoridade, CacheLocal);
+        coordenador.Atualizado += AtualizarEstado;
+        await coordenador.AbrirAsync(Conta, jornada, Categoria, modelo!.Estado.IntervaloValidoAtual!);
+    }
+
+    private void AtualizarEstado()
+    {
+        if (coordenador is null) return;
+        estado = coordenador.Falha is not null ? "Falha na consulta; o recorte anterior foi preservado. Tente novamente."
+            : coordenador.Carregando && coordenador.Publicado is null ? "Conferindo revisão antes de publicar a consulta."
+            : coordenador.Carregando ? "Consultando; o recorte publicado permanece visível."
+            : coordenador.CacheIndisponivel ? "Consulta pronta; cache local indisponível."
+            : "Consulta pronta.";
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void Selecionar(int inicio, int fim)
+    {
+        modelo!.AtualizarPosicoes(inicio / 11d, fim / 11d);
+        modelo.ConcluirOperacao();
+    }
+
+    private void FalharProxima() { autoridade.FalharProxima = true; estado = "A próxima consulta remota falhará."; }
+    private void VencerProximoCursor() { autoridade.VencerCursor = true; estado = "O próximo cursor será recusado."; }
+    private void AlterarRevisao() { autoridade.Revisao++; estado = $"Autoridade passou à revisão {autoridade.Revisao}."; }
+    private Task CarregarMais() => coordenador?.CarregarMaisAsync() ?? Task.CompletedTask;
+    private Task AtualizarJanela() => Task.CompletedTask;
+
+    private async Task Restaurar()
+    {
+        if (coordenador is not null)
+            await coordenador.AbrirAsync(Conta, jornada, Categoria, modelo!.Estado.IntervaloValidoAtual!);
+    }
+
+    private async Task Encerrar()
+    {
+        if (coordenador is not null) await coordenador.EncerrarJornadaAsync();
+        estado = "Jornada encerrada; registro local correspondente removido.";
+    }
+
+    private async Task NovaJornada()
+    {
+        numeroJornada++;
+        jornada = $"lab-e4-jornada-{numeroJornada}";
+        CriarModelo(0, 11);
+        if (coordenador is not null)
+            await coordenador.AbrirAsync(Conta, jornada, Categoria, modelo!.Estado.IntervaloValidoAtual!);
+    }
+
+    public void Dispose()
+    {
+        if (coordenador is not null) coordenador.Atualizado -= AtualizarEstado;
+    }
+
+    private sealed class AutoridadeDemonstrativa : IConsultaMemoriasCategoriaRemota
+    {
+        public int Revisao { get; set; } = 1;
+        public bool FalharProxima { get; set; }
+        public bool VencerCursor { get; set; }
+
+        public async Task<RespostaMemoriasCategoria> ConsultarMemoriasCategoriaAsync(PedidoMemoriasCategoria pedido)
+        {
+            var revisao = Revisao;
+            var falhar = FalharProxima;
+            var vencer = VencerCursor && pedido.Cursor is not null;
+            FalharProxima = false;
+            if (vencer) VencerCursor = false;
+            var espera = Latencia;
+            if (espera > 0) await Task.Delay(espera);
+            if (falhar) return new(EstadoConsultaMemoriasCategoria.Falha);
+            if (vencer) return new(EstadoConsultaMemoriasCategoria.ReinicioNecessario);
+            var datas = Dias.Where(data => data >= pedido.DataInicio && data <= pedido.DataFim).ToArray();
+            var indice = pedido.Cursor is null ? 0 : int.TryParse(pedido.Cursor, out var valor) ? valor : -1;
+            if (indice < 0 || indice > datas.Length) return new(EstadoConsultaMemoriasCategoria.ReinicioNecessario);
+            var itens = datas.Skip(indice).Take(3).Select((data, ordem) =>
+                new MemoriaCategoriaRemota($"lab-e4-{data:yyyyMMdd}", data, indice + ordem,
+                    $"Memória demonstrativa de {data:dd/MM/yyyy}.", (indice + ordem) % 2 == 0 ? 30 : -20)).ToArray();
+            var proximo = indice + itens.Length;
+            return new(EstadoConsultaMemoriasCategoria.Sucesso, revisao.ToString(), itens,
+                proximo < datas.Length, proximo < datas.Length ? proximo.ToString() : null);
+        }
+
+        public int Latencia { get; set; } = 700;
+    }
+}
