@@ -1,47 +1,64 @@
 @page "/rememorar/categoria/{categoria}"
 @attribute [Authorize]
+@using System.Globalization
+@using Microsoft.JSInterop
 @using Rememore.Client.Componentes
+@using Rememore.Client.Infraestrutura
+@using Rememore.Client.Infraestrutura.Categorias
+@using Rememore.Client.Infraestrutura.Rememorar
+@inject NavigationManager Navegacao
+@inject EstadoAutenticacaoProvider EstadoAutenticacao
+@inject SincronizadorProjecaoPanorama Sincronizador
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
-<PageTitle>Família — Rememorar</PageTitle>
+<PageTitle>@TituloPagina</PageTitle>
 
-<main class="pagina-detalhe-categoria">
-    <CabecalhoAmbiente Titulo="Família" MostrarRetorno />
+@if (carregando)
+{
+    <main class="pagina-detalhe-categoria" aria-busy="true"></main>
+}
+else if (categoriaAtual is not null && modeloTemporal is not null)
+{
+    <main class="pagina-detalhe-categoria">
+        <CabecalhoAmbiente Titulo="@categoriaAtual.Nome" MostrarRetorno AoRetornar="VoltarAoPanorama" />
 
-    <section class="detalhe-categoria-controles" aria-label="Período">
-        <div class="detalhe-categoria-controles__conteudo">
-            <JanelaTemporal Modelo="modeloTemporal" />
-        </div>
-    </section>
-
-    <section class="detalhe-categoria-graficos-area" aria-label="Sínteses da categoria">
-        <div class="columns is-mobile is-variable is-1 variacao-tom-comparacao">
-            <div class="column">
-                <OndaUtilizacaoCategoria Serie="serieUtilizacao" Tom="3" />
+        <section class="detalhe-categoria-controles" aria-label="Período">
+            <div class="detalhe-categoria-controles__conteudo">
+                <JanelaTemporal Modelo="@modeloTemporal" />
             </div>
-            <div class="column">
-                <VariacaoTomCategoria Tons="tons" />
-            </div>
-        </div>
-    </section>
-
-    <div class="detalhe-categoria-conteudo">
-        <section class="detalhe-categoria-memorias" aria-label="Memórias da categoria">
-            <ListaMemoriasCategoria Itens="memorias" NomeAcessivel="Memórias da categoria Família" />
         </section>
-    </div>
-</main>
+
+        <section class="detalhe-categoria-graficos-area" aria-label="Sínteses da categoria">
+            <div class="columns is-mobile is-variable is-1 variacao-tom-comparacao">
+                <div class="column">
+                    <OndaUtilizacaoCategoria Serie="serieUtilizacao" Tom="3" />
+                </div>
+                <div class="column">
+                    <VariacaoTomCategoria Tons="tons" />
+                </div>
+            </div>
+        </section>
+
+        <div class="detalhe-categoria-conteudo">
+            <section class="detalhe-categoria-memorias" aria-label="Memórias da categoria">
+                <ListaMemoriasCategoria Itens="memorias" NomeAcessivel="@NomeAcessivelMemorias" />
+            </section>
+        </div>
+    </main>
+}
 
 @code {
     [Parameter] public string categoria { get; set; } = string.Empty;
 
-    private readonly ModeloJanelaTemporal modeloTemporal = new(
-    [
-        new DateOnly(2026, 10, 1),
-        new DateOnly(2026, 10, 8),
-        new DateOnly(2026, 10, 15),
-        new DateOnly(2026, 10, 22),
-        new DateOnly(2026, 10, 29)
-    ]);
+    private IJSObjectReference? moduloEstado;
+    private CategoriaPreservadaRemota? categoriaAtual;
+    private ModeloJanelaTemporal? modeloTemporal;
+    private bool carregando = true;
+    private string TituloPagina => categoriaAtual is null ? "Rememorar" : $"{categoriaAtual.Nome} — Rememorar";
+    private string NomeAcessivelMemorias => categoriaAtual is null
+        ? "Memórias da categoria"
+        : $"Memórias da categoria {categoriaAtual.Nome}";
 
     private readonly IReadOnlyList<double> serieUtilizacao = [1, 3, 2, 4];
     private readonly IReadOnlyList<double?> tons = [-2, 1, 4, 3];
@@ -49,18 +66,127 @@
     [
         new("demonstracao-1", "Passeio no parque.", 2),
         new("demonstracao-2", "Conversamos durante a tarde e lembramos de momentos especiais.", 4),
-        new("demonstracao-3", "Uma lembrança mais longa para observar como o cartão apresenta e limita textos que ocupam várias linhas.", 3),
-        new("demonstracao-4", "Preparamos o almoço juntos e contamos histórias da família.", 5),
-        new("demonstracao-5", "Visitamos a feira da praça no sábado de manhã.", 1),
-        new("demonstracao-6", "As crianças brincaram no quintal enquanto conversávamos na varanda.", 4),
-        new("demonstracao-7", "Encontramos fotografias antigas e reconhecemos lugares que já não existem.", 2),
-        new("demonstracao-8", "Celebramos uma data especial com bolo, música e a presença de todos.", 5),
-        new("demonstracao-9", "Fizemos uma caminhada curta e paramos para observar o pôr do sol.", 3),
-        new("demonstracao-10", "A visita foi breve, mas deixou uma lembrança muito querida.", 4),
-        new("demonstracao-11", "Organizamos a sala e descobrimos objetos guardados há muitos anos.", 2),
-        new("demonstracao-12", "Tomamos café juntos e planejamos o próximo encontro.", 3),
-        new("demonstracao-13", "O passeio terminou com uma conversa tranquila no caminho de volta.", 1),
-        new("demonstracao-14", "Relembramos as festas de infância e rimos das histórias repetidas.", 5),
-        new("demonstracao-15", "Passamos a tarde em família, sem pressa e aproveitando a companhia.", 4)
+        new("demonstracao-3", "Uma lembrança mais longa para observar como o cartão apresenta e limita textos que ocupam várias linhas.", 3)
     ];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        carregando = true;
+        categoriaAtual = null;
+        modeloTemporal = null;
+
+        try
+        {
+            var identidadeConta = EstadoAutenticacao.IdentidadeConta;
+            var identidadeSessao = EstadoAutenticacao.IdentidadeSessao;
+            if (!EstadoAutenticacao.Autenticado || identidadeConta is null || identidadeSessao is null
+                || string.IsNullOrWhiteSpace(categoria))
+            {
+                NavegarAoPanoramaSeguro();
+                return;
+            }
+
+            moduloEstado ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/estadoRememorar.js");
+            var contexto = await moduloEstado.InvokeAsync<ContextoJornadaPanorama?>(
+                "lerContexto", identidadeConta, identidadeSessao);
+            if (!ContextoValido(contexto, identidadeConta, identidadeSessao, categoria))
+            {
+                NavegarAoPanoramaSeguro();
+                return;
+            }
+
+            var preparacao = await Sincronizador.PrepararAsync(identidadeConta);
+            if (!preparacao.Disponivel)
+            {
+                NavegarAoPanoramaSeguro();
+                return;
+            }
+
+            categoriaAtual = preparacao.Categorias.FirstOrDefault(item =>
+                item.Ativa && string.Equals(item.Identidade, categoria, StringComparison.Ordinal));
+            if (categoriaAtual is null)
+            {
+                NavegarAoPanoramaSeguro();
+                return;
+            }
+
+            var datas = preparacao.Dias
+                .OrderBy(dia => dia.Data, StringComparer.Ordinal)
+                .Select(dia => DateOnly.ParseExact(dia.Data, "yyyy-MM-dd", CultureInfo.InvariantCulture))
+                .ToArray();
+            if (datas.Length < 2 || !CriarModeloTemporal(datas, contexto!, out var modeloRestaurado))
+            {
+                categoriaAtual = null;
+                NavegarAoPanoramaSeguro();
+                return;
+            }
+
+            modeloTemporal = modeloRestaurado;
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException or ArgumentException
+            or FormatException or TaskCanceledException)
+        {
+            categoriaAtual = null;
+            modeloTemporal = null;
+            NavegarAoPanoramaSeguro();
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private static bool ContextoValido(
+        ContextoJornadaPanorama? contexto,
+        string identidadeConta,
+        string identidadeSessao,
+        string identidadeCategoria) =>
+        contexto is not null
+        && contexto.Versao == 1
+        && contexto.IdentidadeConta == identidadeConta
+        && contexto.IdentidadeSessao == identidadeSessao
+        && string.Equals(contexto.CategoriaSelecionada, identidadeCategoria, StringComparison.Ordinal)
+        && double.IsFinite(contexto.PosicaoInicio)
+        && double.IsFinite(contexto.PosicaoFim)
+        && contexto.PosicaoInicio is >= 0 and <= 1
+        && contexto.PosicaoFim is >= 0 and <= 1
+        && contexto.PosicaoInicio <= contexto.PosicaoFim;
+
+    private static bool CriarModeloTemporal(
+        IReadOnlyList<DateOnly> datas,
+        ContextoJornadaPanorama contexto,
+        out ModeloJanelaTemporal? modelo)
+    {
+        modelo = null;
+        if (!DateOnly.TryParseExact(contexto.UltimaDataInicio, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out var inicio)
+            || !DateOnly.TryParseExact(contexto.UltimaDataFim, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out var fim))
+            return false;
+
+        var indiceInicio = Array.IndexOf(datas.ToArray(), inicio);
+        var indiceFim = Array.IndexOf(datas.ToArray(), fim);
+        if (indiceInicio < 0 || indiceFim <= indiceInicio) return false;
+
+        var intervalo = new IntervaloJanelaTemporal(indiceInicio, indiceFim, inicio, fim);
+        var restauracao = new EstadoJanelaTemporalRestaurado(
+            contexto.PosicaoInicio, contexto.PosicaoFim, intervalo);
+        modelo = new ModeloJanelaTemporal(datas, restauracao);
+        return true;
+    }
+
+    private void VoltarAoPanorama() => Navegacao.NavigateTo("/rememorar");
+
+    private void NavegarAoPanoramaSeguro() => Navegacao.NavigateTo("/rememorar", replace: true);
+
+    public async ValueTask DisposeAsync()
+    {
+        if (moduloEstado is not null)
+            await moduloEstado.DisposeAsync();
+    }
+
+    private sealed record ContextoJornadaPanorama(
+        int Versao, string IdentidadeConta, string IdentidadeSessao, double PosicaoInicio, double PosicaoFim,
+        string? UltimaDataInicio, string? UltimaDataFim, string? CategoriaSelecionada,
+        double Rolagem = 0);
 }

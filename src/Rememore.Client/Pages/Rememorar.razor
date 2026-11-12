@@ -262,6 +262,12 @@
     {
         categoriaSelecionada = id;
         mensagemSelecao = $"Categoria selecionada: {id}";
+        var identidadeSessao = EstadoAutenticacao.IdentidadeSessao;
+        if (identidadeContaAtual is not null && identidadeSessao is not null)
+        {
+            await GarantirModuloEstadoAsync();
+            await moduloEstado!.InvokeVoidAsync("gravarRolagemImediata", identidadeContaAtual, identidadeSessao);
+        }
         await PersistirContextoAsync();
         Navegacao.NavigateTo($"/rememorar/categoria/{Uri.EscapeDataString(id)}");
     }

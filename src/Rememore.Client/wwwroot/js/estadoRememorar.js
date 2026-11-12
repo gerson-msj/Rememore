@@ -74,6 +74,12 @@ function atualizarRolagem(identidadeConta, identidadeSessao) {
     } catch { }
 }
 
+export function gravarRolagemImediata(identidadeConta, identidadeSessao) {
+    const controle = rolagens.get(identidadeConta);
+    if (controle) clearTimeout(controle.temporizador);
+    atualizarRolagem(identidadeConta, identidadeSessao);
+}
+
 export function conectarRolagem(identidadeConta, identidadeSessao) {
     desconectarRolagem(identidadeConta);
     let restaurandoAte = 0;
