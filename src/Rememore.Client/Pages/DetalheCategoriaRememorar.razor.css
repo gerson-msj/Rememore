@@ -1,0 +1,34 @@
+.pagina-detalhe-categoria {
+    min-height: 100vh;
+    padding-top: 4rem;
+}
+
+.detalhe-categoria-controles {
+    position: sticky;
+    top: 4rem;
+    z-index: 29;
+    background: var(--cor-main);
+}
+
+.detalhe-categoria-controles__conteudo,
+.detalhe-categoria-conteudo {
+    width: min(100%, 60rem);
+    margin-inline: auto;
+    padding-inline: clamp(1rem, 4vw, 2.5rem);
+}
+
+.detalhe-categoria-controles__conteudo {
+    padding-block: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--cor-border);
+}
+
+.detalhe-categoria-graficos-area {
+    width: min(100%, 60rem);
+    margin-inline: auto;
+    padding-inline: clamp(1rem, 4vw, 2.5rem);
+    padding-top: 1rem;
+}
+
+.detalhe-categoria-memorias {
+    padding-block: 0.5rem 2rem;
+}

@@ -263,6 +263,7 @@
         categoriaSelecionada = id;
         mensagemSelecao = $"Categoria selecionada: {id}";
         await PersistirContextoAsync();
+        Navegacao.NavigateTo($"/rememorar/categoria/{Uri.EscapeDataString(id)}");
     }
 
     private async Task VoltarPrincipal()

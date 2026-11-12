@@ -1,8 +1,8 @@
 .box.onda-utilizacao {
     --onda-utilizacao-cor: var(--tom-cor, var(--bulma-text-weak));
 
-    width: min(var(--onda-utilizacao-largura-maxima, 100%), calc(100% - 1.5rem));
-    margin-inline: auto;
+    width: 100%;
+    min-width: 0;
     padding: 0.25rem 0.75rem;
     color: var(--onda-utilizacao-cor);
     transition: color 180ms ease;
@@ -19,7 +19,7 @@
 
 .onda-utilizacao__area {
     position: relative;
-    height: 4.25rem;
+    height: 100%;
     container-type: inline-size;
 }
 
@@ -60,6 +60,5 @@
     .onda-utilizacao__titulo {
         left: 0.125rem;
         padding-inline: 0;
-        font-size: 0.7rem;
     }
 }

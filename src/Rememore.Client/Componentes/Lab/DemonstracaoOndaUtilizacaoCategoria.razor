@@ -4,10 +4,13 @@
 <div class="demonstracao-onda-utilizacao">
     <p class="help">A série, o Tom e o preenchimento atualizam a amostra; os diagnósticos ficam fora do gráfico.</p>
 
-    <OndaUtilizacaoCategoria Serie="@SerieAtual"
-                             LarguraMaximaPx="@LarguraMaximaPx"
-                             Tom="@TomFornecido"
-                             MostrarPreenchimento="@PreenchimentoVisivel" />
+    <div class="columns is-mobile cmp011-amostra" style="@EstiloLarguraAmostra">
+        <div class="column">
+            <OndaUtilizacaoCategoria Serie="@SerieAtual"
+                                     Tom="@TomFornecido"
+                                     MostrarPreenchimento="@PreenchimentoVisivel" />
+        </div>
+    </div>
 
     <div class="columns is-mobile">
         <div class="column">
@@ -107,6 +110,8 @@
     };
 
     private int LarguraMaximaPx { get; set; } = 560;
+
+    private string EstiloLarguraAmostra => $"width:100%;max-width:{LarguraMaximaPx.ToString(CultureInfo.InvariantCulture)}px;margin-inline:0";
 
     private string CenarioSelecionado { get; set; } = "quatro";
 

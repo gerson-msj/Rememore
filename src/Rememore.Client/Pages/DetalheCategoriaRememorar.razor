@@ -1,0 +1,66 @@
+@page "/rememorar/categoria/{categoria}"
+@attribute [Authorize]
+@using Rememore.Client.Componentes
+
+<PageTitle>Família — Rememorar</PageTitle>
+
+<main class="pagina-detalhe-categoria">
+    <CabecalhoAmbiente Titulo="Família" MostrarRetorno />
+
+    <section class="detalhe-categoria-controles" aria-label="Período">
+        <div class="detalhe-categoria-controles__conteudo">
+            <JanelaTemporal Modelo="modeloTemporal" />
+        </div>
+    </section>
+
+    <section class="detalhe-categoria-graficos-area" aria-label="Sínteses da categoria">
+        <div class="columns is-mobile is-variable is-1 variacao-tom-comparacao">
+            <div class="column">
+                <OndaUtilizacaoCategoria Serie="serieUtilizacao" Tom="3" />
+            </div>
+            <div class="column">
+                <VariacaoTomCategoria Tons="tons" />
+            </div>
+        </div>
+    </section>
+
+    <div class="detalhe-categoria-conteudo">
+        <section class="detalhe-categoria-memorias" aria-label="Memórias da categoria">
+            <ListaMemoriasCategoria Itens="memorias" NomeAcessivel="Memórias da categoria Família" />
+        </section>
+    </div>
+</main>
+
+@code {
+    [Parameter] public string categoria { get; set; } = string.Empty;
+
+    private readonly ModeloJanelaTemporal modeloTemporal = new(
+    [
+        new DateOnly(2026, 10, 1),
+        new DateOnly(2026, 10, 8),
+        new DateOnly(2026, 10, 15),
+        new DateOnly(2026, 10, 22),
+        new DateOnly(2026, 10, 29)
+    ]);
+
+    private readonly IReadOnlyList<double> serieUtilizacao = [1, 3, 2, 4];
+    private readonly IReadOnlyList<double?> tons = [-2, 1, 4, 3];
+    private readonly IReadOnlyList<ItemListaMemoriasCategoria> memorias =
+    [
+        new("demonstracao-1", "Passeio no parque.", 2),
+        new("demonstracao-2", "Conversamos durante a tarde e lembramos de momentos especiais.", 4),
+        new("demonstracao-3", "Uma lembrança mais longa para observar como o cartão apresenta e limita textos que ocupam várias linhas.", 3),
+        new("demonstracao-4", "Preparamos o almoço juntos e contamos histórias da família.", 5),
+        new("demonstracao-5", "Visitamos a feira da praça no sábado de manhã.", 1),
+        new("demonstracao-6", "As crianças brincaram no quintal enquanto conversávamos na varanda.", 4),
+        new("demonstracao-7", "Encontramos fotografias antigas e reconhecemos lugares que já não existem.", 2),
+        new("demonstracao-8", "Celebramos uma data especial com bolo, música e a presença de todos.", 5),
+        new("demonstracao-9", "Fizemos uma caminhada curta e paramos para observar o pôr do sol.", 3),
+        new("demonstracao-10", "A visita foi breve, mas deixou uma lembrança muito querida.", 4),
+        new("demonstracao-11", "Organizamos a sala e descobrimos objetos guardados há muitos anos.", 2),
+        new("demonstracao-12", "Tomamos café juntos e planejamos o próximo encontro.", 3),
+        new("demonstracao-13", "O passeio terminou com uma conversa tranquila no caminho de volta.", 1),
+        new("demonstracao-14", "Relembramos as festas de infância e rimos das histórias repetidas.", 5),
+        new("demonstracao-15", "Passamos a tarde em família, sem pressa e aproveitando a companhia.", 4)
+    ];
+}

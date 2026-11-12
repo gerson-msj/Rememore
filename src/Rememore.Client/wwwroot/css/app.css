@@ -1,6 +1,17 @@
 @import url("componentes.css");
 @import url("tom.css");
 
+/* Composição pública para o par de gráficos de categoria usado pelo CMP-012. */
+.columns.variacao-tom-comparacao {
+    width: 100%;
+    column-gap: 0;
+}
+
+.variacao-tom-comparacao > .column,
+.columns.is-mobile > .column {
+    min-width: 0;
+}
+
 /* Fonte principal do Bulma e do site. */
 :root {
     --bulma-family-primary: "Faculty Glyphic", sans-serif;

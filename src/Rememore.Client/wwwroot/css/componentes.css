@@ -27,6 +27,20 @@
     gap: 1rem;
 }
 
+.superficie-grafico-categoria {
+    box-sizing: border-box;
+    height: 4.75rem;
+    border: var(--bulma-control-border-width, 1px) solid var(--bulma-input-border-color, var(--bulma-border));
+    border-radius: var(--bulma-input-radius, var(--bulma-radius));
+    box-shadow: none;
+}
+
+.title.is-6.titulo-grafico-categoria {
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
 .superficie-controle-campo {
     /* Bulma define estes tokens apenas em .control/.input; declara-los aqui permite reusar a superficie fora de um campo. */
     --bulma-input-h: var(--bulma-scheme-h);

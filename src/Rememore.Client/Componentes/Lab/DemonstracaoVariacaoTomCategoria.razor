@@ -2,16 +2,14 @@
 @using Rememore.Client.Componentes
 
 <div>
-    <div class="columns is-mobile is-2 variacao-tom-comparacao" style="@EstiloLarguraComparacao">
+    <div class="columns is-mobile is-variable is-2 variacao-tom-comparacao" style="@EstiloLarguraComparacao">
         <div class="column">
             <OndaUtilizacaoCategoria Serie="@SerieComparacao"
-                                     LarguraMaximaPx="@LarguraMaximaPx"
                                      Tom="@TomComparacao"
                                      MostrarPreenchimento="true" />
         </div>
         <div class="column">
-            <VariacaoTomCategoria Tons="@TonsAtual"
-                                  LarguraMaximaPx="@LarguraMaximaPx" />
+            <VariacaoTomCategoria Tons="@TonsAtual" />
         </div>
     </div>
 
@@ -112,7 +110,7 @@
     private int LarguraMaximaPx { get; set; } = 560;
 
     private string EstiloLarguraComparacao =>
-        $"--variacao-tom-largura-comparacao:{LarguraMaximaPx.ToString(CultureInfo.InvariantCulture)}px";
+        $"width:min(100%, calc(var(--variacao-tom-largura-comparacao) * 2 + 0.5rem));--variacao-tom-largura-comparacao:{LarguraMaximaPx.ToString(CultureInfo.InvariantCulture)}px";
 
     private IReadOnlyList<double?> TonsAtual => Cenarios[CenarioSelecionado];
 

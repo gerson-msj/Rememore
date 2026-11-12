@@ -1,15 +1,14 @@
-@using System.Globalization
 @using Microsoft.JSInterop
 @using Rememore.Client.Infraestrutura
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 
-<div class="box onda-utilizacao @Aparencia.Classes @ClasseTom @ClassePreenchimento @ClasseEstado" style="@EstiloComponente">
+<div class="box onda-utilizacao superficie-grafico-categoria @Aparencia.Classes @ClasseTom @ClassePreenchimento @ClasseEstado" style="@EstiloComponente">
     <div class="onda-utilizacao__area"
          @ref="_area"
          role="img"
          aria-label="@DescricaoAcessivel">
-        <h3 class="title is-6 onda-utilizacao__titulo">Uso da categoria</h3>
+        <h3 class="title is-6 onda-utilizacao__titulo titulo-grafico-categoria">Uso da Categoria</h3>
         <svg class="onda-utilizacao__grafico"
              aria-hidden="true"
              focusable="false"
@@ -50,9 +49,6 @@
     public IReadOnlyList<double> Serie { get; set; } = Array.Empty<double>();
 
     [Parameter]
-    public int? LarguraMaximaPx { get; set; }
-
-    [Parameter]
     public double? Tom { get; set; }
 
     [Parameter]
@@ -72,15 +68,7 @@
         ? "Uso da categoria. Sem dados de ocorrência para representar uma tendência de utilização."
         : "Uso da categoria. Tendência geral de utilização ao longo das ocorrências registradas.";
 
-    private string EstiloLargura => LarguraMaximaPx is > 0
-        ? $"--onda-utilizacao-largura-maxima:{LarguraMaximaPx.Value.ToString(CultureInfo.InvariantCulture)}px"
-        : string.Empty;
-
-    private string EstiloComponente => string.IsNullOrWhiteSpace(Aparencia.Estilo)
-        ? EstiloLargura
-        : string.IsNullOrWhiteSpace(EstiloLargura)
-            ? Aparencia.Estilo
-            : $"{Aparencia.Estilo};{EstiloLargura}";
+    private string EstiloComponente => Aparencia.Estilo;
 
     protected override void OnParametersSet()
     {

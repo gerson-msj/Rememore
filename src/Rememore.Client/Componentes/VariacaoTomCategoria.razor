@@ -1,9 +1,9 @@
 @using System.Globalization
 @using Rememore.Client.Infraestrutura
 
-<div class="box variacao-tom-categoria mb-5 @ClasseEstado" style="@EstiloComponente">
+<div class="box variacao-tom-categoria superficie-grafico-categoria mb-5 @ClasseEstado">
     <div class="variacao-tom-categoria__area">
-        <h3 class="title is-6 variacao-tom-categoria__titulo">Variação do Tom</h3>
+        <h3 class="title is-6 variacao-tom-categoria__titulo titulo-grafico-categoria">Variação do Tom</h3>
         <div class="variacao-tom-categoria__trilha"
              role="img"
              aria-label="@DescricaoAcessivel">
@@ -25,9 +25,6 @@
     [Parameter, EditorRequired]
     public IReadOnlyList<double?> Tons { get; set; } = Array.Empty<double?>();
 
-    [Parameter]
-    public int? LarguraMaximaPx { get; set; }
-
     private AparenciaTomVisual AparenciaNegativa => AparenciaTom.ObterPrecisao(_resultado.MediaNegativa);
 
     private AparenciaTomVisual AparenciaPositiva => AparenciaTom.ObterPrecisao(_resultado.MediaPositiva);
@@ -37,10 +34,6 @@
     private string EstiloNegativo => CriarEstiloLado(_resultado.MediaNegativa, _resultado.LarguraNegativaPercentual);
 
     private string EstiloPositivo => CriarEstiloLado(_resultado.MediaPositiva, _resultado.LarguraPositivaPercentual);
-
-    private string EstiloComponente => LarguraMaximaPx is > 0
-        ? $"--variacao-tom-largura-maxima:{LarguraMaximaPx.Value.ToString(CultureInfo.InvariantCulture)}px"
-        : string.Empty;
 
     private string DescricaoAcessivel
     {
