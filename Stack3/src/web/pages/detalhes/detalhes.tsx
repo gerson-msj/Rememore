@@ -1,9 +1,11 @@
 import { useLayoutEffect } from "react";
 import { ActionButton } from "@web/components/action-button/action-button";
 import { useHeader } from "@web/components/Header/HeaderContext";
+import { useNavigate } from "react-router";
 
-export function Detalhes() {
+export default function Detalhes() {
     const { setTitulo } = useHeader();
+    const navigate = useNavigate();
 
     useLayoutEffect(() => {
         setTitulo("Detalhes");
@@ -13,7 +15,7 @@ export function Detalhes() {
         <main>
             <ActionButton
                 label="Voltar para Home"
-                   onClick={() => window.location.assign("/")}
+                onClick={() => navigate("/")}
             />
         </main>
     )

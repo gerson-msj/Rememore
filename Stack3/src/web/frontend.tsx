@@ -13,13 +13,16 @@ import { StrictMode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { App } from "@web/App";
 import { AppProviders } from "@web/providers/AppProviders";
+import { BrowserRouter } from "react-router";
 
 const elem = document.getElementById("root")!;
 const app = (
   <StrictMode>
-    <AppProviders>
-      <App />
-    </AppProviders>
+    <BrowserRouter>
+      <AppProviders>
+        <App />
+      </AppProviders>
+    </BrowserRouter>
   </StrictMode>
 );
 
