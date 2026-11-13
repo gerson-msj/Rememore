@@ -1,0 +1,32 @@
+@layer global, elementos, componentes, componente, paginas, pagina;
+
+
+@layer global {
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    :root {
+        --primary-color: #2563eb;
+    }
+
+    body {
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        background-color: gray;
+    }
+
+    div#root {
+        width: 100vw;
+        min-width: 320px;
+        max-width: 1280px;
+        height: 100vh;
+
+        background-color: whitesmoke;
+
+    }
+}
