@@ -3,8 +3,6 @@ import { consultarEstadoMemoriasCategoria } from "./contratoMemoriasCategoriaFak
 
 const bancoNome = "rememore.autoridade.fake";
 const bancoVersao = 1;
-const prefixoCenarioPoolE4 = "fixture-pool-e4-";
-const diasCenarioPoolE4 = 75;
 
 function abrirBanco() {
     return new Promise((resolve, reject) => {
@@ -137,92 +135,6 @@ export async function consultarMemoriasCategoria(conta, categoria, inicio, fim, 
         return { estado: 3 };
     return transacionar(conta, "readonly", estado =>
         consultarEstadoMemoriasCategoria(estado, conta, categoria, inicio, fim, cursor));
-}
-
-function obterStatusCenarioPoolE4(estado) {
-    const encontrados = Object.entries(estado.capturas ?? {})
-        .flatMap(([data, captura]) => (captura.memorias ?? [])
-            .filter(memoria => memoria.identidade?.startsWith(prefixoCenarioPoolE4))
-            .map(memoria => ({ data, memoria })));
-    const datas = encontrados.map(item => item.data).sort();
-    return {
-        quantidade: encontrados.length,
-        dataInicio: datas[0] ?? null,
-        dataFim: datas.at(-1) ?? null,
-        identidadeCategoria: encontrados.flatMap(item => item.memoria.categorias ?? [])
-            .find(categoria => categoria.nome === "O pool")?.identidade ?? null
-    };
-}
-
-function exigirDesenvolvimento() {
-    const hostLocal = location.hostname === "localhost" || location.hostname === "127.0.0.1";
-    if (!hostLocal) throw new Error("Cenário temporário disponível somente em desenvolvimento local.");
-}
-
-export async function statusCenarioPoolE4(conta) {
-    exigirDesenvolvimento();
-    return transacionar(conta, "readonly", estado => obterStatusCenarioPoolE4(estado));
-}
-
-export async function prepararCenarioPoolE4(conta) {
-    exigirDesenvolvimento();
-    const statusAtual = await statusCenarioPoolE4(conta);
-    if (statusAtual.quantidade > 0) return { ...statusAtual, jaExistia: true };
-
-    const capturas = await transacionar(conta, "readonly", estado => Object.keys(estado.capturas ?? {}));
-    const primeiraData = capturas.sort()[0] ?? new Date().toISOString().slice(0, 10);
-    const cursor = new Date(`${primeiraData}T00:00:00.000Z`);
-    cursor.setUTCDate(cursor.getUTCDate() - 1);
-    const datas = [];
-    let tentativas = 0;
-    while (datas.length < diasCenarioPoolE4 && tentativas < 3650) {
-        const data = cursor.toISOString().slice(0, 10);
-        if (capturas.includes(data)) datas.length = 0;
-        else datas.push(data);
-        cursor.setUTCDate(cursor.getUTCDate() - 1);
-        tentativas++;
-    }
-    if (datas.length !== diasCenarioPoolE4)
-        throw new Error("Não foi possível reservar datas vazias para o cenário de teste.");
-    datas.reverse();
-
-    const tonsNegativos = [-65, -50, -35, -20, -5, 0, null];
-    const tonsNeutros = [-8, -3, 0, null, 0, 4, 9];
-    const tonsPositivos = [5, 20, 35, 50, 65, 0, null];
-    for (let indice = 0; indice < datas.length; indice++) {
-        const tons = indice < 25 ? tonsNegativos : indice < 50 ? tonsNeutros : tonsPositivos;
-        const tom = tons[indice % tons.length];
-        const memoria = {
-            identidade: `${prefixoCenarioPoolE4}${String(indice + 1).padStart(3, "0")}`,
-            conteudo: `Memória de teste ${String(indice + 1).padStart(3, "0")}.`,
-            ordem: 0,
-            tom,
-            categorias: [{ identidade: "categoria-o-pool-e4", nome: "O pool", origem: 0 }]
-        };
-        const resultado = await preservar({ identidadeConta: conta, data: datas[indice], memorias: [memoria] });
-        if (resultado.estado !== 0) throw new Error(`Falha ao preparar a memória de teste ${indice + 1}.`);
-    }
-
-    return { ...(await statusCenarioPoolE4(conta)), jaExistia: false };
-}
-
-export async function removerCenarioPoolE4(conta) {
-    exigirDesenvolvimento();
-    const datas = await transacionar(conta, "readonly", estado => Object.entries(estado.capturas ?? {})
-        .filter(([, captura]) => (captura.memorias ?? []).some(memoria =>
-            memoria.identidade?.startsWith(prefixoCenarioPoolE4)))
-        .map(([data]) => data));
-    let removidas = 0;
-    for (const data of datas) {
-        const captura = await transacionar(conta, "readonly", estado => estado.capturas?.[data] ?? null);
-        if (!captura) continue;
-        const memoriasRestantes = (captura.memorias ?? []).filter(memoria =>
-            !memoria.identidade?.startsWith(prefixoCenarioPoolE4));
-        const resultado = await preservar({ identidadeConta: conta, data, memorias: memoriasRestantes });
-        if (resultado.estado !== 0) throw new Error(`Falha ao remover as memórias de teste de ${data}.`);
-        removidas += (captura.memorias ?? []).length - memoriasRestantes.length;
-    }
-    return { quantidade: removidas };
 }
 
 export async function consultarCatalogo(conta, cursorConhecido) {

@@ -105,16 +105,28 @@ public sealed class CoordenadorConsultaMemoriasCategoria(
     {
         var contaAtual = conta;
         var jornadaAtual = jornada;
-        geracao++;
-        conta = jornada = categoria = null;
-        intervaloPendente = null;
-        Publicado = null;
-        Carregando = false;
-        Falha = null;
-        Notificar();
         if (contaAtual is null || jornadaAtual is null) return;
+        await EncerrarJornadaAsync(contaAtual, jornadaAtual);
+    }
+
+    public async Task EncerrarJornadaAsync(string identidadeConta, string identidadeJornada)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(identidadeConta);
+        ArgumentException.ThrowIfNullOrWhiteSpace(identidadeJornada);
+        if (conta == identidadeConta && jornada == identidadeJornada)
+        {
+            geracao++;
+            conta = jornada = categoria = null;
+            intervaloPendente = null;
+            Publicado = null;
+            Carregando = false;
+            Falha = null;
+            CacheIndisponivel = false;
+            carregandoLote = false;
+            Notificar();
+        }
         await escritaCache.WaitAsync();
-        try { await cacheLocal.RemoverConsultaMemoriasCategoriaAsync(contaAtual, jornadaAtual); }
+        try { await cacheLocal.RemoverConsultaMemoriasCategoriaAsync(identidadeConta, identidadeJornada); }
         finally { escritaCache.Release(); }
     }
 

@@ -1,9 +1,13 @@
 @page "/principal"
 @attribute [Authorize]
+@using Rememore.Client.Infraestrutura.Rememorar
 @inject NavigationManager Navegacao
 @inject EstadoAutenticacaoProvider EstadoAutenticacao
 @inject ICapacidadesAmbiente ServicoCapacidades
 @inject IPendenciaCapturaLocal ServicoPendencia
+@inject IJSRuntime JS
+@inject CoordenadorConsultaMemoriasCategoria Coordenador
+@implements IAsyncDisposable
 
 <PageTitle>Rememore</PageTitle>
 
@@ -84,6 +88,7 @@
     private bool carregando = true;
     private bool popupAberto;
     private Jornada? jornadaSelecionada;
+    private IJSObjectReference? moduloEstado;
 
     private IReadOnlyList<Jornada> Jornadas =>
     [
@@ -128,10 +133,25 @@
         carregando = false;
     }
 
-    private void AcionarJornada(Jornada jornada)
+    private async Task AcionarJornada(Jornada jornada)
     {
         if (jornada.Disponivel)
         {
+            if (jornada.Rota == "rememorar" && EstadoAutenticacao.IdentidadeConta is { } identidadeConta
+                && EstadoAutenticacao.IdentidadeSessao is { } identidadeSessao)
+            {
+                try
+                {
+                    moduloEstado ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/estadoRememorar.js");
+                    var inicio = await moduloEstado.InvokeAsync<InicioNovaJornada>(
+                        "iniciarNovaJornadaPanorama", identidadeConta, identidadeSessao);
+                    if (!string.IsNullOrWhiteSpace(inicio.IdentidadeAnterior))
+                        await Coordenador.EncerrarJornadaAsync(identidadeConta, inicio.IdentidadeAnterior);
+                }
+                catch (Exception ex) when (ex is JSException or InvalidOperationException or TaskCanceledException)
+                {
+                }
+            }
             Navegacao.NavigateTo(jornada.Rota);
             return;
         }
@@ -146,6 +166,17 @@
         jornadaSelecionada = null;
         return Task.CompletedTask;
     }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (moduloEstado is not null)
+        {
+            try { await moduloEstado.DisposeAsync(); }
+            catch (Exception ex) when (ex is JSDisconnectedException or ObjectDisposedException) { }
+        }
+    }
+
+    private sealed record InicioNovaJornada(string? IdentidadeAnterior, string? IdentidadeNova);
 
     private sealed record Jornada(
         string Titulo,

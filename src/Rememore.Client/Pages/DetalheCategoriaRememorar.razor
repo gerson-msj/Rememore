@@ -24,7 +24,7 @@
 else if (categoriaAtual is not null && modeloTemporal is not null)
 {
     <main class="pagina-detalhe-categoria">
-        <CabecalhoAmbiente Titulo="@categoriaAtual.Nome" MostrarRetorno AoRetornar="VoltarAoPanorama" />
+        <CabecalhoAmbiente Titulo="@categoriaAtual.Nome" MostrarRetorno AoRetornar="VoltarAoPanoramaAsync" />
 
         <section class="detalhe-categoria-controles" aria-label="Período">
             <div class="detalhe-categoria-controles__conteudo">
@@ -74,7 +74,7 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
                     @if (Coordenador.Publicado is { TemMais: false } && lotesAdicionais > 0
                          && !Coordenador.Carregando && Coordenador.Falha is null)
                     {
-                        <p class="rememorar-estado detalhe-categoria-fim-lista" role="status">Não há mais memórias.</p>
+                        <p class="rememorar-estado detalhe-categoria-fim-lista" role="status">@TextoFimLista</p>
                     }
                 </section>
                 @if (mostrarVoltarAoTopo)
@@ -107,6 +107,7 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
 @code {
     [Parameter] public string categoria { get; set; } = string.Empty;
 
+    private const string TextoFimLista = "Não há mais memórias.";
     private IJSObjectReference? moduloEstado;
     private DotNetObjectReference<DetalheCategoriaRememorar>? referenciaDotNet;
     private CategoriaPreservadaRemota? categoriaAtual;
@@ -125,6 +126,15 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
     private bool rolagemDetalheConectada;
     private bool mostrarVoltarAoTopo;
     private bool disposed;
+    private bool restauracaoPontoLeituraPendente;
+    private bool restaurandoPontoLeitura;
+    private bool restauracaoIniciada;
+    private bool jornadaEncerrada;
+    private TaskCompletionSource? renderRestauracaoConcluido;
+    private string? identidadeContaAtual;
+    private string? identidadeSessaoAtual;
+    private string? identidadeJornadaAtual;
+    private double rolagemRestaurar;
     private int lotesAdicionais;
     private string? revisaoPublicadaAnterior;
     private IntervaloJanelaTemporal? intervaloPublicadoAnterior;
@@ -134,6 +144,11 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
     private string NomeAcessivelMemorias => categoriaAtual is null
         ? "Memórias da categoria"
         : $"Memórias da categoria {categoriaAtual.Nome}";
+
+    protected override void OnInitialized()
+    {
+        EstadoAutenticacao.AuthenticationStateChanged += AoMudarAutenticacao;
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -153,6 +168,14 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
         lotesAdicionais = 0;
         revisaoPublicadaAnterior = null;
         intervaloPublicadoAnterior = null;
+        restauracaoPontoLeituraPendente = false;
+        restaurandoPontoLeitura = false;
+        restauracaoIniciada = false;
+        identidadeContaAtual = null;
+        identidadeSessaoAtual = null;
+        identidadeJornadaAtual = null;
+        rolagemRestaurar = 0;
+        jornadaEncerrada = false;
 
         try
         {
@@ -164,15 +187,25 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
                 NavegarAoPanoramaSeguro();
                 return;
             }
+            identidadeContaAtual = identidadeConta;
+            identidadeSessaoAtual = identidadeSessao;
 
             moduloEstado ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/estadoRememorar.js");
-            var contexto = await moduloEstado.InvokeAsync<ContextoJornadaPanorama?>(
-                "lerContexto", identidadeConta, identidadeSessao);
-            if (!ContextoValido(contexto, identidadeConta, identidadeSessao, categoria))
+            var jornadaAba = await moduloEstado.InvokeAsync<JornadaAba?>(
+                "validarIdentidadeJornadaDaAba", identidadeConta, identidadeSessao);
+            if (jornadaAba is null)
             {
                 NavegarAoPanoramaSeguro();
                 return;
             }
+            var contextoPanorama = await moduloEstado.InvokeAsync<ContextoJornadaPanorama?>(
+                "lerContexto", identidadeConta, identidadeSessao);
+            if (!ContextoPanoramaValido(contextoPanorama, identidadeConta, identidadeSessao, categoria))
+            {
+                NavegarAoPanoramaSeguro();
+                return;
+            }
+            identidadeJornadaAtual = contextoPanorama!.IdentidadeJornada;
 
             var preparacao = await Sincronizador.PrepararAsync(identidadeConta);
             if (geracao != geracaoCarregamento) return;
@@ -194,7 +227,14 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
             var datas = diasPreservados
                 .Select(dia => DateOnly.ParseExact(dia.Data, "yyyy-MM-dd", CultureInfo.InvariantCulture))
                 .ToArray();
-            if (datas.Length < 2 || !CriarModeloTemporal(datas, contexto!, out var modeloRestaurado)
+            var contextoDetalhe = await moduloEstado.InvokeAsync<ContextoDetalheCategoria?>(
+                "lerContextoDetalhe", identidadeConta, identidadeSessao, identidadeJornadaAtual, categoria);
+            var detalheValidado = ContextoDetalheValido(contextoDetalhe, identidadeConta, identidadeSessao,
+                identidadeJornadaAtual, categoria, datas);
+            var contextoInicialDetalhe = detalheValidado
+                ? contextoDetalhe!
+                : CriarContextoDetalheDoPanorama(contextoPanorama!);
+            if (datas.Length < 2 || !CriarModeloTemporal(datas, contextoInicialDetalhe, out var modeloRestaurado)
                 || modeloRestaurado is null)
             {
                 categoriaAtual = null;
@@ -203,6 +243,8 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
             }
 
             modeloTemporal = modeloRestaurado;
+            restauracaoPontoLeituraPendente = detalheValidado;
+            rolagemRestaurar = detalheValidado ? contextoDetalhe!.Rolagem : 0;
             modeloTemporal.OperacaoConcluida += AoConcluirOperacaoTemporal;
             inscritoModelo = true;
             Coordenador.Atualizado += AoAtualizarConsulta;
@@ -218,9 +260,10 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
             }
 
             intervaloSolicitado = intervaloInicial;
-            await Coordenador.AbrirAsync(identidadeConta, identidadeSessao, categoriaAtual.Identidade, intervaloInicial);
+            await Coordenador.AbrirAsync(identidadeConta, identidadeJornadaAtual, categoriaAtual.Identidade, intervaloInicial);
             if (geracao != geracaoCarregamento) return;
             MaterializarPublicacao();
+            await PersistirContextoDetalheAsync(intervaloInicial);
         }
         catch (Exception ex) when (ex is JSException or InvalidOperationException or ArgumentException
             or FormatException or TaskCanceledException)
@@ -236,15 +279,16 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
         }
     }
 
-    private static bool ContextoValido(
+    private static bool ContextoPanoramaValido(
         ContextoJornadaPanorama? contexto,
         string identidadeConta,
         string identidadeSessao,
         string identidadeCategoria) =>
         contexto is not null
-        && contexto.Versao == 1
+        && contexto.Versao == 2
         && contexto.IdentidadeConta == identidadeConta
         && contexto.IdentidadeSessao == identidadeSessao
+        && !string.IsNullOrWhiteSpace(contexto.IdentidadeJornada)
         && string.Equals(contexto.CategoriaSelecionada, identidadeCategoria, StringComparison.Ordinal)
         && double.IsFinite(contexto.PosicaoInicio)
         && double.IsFinite(contexto.PosicaoFim)
@@ -252,9 +296,35 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
         && contexto.PosicaoFim is >= 0 and <= 1
         && contexto.PosicaoInicio <= contexto.PosicaoFim;
 
+    private static ContextoDetalheCategoria CriarContextoDetalheDoPanorama(ContextoJornadaPanorama contexto) =>
+        new(1, contexto.IdentidadeConta, contexto.IdentidadeSessao, contexto.IdentidadeJornada,
+            contexto.CategoriaSelecionada!, contexto.PosicaoInicio, contexto.PosicaoFim,
+            contexto.UltimaDataInicio, contexto.UltimaDataFim, 0);
+
+    private static bool ContextoDetalheValido(
+        ContextoDetalheCategoria? contexto,
+        string identidadeConta,
+        string identidadeSessao,
+        string identidadeJornada,
+        string identidadeCategoria,
+        IReadOnlyList<DateOnly> datas) =>
+        contexto is not null && contexto.Versao == 1
+        && contexto.IdentidadeConta == identidadeConta && contexto.IdentidadeSessao == identidadeSessao
+        && contexto.IdentidadeJornada == identidadeJornada
+        && contexto.IdentidadeCategoria == identidadeCategoria
+        && double.IsFinite(contexto.PosicaoInicio) && contexto.PosicaoInicio is >= 0 and <= 1
+        && double.IsFinite(contexto.PosicaoFim) && contexto.PosicaoFim is >= 0 and <= 1
+        && contexto.PosicaoInicio <= contexto.PosicaoFim
+        && double.IsFinite(contexto.Rolagem) && contexto.Rolagem >= 0
+        && DateOnly.TryParseExact(contexto.UltimaDataInicio, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+            DateTimeStyles.None, out var inicio)
+        && DateOnly.TryParseExact(contexto.UltimaDataFim, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+            DateTimeStyles.None, out var fim)
+        && Array.IndexOf(datas.ToArray(), inicio) >= 0 && Array.IndexOf(datas.ToArray(), fim) > Array.IndexOf(datas.ToArray(), inicio);
+
     private static bool CriarModeloTemporal(
         IReadOnlyList<DateOnly> datas,
-        ContextoJornadaPanorama contexto,
+        ContextoDetalheCategoria contexto,
         out ModeloJanelaTemporal? modelo)
     {
         modelo = null;
@@ -283,8 +353,24 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
 
     private async Task ConfirmarIntervaloAsync(IntervaloJanelaTemporal intervalo)
     {
+        var mudouRecorte = intervalo != Coordenador.Publicado?.Intervalo;
         intervaloSolicitado = intervalo;
+        if (mudouRecorte) rolagemRestaurar = 0;
         await Coordenador.ConfirmarIntervaloAsync(intervalo);
+        await PersistirContextoDetalheAsync(intervalo);
+    }
+
+    private async Task PersistirContextoDetalheAsync(IntervaloJanelaTemporal intervalo)
+    {
+        if (moduloEstado is null || identidadeContaAtual is null || identidadeSessaoAtual is null
+            || identidadeJornadaAtual is null || categoriaAtual is null || modeloTemporal is null) return;
+        var estado = modeloTemporal.Estado;
+        var contexto = new ContextoDetalheCategoria(1, identidadeContaAtual, identidadeSessaoAtual,
+            identidadeJornadaAtual, categoriaAtual.Identidade, estado.PosicaoInicio, estado.PosicaoFim,
+            intervalo.DataInicio.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            intervalo.DataFim.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), rolagemRestaurar);
+        await moduloEstado.InvokeVoidAsync("gravarContextoDetalhe", identidadeContaAtual,
+            identidadeSessaoAtual, identidadeJornadaAtual, contexto);
     }
 
     private async Task TentarNovamenteAsync()
@@ -322,17 +408,38 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
         try
         {
             if (moduloEstado is null) return;
+            if (renderRestauracaoConcluido is { } render && !Coordenador.Carregando)
+            {
+                renderRestauracaoConcluido = null;
+                render.TrySetResult();
+            }
             referenciaDotNet ??= DotNetObjectReference.Create(this);
             if (!rolagemDetalheConectada)
             {
-                await moduloEstado.InvokeVoidAsync("conectarRolagemDetalhe", referenciaDotNet);
+                if (identidadeContaAtual is null || identidadeSessaoAtual is null || identidadeJornadaAtual is null) return;
+                await moduloEstado.InvokeVoidAsync("conectarRolagemDetalhe", referenciaDotNet,
+                    identidadeContaAtual, identidadeSessaoAtual, identidadeJornadaAtual);
                 rolagemDetalheConectada = true;
+            }
+
+            if (restauracaoPontoLeituraPendente && !restauracaoIniciada
+                && !Coordenador.Carregando && Coordenador.Publicado is { } publicacaoConfirmada
+                && publicacaoConfirmada.Intervalo == intervaloSolicitado)
+            {
+                restauracaoIniciada = true;
+                restaurandoPontoLeitura = true;
+                restauracaoPontoLeituraPendente = false;
+                assinaturaObservador = string.Empty;
+                await moduloEstado.InvokeVoidAsync("suspenderMarcadorDetalheParaRestauracao");
+                _ = RestaurarPontoLeituraAsync(rolagemRestaurar);
+                return;
             }
 
             var publicado = Coordenador.Publicado;
             var podeAvancar = publicado is { TemMais: true, ProximoCursor: not null }
                 && publicado.Intervalo == intervaloSolicitado
-                && !Coordenador.Carregando && !carregandoMais && Coordenador.Falha is null;
+                && !Coordenador.Carregando && !carregandoMais && !restaurandoPontoLeitura
+                && Coordenador.Falha is null;
             var assinatura = podeAvancar
                 ? $"{publicado!.IdentidadeCategoria}:{publicado.Intervalo.DataInicio.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}:{publicado.Intervalo.DataFim.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}:{publicado.Revisao}:{publicado.Itens.Count}"
                 : string.Empty;
@@ -347,6 +454,46 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
         }
         catch (JSDisconnectedException) { }
         catch (ObjectDisposedException) { }
+    }
+
+    private async Task RestaurarPontoLeituraAsync(double posicao)
+    {
+        try
+        {
+            if (moduloEstado is null) return;
+            var dimensoes = await moduloEstado.InvokeAsync<DimensoesDocumentoDetalhe>("medirDocumentoDetalhe");
+            while (dimensoes.Altura < posicao + dimensoes.AlturaVisivel
+                && Coordenador.Publicado is { TemMais: true, ProximoCursor: not null } publicado
+                && publicado.Intervalo == intervaloSolicitado && Coordenador.Falha is null
+                && !disposed)
+            {
+                var render = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                renderRestauracaoConcluido = render;
+                await Coordenador.CarregarMaisAsync();
+                MaterializarPublicacao();
+                await InvokeAsync(StateHasChanged);
+                await render.Task;
+                if (Coordenador.Falha is not null) break;
+                dimensoes = await moduloEstado.InvokeAsync<DimensoesDocumentoDetalhe>("medirDocumentoDetalhe");
+            }
+
+            if (!disposed)
+            {
+                await moduloEstado.InvokeVoidAsync("restaurarRolagemDetalhe", posicao);
+                rolagemRestaurar = posicao;
+                await moduloEstado.InvokeVoidAsync("concluirRestauracaoDetalhe");
+            }
+        }
+        catch (Exception ex) when (ex is JSException or ObjectDisposedException or InvalidOperationException)
+        {
+            renderRestauracaoConcluido?.TrySetCanceled();
+            renderRestauracaoConcluido = null;
+        }
+        finally
+        {
+            restaurandoPontoLeitura = false;
+            if (!disposed) await InvokeAsync(StateHasChanged);
+        }
     }
 
     [JSInvokable]
@@ -364,6 +511,13 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
     {
         if (moduloEstado is not null)
             await moduloEstado.InvokeVoidAsync("rolarAoTopoDetalhe");
+    }
+
+    private async Task VoltarAoPanoramaAsync()
+    {
+        if (moduloEstado is not null)
+            await moduloEstado.InvokeVoidAsync("gravarRolagemDetalheImediata");
+        Navegacao.NavigateTo("/rememorar");
     }
 
     private void AoAtualizarConsulta()
@@ -447,7 +601,40 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
         }
     }
 
-    private void VoltarAoPanorama() => Navegacao.NavigateTo("/rememorar");
+    private void AoMudarAutenticacao(Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState> tarefaEstado)
+    {
+        _ = EncerrarJornadaSeContextoMudouAsync(tarefaEstado);
+    }
+
+    private async Task EncerrarJornadaSeContextoMudouAsync(
+        Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState> tarefaEstado)
+    {
+        try
+        {
+            var estado = await tarefaEstado;
+            var identidadeConta = estado.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (identidadeConta != identidadeContaAtual || estado.User.Identity?.IsAuthenticated != true
+                || EstadoAutenticacao.IdentidadeSessao != identidadeSessaoAtual)
+            {
+                await EncerrarJornadaAsync();
+                if (!disposed) Navegacao.NavigateTo("/");
+            }
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException or TaskCanceledException) { }
+    }
+
+    private async Task EncerrarJornadaAsync()
+    {
+        if (jornadaEncerrada || identidadeContaAtual is null || identidadeJornadaAtual is null) return;
+        jornadaEncerrada = true;
+        try { await Coordenador.EncerrarJornadaAsync(identidadeContaAtual, identidadeJornadaAtual); }
+        catch (Exception ex) when (ex is InvalidOperationException or TaskCanceledException) { }
+        if (moduloEstado is not null)
+        {
+            try { await moduloEstado.InvokeVoidAsync("removerContexto", identidadeContaAtual, identidadeJornadaAtual); }
+            catch (Exception ex) when (ex is JSException or InvalidOperationException or TaskCanceledException) { }
+        }
+    }
 
     private void NavegarAoPanoramaSeguro() => Navegacao.NavigateTo("/rememorar", replace: true);
 
@@ -455,6 +642,13 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
     {
         disposed = true;
         geracaoCarregamento++;
+        EstadoAutenticacao.AuthenticationStateChanged -= AoMudarAutenticacao;
+        renderRestauracaoConcluido?.TrySetCanceled();
+        renderRestauracaoConcluido = null;
+        if (!jornadaEncerrada && identidadeContaAtual is not null && identidadeJornadaAtual is not null
+            && (!EstadoAutenticacao.Autenticado || EstadoAutenticacao.IdentidadeConta != identidadeContaAtual
+                || EstadoAutenticacao.IdentidadeSessao != identidadeSessaoAtual))
+            await EncerrarJornadaAsync();
         DesinscreverEventos();
         if (moduloEstado is not null)
         {
@@ -467,7 +661,16 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
     }
 
     private sealed record ContextoJornadaPanorama(
-        int Versao, string IdentidadeConta, string IdentidadeSessao, double PosicaoInicio, double PosicaoFim,
-        string? UltimaDataInicio, string? UltimaDataFim, string? CategoriaSelecionada,
+        int Versao, string IdentidadeConta, string IdentidadeSessao, string IdentidadeJornada,
+        double PosicaoInicio, double PosicaoFim, string? UltimaDataInicio, string? UltimaDataFim,
+        string? CategoriaSelecionada,
         double Rolagem = 0);
+
+    private sealed record ContextoDetalheCategoria(
+        int Versao, string IdentidadeConta, string IdentidadeSessao, string IdentidadeJornada,
+        string IdentidadeCategoria, double PosicaoInicio, double PosicaoFim,
+        string? UltimaDataInicio, string? UltimaDataFim, double Rolagem);
+
+    private sealed record DimensoesDocumentoDetalhe(double Altura, double AlturaVisivel);
+    private sealed record JornadaAba(string IdentidadeJornada, bool Duplicada);
 }
