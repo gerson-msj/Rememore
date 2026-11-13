@@ -1,6 +1,12 @@
 const prefixoOrdenacao = "rememore.rememorar.ordenacao.v1:";
 const prefixoJornada = "rememore.rememorar.jornada.v1:";
 const rolagens = new Map();
+let observadorMarcadorDetalhe;
+let referenciaDetalhe;
+let listenerRolagemDetalhe;
+let estadoTopoDetalhe;
+let quadroDetalheAgendado = false;
+let solicitacaoMarcadorDetalhePendente = false;
 
 function chave(prefixo, identidadeConta) {
     if (typeof identidadeConta !== "string" || !identidadeConta.trim()) throw new TypeError("Conta invalida.");
@@ -114,4 +120,73 @@ export function desconectarRolagem(identidadeConta) {
     window.removeEventListener("scroll", estado.aoRolar);
     window.removeEventListener("pagehide", estado.aoSairPagina);
     rolagens.delete(identidadeConta);
+}
+
+function atualizarEstadoTopoDetalhe() {
+    quadroDetalheAgendado = false;
+    const visivel = window.scrollY > window.innerHeight;
+    if (visivel !== estadoTopoDetalhe) {
+        estadoTopoDetalhe = visivel;
+        void referenciaDetalhe?.invokeMethodAsync("AoAlterarVisibilidadeDoTopoAsync", visivel);
+    }
+    solicitarLoteSeMarcadorProximo();
+}
+
+function solicitarLoteSeMarcadorProximo() {
+    if (solicitacaoMarcadorDetalhePendente || !referenciaDetalhe) return;
+    const elemento = document.getElementById("detalhe-categoria-marcador");
+    if (!elemento) return;
+    const retangulo = elemento.getBoundingClientRect();
+    const margem = 320;
+    if (retangulo.top > window.innerHeight + margem || retangulo.bottom < -margem) return;
+    solicitacaoMarcadorDetalhePendente = true;
+    void referenciaDetalhe.invokeMethodAsync("AoMarcadorDeLoteVisivelAsync")
+        .catch(() => { solicitacaoMarcadorDetalhePendente = false; });
+}
+
+export function conectarRolagemDetalhe(dotNetRef) {
+    if (listenerRolagemDetalhe) window.removeEventListener("scroll", listenerRolagemDetalhe);
+    referenciaDetalhe = dotNetRef;
+    estadoTopoDetalhe = undefined;
+    listenerRolagemDetalhe = () => {
+        if (quadroDetalheAgendado) return;
+        quadroDetalheAgendado = true;
+        window.requestAnimationFrame(atualizarEstadoTopoDetalhe);
+    };
+    window.addEventListener("scroll", listenerRolagemDetalhe, { passive: true });
+    atualizarEstadoTopoDetalhe();
+}
+
+export function observarMarcadorDetalhe() {
+    desconectarMarcadorDetalhe();
+    solicitacaoMarcadorDetalhePendente = false;
+    const elemento = document.getElementById("detalhe-categoria-marcador");
+    if (!elemento) return;
+    if (typeof IntersectionObserver !== "undefined") {
+        observadorMarcadorDetalhe = new IntersectionObserver(entradas => {
+            if (entradas.some(entrada => entrada.isIntersecting)) solicitarLoteSeMarcadorProximo();
+        }, { rootMargin: "320px 0px" });
+        observadorMarcadorDetalhe.observe(elemento);
+    }
+    solicitarLoteSeMarcadorProximo();
+}
+
+export function desconectarMarcadorDetalhe() {
+    observadorMarcadorDetalhe?.disconnect();
+    observadorMarcadorDetalhe = undefined;
+}
+
+export function rolarAoTopoDetalhe() {
+    const movimentoReduzido = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: movimentoReduzido ? "auto" : "smooth" });
+}
+
+export function desconectarDetalhe() {
+    desconectarMarcadorDetalhe();
+    if (listenerRolagemDetalhe) window.removeEventListener("scroll", listenerRolagemDetalhe);
+    listenerRolagemDetalhe = undefined;
+    referenciaDetalhe = undefined;
+    estadoTopoDetalhe = undefined;
+    quadroDetalheAgendado = false;
+    solicitacaoMarcadorDetalhePendente = false;
 }

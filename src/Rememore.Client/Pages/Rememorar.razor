@@ -2,18 +2,50 @@
 @attribute [Authorize]
 @using System.Globalization
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
 @using Microsoft.JSInterop
 @using Rememore.Client.Infraestrutura.Rememorar
 @inject NavigationManager Navegacao
 @inject EstadoAutenticacaoProvider EstadoAutenticacao
 @inject SincronizadorProjecaoPanorama Sincronizador
 @inject IJSRuntime JS
+@inject IWebAssemblyHostEnvironment Ambiente
 @implements IAsyncDisposable
 
 <PageTitle>Rememorar</PageTitle>
 
 <main class="pagina-rememorar">
     <CabecalhoAmbiente Titulo="Rememorar" MostrarRetorno AoRetornar="VoltarPrincipal" />
+
+    @if (MostrarControlesCenarioE4)
+    {
+        <section class="container mt-4" aria-label="Cenário temporário de validação">
+            <div class="notification is-info is-light">
+                <p><strong>Cenário temporário da E4</strong></p>
+                @if (!string.IsNullOrWhiteSpace(mensagemCenarioE4))
+                {
+                    <p>@mensagemCenarioE4</p>
+                }
+                @if (carregandoCenarioE4)
+                {
+                    <p role="status" aria-busy="true">Preparando cenário…</p>
+                }
+                else if (statusCenarioE4 is { Quantidade: > 0 } status)
+                {
+                    <p>O pool: @status.Quantidade memórias, @status.DataInicio–@status.DataFim.</p>
+                    <button class="button is-danger is-light mt-2" type="button" @onclick="RemoverCenarioE4Async">
+                        Remover cenário de teste
+                    </button>
+                }
+                else
+                {
+                    <button class="button is-link is-light mt-2" type="button" @onclick="PrepararCenarioE4Async">
+                        Preparar 75 memórias de teste
+                    </button>
+                }
+            </div>
+        </section>
+    }
 
     @if (carregando)
     {
@@ -79,6 +111,7 @@
     private IntervaloJanelaTemporal? intervaloCalculado;
     private EstadoOrdenacaoPanorama ordenacao = EstadoOrdenacaoPanorama.Inicial;
     private IJSObjectReference? moduloEstado;
+    private IJSObjectReference? moduloCenarioE4;
     private IJSObjectReference? moduloLista;
     private IJSObjectReference? controladorLista;
     private ElementReference raizCategorias;
@@ -92,13 +125,21 @@
     private bool sessaoEncerrada;
     private bool carregando = true;
     private bool falhaPreparacao;
+    private bool carregandoCenarioE4;
     private string mensagemSelecao = string.Empty;
+    private string? mensagemCenarioE4;
+    private StatusCenarioPoolE4? statusCenarioE4;
     private IReadOnlyList<CategoriaPanoramaCalculada> categoriasOrdenadas => OrdenacaoPanorama.Ordenar(resultado.Categorias, ordenacao);
+    private bool MostrarControlesCenarioE4 => Ambiente.IsDevelopment()
+        && new Uri(Navegacao.Uri).Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries)
+            .Contains("testeE4=pool", StringComparer.Ordinal);
 
     protected override async Task OnInitializedAsync()
     {
         EstadoAutenticacao.AuthenticationStateChanged += AoMudarAutenticacao;
         await PrepararAsync();
+        if (MostrarControlesCenarioE4)
+            await AtualizarStatusCenarioE4Async();
     }
 
     protected override async Task OnAfterRenderAsync(bool primeiroRender)
@@ -201,6 +242,69 @@
         {
             carregando = false;
         }
+    }
+
+    private async Task AtualizarStatusCenarioE4Async()
+    {
+        try
+        {
+            await GarantirModuloCenarioE4Async();
+            if (EstadoAutenticacao.IdentidadeConta is { } identidadeConta)
+                statusCenarioE4 = await moduloCenarioE4!.InvokeAsync<StatusCenarioPoolE4>("statusCenarioPoolE4", identidadeConta);
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException or TaskCanceledException)
+        {
+            mensagemCenarioE4 = "Não foi possível consultar o estado do cenário local.";
+        }
+    }
+
+    private async Task PrepararCenarioE4Async()
+    {
+        if (carregandoCenarioE4 || EstadoAutenticacao.IdentidadeConta is not { } identidadeConta) return;
+        carregandoCenarioE4 = true;
+        mensagemCenarioE4 = null;
+        StateHasChanged();
+        try
+        {
+            await GarantirModuloCenarioE4Async();
+            statusCenarioE4 = await moduloCenarioE4!.InvokeAsync<StatusCenarioPoolE4>("prepararCenarioPoolE4", identidadeConta);
+            await PrepararAsync();
+            await AtualizarStatusCenarioE4Async();
+            mensagemCenarioE4 = "Cenário pronto. Abra O pool para testar o detalhe.";
+            Navegacao.NavigateTo("/rememorar", replace: true);
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException or TaskCanceledException)
+        {
+            mensagemCenarioE4 = "Não foi possível preparar o cenário temporário.";
+        }
+        finally { carregandoCenarioE4 = false; }
+    }
+
+    private async Task RemoverCenarioE4Async()
+    {
+        if (carregandoCenarioE4 || EstadoAutenticacao.IdentidadeConta is not { } identidadeConta) return;
+        carregandoCenarioE4 = true;
+        mensagemCenarioE4 = null;
+        StateHasChanged();
+        try
+        {
+            await GarantirModuloCenarioE4Async();
+            var resultado = await moduloCenarioE4!.InvokeAsync<ResultadoRemocaoCenarioE4>("removerCenarioPoolE4", identidadeConta);
+            await PrepararAsync();
+            statusCenarioE4 = await moduloCenarioE4!.InvokeAsync<StatusCenarioPoolE4>("statusCenarioPoolE4", identidadeConta);
+            mensagemCenarioE4 = $"Cenário removido: {resultado.Quantidade} memórias de teste.";
+            Navegacao.NavigateTo("/rememorar", replace: true);
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException or TaskCanceledException)
+        {
+            mensagemCenarioE4 = "Não foi possível remover o cenário temporário.";
+        }
+        finally { carregandoCenarioE4 = false; }
+    }
+
+    private async Task GarantirModuloCenarioE4Async()
+    {
+        moduloCenarioE4 ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/autoridadeCapturaFake.js?e3=1");
     }
 
     private async Task AtualizarPanoramaAsync()
@@ -365,10 +469,20 @@
             }
             await moduloEstado.DisposeAsync();
         }
+        if (moduloCenarioE4 is not null)
+        {
+            try { await moduloCenarioE4.DisposeAsync(); }
+            catch (Exception ex) when (ex is JSDisconnectedException or ObjectDisposedException) { }
+        }
     }
 
     private sealed record ContextoJornadaPanorama(
         int Versao, string IdentidadeConta, string IdentidadeSessao, double PosicaoInicio, double PosicaoFim,
         string? UltimaDataInicio, string? UltimaDataFim, string? CategoriaSelecionada,
         double Rolagem = 0);
+
+    private sealed record StatusCenarioPoolE4(
+        int Quantidade, string? DataInicio, string? DataFim, string? IdentidadeCategoria, bool JaExistia = false);
+
+    private sealed record ResultadoRemocaoCenarioE4(int Quantidade);
 }

@@ -30,5 +30,26 @@
 }
 
 .detalhe-categoria-memorias {
-    padding-block: 0.5rem 2rem;
+    padding-block: 0.5rem 5rem;
+}
+
+.detalhe-categoria-marcador {
+    min-height: 1px;
+}
+
+.detalhe-categoria-carregando {
+    margin-block: 0.75rem;
+    color: var(--cor-texto-secundario);
+    font-size: 0.9rem;
+}
+
+.detalhe-categoria-fim-lista {
+    margin-block-start: 1.25rem;
+}
+
+.detalhe-categoria-voltar-topo {
+    position: fixed;
+    right: clamp(1rem, 4vw, 2.5rem);
+    bottom: 1rem;
+    z-index: 31;
 }

@@ -46,17 +46,42 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
             </section>
 
             <div class="detalhe-categoria-conteudo">
+                @if (Coordenador.CacheIndisponivel)
+                {
+                    <div class="notification is-warning is-light" role="status">
+                        Não foi possível atualizar o cache local. As memórias recebidas continuam disponíveis.
+                    </div>
+                }
                 @if (Coordenador.Falha is not null)
                 {
                     <div class="notification is-danger is-light" role="alert" aria-atomic="true">
                         <p>Não foi possível carregar as memórias. Tente novamente.</p>
                         <button class="button is-link mt-3" type="button" @onclick="TentarNovamenteAsync"
-                                disabled="@Coordenador.Carregando">Tentar novamente</button>
+                                disabled="@(Coordenador.Carregando || carregandoMais)">Tentar novamente</button>
                     </div>
+                }
+                @if (Coordenador.Carregando && intervaloSolicitado != Coordenador.Publicado?.Intervalo)
+                {
+                    <p class="rememorar-estado detalhe-categoria-carregando" role="status" aria-busy="true">Carregando...</p>
                 }
                 <section class="detalhe-categoria-memorias" aria-label="Memórias da categoria">
                     <ListaMemoriasCategoria Itens="@memoriasPublicadas" NomeAcessivel="@NomeAcessivelMemorias" />
+                    <div id="detalhe-categoria-marcador" class="detalhe-categoria-marcador" aria-hidden="true"></div>
+                    @if (Coordenador.Carregando && intervaloSolicitado == Coordenador.Publicado?.Intervalo)
+                    {
+                        <p class="rememorar-estado detalhe-categoria-carregando" role="status" aria-busy="true">Carregando...</p>
+                    }
+                    @if (Coordenador.Publicado is { TemMais: false } && lotesAdicionais > 0
+                         && !Coordenador.Carregando && Coordenador.Falha is null)
+                    {
+                        <p class="rememorar-estado detalhe-categoria-fim-lista" role="status">Não há mais memórias.</p>
+                    }
                 </section>
+                @if (mostrarVoltarAoTopo)
+                {
+                    <button class="button is-link is-light detalhe-categoria-voltar-topo" type="button"
+                            @onclick="VoltarAoTopoAsync">Voltar ao topo</button>
+                }
             </div>
         }
         else
@@ -83,6 +108,7 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
     [Parameter] public string categoria { get; set; } = string.Empty;
 
     private IJSObjectReference? moduloEstado;
+    private DotNetObjectReference<DetalheCategoriaRememorar>? referenciaDotNet;
     private CategoriaPreservadaRemota? categoriaAtual;
     private ModeloJanelaTemporal? modeloTemporal;
     private IReadOnlyList<BlocoDiaPanoramaRemoto> diasPreservados = [];
@@ -95,6 +121,14 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
     private bool carregando = true;
     private bool inscritoModelo;
     private bool inscritoCoordenador;
+    private bool carregandoMais;
+    private bool rolagemDetalheConectada;
+    private bool mostrarVoltarAoTopo;
+    private bool disposed;
+    private int lotesAdicionais;
+    private string? revisaoPublicadaAnterior;
+    private IntervaloJanelaTemporal? intervaloPublicadoAnterior;
+    private string? assinaturaObservador;
     private long geracaoCarregamento;
     private string TituloPagina => categoriaAtual is null ? "Rememorar" : $"{categoriaAtual.Nome} — Rememorar";
     private string NomeAcessivelMemorias => categoriaAtual is null
@@ -104,6 +138,7 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
     protected override async Task OnParametersSetAsync()
     {
         var geracao = ++geracaoCarregamento;
+        disposed = false;
         DesinscreverEventos();
         carregando = true;
         categoriaAtual = null;
@@ -115,6 +150,9 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
         publicacaoMaterializada = null;
         intervaloSolicitado = null;
         tomPublicado = null;
+        lotesAdicionais = 0;
+        revisaoPublicadaAnterior = null;
+        intervaloPublicadoAnterior = null;
 
         try
         {
@@ -251,8 +289,81 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
 
     private async Task TentarNovamenteAsync()
     {
+        if (Coordenador.Falha == "consultaLote")
+        {
+            await CarregarMaisAsync();
+            return;
+        }
+
         if (intervaloSolicitado is { } intervalo)
             await Coordenador.ConfirmarIntervaloAsync(intervalo);
+    }
+
+    private async Task CarregarMaisAsync()
+    {
+        var publicado = Coordenador.Publicado;
+        if (disposed || carregandoMais || Coordenador.Carregando || Coordenador.Falha is not null
+            || publicado is null || !publicado.TemMais || publicado.ProximoCursor is null
+            || publicado.Intervalo != intervaloSolicitado)
+            return;
+
+        carregandoMais = true;
+        try { await Coordenador.CarregarMaisAsync(); }
+        finally
+        {
+            carregandoMais = false;
+            if (!disposed) await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (disposed) return;
+        try
+        {
+            if (moduloEstado is null) return;
+            referenciaDotNet ??= DotNetObjectReference.Create(this);
+            if (!rolagemDetalheConectada)
+            {
+                await moduloEstado.InvokeVoidAsync("conectarRolagemDetalhe", referenciaDotNet);
+                rolagemDetalheConectada = true;
+            }
+
+            var publicado = Coordenador.Publicado;
+            var podeAvancar = publicado is { TemMais: true, ProximoCursor: not null }
+                && publicado.Intervalo == intervaloSolicitado
+                && !Coordenador.Carregando && !carregandoMais && Coordenador.Falha is null;
+            var assinatura = podeAvancar
+                ? $"{publicado!.IdentidadeCategoria}:{publicado.Intervalo.DataInicio.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}:{publicado.Intervalo.DataFim.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}:{publicado.Revisao}:{publicado.Itens.Count}"
+                : string.Empty;
+            if (assinatura != assinaturaObservador)
+            {
+                assinaturaObservador = assinatura;
+                if (podeAvancar)
+                    await moduloEstado.InvokeVoidAsync("observarMarcadorDetalhe");
+                else
+                    await moduloEstado.InvokeVoidAsync("desconectarMarcadorDetalhe");
+            }
+        }
+        catch (JSDisconnectedException) { }
+        catch (ObjectDisposedException) { }
+    }
+
+    [JSInvokable]
+    public Task AoMarcadorDeLoteVisivelAsync() => CarregarMaisAsync();
+
+    [JSInvokable]
+    public Task AoAlterarVisibilidadeDoTopoAsync(bool visivel) => InvokeAsync(() =>
+    {
+        if (mostrarVoltarAoTopo == visivel) return;
+        mostrarVoltarAoTopo = visivel;
+        StateHasChanged();
+    });
+
+    private async Task VoltarAoTopoAsync()
+    {
+        if (moduloEstado is not null)
+            await moduloEstado.InvokeVoidAsync("rolarAoTopoDetalhe");
     }
 
     private void AoAtualizarConsulta()
@@ -268,6 +379,23 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
     {
         var publicado = Coordenador.Publicado;
         if (ReferenceEquals(publicado, publicacaoMaterializada)) return;
+        if (publicado is not null)
+        {
+            var mesmaConsulta = intervaloPublicadoAnterior == publicado.Intervalo
+                && revisaoPublicadaAnterior == publicado.Revisao;
+            if (mesmaConsulta)
+                lotesAdicionais++;
+            else if (!mesmaConsulta)
+                lotesAdicionais = 0;
+            revisaoPublicadaAnterior = publicado.Revisao;
+            intervaloPublicadoAnterior = publicado.Intervalo;
+        }
+        else
+        {
+            lotesAdicionais = 0;
+            revisaoPublicadaAnterior = null;
+            intervaloPublicadoAnterior = null;
+        }
         publicacaoMaterializada = publicado;
         if (publicado is null)
         {
@@ -325,8 +453,15 @@ else if (categoriaAtual is not null && modeloTemporal is not null)
 
     public async ValueTask DisposeAsync()
     {
+        disposed = true;
         geracaoCarregamento++;
         DesinscreverEventos();
+        if (moduloEstado is not null)
+        {
+            try { await moduloEstado.InvokeVoidAsync("desconectarDetalhe"); }
+            catch (JSDisconnectedException) { }
+        }
+        referenciaDotNet?.Dispose();
         if (moduloEstado is not null)
             await moduloEstado.DisposeAsync();
     }
