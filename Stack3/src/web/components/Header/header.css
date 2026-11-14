@@ -1,0 +1,42 @@
+@layer componente {
+  .cabecalho {
+    --largura-coluna-lateral-header: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    width: 100%;
+    height: var(--altura-header);
+    background-color: var(--cor-fundo);
+  }
+
+  .cabecalho .cabecalho-container {
+    display: grid;
+    grid-template-columns:
+      var(--largura-coluna-lateral-header)
+      minmax(0, 1fr)
+      var(--largura-coluna-lateral-header);
+    align-items: center;
+    width: min(100%, var(--largura-maxima-pagina));
+    height: 100%;
+    margin-inline: auto;
+    border-bottom: var(--espessura-borda) solid var(--cor-borda);
+  }
+
+  .cabecalho .cabecalho-coluna-central {
+    text-align: left;
+  }
+
+  .cabecalho .cabecalho-coluna-esquerda,
+  .cabecalho .cabecalho-coluna-direita {
+    padding: var(--padding-padrao);
+    font-size: var(--tamanho-fonte-titulo-padrao);
+  }
+
+  .cabecalho .cabecalho-acao {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+  }
+}

@@ -15,7 +15,8 @@ Este documento reúne informações sobre o projeto, seus recursos e as ferramen
 
 - O projeto não utiliza framework CSS. Os estilos são organizados, nesta ordem de precedência: `global`, `elementos`, `componentes`, `componente`, `paginas` e `pagina`.
 - Cada camada posterior pode redefinir estilos de qualquer camada anterior, mas essa possibilidade só deve ser usada quando necessária e autorizada pelo operador. Assim, uma página pode fazer um ajuste local sem criar um estilo mais abrangente para um caso de uso único.
-- Cada página ou componente mantém seus estilos em um arquivo `.module.css` próprio, para uso local ou redefinição de estilos de camadas anteriores.
+- Cada página ou componente mantém seus estilos em um arquivo CSS próprio.
+- Enquanto o problema de CSS Modules no Bun não for resolvido, use arquivos `.css` comuns importados por efeito colateral. Nas camadas `componente` e `pagina`, limite os estilos à classe raiz própria do componente ou página, inclusive regras para elementos HTML. As camadas compartilhadas `global`, `elementos`, `componentes` e `paginas` não exigem esse isolamento.
 - Estilos compartilhados entre componentes ficam nas camadas `componentes` e `paginas`; por sua posição, podem modificar estilos das camadas anteriores.
 - Elementos HTML simples são estilizados na camada `elementos`, para uso consistente em páginas e componentes.
 - A camada `global` reúne estilos aplicáveis à aplicação inteira.

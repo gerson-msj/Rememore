@@ -2,5 +2,10 @@
   :root[data-theme="light"] {
     --cor-fundo: #ffffff;
     --cor-texto: #000000;
+    --cor-borda: #d1d5db;
+    --cor-link: #3b5b9a;
+    --cor-link-hover: #1e3a8a;
+    --cor-perigo: #c94c4c;
+    --cor-perigo-hover: #b71c1c;
   }
 }

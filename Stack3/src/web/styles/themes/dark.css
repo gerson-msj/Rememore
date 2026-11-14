@@ -2,5 +2,10 @@
   :root[data-theme="dark"] {
     --cor-fundo: #000000;
     --cor-texto: #ffffff;
+    --cor-borda: #4b5563;
+    --cor-link: #8ab4f8;
+    --cor-link-hover: #bfdbfe;
+    --cor-perigo: #ef6f6f;
+    --cor-perigo-hover: #fca5a5;
   }
 }

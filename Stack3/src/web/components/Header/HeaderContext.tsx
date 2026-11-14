@@ -1,8 +1,21 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+} from "react";
+
+type ConfiguracaoHeader = {
+  titulo: string;
+  voltar?: () => void;
+  sair?: () => void;
+};
 
 type HeaderContextValue = {
-  titulo: string;
-  setTitulo: (titulo: string) => void;
+  configuracao: ConfiguracaoHeader;
+  setConfiguracao: Dispatch<SetStateAction<ConfiguracaoHeader>>;
 };
 
 const HeaderContext = createContext<HeaderContextValue | undefined>(
@@ -18,10 +31,12 @@ export function HeaderProvider({
   children,
   tituloInicial = "",
 }: HeaderProviderProps) {
-  const [titulo, setTitulo] = useState(tituloInicial);
+  const [configuracao, setConfiguracao] = useState<ConfiguracaoHeader>({
+    titulo: tituloInicial,
+  });
 
   return (
-    <HeaderContext.Provider value={{ titulo, setTitulo }}>
+    <HeaderContext.Provider value={{ configuracao, setConfiguracao }}>
       {children}
     </HeaderContext.Provider>
   );

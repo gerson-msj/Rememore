@@ -1,2 +1,29 @@
 @layer elementos {
+  h1 {
+    margin: 0;
+    font-size: var(--tamanho-fonte-titulo-padrao);
+  }
+
+  .link,
+  .link-perigo {
+    transition: color 180ms ease, text-shadow 180ms ease;
+  }
+
+  .link {
+    color: var(--cor-link);
+  }
+
+  .link:hover {
+    color: var(--cor-link-hover);
+    text-shadow: 0 0 4px color-mix(in srgb, var(--cor-link) 35%, transparent);
+  }
+
+  .link-perigo {
+    color: var(--cor-perigo);
+  }
+
+  .link-perigo:hover {
+    color: var(--cor-perigo-hover);
+    text-shadow: 0 0 4px color-mix(in srgb, var(--cor-perigo) 35%, transparent);
+  }
 }

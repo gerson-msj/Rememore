@@ -8,15 +8,12 @@ declare module "*.svg" {
   export = path;
 }
 
-declare module "*.css" {
-  const styles: Readonly<Record<string, string>>;
-  export default styles;
-}
+declare module "*.css" {}
 
 declare module "*.module.css" {
   /**
    * A record of class names to their corresponding CSS module classes
    */
-  const classes: Readonly<Record<string, string>>;
-  export default classes;
+  const classes: { readonly [key: string]: string };
+  export = classes;
 }

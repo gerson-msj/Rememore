@@ -1,6 +1,16 @@
 @layer global, elementos, componentes, componente, paginas, pagina;
+@import url("./vendor/fontawesome/all.min.css") layer(componentes);
 
 @layer global {
+  @font-face {
+    font-family: "Faculty Glyphic";
+    src: url("./vendor/webfonts/Faculty_Glyphic/FacultyGlyphic-Regular.ttf")
+      format("truetype");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+  }
+
   *,
   *::before,
   *::after {
@@ -10,16 +20,21 @@
   :root {
     --largura-maxima-pagina: 1200px;
     --padding-padrao: 16px;
+    --altura-header: 75px;
+    --espessura-borda: 1px;
+    --tamanho-fonte-titulo-padrao: 1.4rem;
   }
 
   html {
     min-width: 320px;
+    scrollbar-gutter: stable;
   }
 
   body {
     min-width: 320px;
     min-height: 100vh;
     margin: 0;
+    font-family: "Faculty Glyphic", sans-serif;
     color: var(--cor-texto);
     background-color: var(--cor-fundo);
   }

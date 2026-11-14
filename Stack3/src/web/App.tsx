@@ -1,13 +1,13 @@
 import { Header } from "@web/components/Header/Header";
 import { AppRouter } from "@web/router/AppRouter";
-import "./app.module.css";
+import "./app.css";
 
 
 export function App() {
   return (
-    <div className="rememore-app">
+    <div className="aplicacao">
       <Header />
-      <main className="rememore-app-content">
+      <main className="aplicacao-conteudo">
         <AppRouter />
       </main>
     </div>

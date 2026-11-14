@@ -4,19 +4,23 @@ import { useHeader } from "@web/components/Header/HeaderContext";
 import { useNavigate } from "react-router";
 
 export default function Detalhes() {
-    const { setTitulo } = useHeader();
+    const { setConfiguracao } = useHeader();
     const navigate = useNavigate();
 
     useLayoutEffect(() => {
-        setTitulo("Detalhes");
-    }, [setTitulo]);
+        setConfiguracao({
+            titulo: "Detalhes",
+            voltar: () => navigate("/home"),
+            sair: () => navigate("/home"),
+        });
+    }, [navigate, setConfiguracao]);
 
     return (
-        <main>
+        <>
             <ActionButton
                 label="Voltar para Home"
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/home")}
             />
-        </main>
+        </>
     )
 }

@@ -1,2 +1,25 @@
 @layer componentes {
+  .bloco-teste {
+    margin: 16px 8px;
+    border: var(--espessura-borda) solid var(--cor-borda);
+    border-radius: 8px;
+  }
+
+  .bloco-teste-titulo {
+    padding: var(--padding-padrao);
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    list-style: none;
+    font-size: 1rem;
+  }
+
+  .bloco-teste-titulo::-webkit-details-marker {
+    display: none;
+  }
+
+  .bloco-teste-conteudo {
+    padding: var(--padding-padrao);
+    border-top: var(--espessura-borda) solid var(--cor-borda);
+    border-radius: 0 0 8px 8px;
+  }
 }

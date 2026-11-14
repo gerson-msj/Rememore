@@ -1,0 +1,13 @@
+@layer pagina {
+  .aplicacao {
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  .aplicacao .aplicacao-conteudo {
+    width: min(100%, var(--largura-maxima-pagina));
+    min-width: 0;
+    margin-inline: auto;
+    padding: var(--padding-padrao);
+  }
+}
