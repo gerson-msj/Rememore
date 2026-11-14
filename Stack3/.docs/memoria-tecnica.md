@@ -24,3 +24,8 @@ Este documento reúne informações sobre o projeto, seus recursos e as ferramen
 ## Serviço de armazenamento
 
 - O serviço de `localStorage` da aplicação web está em `src/web/services/storage.ts`.
+
+## Convenção de nomes
+
+- Prefira português brasileiro, com identificadores ASCII e convenções usuais da linguagem, para nomes autorais internos ao projeto, como arquivos, classes, métodos e variáveis.
+- Use inglês quando exigido pela estrutura organizacional, por padrões de React, TypeScript, sistema ou ambiente. Preserve a grafia original de APIs, bibliotecas, atributos, rotas e contratos externos.

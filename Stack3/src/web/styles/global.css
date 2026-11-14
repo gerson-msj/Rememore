@@ -1,32 +1,28 @@
 @layer global, elementos, componentes, componente, paginas, pagina;
 
-
 @layer global {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
 
-    *,
-    *::before,
-    *::after {
-        box-sizing: border-box;
-    }
+  :root {
+    --largura-maxima-pagina: 1200px;
+    --padding-padrao: 16px;
+  }
 
-    :root {
-        --primary-color: #2563eb;
-    }
+  html {
+    min-width: 320px;
+  }
 
-    body {
-        margin: 0;
-        display: flex;
-        justify-content: center;
-        background-color: gray;
-    }
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+  }
 
-    div#root {
-        width: 100vw;
-        min-width: 320px;
-        max-width: 1280px;
-        height: 100vh;
-
-        background-color: whitesmoke;
-
-    }
+  #root {
+    min-height: 100vh;
+  }
 }
