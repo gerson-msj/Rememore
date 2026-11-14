@@ -20,6 +20,8 @@
     min-width: 320px;
     min-height: 100vh;
     margin: 0;
+    color: var(--cor-texto);
+    background-color: var(--cor-fundo);
   }
 
   #root {

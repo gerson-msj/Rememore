@@ -20,6 +20,8 @@ Este documento reúne informações sobre o projeto, seus recursos e as ferramen
 - Elementos HTML simples são estilizados na camada `elementos`, para uso consistente em páginas e componentes.
 - A camada `global` reúne estilos aplicáveis à aplicação inteira.
 - O projeto utiliza o pacote gratuito de ícones do Font Awesome 7.
+- Os temas `light` e `dark` ficam em `src/web/styles/themes`, na camada `global`, e definem as variáveis de cor de fundo e texto. O tema é selecionado pelo atributo `data-theme` no elemento `<html>`; por enquanto, o HTML inicia com `light`.
+- A definição de temas será expandida futuramente com alternância por componente, contexto e provider, incluindo as opções `system`, `light` e `dark`.
 
 ## Serviço de armazenamento
 

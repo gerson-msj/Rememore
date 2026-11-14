@@ -1,0 +1,6 @@
+@layer global {
+  :root[data-theme="dark"] {
+    --cor-fundo: #000000;
+    --cor-texto: #ffffff;
+  }
+}
