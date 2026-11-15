@@ -1,38 +1,34 @@
-# Memória técnica — método de implementação
+﻿# Memória técnica
 
-Este arquivo guarda somente princípios técnicos reutilizáveis entre unidades. O `/lab` e o código vigente são a fonte para contratos, estados e configuração dos componentes. O Markdown operacional guarda decisões, progresso e validações da unidade; especificações concluídas guardam seus pareceres. Não manter aqui histórico de implementação nem inventário de componentes.
+Este documento reúne informações sobre o projeto, seus recursos e as ferramentas compartilhadas disponíveis. Seu objetivo é permitir que o agente conheça esses recursos sem precisar ler o código. O operador define todo o material registrado aqui.
 
-## Laboratório e reutilização
+## Organização e desenvolvimento
 
-Os ELMs e CMPs demonstrados no `/lab` são os blocos reutilizáveis da aplicação: definem seus próprios parâmetros, estilos e funcionalidades. Cada demonstração deve instanciar o bloco real e configurá-lo pelos parâmetros públicos, como faria uma página. Não deve reproduzir, compensar ou sobrescrever localmente estilos ou comportamentos próprios do bloco, pois isso mascara sua apresentação e cria divergência com os consumidores. Não é necessário testar no laboratório cada combinação de parâmetros ou ajuste local de uma página; valide a integração no contexto da própria página.
+- `src` está dividida em `api`, `web` e `shared`.
+- O desenvolvimento começa pela aplicação web, com React.
+- Os contratos de dados serão definidos ao longo do desenvolvimento e ficarão em `shared`.
+- Inicialmente, os dados serão armazenados por implementações fake, possivelmente usando IndexedDB.
+- Após a conclusão da parte web, ela servirá de base para definir o que a API deverá fornecer. As implementações fake serão descartadas gradualmente.
+- Haverá também armazenamento local definitivo.
 
-A pedido ou com aprovação do operador, uma página pode receber ajustes locais de composição, estilo ou comportamento em seus próprios arquivos, sem modificar o bloco compartilhado; esses ajustes devem ser validados naquela página, não incorporados como exceções ao demonstrador. Quando a mudança deve valer para o elemento ou componente em todas as páginas, altere o código-fonte e os estilos no escopo compartilhado apropriado; o `/lab` e todos os consumidores devem refletir essa mudança. Verifique os consumidores afetados.
+## Estilos da aplicação web
 
-O Codex pode sugerir ajustes locais ou compartilhados, mas deve obter solicitação ou aprovação do operador antes de implementá-los.
+- O projeto não utiliza framework CSS. Os estilos são organizados, nesta ordem de precedência: `global`, `elementos`, `componentes`, `componente`, `paginas` e `pagina`.
+- Cada camada posterior pode redefinir estilos de qualquer camada anterior, mas essa possibilidade só deve ser usada quando necessária e autorizada pelo operador. Assim, uma página pode fazer um ajuste local sem criar um estilo mais abrangente para um caso de uso único.
+- Cada página ou componente mantém seus estilos em um arquivo CSS próprio.
+- Enquanto o problema de CSS Modules no Bun não for resolvido, use arquivos `.css` comuns importados por efeito colateral. Nas camadas `componente` e `pagina`, limite os estilos à classe raiz própria do componente ou página, inclusive regras para elementos HTML. As camadas compartilhadas `global`, `elementos`, `componentes` e `paginas` não exigem esse isolamento.
+- Estilos compartilhados entre componentes ficam nas camadas `componentes` e `paginas`; por sua posição, podem modificar estilos das camadas anteriores.
+- Elementos HTML simples são estilizados na camada `elementos`, para uso consistente em páginas e componentes.
+- A camada `global` reúne estilos aplicáveis à aplicação inteira.
+- O projeto utiliza o pacote gratuito de ícones do Font Awesome 7.
+- Os temas `light` e `dark` ficam em `src/web/styles/themes`, na camada `global`, e definem as variáveis de cor de fundo e texto. O tema é selecionado pelo atributo `data-theme` no elemento `<html>`; por enquanto, o HTML inicia com `light`.
+- A definição de temas será expandida futuramente com alternância por componente, contexto e provider, incluindo as opções `system`, `light` e `dark`.
 
-## HTML, Bulma e CSS
+## Serviço de armazenamento
 
-Trabalhe nesta ordem: HTML semântico; estrutura e classes documentadas do Bulma; personalização suportada do Bulma; CSS autoral localizado e justificado. Use JavaScript apenas quando necessário. Não altere os arquivos distribuídos do Bulma.
+- O serviço de `localStorage` da aplicação web está em `src/web/services/storage.ts`.
 
-A propriedade dos estilos é definida pelo alcance:
+## Convenção de nomes
 
-- `wwwroot/css/app.css`: tokens e regras globais da aplicação.
-- `wwwroot/css/elementos.css`: personalizações compartilhadas dos ELMs.
-- `wwwroot/css/componentes.css`: estilos realmente compartilhados entre CMPs.
-- `Componentes/Nome.razor.css`: apresentação particular de um CMP.
-- `Pages/Nome.razor.css`: composição e estilos exclusivos da página.
-- `wwwroot/css/paginas.css`: criar e conectar somente quando surgir um padrão de layout reutilizado entre páginas.
-
-Reaproveite classes e estilos existentes antes de criar outros. Não reproduza estilos de ELMs ou CMPs em páginas. Mudanças em CSS compartilhado exigem verificar os consumidores afetados; mudanças de markup, parâmetros ou eventos exigem revisar os chamadores.
-
-## Execução .NET no Windows
-
-No ambiente Windows do ChatGPT Desktop, não execute comandos `dotnet` dentro do sandbox: suas restrições de acesso impedem a execução correta. Execute restauração, build, testes e aplicação fora do sandbox.
-
-## Nível do usuário em testes
-
-Quando o operador solicitar ou for necessário para testes, altere o nível inicial em `FonteNivelOrientacaoSimulada.NivelAtual`, no arquivo `src/Rememore.Client/Infraestrutura/OrientacaoProgressiva/ResolvedorOrientacaoProgressiva.cs`.
-
-## Convenções de código
-
-Use português brasileiro em nomes autorais, com identificadores ASCII e convenções usuais da linguagem. Preserve a grafia de APIs, bibliotecas, atributos, rotas e contratos externos. Separe regras de negócio da apresentação quando isso ajudar a manter comportamento reutilizável e testável; não crie camadas ou abstrações sem necessidade concreta.
+- Prefira português brasileiro, com identificadores ASCII e convenções usuais da linguagem, para nomes autorais internos ao projeto, como arquivos, classes, métodos e variáveis.
+- Use inglês quando exigido pela estrutura organizacional, por padrões de React, TypeScript, sistema ou ambiente. Preserve a grafia original de APIs, bibliotecas, atributos, rotas e contratos externos.

@@ -13,7 +13,7 @@ Leia apenas a unidade atual. As especificações concluídas e os planos arquiva
 
 ## Organização
 
-- `memoria-tecnica.md` — princípios de implementação, CSS e reutilização.
+- `memoria-tecnica.md` — princípios de implementação.
 - `especificacoes/README.md` — guia do fluxo de especificação.
 - `especificacoes/` — unidades em andamento.
 - `especificacoes/concluidas/` — especificações encerradas, com pareceres e registros próprios.
