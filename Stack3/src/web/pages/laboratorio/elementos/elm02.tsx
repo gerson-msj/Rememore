@@ -1,0 +1,11 @@
+export function Elm02() {
+  return (
+    <details className="bloco-teste">
+      <summary className="bloco-teste-titulo link">ELM-02 Parágrafo</summary>
+      <div className="bloco-teste-conteudo">
+        <p>Variação: Parágrafo</p>
+        <p>Exemplo de parágrafo.</p>
+      </div>
+    </details>
+  );
+}

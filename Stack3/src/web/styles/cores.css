@@ -1,0 +1,24 @@
+@layer global {
+  .cor-link {
+    --cor-selecionada: var(--cor-link);
+  }
+
+  .cor-perigo {
+    --cor-selecionada: var(--cor-perigo);
+  }
+
+  .cor-link,
+  .cor-perigo {
+    --cor-campo-preenchimento: color-mix(in srgb, var(--cor-selecionada) 8%, var(--cor-fundo));
+    --cor-campo-borda: color-mix(in srgb, var(--cor-selecionada) 40%, var(--cor-fundo));
+    --cor-campo-borda-hover: color-mix(in srgb, var(--cor-selecionada) 55%, var(--cor-fundo));
+    --cor-campo-sombra: color-mix(in srgb, var(--cor-selecionada) 35%, transparent);
+    --cor-botao-texto: var(--cor-selecionada);
+    --cor-botao-preenchimento: color-mix(in srgb, var(--cor-selecionada) 12%, var(--cor-fundo));
+    --cor-botao-borda: color-mix(in srgb, var(--cor-selecionada) 40%, var(--cor-fundo));
+    --cor-botao-preenchimento-hover: color-mix(in srgb, var(--cor-selecionada) 15%, var(--cor-fundo));
+    --cor-botao-borda-hover: color-mix(in srgb, var(--cor-selecionada) 55%, var(--cor-fundo));
+    --cor-botao-preenchimento-ativo: color-mix(in srgb, var(--cor-selecionada) 18%, var(--cor-fundo));
+    --cor-botao-borda-ativa: color-mix(in srgb, var(--cor-selecionada) 70%, var(--cor-fundo));
+  }
+}

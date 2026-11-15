@@ -8,6 +8,7 @@
 import "./styles/global.css";
 import "./styles/themes/light.css";
 import "./styles/themes/dark.css";
+import "./styles/cores.css";
 import "./styles/elementos.css";
 import "./styles/componentes.css";
 import "./styles/paginas.css";
