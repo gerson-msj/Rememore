@@ -18,7 +18,7 @@ A especificação pode já existir na raiz do diretório de especificações, se
 - `.docs/Rememore/` contém uma cópia local da documentação do projeto mantida isoladamente. Durante tarefas no código-fonte, não leia, altere ou exclua esse diretório; trabalhe nele somente quando o operador solicitar.
 - Não abra `Anotações.md` nem arquivos de credenciais; nunca exponha segredos. Alterações em publicação, pipelines, segredos, dados remotos ou backend real exigem autorização específica.
 - Não acesse o Google Drive, solicite ao operador se precisar de alguma informação relativa a documentação utilizada para elaboração das especificações.
-- Leia este `AGENTS.md` novamente a cada compactação da sessão. Leia também `.docs/memoria-tecnica.md` no início de cada nova sessão e novamente após cada compactação. Se não conseguir identificar que houve uma compactação, o operador avisará.
+- Leia este `AGENTS.md` novamente a cada compactação da sessão. Leia `.docs/memoria-tecnica.md` e `.docs/especificacoes/README.md` no início de cada nova sessão e novamente após cada compactação. Se não conseguir identificar que houve uma compactação, o operador avisará.
 
 ## Runbook (Execução e validação)
 
