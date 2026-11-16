@@ -4,11 +4,15 @@
 
 ## Unidade atual
 
-Nenhuma unidade em andamento.
+**[05.01 - Página Inicial da Área Aberta](https://drive.google.com/file/d/19XrY0DwXSXSyXv_39VRyDcO9T1S_30Z-/view?usp=drivesdk)**
+
+- Etapa E1 — Apresentação da Página Inicial: concluída.
+- Elaboração: especificação consolidada.
+- Reintegração: aguarda o Parecer Final.
 
 ## Próximas tarefas
 
-Nenhuma tarefa definida no momento.
+Preparar a **05.02 — Login da Área Aberta (`/entrar`)** no Work. Confirmar a disponibilidade do `CMP-001 — Campo de Senha` e definir o escopo inicial do Login com o operador.
 
 ## Última unidade formalmente encerrada
 
