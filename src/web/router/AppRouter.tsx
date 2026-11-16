@@ -6,7 +6,7 @@ import Laboratorio from "@web/pages/laboratorio/laboratorio";
 export function AppRouter() {
   return (
     <Routes>
-      <Route path="/" element={<Laboratorio />} />
+      <Route path="/" element={<Home />} />
       <Route path="/home" element={<Home />} />
       <Route path="/detalhes" element={<Detalhes />} />
       <Route path="/lab" element={<Laboratorio />} />

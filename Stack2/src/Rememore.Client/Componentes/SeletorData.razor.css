@@ -1,8 +1,0 @@
-.seletor-data__entrada:invalid,
-.seletor-data__entrada.seletor-data__entrada--texto-provisorio {
-    color: var(--bulma-input-placeholder-color);
-}
-
-.seletor-data__entrada::-webkit-calendar-picker-indicator {
-    display: none;
-}

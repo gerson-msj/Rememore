@@ -1,11 +1,9 @@
 import { useLayoutEffect } from "react";
-import { ActionButton } from "@web/components/action-button/action-button";
 import { useHeader } from "@web/components/Header/HeaderContext";
-import { useNavigate } from "react-router";
+import "./home.css";
 
 export default function Home() {
     const { setConfiguracao } = useHeader();
-    const navigate = useNavigate();
 
     useLayoutEffect(() => {
         setConfiguracao({
@@ -14,16 +12,18 @@ export default function Home() {
     }, [setConfiguracao]);
 
     return (
-        <>
-            <p>React + Bun + TS</p>
-            <ActionButton
-                label="Ir para Detalhes"
-                onClick={() => navigate("/detalhes")}
-            />
-
-            {Array.from({ length: 100 }, (_, indice) => (
-                <p key={indice + 1}>Linha {indice + 1}</p>
-            ))}
-        </>
+        <section className="pagina-inicial-area-aberta">
+            <div className="pagina-inicial-apresentacao">
+                <div className="pagina-inicial-textos">
+                    <p>Nem todos os dias são iguais. Às vezes, é a memória que os torna parecidos.</p>
+                    <p>O Rememore ajuda você a preservar lembranças do cotidiano e voltar a elas ao longo do tempo, recuperando detalhes que poderiam se perder com a passagem dos dias.</p>
+                    <p>Entre na sua conta ou, se recebeu um convite, comece por aqui.</p>
+                </div>
+                <div className="pagina-inicial-acoes">
+                    <button type="button">Entrar</button>
+                    <button type="button">Criar conta</button>
+                </div>
+            </div>
+        </section>
     );
 }
