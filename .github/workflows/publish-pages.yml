@@ -1,10 +1,13 @@
-name: Publicar no GitHub Pages
+name: Publicar frontend no GitHub Pages
 
 on:
   push:
     branches: [main]
     paths:
-      - 'src/Rememore.Client/**'
+      - 'src/web/**'
+      - 'package.json'
+      - 'bun.lock'
+      - 'tsconfig.json'
       - '.github/workflows/publish-pages.yml'
   workflow_dispatch:
 
@@ -23,28 +26,26 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-dotnet@v6
+      - uses: oven-sh/setup-bun@v2
         with:
-          dotnet-version: 10.0.x
+          bun-version: 1.4.4
 
       - uses: actions/configure-pages@v5
 
-      - name: Publicar Blazor
-        run: dotnet publish src/Rememore.Client/Rememore.Client.csproj -c Release -p:CompressionEnabled=false
+      - name: Instalar dependências
+        run: bun install --frozen-lockfile
 
-      - name: Configurar URL da API no site publicado
-        run: |
-          sed -i 's|http://localhost:5297/|https://rememore.onrender.com/|' src/Rememore.Client/bin/Release/net10.0/publish/wwwroot/appsettings.json
+      - name: Compilar frontend
+        run: bun run build:pages
 
-      - name: Preparar arquivos
-        shell: bash
+      - name: Preparar arquivos do Pages
         run: |
-          sed -i 's|<base href="/" />|<base href="/Rememore/" />|' src/Rememore.Client/bin/Release/net10.0/publish/wwwroot/index.html
-          touch src/Rememore.Client/bin/Release/net10.0/publish/wwwroot/.nojekyll
+          cp dist-pages/index.html dist-pages/404.html
+          touch dist-pages/.nojekyll
 
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: src/Rememore.Client/bin/Release/net10.0/publish/wwwroot
+          path: dist-pages
 
       - id: deploy
         uses: actions/deploy-pages@v4

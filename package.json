@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "bun --hot src/api/index.ts",
     "build": "bun build ./src/web/index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'",
-    "start": "NODE_ENV=production bun src/api/index.ts",
+    "build:pages": "bun build ./src/web/index.html --outdir=dist-pages --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --public-path=./",
+    "build:server": "bun build --target=bun --production --outdir=dist/server ./src/api/index.ts",
+    "start": "NODE_ENV=production bun dist/server/index.js",
     "typecheck": "bun check"
   },
   "dependencies": {

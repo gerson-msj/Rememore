@@ -20,9 +20,13 @@ import { AppProviders } from "@web/providers/AppProviders";
 import { BrowserRouter } from "react-router";
 
 const elem = document.getElementById("root")!;
+const basePath = window.location.pathname === "/Rememore" ||
+  window.location.pathname.startsWith("/Rememore/")
+  ? "/Rememore"
+  : "/";
 const app = (
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={basePath}>
       <AppProviders>
         <App />
       </AppProviders>

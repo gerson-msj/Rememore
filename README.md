@@ -15,6 +15,7 @@ bun dev
 To run for production:
 
 ```bash
+bun run build:server
 bun start
 ```
 

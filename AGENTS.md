@@ -4,9 +4,9 @@ Este repositório contém a implementação do Rememore com Bun e React (Stack 3
 
 ## Início de uma unidade
 
-Leia, nesta ordem, estes arquivos, `.docs/README.md`, `.docs/memoria-tecnica.md` e `.docs/especificacoes/README.md`. Depois, verifique se existe uma única especificação operacional disponível em `.docs/especificacoes/`, se houver, ela será a especificação a ser trabalhada, do contrário, aguarde instruções do operador. Não percorra automaticamente outras especificações, a árvore completa do código ou documentos do Google Drive.
+Leia, nesta ordem, estes arquivos: `.docs/README.md`, `.docs/memoria-tecnica.md` e `.docs/especificacoes/README.md`. Depois, verifique se existe uma única especificação operacional disponível em `.docs/especificacoes/`. Se houver, ela será a especificação a ser trabalhada. Se não houver, aguarde as instruções do operador e, com base nelas, trabalhe sem especificação, respeitando o escopo e os limites informados. Não percorra automaticamente outras especificações, a árvore completa do código ou documentos do Google Drive.
 
-A especificação pode já existir na raiz do diretório de especificações, ser fornecida como texto/arquivo aprovado ou como pedido para elaborar uma proposta sujeita à aprovação. Mantenha o conteúdo aprovado intacto no Markdown operacional; registre nele, em seção separada, o plano mínimo, o estado, as validações, os pareceres parciais e o parecer final.
+A especificação pode já existir na raiz do diretório de especificações, ser fornecida como texto/arquivo aprovado ou como pedido para elaborar uma proposta sujeita à aprovação. As instruções do operador também podem definir o trabalho sem uma especificação operacional. Mantenha o conteúdo aprovado intacto no Markdown operacional; registre nele, em seção separada, o plano mínimo, o estado, as validações, os pareceres parciais e o parecer final.
 
 ## Autoridade e limites
 
