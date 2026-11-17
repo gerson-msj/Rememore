@@ -25,8 +25,7 @@
     font-size: 0.9em;
   }
 
-  .campo-texto input[type="text"],
-  .campo-texto textarea {
+  .controle-com-borda {
     border: var(--espessura-borda) solid var(--cor-campo-borda, var(--cor-borda));
     border-radius: var(--raio-borda-controle);
     font: inherit;
@@ -35,7 +34,18 @@
       background-color var(--duracao-transicao-elemento) ease;
   }
 
-  .campo-texto input[type="text"] {
+  .controle-com-borda:hover,
+  .controle-com-borda:focus {
+    border-color: var(--cor-campo-borda-hover, color-mix(in srgb, var(--cor-borda) 80%, var(--cor-mistura)));
+  }
+
+  .controle-com-borda:focus {
+    outline: none;
+    box-shadow: 0 0 var(--desfoque-sombra-foco) var(--cor-campo-sombra, var(--cor-borda));
+  }
+
+  .campo-texto input[type="text"],
+  .campo-texto input[type="password"] {
     height: var(--altura-controle);
     padding-inline: var(--espacamento-controle);
   }
@@ -49,15 +59,10 @@
   select {
     height: var(--altura-controle);
     padding-inline: var(--espacamento-controle);
-    border: var(--espessura-borda) solid var(--cor-campo-borda, var(--cor-borda));
-    border-radius: var(--raio-borda-controle);
     font: inherit;
     color: var(--cor-texto);
     background-color: var(--cor-fundo);
     appearance: auto;
-    transition: border-color var(--duracao-transicao-elemento) ease,
-      box-shadow var(--duracao-transicao-elemento) ease,
-      background-color var(--duracao-transicao-elemento) ease;
   }
 
   .select-com-icone {
@@ -88,38 +93,13 @@
     pointer-events: none;
   }
 
-  select:hover,
-  select:focus {
-    border-color: color-mix(in srgb, var(--cor-borda) 80%, var(--cor-mistura));
-  }
-
-  select:focus {
-    outline: none;
-    box-shadow: 0 0 var(--desfoque-sombra-foco) var(--cor-borda);
-  }
-
-  .campo-texto input[type="text"]:hover,
-  .campo-texto input[type="text"]:focus,
-  .campo-texto select:hover,
-  .campo-texto select:focus,
-  .campo-texto textarea:hover,
-  .campo-texto textarea:focus {
-    border-color: var(--cor-campo-borda-hover, color-mix(in srgb, var(--cor-borda) 80%, var(--cor-mistura)));
-  }
-
-  .campo-texto input[type="text"]:focus,
-  .campo-texto select:focus,
-  .campo-texto textarea:focus {
-    outline: none;
-    box-shadow: 0 0 var(--desfoque-sombra-foco) var(--cor-campo-sombra, var(--cor-borda));
-  }
-
   .campo-texto input[type="text"]:read-only {
     background-color: color-mix(in srgb, var(--cor-fundo) 97%, var(--cor-mistura));
     cursor: default;
   }
 
   .campo-texto:is(.cor-link, .cor-perigo) input[type="text"],
+  .campo-texto:is(.cor-link, .cor-perigo) input[type="password"],
   .campo-texto:is(.cor-link, .cor-perigo) textarea,
   .campo-texto:is(.cor-link, .cor-perigo) select {
     background-color: var(--cor-campo-preenchimento);

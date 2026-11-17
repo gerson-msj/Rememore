@@ -6,6 +6,7 @@ import { Elm03 } from "./elementos/elm03";
 import { Elm04 } from "./elementos/elm04";
 import { Elm05 } from "./elementos/elm05";
 import { Elm06 } from "./elementos/elm06";
+import { Cmp001 } from "./componentes/cmp001";
 
 export default function Laboratorio() {
   const { setConfiguracao } = useHeader();
@@ -54,7 +55,9 @@ export default function Laboratorio() {
         id="painel-componentes"
         aria-label="Componentes"
         hidden={abaSelecionada !== "componentes"}
-      />
+      >
+        <Cmp001 />
+      </section>
     </div>
   );
 }

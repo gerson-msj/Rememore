@@ -14,6 +14,7 @@ export function Elm05() {
           <span className="select-com-icone">
             <select
               id="elm05-cor-campo"
+              className="controle-com-borda"
               value={corSelecionada}
               onChange={(evento) => setCorSelecionada(evento.currentTarget.value)}
             >
@@ -29,21 +30,21 @@ export function Elm05() {
             <p>Variação: Caixa de texto</p>
             <div className={classeCampoTexto}>
               <label htmlFor="elm05-caixa-texto">Texto</label>
-              <input id="elm05-caixa-texto" type="text" />
+              <input id="elm05-caixa-texto" className="controle-com-borda" type="text" />
             </div>
           </div>
           <div>
             <p>Variação: Caixa de texto multilinear</p>
             <div className={classeCampoTexto}>
               <label htmlFor="elm05-caixa-texto-multilinear">Texto</label>
-              <textarea id="elm05-caixa-texto-multilinear" rows={3} />
+              <textarea id="elm05-caixa-texto-multilinear" className="controle-com-borda" rows={3} />
             </div>
           </div>
           <div>
             <p>Variação: Caixa de texto em estado de erro</p>
             <div className="campo-texto cor-perigo">
               <label htmlFor="elm05-caixa-texto-erro">Texto</label>
-              <input id="elm05-caixa-texto-erro" type="text" aria-invalid="true" />
+              <input id="elm05-caixa-texto-erro" className="controle-com-borda" type="text" aria-invalid="true" />
               <small className="mensagem-erro">Este campo contém um erro.</small>
             </div>
           </div>
@@ -51,7 +52,7 @@ export function Elm05() {
             <p>Variação: Caixa de texto somente leitura</p>
             <div className={classeCampoTexto}>
               <label htmlFor="elm05-caixa-texto-leitura">Texto</label>
-              <input id="elm05-caixa-texto-leitura" type="text" value="Texto somente leitura" readOnly />
+              <input id="elm05-caixa-texto-leitura" className="controle-com-borda" type="text" value="Texto somente leitura" readOnly />
             </div>
           </div>
           <div>
@@ -59,7 +60,7 @@ export function Elm05() {
             <div className={classeCampoTexto}>
               <label htmlFor="elm05-caixa-selecao">Opção</label>
               <div className="select-com-icone">
-                <select id="elm05-caixa-selecao" defaultValue="">
+                <select id="elm05-caixa-selecao" className="controle-com-borda" defaultValue="">
                   <option value="" disabled>Selecione uma opção</option>
                   <option value="opcao-1">Opção 1</option>
                   <option value="opcao-2">Opção 2</option>

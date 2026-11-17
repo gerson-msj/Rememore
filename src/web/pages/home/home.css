@@ -28,10 +28,32 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 1rem;
+    gap: 1.5rem 1rem;
   }
 
   .pagina-inicial-area-aberta .pagina-inicial-acoes button {
     width: 10rem;
+  }
+
+  .pagina-inicial-area-aberta .pagina-inicial-botao-laboratorio {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 10rem;
+    height: var(--altura-controle);
+    padding-inline: var(--espacamento-controle);
+    border: var(--espessura-borda) solid var(--cor-borda);
+    border-radius: var(--raio-borda-controle);
+    color: var(--cor-texto);
+    text-decoration: none;
+    transition:
+      color var(--duracao-transicao-elemento) ease,
+      background-color var(--duracao-transicao-elemento) ease,
+      border-color var(--duracao-transicao-elemento) ease;
+  }
+
+  .pagina-inicial-area-aberta .pagina-inicial-botao-laboratorio:hover {
+    color: var(--cor-link);
+    border-color: var(--cor-link);
   }
 }

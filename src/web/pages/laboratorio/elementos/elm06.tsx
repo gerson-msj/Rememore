@@ -27,6 +27,7 @@ export function Elm06() {
             <span className="select-com-icone">
               <select
                 id="elm06-cor-botao"
+                className="controle-com-borda"
                 value={corSelecionada}
                 onChange={(evento) => setCorSelecionada(evento.currentTarget.value)}
               >
@@ -43,6 +44,7 @@ export function Elm06() {
             <span className="select-com-icone">
               <select
                 id="elm06-posicao-icone"
+                className="controle-com-borda"
                 value={posicaoIcone}
                 onChange={(evento) =>
                   setPosicaoIcone(evento.currentTarget.value === "direita" ? "direita" : "esquerda")
@@ -60,6 +62,7 @@ export function Elm06() {
             <span className="select-com-icone">
               <select
                 id="elm06-quantidade-botoes"
+                className="controle-com-borda"
                 value={quantidadeBotoes}
                 onChange={(evento) => setQuantidadeBotoes(Number(evento.currentTarget.value))}
               >
