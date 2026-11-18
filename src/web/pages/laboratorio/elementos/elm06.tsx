@@ -12,10 +12,11 @@ export function Elm06() {
       <summary className="bloco-teste-titulo link">ELM-06 Botões</summary>
       <div className="bloco-teste-conteudo">
         <div className="elm06-controles">
-          <div className="elm06-controle">
+          <div className="elm06-controle campo-checkbox">
             <label htmlFor="elm06-botoes-ativos">Botões ativos</label>
             <input
               id="elm06-botoes-ativos"
+              className="controle-com-borda"
               type="checkbox"
               checked={botoesAtivos}
               onChange={(evento) => setBotoesAtivos(evento.currentTarget.checked)}

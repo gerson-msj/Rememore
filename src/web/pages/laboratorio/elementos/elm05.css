@@ -18,4 +18,14 @@
     display: block;
     width: max-content;
   }
+
+  .elm05 .elm05-checkbox-variacao {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .elm05 .elm05-checkbox-variacao .campo-checkbox {
+    min-height: var(--altura-controle);
+    margin-top: auto;
+  }
 }

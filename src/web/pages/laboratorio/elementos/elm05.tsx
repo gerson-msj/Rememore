@@ -76,6 +76,14 @@ export function Elm05() {
               </div>
             </div>
           </div>
+          <div className="elm05-checkbox-variacao">
+            <p>Variação: Checkbox</p>
+            {/* ELM-05, checkbox: reproduzir o bloco completo a partir de campo-checkbox. */}
+            <div className={corSelecionada ? `campo-checkbox ${corSelecionada}` : "campo-checkbox"}>
+              <input id="elm05-checkbox" className="controle-com-borda" type="checkbox" />
+              <label htmlFor="elm05-checkbox">Opção</label>
+            </div>
+          </div>
         </div>
       </div>
     </details>

@@ -43,12 +43,12 @@ export function Cmp028() {
               <label htmlFor="cmp028-titulo">Título</label>
               <input id="cmp028-titulo" className="controle-com-borda" type="text" value={titulo} onChange={(evento) => setTitulo(evento.currentTarget.value)} />
             </div>
-            <label className="cmp028-lab-opcao">
-              <input type="checkbox" checked={apresentarTitulo} onChange={(evento) => setApresentarTitulo(evento.currentTarget.checked)} />
+            <label className="cmp028-lab-opcao campo-checkbox">
+              <input className="controle-com-borda" type="checkbox" checked={apresentarTitulo} onChange={(evento) => setApresentarTitulo(evento.currentTarget.checked)} />
               Apresentar título
             </label>
-            <label className="cmp028-lab-opcao">
-              <input type="checkbox" checked={apresentarIcone} onChange={(evento) => setApresentarIcone(evento.currentTarget.checked)} />
+            <label className="cmp028-lab-opcao campo-checkbox">
+              <input className="controle-com-borda" type="checkbox" checked={apresentarIcone} onChange={(evento) => setApresentarIcone(evento.currentTarget.checked)} />
               Apresentar ícone
             </label>
             <div className="campo-texto cmp028-lab-mensagem">
@@ -68,8 +68,8 @@ export function Cmp028() {
             </div>
             <fieldset className="cmp028-lab-botao">
               <legend>Botão OK</legend>
-              <label className="cmp028-lab-opcao">
-                <input type="checkbox" checked={apresentarOk} onChange={(evento) => setApresentarOk(evento.currentTarget.checked)} />
+              <label className="cmp028-lab-opcao campo-checkbox">
+                <input className="controle-com-borda" type="checkbox" checked={apresentarOk} onChange={(evento) => setApresentarOk(evento.currentTarget.checked)} />
                 Apresentar
               </label>
               <div className="campo-texto">
@@ -89,8 +89,8 @@ export function Cmp028() {
 
             <fieldset className="cmp028-lab-botao">
               <legend>Botão Cancelar</legend>
-              <label className="cmp028-lab-opcao">
-                <input type="checkbox" checked={apresentarCancelar} onChange={(evento) => setApresentarCancelar(evento.currentTarget.checked)} />
+              <label className="cmp028-lab-opcao campo-checkbox">
+                <input className="controle-com-borda" type="checkbox" checked={apresentarCancelar} onChange={(evento) => setApresentarCancelar(evento.currentTarget.checked)} />
                 Apresentar
               </label>
               <div className="campo-texto">

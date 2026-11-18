@@ -61,12 +61,12 @@ export function Cmp001() {
             <small>Valor atual: {autocomplete}</small>
           </div>
 
-          <label className="cmp001-lab-opcao">
-            <input type="checkbox" checked={exibirErro} onChange={(evento) => setExibirErro(evento.currentTarget.checked)} />
+          <label className="cmp001-lab-opcao campo-checkbox">
+            <input className="controle-com-borda" type="checkbox" checked={exibirErro} onChange={(evento) => setExibirErro(evento.currentTarget.checked)} />
             Exibir erro
           </label>
-          <label className="cmp001-lab-opcao">
-            <input type="checkbox" checked={habilitado} onChange={(evento) => setHabilitado(evento.currentTarget.checked)} />
+          <label className="cmp001-lab-opcao campo-checkbox">
+            <input className="controle-com-borda" type="checkbox" checked={habilitado} onChange={(evento) => setHabilitado(evento.currentTarget.checked)} />
             Habilitado
           </label>
         </div>

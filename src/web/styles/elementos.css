@@ -25,6 +25,42 @@
     font-size: 0.9em;
   }
 
+  .campo-checkbox {
+    display: flex;
+    align-items: center;
+    gap: var(--espacamento-controle);
+    width: max-content;
+  }
+
+  .campo-checkbox input[type="checkbox"] {
+    appearance: none;
+    display: grid;
+    place-items: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: 0;
+    background-color: var(--cor-campo-preenchimento);
+    cursor: pointer;
+  }
+
+  .campo-checkbox input[type="checkbox"]:checked {
+    border-color: var(--cor-selecionada);
+  }
+
+  .campo-checkbox input[type="checkbox"]:checked::after {
+    content: "";
+    width: 0.3125rem;
+    height: 0.5625rem;
+    border: solid var(--cor-selecionada);
+    border-width: 0 2px 2px 0;
+    transform: translateY(-1px) rotate(45deg);
+  }
+
+  .campo-checkbox label {
+    font-size: 0.9em;
+    cursor: pointer;
+  }
+
   .controle-com-borda {
     border: var(--espessura-borda) solid var(--cor-campo-borda);
     border-radius: var(--raio-borda-controle);
