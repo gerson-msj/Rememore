@@ -125,6 +125,17 @@
       opacity var(--duracao-transicao-elemento) ease;
   }
 
+  button:disabled {
+    opacity: 0.9;
+    cursor: default;
+  }
+
+  .grupo-botoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--espacamento-controle);
+  }
+
   button.botao-com-icone {
     display: inline-flex;
     align-items: center;

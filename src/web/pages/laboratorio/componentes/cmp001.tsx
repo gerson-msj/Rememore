@@ -13,18 +13,20 @@ export function Cmp001() {
   return (
     <details className="bloco-teste cmp001-lab">
       <summary className="bloco-teste-titulo link">CMP-001 Campo de Senha</summary>
-      <div className="bloco-teste-conteudo">
+      <div className="bloco-teste-conteudo cmp001-lab-conteudo">
         <div className="cmp001-lab-controles">
-          <div className="cmp001-lab-controle campo-texto">
-            <label htmlFor="cmp001-lab-valor">Valor sob controle do Lab</label>
-            <input
-              id="cmp001-lab-valor"
-              className="controle-com-borda"
-              type="text"
-              value={valorTeste}
-              onChange={(evento) => setValorTeste(evento.currentTarget.value)}
-            />
-            <div className="cmp001-lab-acoes">
+          <div className="cmp001-lab-valor">
+            <div className="cmp001-lab-controle campo-texto">
+              <label htmlFor="cmp001-lab-valor">Valor sob controle do Lab</label>
+              <input
+                id="cmp001-lab-valor"
+                className="controle-com-borda"
+                type="text"
+                value={valorTeste}
+                onChange={(evento) => setValorTeste(evento.currentTarget.value)}
+              />
+            </div>
+            <div className="grupo-botoes">
               <button type="button" onClick={() => setValorAplicado(valorTeste)}>Aplicar valor</button>
               <button type="button" onClick={() => { setValorTeste(""); setValorAplicado(""); }}>Limpar valor</button>
             </div>

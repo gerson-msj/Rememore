@@ -77,12 +77,14 @@ export function Elm06() {
         <div className="elm06-variacoes">
           <div>
             <p>Variação: Botão</p>
+            {/* ELM-06, botão: reproduzir o elemento abaixo com as classes de cor desejadas. */}
             <button className={corSelecionada} type="button" disabled={!botoesAtivos}>
               Exemplo de botão
             </button>
           </div>
           <div>
             <p>Variação: Botão com ícone</p>
+            {/* ELM-06, botão com ícone: reproduzir o botão e seus filhos. */}
             <button
               className={`botao-com-icone ${corSelecionada}`}
               type="button"
@@ -103,7 +105,8 @@ export function Elm06() {
           </div>
           <div>
             <p>Variação: Múltiplos botões</p>
-            <div className="elm06-grupo-botoes">
+            {/* ELM-06, grupo: reproduzir o bloco completo a partir de grupo-botoes. */}
+            <div className="grupo-botoes">
               {Array.from({ length: quantidadeBotoes }, (_, indice) => (
                 <button
                   key={indice}

@@ -28,6 +28,7 @@ export function Elm05() {
         <div className="elm05-variacoes">
           <div>
             <p>Variação: Caixa de texto</p>
+            {/* ELM-05, caixa de texto: reproduzir o bloco completo a partir de campo-texto. */}
             <div className={classeCampoTexto}>
               <label htmlFor="elm05-caixa-texto">Texto</label>
               <input id="elm05-caixa-texto" className="controle-com-borda" type="text" />
@@ -35,6 +36,7 @@ export function Elm05() {
           </div>
           <div>
             <p>Variação: Caixa de texto multilinear</p>
+            {/* ELM-05, multilinear: reproduzir o bloco completo a partir de campo-texto. */}
             <div className={classeCampoTexto}>
               <label htmlFor="elm05-caixa-texto-multilinear">Texto</label>
               <textarea id="elm05-caixa-texto-multilinear" className="controle-com-borda" rows={3} />
@@ -42,6 +44,7 @@ export function Elm05() {
           </div>
           <div>
             <p>Variação: Caixa de texto em estado de erro</p>
+            {/* ELM-05, erro: reproduzir o bloco completo, incluindo a mensagem. */}
             <div className="campo-texto cor-perigo">
               <label htmlFor="elm05-caixa-texto-erro">Texto</label>
               <input id="elm05-caixa-texto-erro" className="controle-com-borda" type="text" aria-invalid="true" />
@@ -50,6 +53,7 @@ export function Elm05() {
           </div>
           <div>
             <p>Variação: Caixa de texto somente leitura</p>
+            {/* ELM-05, somente leitura: reproduzir o bloco completo a partir de campo-texto. */}
             <div className={classeCampoTexto}>
               <label htmlFor="elm05-caixa-texto-leitura">Texto</label>
               <input id="elm05-caixa-texto-leitura" className="controle-com-borda" type="text" value="Texto somente leitura" readOnly />
@@ -57,6 +61,7 @@ export function Elm05() {
           </div>
           <div>
             <p>Variação: Caixa de seleção</p>
+            {/* ELM-05, seleção: reproduzir o bloco completo, incluindo select-com-icone. */}
             <div className={classeCampoTexto}>
               <label htmlFor="elm05-caixa-selecao">Opção</label>
               <div className="select-com-icone">
