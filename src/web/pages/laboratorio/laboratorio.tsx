@@ -9,6 +9,7 @@ import { Elm06 } from "./elementos/elm06";
 import { Cmp001 } from "./componentes/cmp001";
 import { Cmp002 } from "./componentes/cmp002";
 import { Cmp028 } from "./componentes/cmp028";
+import "./laboratorio.css";
 
 export default function Laboratorio() {
   const { setConfiguracao } = useHeader();

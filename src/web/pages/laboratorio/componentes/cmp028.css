@@ -1,4 +1,4 @@
-@layer componente {
+@layer pagina {
   .cmp028-lab .cmp028-lab-conteudo {
     display: grid;
     gap: var(--padding-padrao);

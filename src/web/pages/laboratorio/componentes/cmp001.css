@@ -1,4 +1,4 @@
-@layer componente {
+@layer pagina {
   .cmp001-lab .cmp001-lab-conteudo {
     display: grid;
     gap: var(--padding-padrao);
@@ -27,11 +27,6 @@
 
   .cmp001-lab .cmp001-lab-controle input[type="text"],
   .cmp001-lab .cmp001-lab-controle select {
-    width: 100%;
-  }
-
-  .cmp001-lab .cmp001-lab-controle .select-com-icone {
-    display: block;
     width: 100%;
   }
 

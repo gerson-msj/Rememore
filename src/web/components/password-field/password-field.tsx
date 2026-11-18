@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import "./password-field.css";
 
 export type PasswordAutocomplete = "off" | "current-password" | "new-password";
@@ -23,8 +23,9 @@ export function PasswordField({
   const [senhaVisivel, setSenhaVisivel] = useState(false);
   const iconeInativo = disabled || value.length === 0;
   const classeCorIcone = iconeInativo ? "cor-elemento-inativo" : hasError ? "texto-cor-selecionada" : "";
-  const id = "cmp001-campo-senha";
-  const errorId = "cmp001-mensagem-erro";
+  const idBase = useId();
+  const id = `${idBase}-campo-senha`;
+  const errorId = `${idBase}-mensagem-erro`;
 
   return (
     <div className="cmp001">

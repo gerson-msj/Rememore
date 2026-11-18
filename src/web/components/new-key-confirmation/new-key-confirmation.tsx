@@ -66,26 +66,24 @@ export function NewKeyConfirmation({ chave }: NewKeyConfirmationProps) {
 
   return (
     <div className="cmp002">
-      <div className="cmp002-conteudo">
-        <div className="campo-texto">
-          <label htmlFor={idCampo}>Chave de redefinição de senha</label>
-          <div className="controle-com-icone">
-            <input
-              id={idCampo}
-              className="controle-com-borda"
-              type="text"
-              value={chave}
-              readOnly
-            />
-            <button
-              className="botao-icone-controle link"
-              type="button"
-              aria-label="Copiar chave"
-              onClick={copiarChave}
-            >
-              <i className="fa-solid fa-copy" aria-hidden="true" />
-            </button>
-          </div>
+      <div className="campo-texto">
+        <label htmlFor={idCampo}>Chave de redefinição de senha</label>
+        <div className="controle-com-icone">
+          <input
+            id={idCampo}
+            className="controle-com-borda"
+            type="text"
+            value={chave}
+            readOnly
+          />
+          <button
+            className="botao-icone-controle link"
+            type="button"
+            aria-label="Copiar chave"
+            onClick={copiarChave}
+          >
+            <i className="fa-solid fa-copy" aria-hidden="true" />
+          </button>
         </div>
       </div>
       {feedbackVisivel && (
