@@ -82,7 +82,7 @@
   }
 
   .popup-acoes {
-    justify-content: flex-end;
+    justify-self: end;
   }
 
   @media (prefers-reduced-motion: reduce) {

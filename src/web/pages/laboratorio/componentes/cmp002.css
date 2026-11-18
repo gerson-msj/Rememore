@@ -1,0 +1,19 @@
+@layer componente {
+  .cmp002-lab .bloco-teste-conteudo {
+    display: grid;
+    gap: var(--padding-padrao);
+  }
+
+  .cmp002-lab .cmp002-lab-controles {
+    display: grid;
+    gap: var(--padding-padrao);
+  }
+
+  .cmp002-lab .cmp002-lab-controles > .campo-texto {
+    max-width: 40rem;
+  }
+
+  .cmp002-lab .bloco-teste-conteudo > p {
+    margin: 0;
+  }
+}

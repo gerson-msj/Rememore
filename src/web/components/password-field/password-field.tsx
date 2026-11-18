@@ -30,7 +30,7 @@ export function PasswordField({
     <div className="cmp001">
       <div className={`campo-texto${hasError ? " cor-perigo" : ""}`}>
         <label htmlFor={id}>Senha</label>
-        <div className="cmp001-entrada">
+        <div className="controle-com-icone cmp001-entrada">
           <input
             id={id}
             className="controle-com-borda"
@@ -43,7 +43,7 @@ export function PasswordField({
             onChange={(evento) => onChange(evento.currentTarget.value)}
           />
           <button
-            className="cmp001-alternar link"
+            className="botao-icone-controle cmp001-alternar link"
             type="button"
             aria-label={senhaVisivel ? "Ocultar senha" : "Exibir senha"}
             aria-pressed={senhaVisivel}

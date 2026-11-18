@@ -1,0 +1,13 @@
+@layer componente {
+  .cmp002 .cmp002-conteudo {
+    width: 100%;
+  }
+
+  .cmp002 .cmp002-feedback {
+    display: block;
+    margin: var(--espacamento-reduzido-elemento) 0 0;
+    font-size: 1em;
+    text-align: center;
+  }
+
+}

@@ -110,7 +110,7 @@
     font-size: 0.75em;
   }
 
-  button {
+  button:not(.botao-icone-controle) {
     height: var(--altura-controle);
     padding-inline: var(--espacamento-controle);
     border: var(--espessura-borda) solid var(--cor-botao-borda);
@@ -126,31 +126,35 @@
       opacity var(--duracao-transicao-elemento) ease;
   }
 
-  button:hover:not(:disabled) {
+  button:not(.botao-icone-controle):hover:not(:disabled) {
     background-color: var(--cor-botao-preenchimento-hover);
     border-color: var(--cor-botao-borda-hover);
   }
 
-  button:active:not(:disabled) {
+  button:not(.botao-icone-controle):active:not(:disabled) {
     background-color: var(--cor-botao-preenchimento-ativo);
     border-color: var(--cor-botao-borda-ativa);
   }
 
-  button:disabled {
+  button:not(.botao-icone-controle):disabled {
     opacity: 0.9;
     cursor: default;
   }
 
   .grupo-botoes {
-    display: flex;
-    flex-wrap: wrap;
+    display: inline-grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
     gap: var(--espacamento-controle);
+    width: max-content;
   }
 
-  .grupo-botoes > button {
-    width: 7rem;
+  .grupo-botoes > button:not(.botao-icone-controle) {
+    width: auto;
+    min-width: 0;
     height: auto;
     min-height: var(--altura-controle);
+    white-space: nowrap;
   }
 
   button.botao-com-icone {

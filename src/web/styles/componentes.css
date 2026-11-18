@@ -22,4 +22,46 @@
     border-top: var(--espessura-borda) solid var(--cor-borda-padrao);
     border-radius: 0 0 8px 8px;
   }
+
+  .controle-com-icone {
+    position: relative;
+  }
+
+  .controle-com-icone > input.controle-com-borda {
+    min-width: 0;
+    width: 100%;
+    padding-right: 2.5rem;
+  }
+
+  .controle-com-icone > button.botao-icone-controle {
+    position: absolute;
+    top: 50%;
+    right: calc(var(--espacamento-controle) + var(--espacamento-reduzido-elemento));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25em;
+    aspect-ratio: 1;
+    height: 1.25em;
+    min-height: 0;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    transform: translateY(-50%);
+    text-decoration: none;
+  }
+
+  .controle-com-icone > button.botao-icone-controle > i {
+    font-size: 1.1em;
+  }
+
+  .controle-com-icone > button.botao-icone-controle:disabled {
+    cursor: pointer;
+  }
+
+  .controle-com-icone > button.botao-icone-controle:hover,
+  .controle-com-icone > button.botao-icone-controle:active:not(:disabled) {
+    border-color: transparent;
+    background-color: transparent;
+  }
 }
