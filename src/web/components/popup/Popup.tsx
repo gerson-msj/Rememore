@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { AcaoPopup, OpcoesPopup, TemaPopup } from "./PopupContext";
 import "./popup.css";
 
@@ -15,6 +15,7 @@ function classeTemaBotao(tema?: TemaPopup) {
 export function Popup({ id, opcoes, aoResponder }: PopupProps) {
   const [estado, setEstado] = useState<"inicial" | "aberto" | "fechando">("inicial");
   const camadaRef = useRef<HTMLDivElement>(null);
+  const dialogoRef = useRef<HTMLElement>(null);
   const acaoFechamentoRef = useRef<AcaoPopup | null>(null);
 
   const fechar = useCallback((acao: AcaoPopup) => {
@@ -38,11 +39,55 @@ export function Popup({ id, opcoes, aoResponder }: PopupProps) {
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
+  useLayoutEffect(() => {
+    const dialogo = dialogoRef.current;
+    if (!dialogo) return;
+
+    const focoAnterior = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+
+    const manterFoco = (evento: FocusEvent) => {
+      if (evento.target instanceof Node && !dialogo.contains(evento.target)) {
+        dialogo.focus();
+      }
+    };
+
+    document.addEventListener("focusin", manterFoco);
+    dialogo.focus();
+
+    return () => {
+      document.removeEventListener("focusin", manterFoco);
+      if (focoAnterior?.isConnected) focoAnterior.focus();
+    };
+  }, []);
+
   useEffect(() => {
     const tratarTecla = (evento: KeyboardEvent) => {
       if (evento.key === "Escape") {
         evento.preventDefault();
         fechar("Cancelar");
+      } else if (evento.key === "Tab") {
+        const dialogo = dialogoRef.current;
+        if (!dialogo) return;
+
+        const controles = Array.from(dialogo.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        )).filter((controle) => controle.getClientRects().length > 0);
+        const primeiro = controles[0];
+        const ultimo = controles[controles.length - 1];
+        const focoAtual = document.activeElement;
+
+        if (!primeiro || !ultimo) {
+          evento.preventDefault();
+          dialogo.focus();
+        } else if (evento.shiftKey && (focoAtual === primeiro || focoAtual === dialogo || !dialogo.contains(focoAtual))) {
+          evento.preventDefault();
+          ultimo.focus();
+        } else if (!evento.shiftKey && (focoAtual === ultimo || focoAtual === dialogo || !dialogo.contains(focoAtual))) {
+          evento.preventDefault();
+          primeiro.focus();
+        }
       }
     };
 
@@ -104,8 +149,10 @@ export function Popup({ id, opcoes, aoResponder }: PopupProps) {
       }}
     >
       <section
+        ref={dialogoRef}
         className={`popup${opcoes.tema && opcoes.tema !== "normal" ? ` cor-popup-${opcoes.tema}` : ""}`}
         role="dialog"
+        tabIndex={-1}
         aria-modal="true"
         aria-labelledby={opcoes.titulo ? tituloId : undefined}
         aria-label={opcoes.titulo ? undefined : "Mensagem"}
