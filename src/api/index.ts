@@ -1,7 +1,15 @@
 import { serve } from "bun";
 import index from "../web/index.html";
 
+const hostname = process.argv.includes("--intranet")
+  ? process.env.REMEMORE_LAN_HOST || "192.168.0.24"
+  : process.env.NODE_ENV === "production"
+  ? "0.0.0.0"
+  : "127.0.0.1";
+
 const server = serve({
+  hostname,
+  port: 3000,
   routes: {
     // Serve index.html for all unmatched routes.
     "/*": index,

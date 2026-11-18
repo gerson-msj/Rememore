@@ -23,7 +23,7 @@ export default function Home() {
                 <div className="pagina-inicial-acoes">
                     <button type="button">Entrar</button>
                     <button type="button">Criar conta</button>
-                    <Link className="pagina-inicial-botao-laboratorio" to="/lab">Laboratório</Link>
+                    <Link className="pagina-inicial-botao-laboratorio cor-link" to="/lab">Laboratório</Link>
                 </div>
             </div>
         </section>

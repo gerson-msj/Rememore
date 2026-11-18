@@ -26,7 +26,7 @@
   }
 
   .controle-com-borda {
-    border: var(--espessura-borda) solid var(--cor-campo-borda, var(--cor-borda));
+    border: var(--espessura-borda) solid var(--cor-campo-borda);
     border-radius: var(--raio-borda-controle);
     font: inherit;
     transition: border-color var(--duracao-transicao-elemento) ease,
@@ -36,12 +36,20 @@
 
   .controle-com-borda:hover,
   .controle-com-borda:focus {
-    border-color: var(--cor-campo-borda-hover, color-mix(in srgb, var(--cor-borda) 80%, var(--cor-mistura)));
+    border-color: var(--cor-campo-borda-hover);
   }
 
   .controle-com-borda:focus {
     outline: none;
-    box-shadow: 0 0 var(--desfoque-sombra-foco) var(--cor-campo-sombra, var(--cor-borda));
+    box-shadow: 0 0 var(--desfoque-sombra-foco) var(--cor-campo-sombra);
+  }
+
+  .campo-texto input[type="text"],
+  .campo-texto input[type="password"],
+  .campo-texto textarea,
+  select {
+    color: var(--cor-texto);
+    background-color: var(--cor-campo-preenchimento);
   }
 
   .campo-texto input[type="text"],
@@ -60,8 +68,6 @@
     height: var(--altura-controle);
     padding-inline: var(--espacamento-controle);
     font: inherit;
-    color: var(--cor-texto);
-    background-color: var(--cor-fundo);
     appearance: auto;
   }
 
@@ -94,35 +100,40 @@
   }
 
   .campo-texto input[type="text"]:read-only {
-    background-color: color-mix(in srgb, var(--cor-fundo) 97%, var(--cor-mistura));
+    background-color: var(--cor-campo-preenchimento-leitura);
     cursor: default;
-  }
-
-  .campo-texto:is(.cor-link, .cor-perigo) input[type="text"],
-  .campo-texto:is(.cor-link, .cor-perigo) input[type="password"],
-  .campo-texto:is(.cor-link, .cor-perigo) textarea,
-  .campo-texto:is(.cor-link, .cor-perigo) select {
-    background-color: var(--cor-campo-preenchimento);
   }
 
   .mensagem-erro {
     margin: var(--espacamento-reduzido-elemento) 0 0 var(--espacamento-reduzido-elemento);
-    color: color-mix(in srgb, var(--cor-perigo) 75%, var(--cor-fundo));
+    color: var(--cor-texto-mensagem-erro);
     font-size: 0.75em;
   }
 
   button {
     height: var(--altura-controle);
     padding-inline: var(--espacamento-controle);
-    border: var(--espessura-borda) solid var(--cor-borda);
+    border: var(--espessura-borda) solid var(--cor-botao-borda);
     border-radius: var(--raio-borda-controle);
     font: inherit;
+    color: var(--cor-botao-texto);
+    background-color: var(--cor-botao-preenchimento);
     cursor: pointer;
     transition:
       color var(--duracao-transicao-elemento) ease,
       background-color var(--duracao-transicao-elemento) ease,
       border-color var(--duracao-transicao-elemento) ease,
       opacity var(--duracao-transicao-elemento) ease;
+  }
+
+  button:hover:not(:disabled) {
+    background-color: var(--cor-botao-preenchimento-hover);
+    border-color: var(--cor-botao-borda-hover);
+  }
+
+  button:active:not(:disabled) {
+    background-color: var(--cor-botao-preenchimento-ativo);
+    border-color: var(--cor-botao-borda-ativa);
   }
 
   button:disabled {
@@ -136,6 +147,12 @@
     gap: var(--espacamento-controle);
   }
 
+  .grupo-botoes > button {
+    width: 7rem;
+    height: auto;
+    min-height: var(--altura-controle);
+  }
+
   button.botao-com-icone {
     display: inline-flex;
     align-items: center;
@@ -146,47 +163,15 @@
     font-size: 1.2em;
   }
 
-  button.cor-link,
-  button.cor-perigo {
-    color: var(--cor-botao-texto);
-    background-color: var(--cor-botao-preenchimento);
-    border-color: var(--cor-botao-borda);
-  }
-
-  button.cor-link:hover:not(:disabled),
-  button.cor-perigo:hover:not(:disabled) {
-    background-color: var(--cor-botao-preenchimento-hover);
-    border-color: var(--cor-botao-borda-hover);
-  }
-
-  button.cor-link:active:not(:disabled),
-  button.cor-perigo:active:not(:disabled) {
-    background-color: var(--cor-botao-preenchimento-ativo);
-    border-color: var(--cor-botao-borda-ativa);
-  }
-
-  .link,
-  .link-perigo {
+  .link {
     transition:
       color var(--duracao-transicao-elemento) ease,
       text-shadow var(--duracao-transicao-elemento) ease;
-  }
-
-  .link {
-    color: var(--cor-link);
+    color: var(--cor-texto-destaque);
   }
 
   .link:hover {
-    color: color-mix(in srgb, var(--cor-link) 80%, var(--cor-mistura));
-    text-shadow: 0 0 var(--desfoque-sombra-link) color-mix(in srgb, var(--cor-link) 35%, transparent);
-  }
-
-  .link-perigo {
-    color: var(--cor-perigo);
-  }
-
-  .link-perigo:hover {
-    color: color-mix(in srgb, var(--cor-perigo) 80%, var(--cor-mistura));
-    text-shadow: 0 0 var(--desfoque-sombra-link) color-mix(in srgb, var(--cor-perigo) 35%, transparent);
+    color: var(--cor-texto-destaque-hover);
+    text-shadow: 0 0 var(--desfoque-sombra-link) var(--cor-texto-destaque-sombra);
   }
 }

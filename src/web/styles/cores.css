@@ -1,4 +1,65 @@
 @layer global {
+  :root {
+    --cor-selecionada: var(--cor-padrao);
+    --cor-borda-padrao: color-mix(in srgb, var(--cor-borda) 92%, var(--cor-padrao) 8%);
+    --cor-texto-mensagem-erro: color-mix(in srgb, var(--cor-perigo) 75%, var(--cor-fundo));
+
+    --cor-texto-destaque: var(--cor-link);
+    --cor-texto-destaque-hover: color-mix(in srgb, var(--cor-link) 80%, var(--cor-mistura));
+    --cor-texto-destaque-sombra: color-mix(in srgb, var(--cor-link) 35%, transparent);
+
+    --cor-campo-preenchimento-padrao: var(--cor-fundo);
+    --cor-campo-borda-padrao: var(--cor-borda-padrao);
+    --cor-campo-borda-hover-padrao: color-mix(in srgb, var(--cor-borda) 80%, var(--cor-padrao));
+    --cor-campo-sombra-padrao: var(--cor-borda-padrao);
+    --cor-campo-preenchimento-leitura-padrao: color-mix(in srgb, var(--cor-fundo) 97%, var(--cor-padrao));
+
+    --cor-botao-texto-padrao: var(--cor-texto);
+    --cor-botao-preenchimento-padrao: color-mix(in srgb, var(--cor-fundo) 94%, var(--cor-padrao));
+    --cor-botao-borda-padrao: var(--cor-borda-padrao);
+    --cor-botao-preenchimento-hover-padrao: color-mix(in srgb, var(--cor-fundo) 90%, var(--cor-padrao));
+    --cor-botao-borda-hover-padrao: color-mix(in srgb, var(--cor-borda) 75%, var(--cor-padrao));
+    --cor-botao-preenchimento-ativo-padrao: color-mix(in srgb, var(--cor-fundo) 86%, var(--cor-padrao));
+    --cor-botao-borda-ativa-padrao: color-mix(in srgb, var(--cor-borda) 60%, var(--cor-padrao));
+
+    --cor-popup-cor-destaque: var(--cor-padrao);
+    --cor-popup-borda: var(--cor-borda-padrao);
+    --cor-popup-sombra: color-mix(in srgb, var(--cor-padrao) 24%, transparent);
+
+    --cor-campo-preenchimento: var(--cor-campo-preenchimento-padrao);
+    --cor-campo-borda: var(--cor-campo-borda-padrao);
+    --cor-campo-borda-hover: var(--cor-campo-borda-hover-padrao);
+    --cor-campo-sombra: var(--cor-campo-sombra-padrao);
+    --cor-campo-preenchimento-leitura: var(--cor-campo-preenchimento-leitura-padrao);
+
+    --cor-botao-texto: var(--cor-botao-texto-padrao);
+    --cor-botao-preenchimento: var(--cor-botao-preenchimento-padrao);
+    --cor-botao-borda: var(--cor-botao-borda-padrao);
+    --cor-botao-preenchimento-hover: var(--cor-botao-preenchimento-hover-padrao);
+    --cor-botao-borda-hover: var(--cor-botao-borda-hover-padrao);
+    --cor-botao-preenchimento-ativo: var(--cor-botao-preenchimento-ativo-padrao);
+    --cor-botao-borda-ativa: var(--cor-botao-borda-ativa-padrao);
+  }
+
+  .cor-padrao {
+    --cor-selecionada: var(--cor-padrao);
+    --cor-texto-destaque: var(--cor-padrao);
+    --cor-texto-destaque-hover: color-mix(in srgb, var(--cor-padrao) 80%, var(--cor-mistura));
+    --cor-texto-destaque-sombra: color-mix(in srgb, var(--cor-padrao) 35%, transparent);
+    --cor-campo-preenchimento: var(--cor-campo-preenchimento-padrao);
+    --cor-campo-borda: var(--cor-campo-borda-padrao);
+    --cor-campo-borda-hover: var(--cor-campo-borda-hover-padrao);
+    --cor-campo-sombra: var(--cor-campo-sombra-padrao);
+    --cor-campo-preenchimento-leitura: var(--cor-campo-preenchimento-leitura-padrao);
+    --cor-botao-texto: var(--cor-botao-texto-padrao);
+    --cor-botao-preenchimento: var(--cor-botao-preenchimento-padrao);
+    --cor-botao-borda: var(--cor-botao-borda-padrao);
+    --cor-botao-preenchimento-hover: var(--cor-botao-preenchimento-hover-padrao);
+    --cor-botao-borda-hover: var(--cor-botao-borda-hover-padrao);
+    --cor-botao-preenchimento-ativo: var(--cor-botao-preenchimento-ativo-padrao);
+    --cor-botao-borda-ativa: var(--cor-botao-borda-ativa-padrao);
+  }
+
   .cor-link {
     --cor-selecionada: var(--cor-link);
   }
@@ -7,12 +68,22 @@
     --cor-selecionada: var(--cor-perigo);
   }
 
+  .cor-alerta {
+    --cor-selecionada: var(--cor-alerta);
+  }
+
   .cor-link,
-  .cor-perigo {
+  .cor-perigo,
+  .cor-alerta {
+    --cor-texto-destaque: var(--cor-selecionada);
+    --cor-texto-destaque-hover: color-mix(in srgb, var(--cor-selecionada) 80%, var(--cor-mistura));
+    --cor-texto-destaque-sombra: color-mix(in srgb, var(--cor-selecionada) 35%, transparent);
+
     --cor-campo-preenchimento: color-mix(in srgb, var(--cor-selecionada) 8%, var(--cor-fundo));
     --cor-campo-borda: color-mix(in srgb, var(--cor-selecionada) 40%, var(--cor-fundo));
     --cor-campo-borda-hover: color-mix(in srgb, var(--cor-selecionada) 55%, var(--cor-fundo));
     --cor-campo-sombra: color-mix(in srgb, var(--cor-selecionada) 35%, transparent);
+
     --cor-botao-texto: var(--cor-selecionada);
     --cor-botao-preenchimento: color-mix(in srgb, var(--cor-selecionada) 12%, var(--cor-fundo));
     --cor-botao-borda: color-mix(in srgb, var(--cor-selecionada) 40%, var(--cor-fundo));
@@ -20,5 +91,27 @@
     --cor-botao-borda-hover: color-mix(in srgb, var(--cor-selecionada) 55%, var(--cor-fundo));
     --cor-botao-preenchimento-ativo: color-mix(in srgb, var(--cor-selecionada) 18%, var(--cor-fundo));
     --cor-botao-borda-ativa: color-mix(in srgb, var(--cor-selecionada) 70%, var(--cor-fundo));
+  }
+
+  .cor-popup-link {
+    --cor-popup-cor-destaque: var(--cor-link);
+    --cor-popup-borda: color-mix(in srgb, var(--cor-link) 55%, var(--cor-fundo));
+    --cor-popup-sombra: color-mix(in srgb, var(--cor-link) 24%, transparent);
+  }
+
+  .cor-popup-perigo {
+    --cor-popup-cor-destaque: var(--cor-perigo);
+    --cor-popup-borda: color-mix(in srgb, var(--cor-perigo) 55%, var(--cor-fundo));
+    --cor-popup-sombra: color-mix(in srgb, var(--cor-perigo) 24%, transparent);
+  }
+
+  .cor-popup-alerta {
+    --cor-popup-cor-destaque: var(--cor-alerta);
+    --cor-popup-borda: color-mix(in srgb, var(--cor-alerta) 55%, var(--cor-fundo));
+    --cor-popup-sombra: color-mix(in srgb, var(--cor-alerta) 24%, transparent);
+  }
+
+  .texto-cor-selecionada {
+    color: var(--cor-selecionada);
   }
 }

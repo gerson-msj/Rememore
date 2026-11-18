@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun --hot src/api/index.ts",
+    "host": "bun --hot src/api/index.ts --intranet",
     "build": "bun build ./src/web/index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'",
     "build:pages": "bun build ./src/web/index.html --outdir=dist-pages --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --public-path=./",
     "build:server": "bun build --target=bun --production --outdir=dist/server ./src/api/index.ts",

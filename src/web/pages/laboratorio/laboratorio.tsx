@@ -7,6 +7,7 @@ import { Elm04 } from "./elementos/elm04";
 import { Elm05 } from "./elementos/elm05";
 import { Elm06 } from "./elementos/elm06";
 import { Cmp001 } from "./componentes/cmp001";
+import { Cmp028 } from "./componentes/cmp028";
 
 export default function Laboratorio() {
   const { setConfiguracao } = useHeader();
@@ -57,6 +58,7 @@ export default function Laboratorio() {
         hidden={abaSelecionada !== "componentes"}
       >
         <Cmp001 />
+        <Cmp028 />
       </section>
     </div>
   );

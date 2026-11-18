@@ -22,7 +22,7 @@ export function PasswordField({
 }: PasswordFieldProps) {
   const [senhaVisivel, setSenhaVisivel] = useState(false);
   const iconeInativo = disabled || value.length === 0;
-  const classeCorIcone = iconeInativo ? "cor-elemento-inativo" : hasError ? "cor-perigo" : "";
+  const classeCorIcone = iconeInativo ? "cor-elemento-inativo" : hasError ? "texto-cor-selecionada" : "";
   const id = "cmp001-campo-senha";
   const errorId = "cmp001-mensagem-erro";
 

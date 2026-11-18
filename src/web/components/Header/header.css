@@ -19,7 +19,7 @@
     width: min(100%, var(--largura-maxima-pagina));
     height: 100%;
     margin-inline: auto;
-    border-bottom: var(--espessura-borda) solid var(--cor-borda);
+    border-bottom: var(--espessura-borda) solid var(--cor-borda-padrao);
   }
 
   .cabecalho .cabecalho-coluna-central {

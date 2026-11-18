@@ -11,6 +11,10 @@ Este documento reúne informações sobre o projeto, seus recursos e as ferramen
 - Após a conclusão da parte web, ela servirá de base para definir o que a API deverá fornecer. As implementações fake serão descartadas gradualmente.
 - Haverá também armazenamento local definitivo.
 
+## Contextos e provedores React
+
+- Ao fornecer por contexto um valor composto por objeto ou funções, use `useMemo` para manter a referência estável enquanto seus dados não mudarem. Declare as dependências correspondentes ao conteúdo do valor para evitar atualizações desnecessárias dos componentes consumidores. Não use memoização para ocultar mudanças reais do contexto.
+
 ## Estilos da aplicação web
 
 - O projeto não utiliza framework CSS. Os estilos são organizados, nesta ordem de precedência: `global`, `elementos`, `componentes`, `componente`, `paginas` e `pagina`.
@@ -25,6 +29,8 @@ Este documento reúne informações sobre o projeto, seus recursos e as ferramen
 - A camada `global` reúne estilos aplicáveis à aplicação inteira.
 - O projeto utiliza o pacote gratuito de ícones do Font Awesome 7.
 - Os temas `light` e `dark` ficam em `src/web/styles/themes`, na camada `global`, e definem as variáveis de cor de fundo e texto. O tema é selecionado pelo atributo `data-theme` no elemento `<html>`; por enquanto, o HTML inicia com `light`.
+- Os arquivos em `src/web/styles/themes` são a fonte dos valores de cada cor semântica por tema. `src/web/styles/cores.css` mantém o catálogo dos papéis de cor e mapeia suas classes e propriedades visuais genéricas, como texto, borda, preenchimento e estados. Elementos e componentes devem consumir essas propriedades genéricas sem enumerar cores específicas em seus próprios seletores. Para adicionar um novo papel de cor, inclua seu valor em todos os temas e seu mapeamento em `cores.css`; só altere estilos consumidores se a nova cor introduzir um comportamento visual que ainda não esteja coberto pelo contrato genérico.
+- Os arquivos em `src/web/styles/themes` são a fonte dos valores de cada cor semântica por tema: `--cor-padrao`, `--cor-link`, `--cor-perigo` e `--cor-alerta`. `--cor-texto` usa `--cor-padrao`; estilos comuns sem uma classe de cor recebem as propriedades padrão de `cores.css`. Esse arquivo mantém o catálogo dos papéis e mapeia suas classes e propriedades visuais genéricas, como texto, borda, preenchimento e estados. Classes como `.cor-link`, `.cor-perigo` e `.cor-alerta` substituem essas propriedades por herança; quando um componente aplica a cor a partes específicas da apresentação, use propriedades próprias do componente, como o conjunto `--cor-popup-*`. Elementos e componentes devem consumir as propriedades genéricas sem enumerar cores específicas em seus próprios seletores. Para adicionar um novo papel, inclua seu valor em todos os temas e seu mapeamento em `cores.css`; atualize também os contratos e seletores de teste que exponham a nova opção, sem percorrer os estilos consumidores.
 - A definição de temas será expandida futuramente com alternância por componente, contexto e provider, incluindo as opções `system`, `light` e `dark`.
 
 ## Serviço de armazenamento

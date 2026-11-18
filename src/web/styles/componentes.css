@@ -1,7 +1,7 @@
 @layer componentes {
   .bloco-teste {
     margin: 16px 8px;
-    border: var(--espessura-borda) solid var(--cor-borda);
+    border: var(--espessura-borda) solid var(--cor-borda-padrao);
     border-radius: 8px;
   }
 
@@ -19,7 +19,7 @@
 
   .bloco-teste-conteudo {
     padding: var(--padding-padrao);
-    border-top: var(--espessura-borda) solid var(--cor-borda);
+    border-top: var(--espessura-borda) solid var(--cor-borda-padrao);
     border-radius: 0 0 8px 8px;
   }
 }

@@ -1,11 +1,16 @@
 import type { ReactNode } from "react";
 import { HeaderProvider } from "@web/components/Header/HeaderContext";
+import { PopupProvider } from "@web/components/popup/PopupContext";
 
 type AppProvidersProps = {
   children: ReactNode;
 };
 
 export function AppProviders({ children }: AppProvidersProps) {
-  return <HeaderProvider>{children}</HeaderProvider>;
+  return (
+    <HeaderProvider>
+      <PopupProvider>{children}</PopupProvider>
+    </HeaderProvider>
+  );
 }
 

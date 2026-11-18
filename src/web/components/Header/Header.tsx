@@ -27,7 +27,7 @@ export function Header() {
         <div className="cabecalho-coluna-direita">
           {configuracao.sair && (
             <button
-              className="cabecalho-acao link-perigo"
+              className="cabecalho-acao link cor-perigo"
               type="button"
               aria-label="Sair"
               onClick={configuracao.sair}

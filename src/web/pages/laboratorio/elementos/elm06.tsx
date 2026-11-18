@@ -34,6 +34,7 @@ export function Elm06() {
                 <option value="">Padrão</option>
                 <option value="cor-link">Link</option>
                 <option value="cor-perigo">Perigo</option>
+                <option value="cor-alerta">Alerta</option>
               </select>
               <i className="fa-solid fa-caret-down icone-selecao" aria-hidden="true" />
             </span>

@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useMemo,
   useState,
   type Dispatch,
   type ReactNode,
@@ -34,9 +35,13 @@ export function HeaderProvider({
   const [configuracao, setConfiguracao] = useState<ConfiguracaoHeader>({
     titulo: tituloInicial,
   });
+  const valorContexto = useMemo(
+    () => ({ configuracao, setConfiguracao }),
+    [configuracao],
+  );
 
   return (
-    <HeaderContext.Provider value={{ configuracao, setConfiguracao }}>
+    <HeaderContext.Provider value={valorContexto}>
       {children}
     </HeaderContext.Provider>
   );

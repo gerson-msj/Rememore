@@ -1,0 +1,76 @@
+@layer componente {
+  .cmp028-lab .cmp028-lab-conteudo {
+    display: grid;
+    gap: var(--padding-padrao);
+  }
+
+  .cmp028-lab .cmp028-lab-controles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: var(--padding-padrao);
+  }
+
+  .cmp028-lab .cmp028-lab-coluna {
+    display: grid;
+    align-content: start;
+    gap: var(--padding-padrao);
+    min-width: 0;
+  }
+
+  .cmp028-lab .cmp028-lab-coluna .campo-texto input,
+  .cmp028-lab .cmp028-lab-coluna .campo-texto select,
+  .cmp028-lab .cmp028-lab-coluna .campo-texto textarea {
+    width: 100%;
+  }
+
+  .cmp028-lab .cmp028-lab-mensagem textarea {
+    height: 7rem;
+    resize: vertical;
+  }
+
+  .cmp028-lab .cmp028-lab-opcao {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .cmp028-lab .cmp028-lab-botao {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--padding-padrao);
+    min-width: 0;
+    margin: 0;
+    padding: var(--padding-padrao);
+    border: var(--espessura-borda) solid var(--cor-borda-padrao);
+    border-radius: var(--raio-borda-controle);
+  }
+
+  .cmp028-lab .cmp028-lab-botao legend {
+    padding-inline: 0.25rem;
+  }
+
+  .cmp028-lab .cmp028-lab-botao > .cmp028-lab-opcao {
+    grid-column: 1 / -1;
+  }
+
+  .cmp028-lab .cmp028-lab-acao {
+    display: grid;
+    justify-items: start;
+    gap: var(--padding-padrao);
+  }
+
+  .cmp028-lab .cmp028-lab-acao p {
+    margin: 0;
+  }
+
+  @media (max-width: 40rem) {
+    .cmp028-lab .cmp028-lab-controles {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cmp028-lab .cmp028-lab-botao {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
