@@ -89,6 +89,21 @@
 
   .campo-texto .select-com-icone select {
     width: 100%;
+    appearance: base-select;
+    align-items: center;
+  }
+
+  .campo-texto .select-com-icone select::picker(select) {
+    appearance: base-select;
+    border: var(--espessura-borda) solid var(--cor-campo-borda);
+    border-radius: var(--raio-borda-controle);
+    padding-block: var(--espacamento-controle);
+    top: anchor(bottom);
+    left: anchor(left);
+  }
+
+  .campo-texto .select-com-icone select::picker-icon {
+    display: none;
   }
 
   .select-com-icone .icone-selecao {
