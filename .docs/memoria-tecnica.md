@@ -5,11 +5,41 @@ Este documento reúne informações sobre o projeto, seus recursos e as ferramen
 ## Organização e desenvolvimento
 
 - `src` está dividida em `api`, `web` e `shared`.
-- O desenvolvimento começa pela aplicação web, com React.
-- Os contratos de dados serão definidos ao longo do desenvolvimento e ficarão em `shared`.
-- Inicialmente, os dados serão armazenados por implementações fake, possivelmente usando IndexedDB.
-- Após a conclusão da parte web, ela servirá de base para definir o que a API deverá fornecer. As implementações fake serão descartadas gradualmente.
+- O desenvolvimento começa pela aplicação web, com React, integrada à API por comunicação HTTP real.
+- Os contratos de request e response ficam em `shared` e são utilizados pela API e pela aplicação web.
+- Os endpoints são implementados em `api/controllers`, com cenários simulados e hardcoded. Quando necessário, podem utilizar dados em memória ou arquivos JSON.
+- As camadas de serviço e persistência da API serão desenvolvidas em fase posterior.
 - Haverá também armazenamento local definitivo.
+- Utilize os aliases `@web`, `@api` e `@shared` nas importações entre diretórios.
+
+## Organização da aplicação web
+
+- `components`: componentes React reutilizáveis, incluindo seus contextos, providers e hooks específicos.
+- `pages`: páginas, organizadas em diretórios próprios.
+- `services`: operações independentes do React, incluindo comunicação com a API por meio de `fetch`.
+- `hooks`: lógica React reutilizável que não pertence a um componente específico.
+- `contexts`: contextos e providers de aplicação que não pertencem a um componente específico.
+- `providers`: composição dos providers de alcance global em `AppProviders`.
+- `router`: definição e gerenciamento das rotas.
+- `layouts`: estruturas e comportamentos compartilhados por grupos de páginas.
+- `styles`: estilos compartilhados da aplicação.
+
+Crie novos diretórios e abstrações conforme as necessidades das especificações.
+
+## Gerenciamento de estado
+
+- Mantenha o estado no menor escopo necessário.
+- Utilize `useState` para estados locais, `useReducer` quando a complexidade das transições justificar seu uso e Context/Provider para estados ou comportamentos compartilhados.
+- Utilize hooks para encapsular lógica reutilizável dependente do React.
+- Não introduza bibliotecas adicionais de gerenciamento de estado sem decisão do operador.
+
+## Sessão e controle de acesso
+
+- Utilize um contexto de sessão para representar o estado de autenticação conhecido pela aplicação web.
+- A comunicação com a API para gerenciamento da sessão será realizada por serviços.
+- O cookie HttpOnly será gerenciado pelo servidor e pelo navegador.
+- O controle de navegação entre as áreas aberta e restrita será realizado por rotas e layouts, conforme as necessidades das especificações.
+- A autorização efetiva das operações é responsabilidade da API.
 
 ## Contextos e provedores React
 
