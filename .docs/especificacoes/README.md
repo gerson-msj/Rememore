@@ -38,13 +38,21 @@ Se surgir uma dúvida funcional ou incompatibilidade durante a implementação, 
 
 ## Conclusão e avaliação de uma etapa
 
-Ao concluir uma etapa, registre no Markdown operacional o que foi implementado, as validações realizadas e seus resultados, as decisões tomadas, as observações do operador e as pendências. Esse registro deve ser suficiente para retomar o trabalho após uma compactação de contexto e será usado na composição do Parecer Final da unidade.
+Ao iniciar uma etapa, registre no Markdown operacional o estado do Git que servirá de referência para identificar as alterações dessa etapa. Se já houver alterações, identifique-as quando possível e preserve-as. Se não for possível distinguir as alterações da etapa de mudanças alheias, registre a limitação e consulte o operador antes de incluir essas mudanças na revisão.
 
-Apresente ao operador o resultado da etapa, as validações e as pendências. Informe qualquer requisito que não pôde ser atendido e o motivo. Aguarde a avaliação do operador e registre as solicitações de ajuste e decisões posteriores sem alterar o texto aprovado da especificação.
+Ao concluir a implementação, registre no Markdown operacional o que foi feito, as validações realizadas e seus resultados, as decisões tomadas, as observações do operador e as pendências. Esse registro deve ser suficiente para retomar o trabalho após uma compactação de contexto e será usado na composição do Parecer Final da unidade.
 
-Após o aceite do operador, marque a etapa como concluída no Markdown operacional e apresente a próxima etapa prevista, com seu objetivo, entregas e dependências. Não a inicie sem autorização do operador.
+Apresente ao operador o resultado da etapa, as validações e as pendências. Informe qualquer requisito que não pôde ser atendido e o motivo. Aguarde a avaliação funcional do operador e registre as solicitações de ajuste e decisões posteriores sem alterar o texto aprovado da especificação.
 
-Após o aceite expresso de cada etapa, retire os controles temporários de teste que já não forem necessários, valide o resultado e registre um **Parecer Parcial — E#** com entregas, validações, decisões, pendências e observações do operador. Faça um commit local na branch `develop`, sem push, usando a mensagem definida para a unidade, por exemplo, `05.01 - E1`. Registre o commit no Markdown operacional.
+Após o aceite funcional expresso do operador, retire os controles temporários de teste que já não forem necessários e valide o resultado. Em seguida, faça uma revisão técnica de qualidade limitada às alterações da etapa ainda presentes no Git, incluindo alterações staged e unstaged e arquivos novos não rastreados. Considere a referência registrada no início da etapa para distinguir mudanças alheias. Se a origem de alguma alteração não puder ser determinada com segurança, registre essa limitação e consulte o operador antes de incluí-la na revisão.
+
+A revisão técnica avalia a qualidade do código alterado, incluindo práticas de React, uso de estilos, composição da página, clareza e manutenção. Seu escopo é a qualidade das alterações da etapa; não reavalie o atendimento à especificação nem reabra o aceite funcional.
+
+Apresente sugestões com referências aos arquivos e trechos pertinentes, explicando o problema ou benefício esperado. Diferencie correções necessárias, melhorias opcionais e preferências de engenharia. Se não houver sugestões relevantes, registre esse resultado. Não altere o código durante a revisão e aguarde a decisão do operador sobre cada sugestão antes de implementá-la. Se uma sugestão puder alterar comportamento ou escopo funcional, esclareça esse impacto e obtenha autorização específica antes de implementá-la.
+
+Implemente as sugestões aprovadas pelo operador, valide os ajustes e revise as alterações resultantes. Registre também as sugestões recusadas ou adiadas e as decisões do operador. Concluída a revisão técnica e registradas as decisões sobre as sugestões, quando houver, marque a etapa como concluída no Markdown operacional e registre sempre um **Parecer Parcial — E#**, mesmo que a revisão não tenha encontrado achados. Inclua no parecer as entregas, validações, decisões, resultado da revisão técnica, pendências e observações do operador; quando não houver achados, registre esse resultado. Esse parecer será usado na composição do Parecer Final da unidade.
+
+Faça um commit local na branch `develop`, sem push, usando a mensagem definida para a unidade, por exemplo, `05.01 - E1`. Registre o commit no Markdown operacional. Apresente a próxima etapa prevista, com seu objetivo, entregas e dependências, e aguarde autorização do operador antes de iniciá-la.
 
 ## Encerramento da especificação
 
