@@ -1,0 +1,32 @@
+@layer pagina {
+  .pagina-confirmacao-cadastro {
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-padrao);
+    width: min(100%, 42rem);
+    margin-inline: auto;
+    padding: clamp(1.5rem, 5vh, 3.5rem) var(--padding-padrao);
+  }
+
+  .pagina-confirmacao-cadastro .pagina-confirmacao-cadastro-aviso,
+  .pagina-confirmacao-cadastro .pagina-confirmacao-cadastro-resultado {
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .pagina-confirmacao-cadastro .pagina-confirmacao-cadastro-contexto {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espacamento-reduzido-elemento);
+  }
+
+  .pagina-confirmacao-cadastro .pagina-confirmacao-cadastro-contexto p {
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .pagina-confirmacao-cadastro .pagina-confirmacao-cadastro-aviso {
+    font-size: 0.9rem;
+  }
+
+}

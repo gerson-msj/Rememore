@@ -14,6 +14,11 @@
     font-size: var(--tamanho-fonte-titulo-padrao);
   }
 
+  h2.subtitulo {
+    margin: 0;
+    font-size: 1em;
+  }
+
   .campo-texto {
     display: flex;
     flex-direction: column;
