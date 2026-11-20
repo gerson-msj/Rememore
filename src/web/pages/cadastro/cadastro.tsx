@@ -3,9 +3,13 @@ import { useNavigate, useSearchParams } from "react-router";
 import { useHeader } from "@web/components/Header/HeaderContext";
 import { PasswordField } from "@web/components/password-field/password-field";
 import { ErrorMessages, type MensagemErro } from "@web/components/error-messages/error-messages";
-import { useContextoConfirmacaoCadastro } from "@web/providers/AppProviders";
 import { useSessao } from "@web/contexts/SessaoContext";
 import { FalhaHttp, falhaDesconhecida } from "@web/services/http";
+import {
+  armazenar,
+  CHAVE_CONFIRMACAO_CADASTRO,
+  verificarAcesso,
+} from "@web/services/storage";
 import type { ErrosCamposCadastro } from "@shared/usuarios";
 import "./cadastro.css";
 
@@ -21,6 +25,8 @@ const mensagensValidacao: Pick<Required<ErrosCamposCadastro>, "nomeUsuario" | "s
   nomeUsuario: "Este nome de usuário não pode ser utilizado. Escolha outro e tente novamente.",
   senha: "A senha deve ter pelo menos 6 caracteres.",
 };
+const mensagemArmazenamentoIndisponivel =
+  "Não foi possível acessar o armazenamento deste navegador. Habilite o armazenamento do site e tente criar a conta novamente.";
 
 export default function Cadastro() {
   const { setConfiguracao } = useHeader();
@@ -36,7 +42,6 @@ export default function Cadastro() {
   const [enviando, setEnviando] = useState(false);
   const envioEmAndamento = useRef(false);
   const { criarConta } = useSessao();
-  const { definirChaveRedefinicao } = useContextoConfirmacaoCadastro();
 
   useLayoutEffect(() => {
     setConfiguracao({
@@ -80,16 +85,20 @@ export default function Cadastro() {
 
     if (!convitePreparado || Object.keys(errosLocais).length > 0) return;
 
+    if (!verificarAcesso("sessao")) {
+      setErroGeral(mensagemArmazenamentoIndisponivel);
+      return;
+    }
+
     envioEmAndamento.current = true;
     setEnviando(true);
+    let chaveRedefinicao: string | null = null;
     try {
-      const chave = await criarConta({
+      chaveRedefinicao = await criarConta({
         convite: convitePreparado,
         nomeUsuario: nomeUsuarioPreparado,
         senha: senhaPreparada,
       });
-      definirChaveRedefinicao(chave);
-      navigate("/cadastro/confirmacao");
     } catch (falha) {
       const erro = falhaDesconhecida(falha);
       if (erro instanceof FalhaHttp && erro.tipo === "aplicacao") {
@@ -103,6 +112,15 @@ export default function Cadastro() {
       envioEmAndamento.current = false;
       setEnviando(false);
     }
+
+    if (chaveRedefinicao === null) return;
+
+    armazenar(
+      CHAVE_CONFIRMACAO_CADASTRO,
+      { chaveRedefinicao },
+      "sessao",
+    );
+    navigate("/cadastro/confirmacao");
   }
 
   const mensagensErro: MensagemErro[] = [
