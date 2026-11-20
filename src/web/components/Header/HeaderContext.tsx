@@ -11,12 +11,15 @@ import {
 type ConfiguracaoHeader = {
   titulo: string;
   voltar?: () => void;
-  sair?: () => void;
+  apresentarSair?: boolean;
+  acaoSair?: () => void | Promise<void>;
 };
 
 type HeaderContextValue = {
   configuracao: ConfiguracaoHeader;
   setConfiguracao: Dispatch<SetStateAction<ConfiguracaoHeader>>;
+  area: "aberta" | "protegida";
+  setArea: Dispatch<SetStateAction<"aberta" | "protegida">>;
 };
 
 const HeaderContext = createContext<HeaderContextValue | undefined>(
@@ -35,9 +38,10 @@ export function HeaderProvider({
   const [configuracao, setConfiguracao] = useState<ConfiguracaoHeader>({
     titulo: tituloInicial,
   });
+  const [area, setArea] = useState<"aberta" | "protegida">("aberta");
   const valorContexto = useMemo(
-    () => ({ configuracao, setConfiguracao }),
-    [configuracao],
+    () => ({ configuracao, setConfiguracao, area, setArea }),
+    [configuracao, area],
   );
 
   return (

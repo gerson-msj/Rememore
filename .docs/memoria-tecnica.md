@@ -41,6 +41,14 @@ Crie novos diretórios e abstrações conforme as necessidades das especificaç�
 - O controle de navegação entre as áreas aberta e restrita será realizado por rotas e layouts, conforme as necessidades das especificações.
 - A autorização efetiva das operações é responsabilidade da API.
 
+## Tratamento genérico de falhas de operações
+
+- O executor compartilhado está em `src/web/hooks/useExecutorOperacao.ts`; ele apresenta a falha genérica usando CMP-028, definido em `src/web/components/popup/PopupContext.tsx` e `Popup.tsx`.
+- A operação consumidora chama `useExecutorOperacao()` e passa `operacao`, além de `aoIniciar` e `aoFinalizar` quando precisar controlar processamento. O executor chama a finalização mesmo quando a operação falha.
+- Para operações sem tratamento próprio, o executor captura a falha, mostra “Não foi possível concluir a operação. Tente novamente.” com a ação “Entendi” e não repete a operação automaticamente. A nova tentativa parte da ação original da tela.
+- Quando uma operação exigir apresentação ou recuperação específica, passe `aoFalhar` para substituir o popup genérico. Não apresente também o tratamento genérico para a mesma falha.
+- Use o executor compartilhado em operações sem tratativa específica; não duplique essa implementação em páginas ou componentes.
+
 ## Contextos e provedores React
 
 - Ao fornecer por contexto um valor composto por objeto ou funções, use `useMemo` para manter a referência estável enquanto seus dados não mudarem. Declare as dependências correspondentes ao conteúdo do valor para evitar atualizações desnecessárias dos componentes consumidores. Não use memoização para ocultar mudanças reais do contexto.

@@ -18,7 +18,9 @@ type ContextoSessao = {
   estado: EstadoSessao;
   perfil: Perfil | null;
   erro: FalhaHttp | null;
+  transicaoCadastroPendente: boolean;
   criarConta: (dados: DadosCriarConta) => Promise<string>;
+  concluirTransicaoCadastro: () => void;
   consultarSessao: () => Promise<void>;
   sair: () => Promise<void>;
 };
@@ -31,12 +33,14 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
   const [estado, setEstado] = useState<EstadoSessao>("verificando");
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [erro, setErro] = useState<FalhaHttp | null>(null);
+  const [transicaoCadastroPendente, setTransicaoCadastroPendente] = useState(false);
   const consultaInicialIniciada = useRef(false);
 
   const consultarSessao = useCallback(async () => {
     setEstado("verificando");
     setPerfil(null);
     setErro(null);
+    setTransicaoCadastroPendente(false);
     try {
       const sessao = await servicoUsuario.consultarSessao();
       setPerfil(sessao?.perfil ?? null);
@@ -53,6 +57,7 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
       const resposta = await servicoUsuario.criarConta(dados);
       setPerfil(resposta.perfil);
       setErro(null);
+      setTransicaoCadastroPendente(true);
       setEstado("autenticado");
       return resposta.chaveRedefinicao;
     } catch (falha) {
@@ -60,11 +65,16 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
     }
   }, []);
 
+  const concluirTransicaoCadastro = useCallback(() => {
+    setTransicaoCadastroPendente(false);
+  }, []);
+
   const sair = useCallback(async () => {
     try {
       await servicoUsuario.sair();
       setPerfil(null);
       setErro(null);
+      setTransicaoCadastroPendente(false);
       setEstado("naoAutenticado");
     } catch (falha) {
       throw falhaDesconhecida(falha);
@@ -78,8 +88,17 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
   }, [consultarSessao]);
 
   const valor = useMemo<ContextoSessao>(
-    () => ({ estado, perfil, erro, criarConta, consultarSessao, sair }),
-    [estado, perfil, erro, criarConta, consultarSessao, sair],
+    () => ({
+      estado,
+      perfil,
+      erro,
+      transicaoCadastroPendente,
+      criarConta,
+      concluirTransicaoCadastro,
+      consultarSessao,
+      sair,
+    }),
+    [estado, perfil, erro, transicaoCadastroPendente, criarConta, concluirTransicaoCadastro, consultarSessao, sair],
   );
 
   return <SessaoContext.Provider value={valor}>{children}</SessaoContext.Provider>;

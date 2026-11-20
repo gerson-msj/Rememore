@@ -1,11 +1,11 @@
 @layer pagina {
-  .pagina-inicial-area-aberta {
+  .pagina-apresentacao {
     display: flex;
     justify-content: center;
     padding: 4rem 1.5rem;
   }
 
-  .pagina-inicial-area-aberta .pagina-inicial-apresentacao {
+  .pagina-apresentacao .pagina-apresentacao-conteudo {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -14,28 +14,28 @@
     text-align: center;
   }
 
-  .pagina-inicial-area-aberta .pagina-inicial-textos {
+  .pagina-apresentacao .pagina-apresentacao-textos {
     display: flex;
     flex-direction: column;
     gap: 1rem;
   }
 
-  .pagina-inicial-area-aberta .pagina-inicial-textos p:first-child {
+  .pagina-apresentacao .pagina-apresentacao-textos p:first-child {
     font-size: 1.5rem;
   }
 
-  .pagina-inicial-area-aberta .pagina-inicial-acoes {
+  .pagina-apresentacao .pagina-apresentacao-acoes {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 1.5rem 1rem;
   }
 
-  .pagina-inicial-area-aberta .pagina-inicial-acoes .botao {
+  .pagina-apresentacao .pagina-apresentacao-acoes .botao {
     width: 10rem;
   }
 
-  .pagina-inicial-area-aberta .pagina-inicial-botao-laboratorio {
+  .pagina-apresentacao .pagina-apresentacao-botao-laboratorio {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -52,7 +52,7 @@
       border-color var(--duracao-transicao-elemento) ease;
   }
 
-  .pagina-inicial-area-aberta .pagina-inicial-botao-laboratorio:hover {
+  .pagina-apresentacao .pagina-apresentacao-botao-laboratorio:hover {
     color: var(--cor-texto-destaque-hover);
     border-color: var(--cor-borda-superficie-selecionada);
   }

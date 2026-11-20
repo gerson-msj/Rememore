@@ -14,7 +14,6 @@ import "./confirmacao-cadastro.css";
 
 type ContextoCadastro = { chaveRedefinicao: string };
 
-const mensagemFalhaSessao = "Não foi possível concluir a operação. Tente novamente.";
 const mensagemChaveIndisponivel =
   "Não foi possível recuperar sua chave de redefinição de senha. Você poderá entrar no Rememore, mas talvez não consiga redefinir sua senha. Entre em contato com o administrador para receber orientação.";
 
@@ -22,22 +21,17 @@ export default function ConfirmacaoCadastro() {
   const { setConfiguracao } = useHeader();
   const { abrirPopup } = usePopup();
   const navigate = useNavigate();
-  const { estado: estadoSessao, consultarSessao } = useSessao();
+  const { estado: estadoSessao } = useSessao();
   const [chaveRedefinicao, setChaveRedefinicao] = useState<string | null>(null);
   const [leituraConcluida, setLeituraConcluida] = useState(false);
   const leituraIniciada = useRef(false);
 
   useLayoutEffect(() => {
-    setConfiguracao({ titulo: "Conta criada" });
+    setConfiguracao({ titulo: "Conta criada", apresentarSair: false });
   }, [setConfiguracao]);
 
   useEffect(() => {
     if (estadoSessao === "verificando") return;
-
-    if (estadoSessao === "falha") {
-      leituraIniciada.current = false;
-      return;
-    }
 
     if (estadoSessao === "naoAutenticado") {
       try {
@@ -90,17 +84,6 @@ export default function ConfirmacaoCadastro() {
       // A remoção não bloqueia a entrada.
     }
     navigate("/home", { replace: true });
-  }
-
-  if (estadoSessao === "falha") {
-    return (
-      <section className="pagina-confirmacao-cadastro">
-        <ErrorMessages mensagens={[{ id: "confirmacao-erro-sessao", texto: mensagemFalhaSessao }]} />
-        <button className="botao" type="button" onClick={() => void consultarSessao()}>
-          Tentar novamente
-        </button>
-      </section>
-    );
   }
 
   if (estadoSessao !== "autenticado" || !leituraConcluida) {

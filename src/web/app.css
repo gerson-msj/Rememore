@@ -10,4 +10,9 @@
     margin-inline: auto;
     padding: var(--padding-padrao);
   }
+
+  .estado-sessao-rota {
+    display: grid;
+    gap: var(--padding-padrao);
+  }
 }

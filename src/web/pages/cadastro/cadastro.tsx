@@ -41,7 +41,7 @@ export default function Cadastro() {
   const [erroGeral, setErroGeral] = useState("");
   const [enviando, setEnviando] = useState(false);
   const envioEmAndamento = useRef(false);
-  const { criarConta } = useSessao();
+  const { criarConta, concluirTransicaoCadastro } = useSessao();
 
   useLayoutEffect(() => {
     setConfiguracao({
@@ -49,6 +49,10 @@ export default function Cadastro() {
       voltar: () => navigate("/"),
     });
   }, [navigate, setConfiguracao]);
+
+  useLayoutEffect(() => () => {
+    concluirTransicaoCadastro();
+  }, [concluirTransicaoCadastro]);
 
   const formularioPreenchido = [convite, nomeUsuario, senha].every((valor) => valor.trim().length > 0);
   const botaoDesabilitado = !formularioPreenchido || enviando;

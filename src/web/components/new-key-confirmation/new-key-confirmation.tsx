@@ -86,11 +86,9 @@ export function NewKeyConfirmation({ chave }: NewKeyConfirmationProps) {
           </button>
         </div>
       </div>
-      {feedbackVisivel && (
-        <small className="cmp002-feedback" role="status" aria-live="polite">
-          {mensagemCopiada}
-        </small>
-      )}
+      <small className="cmp002-feedback" role="status" aria-live="polite">
+        {feedbackVisivel ? mensagemCopiada : ""}
+      </small>
     </div>
   );
 }
