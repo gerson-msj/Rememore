@@ -33,10 +33,11 @@
     font: inherit;
     line-height: 1.4;
     transition: opacity 180ms ease, transform 180ms ease;
-    animation: cmp038-entrada 180ms ease both;
+    animation: cmp038-entrada 180ms ease 180ms both;
   }
 
   .cmp038 .cmp038-mensagem.cmp038-saindo {
+    animation: none;
     opacity: 0;
     transform: translateY(-0.25rem);
   }

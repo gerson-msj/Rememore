@@ -63,7 +63,7 @@ export function ErrorMessages({ mensagens, aoFocarCampo }: ErrorMessagesProps) {
   }, []);
 
   return (
-    <div className={`cmp038${mensagens.length > 0 ? " cmp038-visivel" : ""}`} aria-live="polite">
+    <div className={`cmp038${mensagensVisiveis.length > 0 ? " cmp038-visivel" : ""}`} aria-live="polite">
       <div className="cmp038-conteudo">
         {mensagensVisiveis.map((mensagem) => {
           const classeMensagem = `cmp038-mensagem${mensagem.saindo ? " cmp038-saindo" : ""}`;

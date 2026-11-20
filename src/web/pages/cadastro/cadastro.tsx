@@ -1,16 +1,42 @@
-import { useLayoutEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import { useNavigate, useSearchParams } from "react-router";
 import { useHeader } from "@web/components/Header/HeaderContext";
 import { PasswordField } from "@web/components/password-field/password-field";
-import { ErrorMessages } from "@web/components/error-messages/error-messages";
+import { ErrorMessages, type MensagemErro } from "@web/components/error-messages/error-messages";
+import { useContextoConfirmacaoCadastro } from "@web/providers/AppProviders";
+import { useSessao } from "@web/contexts/SessaoContext";
+import { FalhaHttp, falhaDesconhecida } from "@web/services/http";
+import type { ErrosCamposCadastro } from "@shared/usuarios";
 import "./cadastro.css";
+
+type CampoCadastro = keyof ErrosCamposCadastro;
+
+const identificadoresCampos: Record<CampoCadastro, string> = {
+  convite: "cadastro-convite",
+  nomeUsuario: "cadastro-nome-usuario",
+  senha: "cadastro-senha",
+};
+
+const mensagensValidacao: Pick<Required<ErrosCamposCadastro>, "nomeUsuario" | "senha"> = {
+  nomeUsuario: "Este nome de usuário não pode ser utilizado. Escolha outro e tente novamente.",
+  senha: "A senha deve ter pelo menos 6 caracteres.",
+};
 
 export default function Cadastro() {
   const { setConfiguracao } = useHeader();
   const navigate = useNavigate();
-  const [convite, setConvite] = useState("");
+  const [parametros] = useSearchParams();
+  const conviteInicial = parametros.get("convite") ?? "";
+  const conviteRecebido = conviteInicial.length > 0;
+  const [convite, setConvite] = useState(conviteInicial);
   const [nomeUsuario, setNomeUsuario] = useState("");
   const [senha, setSenha] = useState("");
+  const [errosCampos, setErrosCampos] = useState<ErrosCamposCadastro>({});
+  const [erroGeral, setErroGeral] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const envioEmAndamento = useRef(false);
+  const { criarConta } = useSessao();
+  const { definirChaveRedefinicao } = useContextoConfirmacaoCadastro();
 
   useLayoutEffect(() => {
     setConfiguracao({
@@ -19,47 +45,124 @@ export default function Cadastro() {
     });
   }, [navigate, setConfiguracao]);
 
-  const formularioPreenchido =
-    convite.trim().length > 0 &&
-    nomeUsuario.trim().length > 0 &&
-    senha.trim().length > 0;
-  const botaoDesabilitado = !formularioPreenchido;
+  const formularioPreenchido = [convite, nomeUsuario, senha].every((valor) => valor.trim().length > 0);
+  const botaoDesabilitado = !formularioPreenchido || enviando;
+
+  function alterarCampo(campo: CampoCadastro, valor: string) {
+    if (campo === "convite") setConvite(valor);
+    if (campo === "nomeUsuario") setNomeUsuario(valor);
+    if (campo === "senha") setSenha(valor);
+    setErrosCampos((atuais) => {
+      const seguintes = { ...atuais };
+      delete seguintes[campo];
+      return seguintes;
+    });
+    setErroGeral("");
+  }
+
+  async function enviarCadastro(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    if (envioEmAndamento.current || enviando) return;
+
+    setErroGeral("");
+    const convitePreparado = convite.trim();
+    const nomeUsuarioPreparado = nomeUsuario.trim().toLowerCase();
+    const senhaPreparada = senha;
+    const errosLocais: ErrosCamposCadastro = {};
+
+    if (!nomeUsuarioPreparado || /\s/.test(nomeUsuarioPreparado)) {
+      errosLocais.nomeUsuario = mensagensValidacao.nomeUsuario;
+    }
+    if (!senhaPreparada.trim() || senhaPreparada.length < 6) {
+      errosLocais.senha = mensagensValidacao.senha;
+    }
+    setErrosCampos(errosLocais);
+
+    if (!convitePreparado || Object.keys(errosLocais).length > 0) return;
+
+    envioEmAndamento.current = true;
+    setEnviando(true);
+    try {
+      const chave = await criarConta({
+        convite: convitePreparado,
+        nomeUsuario: nomeUsuarioPreparado,
+        senha: senhaPreparada,
+      });
+      definirChaveRedefinicao(chave);
+      navigate("/cadastro/confirmacao");
+    } catch (falha) {
+      const erro = falhaDesconhecida(falha);
+      if (erro instanceof FalhaHttp && erro.tipo === "aplicacao") {
+        setErrosCampos(erro.errosCampos ?? {});
+        setErroGeral(erro.message);
+      } else {
+        setErrosCampos({});
+        setErroGeral(erro.message);
+      }
+    } finally {
+      envioEmAndamento.current = false;
+      setEnviando(false);
+    }
+  }
+
+  const mensagensErro: MensagemErro[] = [
+    ...Object.entries(errosCampos).flatMap(([campo, texto]) =>
+      texto
+        ? [{ id: `cadastro-erro-${campo}`, texto, campo }]
+        : [],
+    ),
+    ...(erroGeral ? [{ id: "cadastro-erro-geral", texto: erroGeral }] : []),
+  ];
+
+  function focarCampo(campo: string) {
+    const id = identificadoresCampos[campo as CampoCadastro];
+    if (id) document.getElementById(id)?.focus();
+  }
 
   return (
     <section className="pagina-cadastro">
-      <form className="pagina-cadastro-formulario" onSubmit={(evento) => evento.preventDefault()}>
+      <form className="pagina-cadastro-formulario" onSubmit={enviarCadastro}>
         <div className="pagina-cadastro-campos">
-          <div className="campo-texto">
+          <div className={`campo-texto${errosCampos.convite ? " cor-perigo" : ""}`}>
             <label htmlFor="cadastro-convite">Convite</label>
             <input
               id="cadastro-convite"
               className="controle-com-borda"
               type="text"
+              readOnly={conviteRecebido}
+              disabled={enviando}
+              aria-invalid={Boolean(errosCampos.convite) || undefined}
+              aria-describedby={errosCampos.convite ? "cadastro-erro-convite" : undefined}
               value={convite}
-              onChange={(evento) => setConvite(evento.currentTarget.value)}
+              onChange={(evento) => alterarCampo("convite", evento.currentTarget.value)}
             />
           </div>
 
-          <div className="campo-texto">
+          <div className={`campo-texto${errosCampos.nomeUsuario ? " cor-perigo" : ""}`}>
             <label htmlFor="cadastro-nome-usuario">Nome de usuário</label>
             <input
               id="cadastro-nome-usuario"
               className="controle-com-borda"
               type="text"
               autoComplete="username"
+              disabled={enviando}
+              aria-invalid={Boolean(errosCampos.nomeUsuario) || undefined}
+              aria-describedby={errosCampos.nomeUsuario ? "cadastro-erro-nomeUsuario" : undefined}
               value={nomeUsuario}
-              onChange={(evento) => setNomeUsuario(evento.currentTarget.value)}
+              onChange={(evento) => alterarCampo("nomeUsuario", evento.currentTarget.value)}
             />
           </div>
 
           <PasswordField
             inputId="cadastro-senha"
             value={senha}
-            onChange={setSenha}
+            onChange={(valor) => alterarCampo("senha", valor)}
             autoComplete="new-password"
-            hasError={false}
-            errorMessage=""
-            disabled={false}
+            hasError={Boolean(errosCampos.senha)}
+            errorMessage={errosCampos.senha ?? ""}
+            errorMessageId="cadastro-erro-senha"
+            renderErrorMessage={false}
+            disabled={enviando}
           />
         </div>
 
@@ -86,7 +189,7 @@ export default function Cadastro() {
           Criar conta
         </button>
 
-        <ErrorMessages mensagens={[]} />
+        <ErrorMessages mensagens={mensagensErro} aoFocarCampo={focarCampo} />
       </form>
     </section>
   );
