@@ -59,12 +59,15 @@ export function Cmp028() {
           <div className="cmp028-lab-coluna">
             <div className="campo-texto">
               <label htmlFor="cmp028-tema">Tema do popup</label>
-              <select id="cmp028-tema" className="controle-com-borda" value={temaPopup} onChange={(evento) => setTemaPopup(evento.currentTarget.value as TemaPopup)}>
-                <option value="normal">Normal</option>
-                <option value="link">Link</option>
-                <option value="perigo">Perigo</option>
-                <option value="alerta">Alerta</option>
-              </select>
+              <span className="select-com-icone">
+                <select id="cmp028-tema" className="controle-com-borda" value={temaPopup} onChange={(evento) => setTemaPopup(evento.currentTarget.value as TemaPopup)}>
+                  <option value="normal">Normal</option>
+                  <option value="link">Link</option>
+                  <option value="perigo">Perigo</option>
+                  <option value="alerta">Alerta</option>
+                </select>
+                <i className="fa-solid fa-caret-down icone-selecao" aria-hidden="true" />
+              </span>
             </div>
             <fieldset className="cmp028-lab-botao">
               <legend>Botão OK</legend>
@@ -78,12 +81,15 @@ export function Cmp028() {
               </div>
               <div className="campo-texto">
                 <label htmlFor="cmp028-tema-ok">Tema</label>
-                <select id="cmp028-tema-ok" className="controle-com-borda" value={temaOk} onChange={(evento) => setTemaOk(evento.currentTarget.value as TemaPopup)}>
-                  <option value="normal">Normal</option>
-                  <option value="link">Link</option>
-                  <option value="perigo">Perigo</option>
-                  <option value="alerta">Alerta</option>
-                </select>
+                <span className="select-com-icone">
+                  <select id="cmp028-tema-ok" className="controle-com-borda" value={temaOk} onChange={(evento) => setTemaOk(evento.currentTarget.value as TemaPopup)}>
+                    <option value="normal">Normal</option>
+                    <option value="link">Link</option>
+                    <option value="perigo">Perigo</option>
+                    <option value="alerta">Alerta</option>
+                  </select>
+                  <i className="fa-solid fa-caret-down icone-selecao" aria-hidden="true" />
+                </span>
               </div>
             </fieldset>
 
@@ -99,19 +105,22 @@ export function Cmp028() {
               </div>
               <div className="campo-texto">
                 <label htmlFor="cmp028-tema-cancelar">Tema</label>
-                <select id="cmp028-tema-cancelar" className="controle-com-borda" value={temaCancelar} onChange={(evento) => setTemaCancelar(evento.currentTarget.value as TemaPopup)}>
-                  <option value="normal">Normal</option>
-                  <option value="link">Link</option>
-                  <option value="perigo">Perigo</option>
-                  <option value="alerta">Alerta</option>
-                </select>
+                <span className="select-com-icone">
+                  <select id="cmp028-tema-cancelar" className="controle-com-borda" value={temaCancelar} onChange={(evento) => setTemaCancelar(evento.currentTarget.value as TemaPopup)}>
+                    <option value="normal">Normal</option>
+                    <option value="link">Link</option>
+                    <option value="perigo">Perigo</option>
+                    <option value="alerta">Alerta</option>
+                  </select>
+                  <i className="fa-solid fa-caret-down icone-selecao" aria-hidden="true" />
+                </span>
               </div>
             </fieldset>
           </div>
         </div>
 
         <div className="cmp028-lab-acao">
-          <button type="button" onClick={abrir}>Abrir popup</button>
+          <button className="botao" type="button" onClick={abrir}>Abrir popup</button>
           <p>Última ação recebida: <output>{ultimaAcao}</output></p>
         </div>
       </div>

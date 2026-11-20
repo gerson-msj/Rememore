@@ -1,5 +1,7 @@
 import { useLayoutEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { useHeader } from "@web/components/Header/HeaderContext";
+import { armazenar, recuperar } from "@web/services/storage";
 import { Elm01 } from "./elementos/elm01";
 import { Elm02 } from "./elementos/elm02";
 import { Elm03 } from "./elementos/elm03";
@@ -9,22 +11,41 @@ import { Elm06 } from "./elementos/elm06";
 import { Cmp001 } from "./componentes/cmp001";
 import { Cmp002 } from "./componentes/cmp002";
 import { Cmp028 } from "./componentes/cmp028";
+import { Cmp038 } from "./componentes/cmp038";
 import "./laboratorio.css";
 
 export default function Laboratorio() {
   const { setConfiguracao } = useHeader();
-  const [abaSelecionada, setAbaSelecionada] = useState<"elementos" | "componentes">("elementos");
+  const navigate = useNavigate();
+  const [abaSelecionada, setAbaSelecionada] = useState<"elementos" | "componentes">(() => {
+    try {
+      const abaSalva = recuperar<string>("laboratorio:abaAtiva");
+      return abaSalva === "componentes" ? "componentes" : "elementos";
+    } catch {
+      return "elementos";
+    }
+  });
 
   useLayoutEffect(() => {
     setConfiguracao({
       titulo: "Laboratório",
+      voltar: () => navigate("/"),
     });
-  }, [setConfiguracao]);
+  }, [navigate, setConfiguracao]);
+
+  useLayoutEffect(() => {
+    try {
+      armazenar("laboratorio:abaAtiva", abaSelecionada);
+    } catch {
+      // A aba continua funcionando durante esta visita se o armazenamento falhar.
+    }
+  }, [abaSelecionada]);
 
   return (
     <div>
       <div>
         <button
+          className="botao"
           type="button"
           aria-pressed={abaSelecionada === "elementos"}
           aria-controls="painel-elementos"
@@ -33,6 +54,7 @@ export default function Laboratorio() {
           Elementos
         </button>
         <button
+          className="botao"
           type="button"
           aria-pressed={abaSelecionada === "componentes"}
           aria-controls="painel-componentes"
@@ -62,6 +84,7 @@ export default function Laboratorio() {
         <Cmp001 />
         <Cmp002 />
         <Cmp028 />
+        <Cmp038 />
       </section>
     </div>
   );

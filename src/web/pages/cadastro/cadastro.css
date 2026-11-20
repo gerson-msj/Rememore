@@ -1,0 +1,44 @@
+@layer pagina {
+  .pagina-cadastro {
+    display: flex;
+    justify-content: center;
+    padding: clamp(1.5rem, 5vh, 3.5rem) var(--padding-padrao);
+  }
+
+  .pagina-cadastro .pagina-cadastro-formulario {
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-padrao);
+    width: min(100%, 30rem);
+  }
+
+  .pagina-cadastro .pagina-cadastro-campos,
+  .pagina-cadastro .pagina-cadastro-informacoes {
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-padrao);
+  }
+
+  .pagina-cadastro .pagina-cadastro-informacoes p {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0;
+    line-height: 1.5;
+    font-size: 0.9rem;
+  }
+
+  .pagina-cadastro .pagina-cadastro-informacoes strong {
+    font-size: 0.95em;
+  }
+
+  .pagina-cadastro .pagina-cadastro-enviar {
+    width: 100%;
+  }
+
+  @media (min-width: 48rem) {
+    .pagina-cadastro {
+      padding-top: 3rem;
+    }
+  }
+}

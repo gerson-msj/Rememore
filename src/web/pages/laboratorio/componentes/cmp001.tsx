@@ -27,8 +27,8 @@ export function Cmp001() {
               />
             </div>
             <div className="grupo-botoes">
-              <button type="button" onClick={() => setValorAplicado(valorTeste)}>Aplicar valor</button>
-              <button type="button" onClick={() => { setValorTeste(""); setValorAplicado(""); }}>Limpar valor</button>
+              <button className="botao" type="button" onClick={() => setValorAplicado(valorTeste)}>Aplicar valor</button>
+              <button className="botao" type="button" onClick={() => { setValorTeste(""); setValorAplicado(""); }}>Limpar valor</button>
             </div>
           </div>
 

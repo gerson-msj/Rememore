@@ -29,8 +29,8 @@ export function Cmp002() {
             />
           </div>
           <div className="grupo-botoes">
-            <button type="button" onClick={() => setChaveAplicada(chaveTeste)}>Aplicar chave</button>
-            <button type="button" onClick={limparChave}>Limpar chave</button>
+            <button className="botao" type="button" onClick={() => setChaveAplicada(chaveTeste)}>Aplicar chave</button>
+            <button className="botao" type="button" onClick={limparChave}>Limpar chave</button>
           </div>
         </div>
 

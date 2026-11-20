@@ -4,28 +4,34 @@ import "./password-field.css";
 export type PasswordAutocomplete = "off" | "current-password" | "new-password";
 
 type PasswordFieldProps = {
+  inputId?: string;
   value: string;
   onChange: (value: string) => void;
   autoComplete: PasswordAutocomplete;
   hasError: boolean;
   errorMessage: string;
+  errorMessageId?: string;
+  renderErrorMessage?: boolean;
   disabled: boolean;
 };
 
 export function PasswordField({
+  inputId,
   value,
   onChange,
   autoComplete,
   hasError,
   errorMessage,
+  errorMessageId,
+  renderErrorMessage = true,
   disabled,
 }: PasswordFieldProps) {
   const [senhaVisivel, setSenhaVisivel] = useState(false);
   const iconeInativo = disabled || value.length === 0;
   const classeCorIcone = iconeInativo ? "cor-elemento-inativo" : hasError ? "texto-cor-selecionada" : "";
   const idBase = useId();
-  const id = `${idBase}-campo-senha`;
-  const errorId = `${idBase}-mensagem-erro`;
+  const id = inputId ?? `${idBase}-campo-senha`;
+  const errorId = errorMessageId ?? `${idBase}-mensagem-erro`;
 
   return (
     <div className="cmp001">
@@ -55,7 +61,7 @@ export function PasswordField({
             <i className={`fa-solid fa-eye-slash cmp001-icone ${classeCorIcone} ${senhaVisivel ? "cmp001-icone-visivel" : "cmp001-icone-oculto"}`} aria-hidden="true" />
           </button>
         </div>
-        {hasError && <small id={errorId} className="mensagem-erro">{errorMessage}</small>}
+        {hasError && renderErrorMessage && <small id={errorId} className="mensagem-erro">{errorMessage}</small>}
       </div>
     </div>
   );

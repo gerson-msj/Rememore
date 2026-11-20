@@ -10,7 +10,7 @@ export function Header() {
         <div className="cabecalho-coluna-esquerda">
           {configuracao.voltar ? (
             <button
-              className="cabecalho-acao link"
+              className="botao-icone-controle link"
               type="button"
               aria-label="Voltar"
               onClick={configuracao.voltar}
@@ -27,7 +27,7 @@ export function Header() {
         <div className="cabecalho-coluna-direita">
           {configuracao.sair && (
             <button
-              className="cabecalho-acao link cor-perigo"
+              className="botao-icone-controle link cor-perigo"
               type="button"
               aria-label="Sair"
               onClick={configuracao.sair}

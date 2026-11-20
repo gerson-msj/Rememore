@@ -1,10 +1,11 @@
 import { useLayoutEffect } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useHeader } from "@web/components/Header/HeaderContext";
 import "./home.css";
 
 export default function Home() {
     const { setConfiguracao } = useHeader();
+    const navigate = useNavigate();
 
     useLayoutEffect(() => {
         setConfiguracao({
@@ -21,8 +22,8 @@ export default function Home() {
                     <p>Entre na sua conta ou, se recebeu um convite, comece por aqui.</p>
                 </div>
                 <div className="pagina-inicial-acoes">
-                    <button type="button">Entrar</button>
-                    <button type="button">Criar conta</button>
+                    <button className="botao" type="button">Entrar</button>
+                    <button className="botao" type="button" onClick={() => navigate("/cadastro")}>Criar conta</button>
                     <Link className="pagina-inicial-botao-laboratorio cor-link" to="/lab">Laboratório</Link>
                 </div>
             </div>

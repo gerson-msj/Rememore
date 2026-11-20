@@ -174,7 +174,7 @@ export function Popup({ id, opcoes, aoResponder }: PopupProps) {
             {mostrarOk && (
               <button
                 type="button"
-                className={classeTemaBotao(opcoes.botoes?.ok?.tema)}
+                className={`botao ${classeTemaBotao(opcoes.botoes?.ok?.tema) ?? ""}`.trim()}
                 onClick={() => fechar("OK")}
               >
                 {opcoes.botoes?.ok?.texto ?? "OK"}
@@ -183,7 +183,7 @@ export function Popup({ id, opcoes, aoResponder }: PopupProps) {
             {mostrarCancelar && (
               <button
                 type="button"
-                className={classeTemaBotao(opcoes.botoes?.cancelar?.tema)}
+                className={`botao ${classeTemaBotao(opcoes.botoes?.cancelar?.tema) ?? ""}`.trim()}
                 onClick={() => fechar("Cancelar")}
               >
                 {opcoes.botoes?.cancelar?.texto ?? "Cancelar"}

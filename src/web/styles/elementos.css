@@ -161,7 +161,7 @@
     font-size: 0.75em;
   }
 
-  button:not(.botao-icone-controle) {
+  .botao {
     height: var(--altura-controle);
     padding-inline: var(--espacamento-controle);
     border: var(--espessura-borda) solid var(--cor-botao-borda);
@@ -177,17 +177,17 @@
       opacity var(--duracao-transicao-elemento) ease;
   }
 
-  button:not(.botao-icone-controle):hover:not(:disabled) {
+  .botao:hover:not(:disabled) {
     background-color: var(--cor-botao-preenchimento-hover);
     border-color: var(--cor-botao-borda-hover);
   }
 
-  button:not(.botao-icone-controle):active:not(:disabled) {
+  .botao:active:not(:disabled) {
     background-color: var(--cor-botao-preenchimento-ativo);
     border-color: var(--cor-botao-borda-ativa);
   }
 
-  button:not(.botao-icone-controle):disabled {
+  .botao:disabled {
     opacity: 0.9;
     cursor: default;
   }
@@ -200,7 +200,7 @@
     width: max-content;
   }
 
-  .grupo-botoes > button:not(.botao-icone-controle) {
+  .grupo-botoes > .botao {
     width: auto;
     min-width: 0;
     height: auto;
@@ -208,13 +208,13 @@
     white-space: nowrap;
   }
 
-  button.botao-com-icone {
+  .botao-com-icone {
     display: inline-flex;
     align-items: center;
     gap: var(--espacamento-controle);
   }
 
-  button.botao-com-icone i {
+  .botao-com-icone i {
     font-size: 1.2em;
   }
 

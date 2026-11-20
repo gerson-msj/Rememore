@@ -1,0 +1,75 @@
+@layer componente {
+  .cmp038 {
+    display: grid;
+    grid-template-rows: 0fr;
+    margin: 0;
+    padding: 0 var(--padding-padrao);
+    border-width: 0 1px;
+    opacity: 0;
+    transition: grid-template-rows 180ms ease, margin 180ms ease,
+      padding 180ms ease, border-width 180ms ease, opacity 180ms ease;
+  }
+
+  .cmp038.cmp038-visivel {
+    display: grid;
+    gap: var(--espacamento-reduzido-elemento);
+    grid-template-rows: 1fr;
+    margin: var(--padding-padrao) 0 0;
+    padding: var(--padding-padrao);
+    border: var(--espessura-borda) solid color-mix(in srgb, var(--cor-perigo) 55%, var(--cor-fundo));
+    border-radius: var(--raio-borda-controle);
+    background-color: color-mix(in srgb, var(--cor-perigo) 8%, var(--cor-fundo));
+    color: var(--cor-texto-mensagem-erro);
+    opacity: 1;
+  }
+
+  .cmp038 .cmp038-conteudo {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .cmp038 .cmp038-mensagem {
+    margin: 0;
+    font: inherit;
+    line-height: 1.4;
+    transition: opacity 180ms ease, transform 180ms ease;
+    animation: cmp038-entrada 180ms ease both;
+  }
+
+  .cmp038 .cmp038-mensagem.cmp038-saindo {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+
+  .cmp038 .cmp038-mensagem-campo {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    appearance: none;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .cmp038 .cmp038-mensagem-campo:hover {
+    color: inherit;
+    text-shadow: none;
+  }
+
+  .cmp038 .cmp038-mensagem-campo:focus-visible {
+    outline: 2px solid var(--cor-perigo);
+    outline-offset: 2px;
+  }
+
+  @keyframes cmp038-entrada {
+    from { opacity: 0; transform: translateY(-0.25rem); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cmp038, .cmp038 .cmp038-mensagem { transition: none; animation: none; }
+  }
+}
