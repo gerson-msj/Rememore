@@ -1,10 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useHeader } from "@web/components/Header/HeaderContext";
 import { ErrorMessages, type MensagemErro } from "@web/components/error-messages/error-messages";
 import { NewKeyConfirmation } from "@web/components/new-key-confirmation/new-key-confirmation";
 import { usePopup } from "@web/components/popup/PopupContext";
-import { useSessao } from "@web/contexts/SessaoContext";
 import {
   CHAVE_CONFIRMACAO_CADASTRO,
   recuperar,
@@ -21,7 +20,7 @@ export default function ConfirmacaoCadastro() {
   const { setConfiguracao } = useHeader();
   const { abrirPopup } = usePopup();
   const navigate = useNavigate();
-  const { estado: estadoSessao } = useSessao();
+  const chaveNaoGravada = useLocation().state?.chaveNaoGravada === true;
   const [chaveRedefinicao, setChaveRedefinicao] = useState<string | null>(null);
   const [leituraConcluida, setLeituraConcluida] = useState(false);
   const leituraIniciada = useRef(false);
@@ -31,20 +30,13 @@ export default function ConfirmacaoCadastro() {
   }, [setConfiguracao]);
 
   useEffect(() => {
-    if (estadoSessao === "verificando") return;
-
-    if (estadoSessao === "naoAutenticado") {
-      try {
-        remover(CHAVE_CONFIRMACAO_CADASTRO, "sessao");
-      } catch {
-        // A navegação não depende da remoção do registro temporário.
-      }
-      navigate("/", { replace: true });
-      return;
-    }
-
     if (leituraIniciada.current) return;
     leituraIniciada.current = true;
+
+    if (chaveNaoGravada) {
+      setLeituraConcluida(true);
+      return;
+    }
 
     let chave: string | null = null;
     try {
@@ -58,7 +50,7 @@ export default function ConfirmacaoCadastro() {
 
     setChaveRedefinicao(chave);
     setLeituraConcluida(true);
-  }, [estadoSessao, navigate]);
+  }, [chaveNaoGravada]);
 
   async function confirmarEntrada() {
     if (!chaveRedefinicao) {
@@ -86,7 +78,7 @@ export default function ConfirmacaoCadastro() {
     navigate("/home", { replace: true });
   }
 
-  if (estadoSessao !== "autenticado" || !leituraConcluida) {
+  if (!leituraConcluida) {
     return (
       <section className="pagina-confirmacao-cadastro">
         <p>Aguarde…</p>

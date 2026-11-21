@@ -1,6 +1,8 @@
-import { Navigate, Outlet, useLocation } from "react-router";
+import { useLayoutEffect } from "react";
+import { Navigate, Outlet, useMatch } from "react-router";
 import { ErrorMessages } from "@web/components/error-messages/error-messages";
 import { useSessao } from "@web/contexts/SessaoContext";
+import { CHAVE_CONFIRMACAO_CADASTRO, remover } from "@web/services/storage";
 
 type AcessoAreaProps = { tipo: "aberta" | "protegida" };
 
@@ -25,7 +27,19 @@ function EstadoSessaoRota() {
 
 export function AcessoArea({ tipo }: AcessoAreaProps) {
   const { estado, transicaoCadastroPendente } = useSessao();
-  const location = useLocation();
+  const cadastro = useMatch("/cadastro");
+  const confirmacao = useMatch("/cadastro/confirmacao");
+  const limparConfirmacao = tipo === "protegida" && estado === "naoAutenticado" && Boolean(confirmacao);
+
+  useLayoutEffect(() => {
+    if (!limparConfirmacao) return;
+
+    try {
+      remover(CHAVE_CONFIRMACAO_CADASTRO, "sessao");
+    } catch {
+      // O redirecionamento pode prosseguir se o armazenamento estiver indisponível.
+    }
+  }, [limparConfirmacao]);
 
   if (estado === "verificando" || estado === "falha") {
     return <EstadoSessaoRota />;
@@ -33,7 +47,7 @@ export function AcessoArea({ tipo }: AcessoAreaProps) {
 
   if (tipo === "aberta" && estado === "autenticado") {
     // Mantém o Cadastro montado até ele concluir a navegação para a Confirmação.
-    if (location.pathname === "/cadastro" && transicaoCadastroPendente) {
+    if (cadastro && transicaoCadastroPendente) {
       return <Outlet />;
     }
     return <Navigate to="/home" replace />;

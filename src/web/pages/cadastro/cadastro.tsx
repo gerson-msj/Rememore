@@ -8,6 +8,7 @@ import { FalhaHttp, falhaDesconhecida } from "@web/services/http";
 import {
   armazenar,
   CHAVE_CONFIRMACAO_CADASTRO,
+  remover,
   verificarAcesso,
 } from "@web/services/storage";
 import type { ErrosCamposCadastro } from "@shared/usuarios";
@@ -119,12 +120,19 @@ export default function Cadastro() {
 
     if (chaveRedefinicao === null) return;
 
-    armazenar(
-      CHAVE_CONFIRMACAO_CADASTRO,
-      { chaveRedefinicao },
-      "sessao",
-    );
-    navigate("/cadastro/confirmacao");
+    let chaveNaoGravada = false;
+    try {
+      armazenar(CHAVE_CONFIRMACAO_CADASTRO, { chaveRedefinicao }, "sessao");
+    } catch {
+      chaveNaoGravada = true;
+      try {
+        remover(CHAVE_CONFIRMACAO_CADASTRO, "sessao");
+      } catch {
+        // A Confirmação ignora o registro anterior mesmo se a remoção falhar.
+      }
+    }
+
+    navigate("/cadastro/confirmacao", { state: { chaveNaoGravada } });
   }
 
   const mensagensErro: MensagemErro[] = [
