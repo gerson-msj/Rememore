@@ -72,9 +72,14 @@
     --cor-selecionada: var(--cor-alerta);
   }
 
+  .cor-info {
+    --cor-selecionada: var(--cor-info);
+  }
+
   .cor-link,
   .cor-perigo,
-  .cor-alerta {
+  .cor-alerta,
+  .cor-info {
     --cor-texto-destaque: var(--cor-selecionada);
     --cor-texto-destaque-hover: color-mix(in srgb, var(--cor-selecionada) 80%, var(--cor-mistura));
     --cor-texto-destaque-sombra: color-mix(in srgb, var(--cor-selecionada) 35%, transparent);
@@ -109,6 +114,12 @@
     --cor-popup-cor-destaque: var(--cor-alerta);
     --cor-popup-borda: color-mix(in srgb, var(--cor-alerta) 55%, var(--cor-fundo));
     --cor-popup-sombra: color-mix(in srgb, var(--cor-alerta) 24%, transparent);
+  }
+
+  .cor-popup-info {
+    --cor-popup-cor-destaque: var(--cor-info);
+    --cor-popup-borda: color-mix(in srgb, var(--cor-info) 55%, var(--cor-fundo));
+    --cor-popup-sombra: color-mix(in srgb, var(--cor-info) 24%, transparent);
   }
 
   .texto-cor-selecionada {

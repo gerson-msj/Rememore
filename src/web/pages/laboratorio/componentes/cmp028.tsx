@@ -65,6 +65,7 @@ export function Cmp028() {
                   <option value="link">Link</option>
                   <option value="perigo">Perigo</option>
                   <option value="alerta">Alerta</option>
+                  <option value="info">Info</option>
                 </select>
                 <i className="fa-solid fa-caret-down icone-selecao" aria-hidden="true" />
               </span>
@@ -87,6 +88,7 @@ export function Cmp028() {
                     <option value="link">Link</option>
                     <option value="perigo">Perigo</option>
                     <option value="alerta">Alerta</option>
+                    <option value="info">Info</option>
                   </select>
                   <i className="fa-solid fa-caret-down icone-selecao" aria-hidden="true" />
                 </span>
@@ -111,6 +113,7 @@ export function Cmp028() {
                     <option value="link">Link</option>
                     <option value="perigo">Perigo</option>
                     <option value="alerta">Alerta</option>
+                    <option value="info">Info</option>
                   </select>
                   <i className="fa-solid fa-caret-down icone-selecao" aria-hidden="true" />
                 </span>

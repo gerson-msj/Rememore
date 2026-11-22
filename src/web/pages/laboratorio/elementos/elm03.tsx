@@ -18,6 +18,10 @@ export function Elm03() {
         <a className="link cor-alerta" href="/lab">
           Exemplo de link alerta
         </a>
+        <p>Variação: Link info</p>
+        <a className="link cor-info" href="/lab">
+          Exemplo de link info
+        </a>
       </div>
     </details>
   );

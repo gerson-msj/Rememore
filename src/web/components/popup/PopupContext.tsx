@@ -10,7 +10,7 @@ import {
 import { createPortal } from "react-dom";
 import { Popup } from "./Popup";
 
-export type TemaPopup = "normal" | "link" | "perigo" | "alerta";
+export type TemaPopup = "normal" | "link" | "perigo" | "alerta" | "info";
 export type AcaoPopup = "OK" | "Cancelar";
 
 export type OpcaoBotaoPopup = {
