@@ -1,15 +1,28 @@
-import { useLayoutEffect, useState, type FormEvent } from "react";
+import { useLayoutEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { useHeader } from "@web/components/Header/HeaderContext";
 import { PasswordField } from "@web/components/password-field/password-field";
 import { ErrorMessages } from "@web/components/error-messages/error-messages";
+import { useProcessamento } from "@web/components/processing-overlay/ProcessingContext.tsx";
+import { useSessao } from "@web/contexts/SessaoContext";
+import { FalhaHttp } from "@web/services/http";
 import "./entrar.css";
+
+const MENSAGEM_CREDENCIAIS = "Não foi possível entrar. Confira seu nome de usuário e senha e tente novamente.";
+const MENSAGEM_HTTP = "Não foi possível concluir a operação. Tente novamente.";
+const MENSAGEM_COMUNICACAO = "Não foi possível comunicar com o servidor. Tente novamente.";
 
 export default function Entrar() {
   const { setConfiguracao } = useHeader();
   const navigate = useNavigate();
+  const { entrar } = useSessao();
+  const { processar } = useProcessamento();
   const [nomeUsuario, setNomeUsuario] = useState("");
   const [senha, setSenha] = useState("");
+  const [mensagem, setMensagem] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [credenciaisRejeitadas, setCredenciaisRejeitadas] = useState(false);
+  const envioEmCurso = useRef(false);
 
   useLayoutEffect(() => {
     setConfiguracao({
@@ -19,15 +32,65 @@ export default function Entrar() {
     });
   }, [navigate, setConfiguracao]);
 
-  function impedirEnvio(evento: FormEvent<HTMLFormElement>) {
-    evento.preventDefault();
+  function limparFalhaAnterior() {
+    setMensagem("");
+    setCredenciaisRejeitadas(false);
   }
 
-  const habilitarEntrar = nomeUsuario.length > 0 && senha.length > 0;
+  function alterarNomeUsuario(valor: string) {
+    setNomeUsuario(valor);
+    limparFalhaAnterior();
+  }
+
+  function alterarSenha(valor: string) {
+    setSenha(valor);
+    limparFalhaAnterior();
+  }
+
+  async function enviar(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+
+    const nomeNormalizado = nomeUsuario.trim().toLowerCase();
+    if (
+      envioEmCurso.current || enviando || credenciaisRejeitadas ||
+      nomeNormalizado.length === 0 || senha.trim().length === 0
+    ) return;
+
+    if (/\s/.test(nomeNormalizado)) {
+      setMensagem(MENSAGEM_CREDENCIAIS);
+      setCredenciaisRejeitadas(true);
+      return;
+    }
+
+    envioEmCurso.current = true;
+    setEnviando(true);
+    setMensagem("");
+
+    try {
+      await processar(() => entrar({ nomeUsuario: nomeNormalizado, senha }));
+      // AcessoArea redireciona para /home quando a sessão muda para autenticada.
+    } catch (falha) {
+      if (falha instanceof FalhaHttp && falha.tipo === "aplicacao" && falha.status === 401) {
+        setMensagem(MENSAGEM_CREDENCIAIS);
+        setCredenciaisRejeitadas(true);
+      } else if (falha instanceof FalhaHttp && falha.tipo === "comunicacao") {
+        setMensagem(MENSAGEM_COMUNICACAO);
+      } else {
+        setMensagem(MENSAGEM_HTTP);
+      }
+    } finally {
+      envioEmCurso.current = false;
+      setEnviando(false);
+    }
+  }
+
+  const habilitarEntrar = nomeUsuario.trim().length > 0 && senha.trim().length > 0 &&
+    !enviando && !credenciaisRejeitadas;
+  const mensagens = mensagem ? [{ id: "entrar-erro-geral", texto: mensagem }] : [];
 
   return (
     <section className="pagina-entrar">
-      <form className="pagina-entrar-formulario" onSubmit={impedirEnvio}>
+      <form className="pagina-entrar-formulario" onSubmit={enviar}>
         <div className="pagina-entrar-campos">
           {/* ELM-05, caixa de texto: reproduzido conforme o bloco compartilhado da bancada. */}
           <div className="campo-texto">
@@ -38,14 +101,14 @@ export default function Entrar() {
               type="text"
               autoComplete="username"
               value={nomeUsuario}
-              onChange={(evento) => setNomeUsuario(evento.currentTarget.value)}
+              onChange={(evento) => alterarNomeUsuario(evento.currentTarget.value)}
             />
           </div>
 
           <PasswordField
             inputId="entrar-senha"
             value={senha}
-            onChange={setSenha}
+            onChange={alterarSenha}
             autoComplete="current-password"
             hasError={false}
             errorMessage=""
@@ -64,7 +127,7 @@ export default function Entrar() {
           </a>
         </div>
 
-        <ErrorMessages mensagens={[]} />
+        <ErrorMessages mensagens={mensagens} />
       </form>
     </section>
   );
