@@ -4,6 +4,7 @@ import { LayoutArea } from "./LayoutArea";
 import Apresentacao from "@web/pages/apresentacao/apresentacao";
 import Home from "@web/pages/home/home";
 import Cadastro from "@web/pages/cadastro/cadastro";
+import Entrar from "@web/pages/entrar/entrar";
 import ConfirmacaoCadastro from "@web/pages/cadastro-confirmacao/confirmacao-cadastro";
 import Laboratorio from "@web/pages/laboratorio/laboratorio";
 
@@ -14,6 +15,7 @@ export function AppRouter() {
         <Route element={<LayoutArea area="aberta" />}>
           <Route path="/" element={<Apresentacao />} />
           <Route path="/cadastro" element={<Cadastro />} />
+          <Route path="/entrar" element={<Entrar />} />
         </Route>
       </Route>
       <Route element={<AcessoArea tipo="protegida" />}>

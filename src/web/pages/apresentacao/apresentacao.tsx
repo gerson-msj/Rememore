@@ -20,7 +20,7 @@ export default function Apresentacao() {
           <p>Entre na sua conta ou, se recebeu um convite, comece por aqui.</p>
         </div>
         <div className="pagina-apresentacao-acoes">
-          <button className="botao" type="button">Entrar</button>
+          <button className="botao" type="button" onClick={() => navigate("/entrar")}>Entrar</button>
           <button className="botao" type="button" onClick={() => navigate("/cadastro")}>Criar conta</button>
           <Link className="pagina-apresentacao-botao-laboratorio cor-link" to="/lab">Laboratório</Link>
         </div>

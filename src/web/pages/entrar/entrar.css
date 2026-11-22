@@ -1,0 +1,39 @@
+@layer pagina {
+  .pagina-entrar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--padding-padrao);
+    padding: clamp(1.5rem, 5vh, 3.5rem) var(--padding-padrao);
+  }
+
+  .pagina-entrar .pagina-entrar-formulario {
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-padrao);
+    width: min(100%, 30rem);
+  }
+
+  .pagina-entrar .pagina-entrar-campos {
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-padrao);
+  }
+
+  .pagina-entrar .pagina-entrar-acoes {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--padding-padrao);
+  }
+
+  .pagina-entrar .pagina-entrar-enviar {
+    width: 100%;
+  }
+
+  @media (min-width: 48rem) {
+    .pagina-entrar {
+      padding-top: 3rem;
+    }
+  }
+}
