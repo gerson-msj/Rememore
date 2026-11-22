@@ -1,8 +1,10 @@
 import type {
-  DadosCriarConta,
+  CriarContaRequest,
+  CriarContaResponse,
+  EntrarRequest,
+  EntrarResponse,
   Perfil,
-  RespostaCriarConta,
-  RespostaSessao,
+  SessaoResponse,
 } from "@shared/usuarios";
 import { FalhaHttp, requisitar } from "@web/services/http";
 
@@ -14,7 +16,7 @@ function validarPerfil(perfil: unknown): perfil is Perfil {
   return perfil === "usuario" || perfil === "admin";
 }
 
-export async function criarConta(dados: DadosCriarConta): Promise<RespostaCriarConta> {
+export async function criarConta(dados: CriarContaRequest): Promise<CriarContaResponse> {
   if (dados.convite === "rede" && nomeNormalizado(dados.nomeUsuario) === "usuario" && dados.senha === "usuario") {
     throw new FalhaHttp(
       "comunicacao",
@@ -23,7 +25,7 @@ export async function criarConta(dados: DadosCriarConta): Promise<RespostaCriarC
     );
   }
 
-  const resposta = await requisitar<RespostaCriarConta>("/api/usuarios", {
+  const resposta = await requisitar<CriarContaResponse>("/api/usuarios", {
     method: "POST",
     body: JSON.stringify(dados),
   });
@@ -34,8 +36,27 @@ export async function criarConta(dados: DadosCriarConta): Promise<RespostaCriarC
   return resposta.dados;
 }
 
-export async function consultarSessao(): Promise<RespostaSessao | null> {
-  const resposta = await requisitar<RespostaSessao>("/api/sessao", {}, [401]);
+export async function entrar(dados: EntrarRequest): Promise<EntrarResponse> {
+  if (nomeNormalizado(dados.nomeUsuario) === "rede" && dados.senha === "usuario") {
+    throw new FalhaHttp(
+      "comunicacao",
+      null,
+      "Não foi possível comunicar com o servidor. Tente novamente.",
+    );
+  }
+
+  const resposta = await requisitar<EntrarResponse>("/api/sessao", {
+    method: "POST",
+    body: JSON.stringify(dados),
+  });
+  if (resposta.status !== 200 || !resposta.dados || !validarPerfil(resposta.dados.perfil)) {
+    throw new FalhaHttp("http", resposta.status, "Não foi possível concluir a operação. Tente novamente.");
+  }
+  return resposta.dados;
+}
+
+export async function consultarSessao(): Promise<SessaoResponse | null> {
+  const resposta = await requisitar<SessaoResponse>("/api/sessao", {}, [401]);
   if (resposta.status === 401) return null;
   if (!resposta.dados || !validarPerfil(resposta.dados.perfil)) {
     throw new FalhaHttp("http", resposta.status, "Não foi possível concluir a operação. Tente novamente.");

@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { DadosCriarConta, Perfil } from "@shared/usuarios";
+import type { CriarContaRequest, EntrarRequest, Perfil } from "@shared/usuarios";
 import { falhaDesconhecida, type FalhaHttp } from "@web/services/http";
 import * as servicoUsuario from "@web/services/usuario";
 
@@ -19,7 +19,8 @@ type ContextoSessao = {
   perfil: Perfil | null;
   erro: FalhaHttp | null;
   transicaoCadastroPendente: boolean;
-  criarConta: (dados: DadosCriarConta) => Promise<string>;
+  criarConta: (dados: CriarContaRequest) => Promise<string>;
+  entrar: (dados: EntrarRequest) => Promise<void>;
   concluirTransicaoCadastro: () => void;
   consultarSessao: () => Promise<void>;
   sair: () => Promise<void>;
@@ -52,7 +53,7 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
     }
   }, []);
 
-  const criarConta = useCallback(async (dados: DadosCriarConta) => {
+  const criarConta = useCallback(async (dados: CriarContaRequest) => {
     try {
       const resposta = await servicoUsuario.criarConta(dados);
       setPerfil(resposta.perfil);
@@ -60,6 +61,18 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
       setTransicaoCadastroPendente(true);
       setEstado("autenticado");
       return resposta.chaveRedefinicao;
+    } catch (falha) {
+      throw falhaDesconhecida(falha);
+    }
+  }, []);
+
+  const entrar = useCallback(async (dados: EntrarRequest) => {
+    try {
+      const resposta = await servicoUsuario.entrar(dados);
+      setPerfil(resposta.perfil);
+      setErro(null);
+      setTransicaoCadastroPendente(false);
+      setEstado("autenticado");
     } catch (falha) {
       throw falhaDesconhecida(falha);
     }
@@ -94,11 +107,12 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
       erro,
       transicaoCadastroPendente,
       criarConta,
+      entrar,
       concluirTransicaoCadastro,
       consultarSessao,
       sair,
     }),
-    [estado, perfil, erro, transicaoCadastroPendente, criarConta, concluirTransicaoCadastro, consultarSessao, sair],
+    [estado, perfil, erro, transicaoCadastroPendente, criarConta, entrar, concluirTransicaoCadastro, consultarSessao, sair],
   );
 
   return <SessaoContext.Provider value={valor}>{children}</SessaoContext.Provider>;

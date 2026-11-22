@@ -1,7 +1,7 @@
 import { serve } from "bun";
 import index from "../web/index.html";
 import { criarConta } from "@api/controllers/usuarios";
-import { consultarSessao, sair } from "@api/controllers/sessao";
+import { consultarSessao, entrar, sair } from "@api/controllers/sessao";
 
 const hostname = process.argv.includes("--intranet")
   ? process.env.REMEMORE_LAN_HOST || "192.168.0.24"
@@ -16,6 +16,7 @@ const server = serve({
     "/api/usuarios": { POST: criarConta },
     "/api/sessao": {
       GET: consultarSessao,
+      POST: entrar,
       DELETE: sair,
     },
     // Serve index.html for all unmatched routes.

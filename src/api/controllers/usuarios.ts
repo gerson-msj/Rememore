@@ -1,4 +1,4 @@
-import type { DadosCriarConta, ErroAplicacao } from "@shared/usuarios";
+import type { CriarContaRequest, ErroAplicacao } from "@shared/usuarios";
 import { criarCookieSessao } from "@api/controllers/cookies";
 
 const idUsuarioSimulado = "01ARZ3NDEKTSV4RRFFQ69G5FAV";
@@ -13,10 +13,10 @@ function erroAplicacao(status: number, conteudo: ErroAplicacao) {
 }
 
 export async function criarConta(request: Request) {
-  let dados: Partial<DadosCriarConta>;
+  let dados: Partial<CriarContaRequest>;
 
   try {
-    dados = await request.json() as Partial<DadosCriarConta>;
+    dados = await request.json() as Partial<CriarContaRequest>;
   } catch {
     return new Response(null, { status: 400 });
   }

@@ -1,19 +1,26 @@
 export type Perfil = "usuario" | "admin";
 
-export type DadosCriarConta = {
+export type CriarContaRequest = {
   convite: string;
   nomeUsuario: string;
   senha: string;
 };
 
-export type RespostaCriarConta = {
+export type CriarContaResponse = {
   perfil: Perfil;
   chaveRedefinicao: string;
 };
 
-export type RespostaSessao = {
+export type SessaoResponse = {
   perfil: Perfil;
 };
+
+export type EntrarRequest = {
+  nomeUsuario: string;
+  senha: string;
+};
+
+export type EntrarResponse = SessaoResponse;
 
 export type ErrosCamposCadastro = Partial<
   Record<"convite" | "nomeUsuario" | "senha", string>

@@ -12,6 +12,12 @@ Este documento reúne informações sobre o projeto, seus recursos e as ferramen
 - Haverá também armazenamento local definitivo.
 - Utilize os aliases `@web`, `@api` e `@shared` nas importações entre diretórios.
 
+## Testes unitários
+
+- O projeto não exige testes unitários nem cobertura abrangente como critério geral de implementação, salvo quando uma especificação os exigir explicitamente.
+- Durante o desenvolvimento, podem ser criados testes unitários para apoiar a verificação de regras específicas ou complexas, quando forem considerados úteis. Essa criação pontual não implica obrigação de manter, ampliar ou completar a cobertura de testes do projeto.
+- Mantenha os testes unitários fora de `src`, sob `tests/unit/`, organizados por área correspondente.
+
 ## Organização da aplicação web
 
 - `components`: componentes React reutilizáveis, incluindo seus contextos, providers e hooks específicos.
