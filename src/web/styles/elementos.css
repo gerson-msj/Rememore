@@ -87,6 +87,7 @@
 
   .campo-texto input[type="text"],
   .campo-texto input[type="password"],
+  .campo-texto input[type="number"],
   .campo-texto textarea,
   select {
     color: var(--cor-texto);
@@ -94,7 +95,8 @@
   }
 
   .campo-texto input[type="text"],
-  .campo-texto input[type="password"] {
+  .campo-texto input[type="password"],
+  .campo-texto input[type="number"] {
     height: var(--altura-controle);
     padding-inline: var(--espacamento-controle);
   }

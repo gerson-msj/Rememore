@@ -1,58 +1,10 @@
 @layer componente {
   .popup-camada {
-    --duracao-transicao-popup: var(--duracao-transicao-elemento);
-    position: fixed;
     z-index: 1000;
-    inset: 0;
-    display: grid;
-    place-items: start center;
-    padding: 25vh var(--padding-padrao) var(--padding-padrao);
-    background-color: rgba(0, 0, 0, 0.25);
-    opacity: 0;
-    backdrop-filter: blur(0);
-    transition:
-      opacity var(--duracao-transicao-popup) ease,
-      backdrop-filter var(--duracao-transicao-popup) ease;
-  }
-
-  .popup-camada--aberta {
-    opacity: 1;
-    backdrop-filter: blur(2px);
   }
 
   .popup-camada--fechando {
-    opacity: 0;
-    backdrop-filter: blur(0);
     pointer-events: none;
-  }
-
-  .popup {
-    display: grid;
-    gap: var(--padding-padrao);
-    width: min(100%, 32rem);
-    max-height: calc(75vh - var(--padding-padrao));
-    overflow: auto;
-    padding: var(--padding-padrao);
-    border: var(--espessura-borda) solid var(--cor-popup-borda);
-    border-radius: 0.5rem;
-    color: var(--cor-texto);
-    background: var(--cor-fundo);
-    box-shadow: 0 0 0.6rem 0.2rem var(--cor-popup-sombra);
-    opacity: 0;
-    transform: translateY(-0.5rem) scale(0.98);
-    transition:
-      opacity var(--duracao-transicao-popup) ease,
-      transform var(--duracao-transicao-popup) ease;
-  }
-
-  .popup-camada--aberta .popup {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-
-  .popup-camada--fechando .popup {
-    opacity: 0;
-    transform: translateY(-0.35rem) scale(0.98);
   }
 
   .popup-titulo {
@@ -83,12 +35,5 @@
 
   .popup-acoes {
     justify-self: end;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .popup-camada,
-    .popup {
-      transition: none;
-    }
   }
 }

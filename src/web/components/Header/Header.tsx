@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { usePopup } from "@web/components/popup/PopupContext";
 import { useSessao } from "@web/contexts/SessaoContext";
 import { useExecutorOperacao } from "@web/hooks/useExecutorOperacao";
+import { useProcessamento } from "@web/components/processing-overlay/ProcessingContext.tsx";
 import { CHAVE_CONFIRMACAO_CADASTRO, remover } from "@web/services/storage";
 import { useHeader } from "./HeaderContext";
 import "./header.css";
@@ -13,6 +14,7 @@ export function Header() {
   const { estado: estadoSessao, sair } = useSessao();
   const navigate = useNavigate();
   const executarOperacao = useExecutorOperacao();
+  const { processar } = useProcessamento();
   const acaoEmAndamento = useRef(false);
   const [saindo, setSaindo] = useState(false);
   const apresentarSair = area === "protegida"
@@ -41,14 +43,16 @@ export function Header() {
 
       await executarOperacao({
         operacao: async () => {
-          await sair();
-          try {
-            // Temporário: remove apenas a chave da E5; será substituído por uma limpeza completa.
-            remover(CHAVE_CONFIRMACAO_CADASTRO, "sessao");
-          } catch {
-            // A limpeza temporária não bloqueia a navegação após sair.
-          }
-          navigate("/", { replace: true });
+          await processar(async () => {
+            await sair();
+            try {
+              // Temporário: remove apenas a chave da E5; será substituído por uma limpeza completa.
+              remover(CHAVE_CONFIRMACAO_CADASTRO, "sessao");
+            } catch {
+              // A limpeza temporária não bloqueia a navegação após sair.
+            }
+            navigate("/", { replace: true });
+          }, "Saindo...");
         },
         aoIniciar: () => setSaindo(true),
         aoFinalizar: () => setSaindo(false),

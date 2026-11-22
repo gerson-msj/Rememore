@@ -12,6 +12,7 @@ import { Cmp001 } from "./componentes/cmp001";
 import { Cmp002 } from "./componentes/cmp002";
 import { Cmp028 } from "./componentes/cmp028";
 import { Cmp038 } from "./componentes/cmp038";
+import { Cmp039 } from "./componentes/cmp039";
 import "./laboratorio.css";
 
 export default function Laboratorio() {
@@ -85,6 +86,7 @@ export default function Laboratorio() {
         <Cmp002 />
         <Cmp028 />
         <Cmp038 />
+        <Cmp039 />
       </section>
     </div>
   );

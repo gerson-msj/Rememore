@@ -37,6 +37,20 @@ export function Elm05() {
             </div>
           </div>
           <div>
+            <p>Variação: Caixa numérica</p>
+            {/* ELM-05, caixa numérica: reproduzir o bloco completo a partir de campo-texto. */}
+            <div className={classeCampoTexto}>
+              <label htmlFor="elm05-caixa-numerica">Número</label>
+              <input
+                id="elm05-caixa-numerica"
+                className="controle-com-borda"
+                type="number"
+                min="0"
+                step="1"
+              />
+            </div>
+          </div>
+          <div>
             <p>Variação: Caixa de texto multilinear</p>
             {/* ELM-05, multilinear: reproduzir o bloco completo a partir de campo-texto. */}
             <div className={classeCampoTexto}>

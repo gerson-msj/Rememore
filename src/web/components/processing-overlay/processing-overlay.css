@@ -1,0 +1,19 @@
+@layer componente {
+  .processamento-conteudo {
+    min-height: 100%;
+  }
+
+  .cobertura-processamento {
+    z-index: 1100;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  .cobertura-processamento-mensagem {
+    text-align: center;
+  }
+
+  .cobertura-processamento-mensagem p {
+    margin: 0;
+  }
+}

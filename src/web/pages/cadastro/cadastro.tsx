@@ -4,6 +4,7 @@ import { useHeader } from "@web/components/Header/HeaderContext";
 import { PasswordField } from "@web/components/password-field/password-field";
 import { ErrorMessages, type MensagemErro } from "@web/components/error-messages/error-messages";
 import { useSessao } from "@web/contexts/SessaoContext";
+import { useProcessamento } from "@web/components/processing-overlay/ProcessingContext.tsx";
 import { FalhaHttp, falhaDesconhecida } from "@web/services/http";
 import {
   armazenar,
@@ -43,6 +44,7 @@ export default function Cadastro() {
   const [enviando, setEnviando] = useState(false);
   const envioEmAndamento = useRef(false);
   const { criarConta, concluirTransicaoCadastro } = useSessao();
+  const { processar } = useProcessamento();
 
   useLayoutEffect(() => {
     setConfiguracao({
@@ -99,11 +101,11 @@ export default function Cadastro() {
     setEnviando(true);
     let chaveRedefinicao: string | null = null;
     try {
-      chaveRedefinicao = await criarConta({
+      chaveRedefinicao = await processar(() => criarConta({
         convite: convitePreparado,
         nomeUsuario: nomeUsuarioPreparado,
         senha: senhaPreparada,
-      });
+      }), "Criando sua conta...");
     } catch (falha) {
       const erro = falhaDesconhecida(falha);
       if (erro instanceof FalhaHttp && erro.tipo === "aplicacao") {

@@ -40,4 +40,65 @@
     border-color: transparent;
     background-color: transparent;
   }
+
+  .camada-modal {
+    --duracao-transicao-camada: var(--duracao-transicao-elemento);
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: start center;
+    padding: 25vh var(--padding-padrao) var(--padding-padrao);
+    background-color: rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    backdrop-filter: blur(0);
+    transition:
+      opacity var(--duracao-transicao-camada) ease,
+      backdrop-filter var(--duracao-transicao-camada) ease;
+  }
+
+  .camada-modal--visivel {
+    opacity: 1;
+    backdrop-filter: blur(2px);
+  }
+
+  .camada-modal--saindo {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+
+  .painel-modal {
+    display: grid;
+    gap: var(--padding-padrao);
+    width: min(100%, 32rem);
+    max-height: calc(75vh - var(--padding-padrao));
+    overflow: auto;
+    padding: var(--padding-padrao);
+    border: var(--espessura-borda) solid var(--cor-popup-borda);
+    border-radius: 0.5rem;
+    color: var(--cor-texto);
+    background: var(--cor-fundo);
+    box-shadow: 0 0 0.6rem 0.2rem var(--cor-popup-sombra);
+    opacity: 0;
+    transform: translateY(-0.5rem) scale(0.98);
+    transition:
+      opacity var(--duracao-transicao-camada) ease,
+      transform var(--duracao-transicao-camada) ease;
+  }
+
+  .camada-modal--visivel .painel-modal {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .camada-modal--saindo .painel-modal {
+    opacity: 0;
+    transform: translateY(-0.35rem) scale(0.98);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .camada-modal,
+    .painel-modal {
+      transition: none;
+    }
+  }
 }

@@ -48,6 +48,7 @@ export function Popup({ id, opcoes, aoResponder }: PopupProps) {
       : null;
 
     const manterFoco = (evento: FocusEvent) => {
+      if (document.documentElement.dataset.processamentoAtivo === "true") return;
       if (evento.target instanceof Node && !dialogo.contains(evento.target)) {
         dialogo.focus();
       }
@@ -64,6 +65,7 @@ export function Popup({ id, opcoes, aoResponder }: PopupProps) {
 
   useEffect(() => {
     const tratarTecla = (evento: KeyboardEvent) => {
+      if (document.documentElement.dataset.processamentoAtivo === "true") return;
       if (evento.key === "Escape") {
         evento.preventDefault();
         fechar("Cancelar");
@@ -109,7 +111,7 @@ export function Popup({ id, opcoes, aoResponder }: PopupProps) {
       return;
     }
 
-    const duracao = getComputedStyle(camada).getPropertyValue("--duracao-transicao-popup").trim();
+    const duracao = getComputedStyle(camada).getPropertyValue("--duracao-transicao-camada").trim();
     const valorDuracao = Number.parseFloat(duracao);
     const duracaoMs = duracao.endsWith("ms") ? valorDuracao : valorDuracao * 1000;
 
@@ -126,15 +128,15 @@ export function Popup({ id, opcoes, aoResponder }: PopupProps) {
   const mostrarCancelar = opcoes.botoes?.cancelar?.apresentar ?? true;
   const tituloId = `popup-titulo-${id}`;
   const classeEstado = estado === "aberto"
-    ? " popup-camada--aberta"
+    ? " camada-modal--visivel"
     : estado === "fechando"
-    ? " popup-camada--fechando"
+    ? " popup-camada--fechando camada-modal--saindo"
     : "";
 
   return (
     <div
       ref={camadaRef}
-      className={`popup-camada${classeEstado}`}
+      className={`popup-camada camada-modal${classeEstado}`}
       onTransitionEnd={(evento) => {
         if (
           estado === "fechando" &&
@@ -150,7 +152,7 @@ export function Popup({ id, opcoes, aoResponder }: PopupProps) {
     >
       <section
         ref={dialogoRef}
-        className={`popup${opcoes.tema && opcoes.tema !== "normal" ? ` cor-popup-${opcoes.tema}` : ""}`}
+        className={`popup painel-modal${opcoes.tema && opcoes.tema !== "normal" ? ` cor-popup-${opcoes.tema}` : ""}`}
         role="dialog"
         tabIndex={-1}
         aria-modal="true"
