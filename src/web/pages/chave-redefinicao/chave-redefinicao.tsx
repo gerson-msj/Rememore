@@ -76,8 +76,8 @@ export default function ChaveRedefinicao() {
       mensagemHtml:
         "<p>Você já guardou sua chave de redefinição? Depois de entrar, ela não poderá ser exibida novamente.</p>",
       botoes: {
-        ok: { texto: "Já guardei, entrar" },
-        cancelar: { texto: "Voltar e guardar" },
+        ok: { texto: "Já guardei, entrar", tema: "info" },
+        cancelar: { texto: "Voltar e guardar", tema: "alerta" },
       },
     });
 
