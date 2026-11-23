@@ -1,6 +1,7 @@
 const prefixoSerializacao = "rememore:json:";
 export type DestinoArmazenamento = "local" | "sessao";
 export const CHAVE_CONFIRMACAO_CADASTRO = "confirmacaoCadastro";
+export const CHAVE_CONFIRMACAO_REDEFINICAO = "confirmacaoRedefinicao";
 
 function obterArmazenamento(destino: DestinoArmazenamento = "local"): Storage {
   return destino === "sessao" ? window.sessionStorage : window.localStorage;

@@ -4,6 +4,8 @@ import type {
   EntrarRequest,
   EntrarResponse,
   Perfil,
+  RedefinirSenhaRequest,
+  RedefinirSenhaResponse,
   SessaoResponse,
 } from "@shared/usuarios";
 import { FalhaHttp, requisitar } from "@web/services/http";
@@ -50,6 +52,18 @@ export async function entrar(dados: EntrarRequest): Promise<EntrarResponse> {
     body: JSON.stringify(dados),
   });
   if (resposta.status !== 200 || !resposta.dados || !validarPerfil(resposta.dados.perfil)) {
+    throw new FalhaHttp("http", resposta.status, "Não foi possível concluir a operação. Tente novamente.");
+  }
+  return resposta.dados;
+}
+
+export async function redefinirSenha(dados: RedefinirSenhaRequest): Promise<RedefinirSenhaResponse> {
+  const resposta = await requisitar<RedefinirSenhaResponse>("/api/usuarios/redefinicao-senha", {
+    method: "POST",
+    body: JSON.stringify(dados),
+  });
+  if (resposta.status !== 200 || !resposta.dados || !validarPerfil(resposta.dados.perfil) ||
+      typeof resposta.dados.chaveRedefinicao !== "string") {
     throw new FalhaHttp("http", resposta.status, "Não foi possível concluir a operação. Tente novamente.");
   }
   return resposta.dados;

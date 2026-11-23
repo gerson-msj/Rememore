@@ -1,4 +1,4 @@
-import type { CriarContaRequest, ErroAplicacao } from "@shared/usuarios";
+import type { CriarContaRequest, ErroAplicacao, RedefinirSenhaRequest, RedefinirSenhaResponse } from "@shared/usuarios";
 import { criarCookieSessao } from "@api/controllers/cookies";
 
 const idUsuarioSimulado = "01ARZ3NDEKTSV4RRFFQ69G5FAV";
@@ -61,4 +61,34 @@ export async function criarConta(request: Request) {
   }
 
   return erroAplicacao(422, { tipo: "erroAplicacao", errosCampos });
+}
+
+export async function redefinirSenha(request: Request) {
+  let dados: unknown;
+  try {
+    dados = await request.json();
+  } catch {
+    return new Response(null, { status: 400 });
+  }
+  if (typeof dados !== "object" || dados === null || Array.isArray(dados) ||
+      typeof (dados as Partial<RedefinirSenhaRequest>).nomeUsuario !== "string" ||
+      typeof (dados as Partial<RedefinirSenhaRequest>).chaveRedefinicao !== "string" ||
+      typeof (dados as Partial<RedefinirSenhaRequest>).novaSenha !== "string") {
+    return new Response(null, { status: 400 });
+  }
+  const requisicao = dados as RedefinirSenhaRequest;
+  if (requisicao.chaveRedefinicao !== chaveRedefinicaoSimulada) {
+    return erroAplicacao(422, {
+      tipo: "erroAplicacao",
+      mensagem: "Não foi possível redefinir a senha. Confira as informações e tente novamente.",
+    });
+  }
+  const resposta: RedefinirSenhaResponse = {
+    perfil: "usuario",
+    chaveRedefinicao: chaveRedefinicaoSimulada,
+  };
+  return Response.json(resposta, {
+    status: 200,
+    headers: { "Set-Cookie": criarCookieSessao(request, idUsuarioSimulado) },
+  });
 }

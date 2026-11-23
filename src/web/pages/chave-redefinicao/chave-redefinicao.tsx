@@ -4,30 +4,42 @@ import { useHeader } from "@web/components/Header/HeaderContext";
 import { ErrorMessages, type MensagemErro } from "@web/components/error-messages/error-messages";
 import { NewKeyConfirmation } from "@web/components/new-key-confirmation/new-key-confirmation";
 import { usePopup } from "@web/components/popup/PopupContext";
+import { useSessao } from "@web/contexts/SessaoContext";
 import {
   CHAVE_CONFIRMACAO_CADASTRO,
+  CHAVE_CONFIRMACAO_REDEFINICAO,
   recuperar,
   remover,
 } from "@web/services/storage";
-import "./confirmacao-cadastro.css";
+import "./chave-redefinicao.css";
 
 type ContextoCadastro = { chaveRedefinicao: string };
+type OrigemConfirmacao = "cadastro" | "redefinicao";
 
 const mensagemChaveIndisponivel =
   "Não foi possível recuperar sua chave de redefinição de senha. Você poderá entrar no Rememore, mas talvez não consiga redefinir sua senha. Entre em contato com o administrador para receber orientação.";
 
-export default function ConfirmacaoCadastro() {
+export default function ChaveRedefinicao() {
   const { setConfiguracao } = useHeader();
   const { abrirPopup } = usePopup();
   const navigate = useNavigate();
-  const chaveNaoGravada = useLocation().state?.chaveNaoGravada === true;
+  const localizacao = useLocation();
+  const origem: OrigemConfirmacao = localizacao.pathname === "/redefinir-senha/confirmacao"
+    ? "redefinicao"
+    : "cadastro";
+  const chaveNaoGravada = localizacao.state?.chaveNaoGravada === true;
   const [chaveRedefinicao, setChaveRedefinicao] = useState<string | null>(null);
   const [leituraConcluida, setLeituraConcluida] = useState(false);
   const leituraIniciada = useRef(false);
+  const { concluirTransicaoRedefinicao } = useSessao();
 
   useLayoutEffect(() => {
-    setConfiguracao({ titulo: "Conta criada", apresentarSair: false });
-  }, [setConfiguracao]);
+    setConfiguracao({ titulo: origem === "cadastro" ? "Conta criada" : "Senha redefinida", apresentarSair: false });
+  }, [origem, setConfiguracao]);
+
+  useEffect(() => {
+    if (origem === "redefinicao") concluirTransicaoRedefinicao();
+  }, [concluirTransicaoRedefinicao, origem]);
 
   useEffect(() => {
     if (leituraIniciada.current) return;
@@ -40,7 +52,8 @@ export default function ConfirmacaoCadastro() {
 
     let chave: string | null = null;
     try {
-      const contexto = recuperar<ContextoCadastro>(CHAVE_CONFIRMACAO_CADASTRO, "sessao");
+      const registro = origem === "cadastro" ? CHAVE_CONFIRMACAO_CADASTRO : CHAVE_CONFIRMACAO_REDEFINICAO;
+      const contexto = recuperar<ContextoCadastro>(registro, "sessao");
       chave = typeof contexto?.chaveRedefinicao === "string" && contexto.chaveRedefinicao.length > 0
         ? contexto.chaveRedefinicao
         : null;
@@ -50,7 +63,7 @@ export default function ConfirmacaoCadastro() {
 
     setChaveRedefinicao(chave);
     setLeituraConcluida(true);
-  }, [chaveNaoGravada]);
+  }, [chaveNaoGravada, origem]);
 
   async function confirmarEntrada() {
     if (!chaveRedefinicao) {
@@ -71,7 +84,7 @@ export default function ConfirmacaoCadastro() {
     if (acao !== "OK") return;
 
     try {
-      remover(CHAVE_CONFIRMACAO_CADASTRO, "sessao");
+      remover(origem === "cadastro" ? CHAVE_CONFIRMACAO_CADASTRO : CHAVE_CONFIRMACAO_REDEFINICAO, "sessao");
     } catch {
       // A remoção não bloqueia a entrada.
     }
@@ -80,7 +93,7 @@ export default function ConfirmacaoCadastro() {
 
   if (!leituraConcluida) {
     return (
-      <section className="pagina-confirmacao-cadastro">
+      <section className="pagina-chave-redefinicao">
         <p>Aguarde…</p>
       </section>
     );
@@ -91,20 +104,19 @@ export default function ConfirmacaoCadastro() {
     : [{ id: "confirmacao-erro-chave", texto: mensagemChaveIndisponivel }];
 
   return (
-    <section className="pagina-confirmacao-cadastro">
+    <section className="pagina-chave-redefinicao">
       {chaveRedefinicao && (
         <>
-          <div className="pagina-confirmacao-cadastro-contexto">
-            <h2 className="subtitulo">Sua conta foi criada.</h2>
-            <p>
-              Guarde esta chave: ela será necessária caso você precise redefinir
-              sua senha no futuro.
-            </p>
+          <div className="pagina-chave-redefinicao-contexto">
+            <h2 className="subtitulo">{origem === "cadastro" ? "Sua conta foi criada." : "Sua senha foi redefinida."}</h2>
+            <p>{origem === "cadastro"
+              ? "Guarde esta chave: ela será necessária caso você precise redefinir sua senha no futuro."
+              : "Guarde esta nova chave: ela será necessária caso você precise redefinir sua senha novamente no futuro."}</p>
           </div>
 
           <NewKeyConfirmation chave={chaveRedefinicao} />
 
-          <p className="pagina-confirmacao-cadastro-aviso">
+          <p className="pagina-chave-redefinicao-aviso">
             Esta chave será exibida somente agora. O Rememore não poderá mostrá-la
             novamente depois que você sair desta página.
           </p>

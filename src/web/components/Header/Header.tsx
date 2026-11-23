@@ -4,7 +4,7 @@ import { usePopup } from "@web/components/popup/PopupContext";
 import { useSessao } from "@web/contexts/SessaoContext";
 import { useExecutorOperacao } from "@web/hooks/useExecutorOperacao";
 import { useProcessamento } from "@web/components/processing-overlay/ProcessingContext.tsx";
-import { CHAVE_CONFIRMACAO_CADASTRO, remover } from "@web/services/storage";
+import { CHAVE_CONFIRMACAO_CADASTRO, CHAVE_CONFIRMACAO_REDEFINICAO, remover } from "@web/services/storage";
 import { useHeader } from "./HeaderContext";
 import "./header.css";
 
@@ -48,6 +48,7 @@ export function Header() {
             try {
               // Temporário: remove apenas a chave da E5; será substituído por uma limpeza completa.
               remover(CHAVE_CONFIRMACAO_CADASTRO, "sessao");
+              remover(CHAVE_CONFIRMACAO_REDEFINICAO, "sessao");
             } catch {
               // A limpeza temporária não bloqueia a navegação após sair.
             }

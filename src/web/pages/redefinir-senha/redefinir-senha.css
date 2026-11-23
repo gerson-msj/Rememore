@@ -1,0 +1,16 @@
+@layer pagina {
+  .pagina-redefinir-senha {
+    display: flex;
+    justify-content: center;
+    padding: clamp(1.5rem, 5vh, 3.5rem) var(--padding-padrao);
+  }
+  .pagina-redefinir-senha .pagina-redefinir-senha-formulario,
+  .pagina-redefinir-senha .pagina-redefinir-senha-campos {
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-padrao);
+  }
+  .pagina-redefinir-senha .pagina-redefinir-senha-formulario { width: min(100%, 30rem); }
+  .pagina-redefinir-senha .pagina-redefinir-senha-enviar { width: 100%; }
+  @media (min-width: 48rem) { .pagina-redefinir-senha { padding-top: 3rem; } }
+}

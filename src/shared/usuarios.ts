@@ -22,6 +22,17 @@ export type EntrarRequest = {
 
 export type EntrarResponse = SessaoResponse;
 
+export type RedefinirSenhaRequest = {
+  nomeUsuario: string;
+  chaveRedefinicao: string;
+  novaSenha: string;
+};
+
+export type RedefinirSenhaResponse = {
+  perfil: Perfil;
+  chaveRedefinicao: string;
+};
+
 export type ErrosCamposCadastro = Partial<
   Record<"convite" | "nomeUsuario" | "senha", string>
 >;

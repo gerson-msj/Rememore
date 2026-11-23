@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useHeader } from "@web/components/Header/HeaderContext";
 import { PasswordField } from "@web/components/password-field/password-field";
 import { ErrorMessages } from "@web/components/error-messages/error-messages";
@@ -121,10 +121,9 @@ export default function Entrar() {
           <button className="botao pagina-entrar-enviar" type="submit" disabled={!habilitarEntrar}>
             Entrar
           </button>
-          {/* ELM-03, link: sem navegação nesta etapa. */}
-          <a className="link pagina-entrar-redefinir" href="#" onClick={(evento) => evento.preventDefault()}>
+          <Link className="link pagina-entrar-redefinir" to="/redefinir-senha">
             Redefinir senha
-          </a>
+          </Link>
         </div>
 
         <ErrorMessages mensagens={mensagens} />

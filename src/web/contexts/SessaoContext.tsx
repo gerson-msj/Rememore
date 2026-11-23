@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { CriarContaRequest, EntrarRequest, Perfil } from "@shared/usuarios";
+import type { CriarContaRequest, EntrarRequest, Perfil, RedefinirSenhaRequest } from "@shared/usuarios";
 import { falhaDesconhecida, type FalhaHttp } from "@web/services/http";
 import * as servicoUsuario from "@web/services/usuario";
 
@@ -19,9 +19,12 @@ type ContextoSessao = {
   perfil: Perfil | null;
   erro: FalhaHttp | null;
   transicaoCadastroPendente: boolean;
+  transicaoRedefinicaoPendente: boolean;
   criarConta: (dados: CriarContaRequest) => Promise<string>;
   entrar: (dados: EntrarRequest) => Promise<void>;
+  redefinirSenha: (dados: RedefinirSenhaRequest) => Promise<string>;
   concluirTransicaoCadastro: () => void;
+  concluirTransicaoRedefinicao: () => void;
   consultarSessao: () => Promise<void>;
   sair: () => Promise<void>;
 };
@@ -35,6 +38,7 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [erro, setErro] = useState<FalhaHttp | null>(null);
   const [transicaoCadastroPendente, setTransicaoCadastroPendente] = useState(false);
+  const [transicaoRedefinicaoPendente, setTransicaoRedefinicaoPendente] = useState(false);
   const consultaInicialIniciada = useRef(false);
 
   const consultarSessao = useCallback(async () => {
@@ -42,6 +46,7 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
     setPerfil(null);
     setErro(null);
     setTransicaoCadastroPendente(false);
+    setTransicaoRedefinicaoPendente(false);
     try {
       const sessao = await servicoUsuario.consultarSessao();
       setPerfil(sessao?.perfil ?? null);
@@ -59,6 +64,7 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
       setPerfil(resposta.perfil);
       setErro(null);
       setTransicaoCadastroPendente(true);
+      setTransicaoRedefinicaoPendente(false);
       setEstado("autenticado");
       return resposta.chaveRedefinicao;
     } catch (falha) {
@@ -72,7 +78,22 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
       setPerfil(resposta.perfil);
       setErro(null);
       setTransicaoCadastroPendente(false);
+      setTransicaoRedefinicaoPendente(false);
       setEstado("autenticado");
+    } catch (falha) {
+      throw falhaDesconhecida(falha);
+    }
+  }, []);
+
+  const redefinirSenha = useCallback(async (dados: RedefinirSenhaRequest) => {
+    try {
+      const resposta = await servicoUsuario.redefinirSenha(dados);
+      setPerfil(resposta.perfil);
+      setErro(null);
+      setTransicaoCadastroPendente(false);
+      setTransicaoRedefinicaoPendente(true);
+      setEstado("autenticado");
+      return resposta.chaveRedefinicao;
     } catch (falha) {
       throw falhaDesconhecida(falha);
     }
@@ -82,12 +103,17 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
     setTransicaoCadastroPendente(false);
   }, []);
 
+  const concluirTransicaoRedefinicao = useCallback(() => {
+    setTransicaoRedefinicaoPendente(false);
+  }, []);
+
   const sair = useCallback(async () => {
     try {
       await servicoUsuario.sair();
       setPerfil(null);
       setErro(null);
       setTransicaoCadastroPendente(false);
+      setTransicaoRedefinicaoPendente(false);
       setEstado("naoAutenticado");
     } catch (falha) {
       throw falhaDesconhecida(falha);
@@ -106,13 +132,16 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
       perfil,
       erro,
       transicaoCadastroPendente,
+      transicaoRedefinicaoPendente,
       criarConta,
       entrar,
+      redefinirSenha,
       concluirTransicaoCadastro,
+      concluirTransicaoRedefinicao,
       consultarSessao,
       sair,
     }),
-    [estado, perfil, erro, transicaoCadastroPendente, criarConta, entrar, concluirTransicaoCadastro, consultarSessao, sair],
+    [estado, perfil, erro, transicaoCadastroPendente, transicaoRedefinicaoPendente, criarConta, entrar, redefinirSenha, concluirTransicaoCadastro, concluirTransicaoRedefinicao, consultarSessao, sair],
   );
 
   return <SessaoContext.Provider value={valor}>{children}</SessaoContext.Provider>;

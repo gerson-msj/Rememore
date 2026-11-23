@@ -1,5 +1,5 @@
 @layer pagina {
-  .pagina-confirmacao-cadastro {
+  .pagina-chave-redefinicao {
     display: flex;
     flex-direction: column;
     gap: var(--padding-padrao);
@@ -8,24 +8,24 @@
     padding: clamp(1.5rem, 5vh, 3.5rem) var(--padding-padrao);
   }
 
-  .pagina-confirmacao-cadastro .pagina-confirmacao-cadastro-aviso,
-  .pagina-confirmacao-cadastro .pagina-confirmacao-cadastro-resultado {
+  .pagina-chave-redefinicao .pagina-chave-redefinicao-aviso,
+  .pagina-chave-redefinicao .pagina-chave-redefinicao-resultado {
     margin: 0;
     line-height: 1.5;
   }
 
-  .pagina-confirmacao-cadastro .pagina-confirmacao-cadastro-contexto {
+  .pagina-chave-redefinicao .pagina-chave-redefinicao-contexto {
     display: flex;
     flex-direction: column;
     gap: var(--espacamento-reduzido-elemento);
   }
 
-  .pagina-confirmacao-cadastro .pagina-confirmacao-cadastro-contexto p {
+  .pagina-chave-redefinicao .pagina-chave-redefinicao-contexto p {
     margin: 0;
     line-height: 1.5;
   }
 
-  .pagina-confirmacao-cadastro .pagina-confirmacao-cadastro-aviso {
+  .pagina-chave-redefinicao .pagina-chave-redefinicao-aviso {
     font-size: 0.9rem;
   }
 

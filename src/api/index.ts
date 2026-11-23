@@ -1,6 +1,6 @@
 import { serve } from "bun";
 import index from "../web/index.html";
-import { criarConta } from "@api/controllers/usuarios";
+import { criarConta, redefinirSenha } from "@api/controllers/usuarios";
 import { consultarSessao, entrar, sair } from "@api/controllers/sessao";
 
 const hostname = process.argv.includes("--intranet")
@@ -14,6 +14,7 @@ const server = serve({
   port: 3000,
   routes: {
     "/api/usuarios": { POST: criarConta },
+    "/api/usuarios/redefinicao-senha": { POST: redefinirSenha },
     "/api/sessao": {
       GET: consultarSessao,
       POST: entrar,
