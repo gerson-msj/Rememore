@@ -63,6 +63,7 @@ export async function requisitar<T>(
 ): Promise<{ status: number; dados: T | undefined }> {
   const geracao = obterGeracaoSessao();
   const verificarSessao = () => {
+    init.signal?.throwIfAborted();
     if (opcoes.protegida) verificarGeracaoSessao(geracao);
   };
   let response: Response;

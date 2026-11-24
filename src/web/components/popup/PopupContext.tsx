@@ -37,7 +37,7 @@ type SolicitacaoPopup = {
 };
 
 type PopupContexto = {
-  abrirPopup: (opcoes: OpcoesPopup) => Promise<AcaoPopup>;
+  abrirPopup: (opcoes: OpcoesPopup, signal?: AbortSignal) => Promise<AcaoPopup>;
 };
 
 const ContextoPopup = createContext<PopupContexto | undefined>(undefined);
@@ -51,13 +51,25 @@ export function PopupProvider({ children }: PopupProviderProps) {
   const proximoId = useRef(0);
   const atual = fila[0];
 
-  const abrirPopup = useCallback((opcoes: OpcoesPopup) => {
+  const abrirPopup = useCallback((opcoes: OpcoesPopup, signal?: AbortSignal) => {
+    if (signal?.aborted) return Promise.resolve<AcaoPopup>("Cancelar");
+
     return new Promise<AcaoPopup>((resolver) => {
-      const solicitacao = {
-        id: proximoId.current++,
-        opcoes,
-        resolver,
+      const id = proximoId.current++;
+      const cancelar = () => {
+        setFila((itens) => itens.filter((item) => item.id !== id));
+        concluir("Cancelar");
       };
+      const concluir = (acao: AcaoPopup) => {
+        signal?.removeEventListener("abort", cancelar);
+        resolver(acao);
+      };
+      const solicitacao = {
+        id,
+        opcoes,
+        resolver: concluir,
+      };
+      signal?.addEventListener("abort", cancelar, { once: true });
       setFila((itens) => [...itens, solicitacao]);
     });
   }, []);
@@ -67,7 +79,7 @@ export function PopupProvider({ children }: PopupProviderProps) {
   const responder = useCallback((acao: AcaoPopup) => {
     const solicitacao = fila[0];
     if (!solicitacao) return;
-    setFila((itens) => itens.slice(1));
+    setFila((itens) => itens.filter((item) => item.id !== solicitacao.id));
     solicitacao.resolver(acao);
   }, [fila]);
 

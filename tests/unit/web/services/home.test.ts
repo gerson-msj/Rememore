@@ -92,6 +92,19 @@ describe("serviços da Home e HTTP protegido", () => {
     expect((await resultado)[0]).toMatchObject({ status: "rejected", reason: expect.any(RespostaSessaoObsoleta) });
   });
 
+  it("não invalida a sessão se um 401 chega após o cancelamento da consulta", async () => {
+    const resposta = adiar<Response>();
+    simularFetch(() => resposta.promessa);
+    const controlador = new AbortController();
+    const geracao = obterGeracaoSessao();
+    const resultado = Promise.allSettled([consultarHome(controlador.signal)]);
+    controlador.abort();
+    resposta.resolver(new Response(null, { status: 401 }));
+
+    expect((await resultado)[0]).toMatchObject({ status: "rejected", reason: { name: "AbortError" } });
+    expect(obterGeracaoSessao()).toBe(geracao);
+  });
+
   it("preserva sessão em 403, 500 e falha de comunicação", async () => {
     let invalidacoes = 0;
     const remover = observarSessaoInvalidada(() => { invalidacoes += 1; });

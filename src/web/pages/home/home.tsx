@@ -1,7 +1,9 @@
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useRef } from "react";
+import { useNavigate } from "react-router";
 import { useHeader } from "@web/components/Header/HeaderContext";
 import { usePopup } from "@web/components/popup/PopupContext";
 import "./home.css";
+import { useCarregamentoHome } from "./useCarregamentoHome";
 
 const mensagensIndisponibilidade = {
   encontrar: [
@@ -22,7 +24,34 @@ const mensagensIndisponibilidade = {
 export default function Home() {
   const { setConfiguracao } = useHeader();
   const { abrirPopup } = usePopup();
-  // Referência estática da composição aprovada; integração reservada à E5.
+  const navigate = useNavigate();
+  const { estado, tentarNovamente } = useCarregamentoHome();
+  const popupsJornadas = useRef<AbortController | null>(null);
+
+  useLayoutEffect(() => {
+    const controlador = new AbortController();
+    popupsJornadas.current = controlador;
+    return () => {
+      controlador.abort();
+      popupsJornadas.current = null;
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    setConfiguracao({ titulo: "Rememore" });
+  }, [setConfiguracao]);
+
+  if (estado.tipo !== "pronta") {
+    return (
+      <section className="pagina-home" aria-label="Home" aria-busy={estado.tipo === "carregando"}>
+        {estado.tipo === "falha" && (
+          <div><button className="botao" type="button" onClick={tentarNovamente}>Tentar novamente</button></div>
+        )}
+      </section>
+    );
+  }
+
+  const { home, capturasPendentes } = estado;
   const jornadas = [
     {
       id: "capturar", titulo: "Capturar", icone: "feather-pointed", disponivel: true,
@@ -31,29 +60,25 @@ export default function Home() {
     {
       id: "encontrar", titulo: "Encontrar Memórias", icone: "magnifying-glass",
       descricao: "Localize memórias preservadas usando diferentes critérios.",
-      disponivel: false,
+      disponivel: home.encontrarMemorias,
       aviso: "Disponível depois que você capturar seu primeiro dia.",
       paragrafos: mensagensIndisponibilidade.encontrar,
     },
     {
       id: "rever", titulo: "Rever um Dia", icone: "location-crosshairs",
       descricao: "Volte às memórias preservadas de uma data específica.",
-      disponivel: false,
+      disponivel: home.reverUmDia,
       aviso: "Disponível depois que você capturar seu primeiro dia.",
       paragrafos: mensagensIndisponibilidade.rever,
     },
     {
       id: "rememorar", titulo: "Rememorar", icone: "book-open",
       descricao: "Explore suas memórias por categorias e períodos.",
-      disponivel: false,
+      disponivel: home.rememorar,
       aviso: "Disponível quando houver mais memórias preservadas.",
       paragrafos: mensagensIndisponibilidade.rememorar,
     },
   ];
-
-  useLayoutEffect(() => {
-    setConfiguracao({ titulo: "Rememore" });
-  }, [setConfiguracao]);
 
   return (
     <section className="pagina-home" aria-label="Home">
@@ -64,13 +89,17 @@ export default function Home() {
             className="card-clicavel controle-com-borda"
             type="button"
             onClick={() => {
-              if (jornada.disponivel || !jornada.paragrafos) return;
+              if (jornada.disponivel) {
+                void navigate(`/${jornada.id}`);
+                return;
+              }
+              if (!jornada.paragrafos || !popupsJornadas.current) return;
               void abrirPopup({
                 titulo: jornada.titulo,
                 icone: `fa-solid fa-${jornada.icone}`,
                 mensagemHtml: jornada.paragrafos.map((texto) => `<p>${texto}</p>`).join(""),
                 botoes: { ok: { texto: "OK" }, cancelar: { apresentar: false } },
-              });
+              }, popupsJornadas.current.signal);
             }}
           >
             <i className={`card-clicavel-icone fa-solid fa-${jornada.icone} cor-info texto-cor-selecionada`} aria-hidden="true" />
@@ -87,18 +116,22 @@ export default function Home() {
         ))}
       </div>
       <div className="home-acoes" aria-label="Ações da conta e capturas">
-        <button className="card-clicavel card-botao controle-com-borda cor-alerta" type="button">
-          <i className="card-clicavel-icone fa-solid fa-triangle-exclamation" aria-hidden="true" />
-          <span>Capturas pendentes</span>
-        </button>
-        <button className="card-clicavel card-botao controle-com-borda cor-info" type="button">
+        {capturasPendentes && (
+          <button className="card-clicavel card-botao controle-com-borda cor-alerta" type="button" onClick={() => void navigate("/capturar")}>
+            <i className="card-clicavel-icone fa-solid fa-triangle-exclamation" aria-hidden="true" />
+            <span>Capturas pendentes</span>
+          </button>
+        )}
+        <button className="card-clicavel card-botao controle-com-borda cor-info" type="button" onClick={() => void navigate("/conta")}>
           <i className="card-clicavel-icone fa-solid fa-user-gear" aria-hidden="true" />
           <span>Minha Conta e Meus Dados</span>
         </button>
-        <button className="card-clicavel card-botao controle-com-borda cor-info" type="button">
-          <i className="card-clicavel-icone fa-solid fa-wrench" aria-hidden="true" />
-          <span>Administração</span>
-        </button>
+        {home.perfil === "admin" && (
+          <button className="card-clicavel card-botao controle-com-borda cor-info" type="button" onClick={() => void navigate("/admin")}>
+            <i className="card-clicavel-icone fa-solid fa-wrench" aria-hidden="true" />
+            <span>Administração</span>
+          </button>
+        )}
       </div>
 
     </section>
