@@ -21,7 +21,7 @@ describe("POST /api/usuarios/redefinicao-senha simulado", () => {
     })));
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ perfil: "usuario", chaveRedefinicao: chaveTeste });
+    expect(await response.json()).toEqual({ perfil: "admin", chaveRedefinicao: chaveTeste });
     const cookie = response.headers.get("set-cookie") ?? "";
     expect(cookie).toContain("rememore_sessao=01ARZ3NDEKTSV4RRFFQ69G5FAV");
     expect(cookie).toContain("Path=/api");
@@ -34,7 +34,7 @@ describe("POST /api/usuarios/redefinicao-senha simulado", () => {
       headers: { Cookie: cookie.split(";")[0] ?? "" },
     }));
     expect(consulta.status).toBe(200);
-    expect(await consulta.json()).toEqual({ perfil: "usuario" });
+    expect(await consulta.json()).toEqual({ perfil: "admin" });
   });
 
   it("rejeita outra chave com erro geral sem devolver chave ou cookie", async () => {

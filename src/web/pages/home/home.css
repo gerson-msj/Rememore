@@ -22,28 +22,8 @@
     gap: var(--padding-padrao);
   }
 
-  .pagina-home .home-testes {
-    min-width: 0;
-    margin: 0;
-    padding: var(--padding-padrao);
-    border: var(--espessura-borda) solid var(--cor-borda-padrao);
-    border-radius: var(--raio-borda-controle);
-  }
-
-  .pagina-home .home-testes legend {
-    padding-inline: var(--espacamento-controle);
-    font-size: 0.9em;
-  }
-
-  .pagina-home .home-testes-controles {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--padding-padrao);
-  }
-
   @media (max-width: 42rem) {
-    .pagina-home .home-jornadas,
-    .pagina-home .home-testes-controles {
+    .pagina-home .home-jornadas {
       grid-template-columns: minmax(0, 1fr);
     }
 

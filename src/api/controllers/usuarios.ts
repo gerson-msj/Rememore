@@ -1,7 +1,7 @@
 import type { CriarContaRequest, ErroAplicacao, RedefinirSenhaRequest, RedefinirSenhaResponse } from "@shared/usuarios";
 import { criarCookieSessao } from "@api/controllers/cookies";
 
-const idUsuarioSimulado = "01ARZ3NDEKTSV4RRFFQ69G5FAV";
+import { idUsuarioSimulado, perfilSimulado } from "@api/simulacao";
 const chaveRedefinicaoSimulada = "550e8400-e29b-41d4-a716-446655440000";
 
 function normalizarNomeUsuario(nomeUsuario: string) {
@@ -41,7 +41,7 @@ export async function criarConta(request: Request) {
 
   if (convite === "usuario" && nomeNormalizado === "usuario" && senha === "usuario") {
     return Response.json(
-      { perfil: "usuario", chaveRedefinicao: chaveRedefinicaoSimulada },
+      { perfil: perfilSimulado, chaveRedefinicao: chaveRedefinicaoSimulada },
       {
         status: 201,
         headers: { "Set-Cookie": criarCookieSessao(request, idUsuarioSimulado) },
@@ -84,7 +84,7 @@ export async function redefinirSenha(request: Request) {
     });
   }
   const resposta: RedefinirSenhaResponse = {
-    perfil: "usuario",
+    perfil: perfilSimulado,
     chaveRedefinicao: chaveRedefinicaoSimulada,
   };
   return Response.json(resposta, {

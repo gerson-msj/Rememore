@@ -44,7 +44,8 @@ export function Header() {
       await executarOperacao({
         operacao: async () => {
           await processar(async () => {
-            await sair();
+            // Uma saída descartada não deve afetar uma sessão posterior.
+            if (!await sair()) return;
             try {
               // Temporário: remove apenas a chave da E5; será substituído por uma limpeza completa.
               remover(CHAVE_CONFIRMACAO_CADASTRO, "sessao");

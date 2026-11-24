@@ -1,7 +1,7 @@
 import type { EntrarRequest, EntrarResponse, ErroAplicacao, SessaoResponse } from "@shared/usuarios";
 import { criarCookieSessao, lerCookieSessao, removerCookieSessao } from "@api/controllers/cookies";
 
-const idUsuarioSimulado = "01ARZ3NDEKTSV4RRFFQ69G5FAV";
+import { idUsuarioSimulado, perfilSimulado } from "@api/simulacao";
 const mensagemCredenciaisInvalidas =
   "Não foi possível entrar. Confira seu nome de usuário e senha e tente novamente.";
 
@@ -38,7 +38,7 @@ export async function entrar(request: Request) {
   }
 
   if (nomeUsuario === "usuario" && credenciais.senha === "usuario") {
-    const resposta: EntrarResponse = { perfil: "usuario" };
+    const resposta: EntrarResponse = { perfil: perfilSimulado };
     return Response.json(resposta, {
       status: 200,
       headers: { "Set-Cookie": criarCookieSessao(request, idUsuarioSimulado) },
@@ -57,7 +57,7 @@ export function consultarSessao(request: Request) {
     return new Response(null, { status: 401 });
   }
 
-  const resposta: SessaoResponse = { perfil: "usuario" };
+  const resposta: SessaoResponse = { perfil: perfilSimulado };
   return Response.json(resposta, { status: 200 });
 }
 

@@ -1,4 +1,5 @@
 import type { ErroAplicacao, ErrosCamposCadastro } from "@shared/usuarios";
+import { invalidarSessaoHttp, obterGeracaoSessao, verificarGeracaoSessao } from "@web/services/sessao-http";
 
 const mensagemHttpGenerica = "Não foi possível concluir a operação. Tente novamente.";
 const mensagemComunicacao = "Não foi possível comunicar com o servidor. Tente novamente.";
@@ -58,7 +59,12 @@ export async function requisitar<T>(
   caminho: string,
   init: RequestInit = {},
   statusPermitidos: number[] = [],
+  opcoes: { protegida: boolean } = { protegida: false },
 ): Promise<{ status: number; dados: T | undefined }> {
+  const geracao = obterGeracaoSessao();
+  const verificarSessao = () => {
+    if (opcoes.protegida) verificarGeracaoSessao(geracao);
+  };
   let response: Response;
   try {
     response = await fetch(caminho, {
@@ -70,11 +76,19 @@ export async function requisitar<T>(
       },
     });
   } catch {
+    verificarSessao();
     throw new FalhaHttp("comunicacao", null, mensagemComunicacao);
+  }
+
+  verificarSessao();
+  if (opcoes.protegida && response.status === 401) {
+    invalidarSessaoHttp(geracao);
+    throw new FalhaHttp("http", 401, mensagemHttpGenerica);
   }
 
   if (!response.ok && !statusPermitidos.includes(response.status)) {
     const corpo = await lerJson(response);
+    verificarSessao();
     const erro = lerContratoErro(corpo);
     if (erro) {
       throw new FalhaHttp("aplicacao", response.status, erro.mensagem ?? "", erro.errosCampos);
@@ -87,6 +101,7 @@ export async function requisitar<T>(
   }
 
   const corpo = await lerJson(response);
+  verificarSessao();
   if (!ehRegistro(corpo)) {
     throw new FalhaHttp("http", response.status, mensagemHttpGenerica);
   }

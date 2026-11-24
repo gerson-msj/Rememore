@@ -2,6 +2,7 @@ import { serve } from "bun";
 import index from "../web/index.html";
 import { criarConta, redefinirSenha } from "@api/controllers/usuarios";
 import { consultarSessao, entrar, sair } from "@api/controllers/sessao";
+import { consultarHome } from "@api/controllers/home";
 
 const hostname = process.argv.includes("--intranet")
   ? process.env.REMEMORE_LAN_HOST || "192.168.0.24"
@@ -13,6 +14,7 @@ const server = serve({
   hostname,
   port: 3000,
   routes: {
+    "/api/home": { GET: consultarHome },
     "/api/usuarios": { POST: criarConta },
     "/api/usuarios/redefinicao-senha": { POST: redefinirSenha },
     "/api/sessao": {
