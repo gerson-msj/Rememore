@@ -1,0 +1,36 @@
+@layer pagina {
+  .elm07 .bloco-teste-conteudo,
+  .elm07 .elm07-controles,
+  .elm07 .elm07-largura,
+  .elm07 .elm07-dimensao {
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-padrao);
+  }
+
+  .elm07 .elm07-largura,
+  .elm07 .elm07-dimensao {
+    gap: var(--espacamento-reduzido-elemento);
+    max-width: 30rem;
+  }
+
+  .elm07 .elm07-largura input,
+  .elm07 .elm07-dimensao input {
+    width: 100%;
+    margin: 0;
+  }
+
+  .elm07 .elm07-controles .campo-checkbox {
+    max-width: 100%;
+  }
+
+  .elm07 .elm07-amostra {
+    display: grid;
+    grid-template-rows: minmax(min-content, 1fr);
+    max-width: 100%;
+  }
+
+  .elm07 .elm07-cor {
+    max-width: 15rem;
+  }
+}
