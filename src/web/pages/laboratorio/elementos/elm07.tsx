@@ -39,7 +39,7 @@ export function Elm07() {
             />
           </div>
           <div className="campo-texto elm07-cor">
-            <label htmlFor="elm07-cor-icone">Cor do ícone</label>
+            <label htmlFor="elm07-cor-icone">Cor semântica</label>
             <div className="select-com-icone">
               <select
                 id="elm07-cor-icone"
@@ -67,28 +67,48 @@ export function Elm07() {
             <label htmlFor="elm07-texto-terciario">Exibir texto terciário</label>
           </div>
         </div>
-        <div className="elm07-amostra" style={{ width: largura, minHeight: altura }}>
-          {/* ELM-07: reproduzir o botão completo; título e secundário obrigatórios,
-              terciário opcional. O contêiner consumidor fornece largura e altura. */}
-          <button className="card-clicavel controle-com-borda" type="button">
-            <i
-              className={`card-clicavel-icone fa-solid fa-feather-pointed texto-cor-selecionada ${corIcone}`}
-              aria-hidden="true"
-            />
-            <span className="card-clicavel-textos">
-              <span className="card-clicavel-titulo">Capturar memórias</span>
-              <span className="card-clicavel-descricao">
-                Registre os momentos que deseja preservar.
-              </span>
-              {exibirTextoTerciario && (
-                <span className="card-clicavel-terciario">
-                  Cada dia guarda uma história.
-                  <br />
-                  Preserve suas memórias.
+        <div>
+          <p>Variação: Card clicável</p>
+          <div className="elm07-amostra" style={{ width: largura, minHeight: altura }}>
+            {/* ELM-07: reproduzir o botão completo; título e secundário obrigatórios,
+                terciário opcional. O contêiner consumidor fornece largura e altura. */}
+            <button className="card-clicavel controle-com-borda" type="button">
+              <i
+                className={`card-clicavel-icone fa-solid fa-feather-pointed texto-cor-selecionada ${corIcone}`}
+                aria-hidden="true"
+              />
+              <span className="card-clicavel-textos">
+                <span className="card-clicavel-titulo">Capturar memórias</span>
+                <span className="card-clicavel-descricao">
+                  Registre os momentos que deseja preservar.
                 </span>
-              )}
-            </span>
-          </button>
+                {exibirTextoTerciario && (
+                  <span className="card-clicavel-terciario">
+                    Cada dia guarda uma história.
+                    <br />
+                    Preserve suas memórias.
+                  </span>
+                )}
+              </span>
+            </button>
+          </div>
+        </div>
+        <div>
+          <p>Variação: Card botão</p>
+          <div className="elm07-cards-botao" style={{ minHeight: altura }}>
+            {Array.from({ length: 3 }, (_, indice) => (
+              // ELM-07, card botão: reproduzir o botão e seus filhos.
+              // A grade de três amostras pertence somente à bancada.
+              <button
+                key={indice}
+                className={`card-clicavel card-botao controle-com-borda ${corIcone}`}
+                type="button"
+              >
+                <i className="card-clicavel-icone fa-solid fa-floppy-disk" aria-hidden="true" />
+                <span>Exemplo de card botão</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </details>

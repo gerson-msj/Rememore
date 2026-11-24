@@ -33,4 +33,11 @@
   .elm07 .elm07-cor {
     max-width: 15rem;
   }
+
+  .elm07 .elm07-cards-botao {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: minmax(min-content, 1fr);
+    gap: var(--padding-padrao);
+  }
 }

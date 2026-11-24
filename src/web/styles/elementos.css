@@ -277,6 +277,22 @@
     white-space: pre-line;
   }
 
+  .card-botao {
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--espacamento-controle);
+    min-width: 0;
+    background-color: var(--cor-fundo);
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .card-botao .card-clicavel-icone {
+    flex: 0 0 auto;
+    font-size: 1.4em;
+    color: var(--cor-selecionada);
+  }
+
   .link {
     transition:
       color var(--duracao-transicao-elemento) ease,
