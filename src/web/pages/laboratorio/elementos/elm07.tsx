@@ -6,6 +6,7 @@ export function Elm07() {
   const [altura, setAltura] = useState(0);
   const [corIcone, setCorIcone] = useState("cor-info");
   const [exibirTextoTerciario, setExibirTextoTerciario] = useState(true);
+  const [exibirComplemento, setExibirComplemento] = useState(true);
 
   return (
     <details className="bloco-teste elm07">
@@ -58,6 +59,16 @@ export function Elm07() {
           </div>
           <div className="campo-checkbox">
             <input
+              id="elm07-complemento"
+              className="controle-com-borda"
+              type="checkbox"
+              checked={exibirComplemento}
+              onChange={(evento) => setExibirComplemento(evento.currentTarget.checked)}
+            />
+            <label htmlFor="elm07-complemento">Exibir mensagem complementar</label>
+          </div>
+          <div className="campo-checkbox">
+            <input
               id="elm07-texto-terciario"
               className="controle-com-borda"
               type="checkbox"
@@ -71,7 +82,9 @@ export function Elm07() {
           <p>Variação: Card clicável</p>
           <div className="elm07-amostra" style={{ width: largura, minHeight: altura }}>
             {/* ELM-07: reproduzir o botão completo; título e secundário obrigatórios,
-                terciário opcional. O contêiner consumidor fornece largura e altura. */}
+                terciário opcional. O secundário aceita parágrafos separados;
+                card-clicavel-complemento aplica tom discreto a uma mensagem complementar.
+                O contêiner consumidor fornece largura e altura. */}
             <button className="card-clicavel controle-com-borda" type="button">
               <i
                 className={`card-clicavel-icone fa-solid fa-feather-pointed texto-cor-selecionada ${corIcone}`}
@@ -80,7 +93,12 @@ export function Elm07() {
               <span className="card-clicavel-textos">
                 <span className="card-clicavel-titulo">Capturar memórias</span>
                 <span className="card-clicavel-descricao">
-                  Registre os momentos que deseja preservar.
+                  <span role="paragraph">Registre os momentos que deseja preservar.</span>
+                  {exibirComplemento && (
+                    <span role="paragraph" className="card-clicavel-complemento">
+                      Mensagem complementar em um parágrafo separado.
+                    </span>
+                  )}
                 </span>
                 {exibirTextoTerciario && (
                   <span className="card-clicavel-terciario">
@@ -96,16 +114,16 @@ export function Elm07() {
         <div>
           <p>Variação: Card botão</p>
           <div className="elm07-cards-botao" style={{ minHeight: altura }}>
-            {Array.from({ length: 3 }, (_, indice) => (
+            {["Capturas pendentes", "Minha Conta e Meus Dados", "Administração"].map((texto) => (
               // ELM-07, card botão: reproduzir o botão e seus filhos.
               // A grade de três amostras pertence somente à bancada.
               <button
-                key={indice}
+                key={texto}
                 className={`card-clicavel card-botao controle-com-borda ${corIcone}`}
                 type="button"
               >
                 <i className="card-clicavel-icone fa-solid fa-floppy-disk" aria-hidden="true" />
-                <span>Exemplo de card botão</span>
+                <span>{texto}</span>
               </button>
             ))}
           </div>

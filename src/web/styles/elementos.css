@@ -248,6 +248,7 @@
 
   .card-clicavel .card-clicavel-icone {
     flex: 0 0 2.5rem;
+    margin-inline: var(--espacamento-controle);
     font-size: 2rem;
     text-align: center;
   }
@@ -266,9 +267,16 @@
   }
 
   .card-clicavel .card-clicavel-descricao {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
     font-size: 0.9em;
     line-height: 1.5;
     white-space: pre-line;
+  }
+
+  .card-clicavel .card-clicavel-complemento {
+    color: color-mix(in srgb, var(--cor-texto) 70%, var(--cor-fundo));
   }
 
   .card-clicavel .card-clicavel-terciario {
@@ -287,8 +295,18 @@
     overflow-wrap: anywhere;
   }
 
+  .card-botao:not(:hover):not(:focus-visible) {
+    border-color: transparent;
+  }
+
+  .card-botao:hover,
+  .card-botao:focus-visible {
+    border-color: var(--cor-campo-borda-hover);
+  }
+
   .card-botao .card-clicavel-icone {
     flex: 0 0 auto;
+    margin-inline: 0;
     font-size: 1.4em;
     color: var(--cor-selecionada);
   }
