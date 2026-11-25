@@ -1,0 +1,38 @@
+@layer pagina {
+  .cmp003-lab .bloco-teste-conteudo,
+  .cmp003-lab .cmp003-lab-configuracao {
+    display: grid;
+    gap: var(--padding-padrao);
+  }
+
+  .cmp003-lab .campo-texto {
+    max-width: 20rem;
+  }
+
+  .cmp003-lab .cmp003-lab-configuracao {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 46rem;
+  }
+
+  .cmp003-lab .cmp003-lab-acoes {
+    grid-column: 1 / -1;
+  }
+
+  .cmp003-lab .cmp003-lab-configuracao input {
+    min-width: 0;
+    height: var(--altura-controle);
+    padding-inline: var(--espacamento-controle);
+    color: var(--cor-texto);
+    background-color: var(--cor-campo-preenchimento);
+  }
+
+  :root[data-theme="dark"] .cmp003-lab .cmp003-lab-configuracao input {
+    color-scheme: dark;
+  }
+
+  @media (max-width: 36rem) {
+    .cmp003-lab .cmp003-lab-configuracao {
+      grid-template-columns: 1fr;
+    }
+  }
+}

@@ -11,6 +11,7 @@ import { Elm06 } from "./elementos/elm06";
 import { Elm07 } from "./elementos/elm07";
 import { Cmp001 } from "./componentes/cmp001";
 import { Cmp002 } from "./componentes/cmp002";
+import { Cmp003 } from "./componentes/cmp003";
 import { Cmp028 } from "./componentes/cmp028";
 import { Cmp038 } from "./componentes/cmp038";
 import { Cmp039 } from "./componentes/cmp039";
@@ -19,6 +20,7 @@ import "./laboratorio.css";
 export default function Laboratorio() {
   const { setConfiguracao } = useHeader();
   const navigate = useNavigate();
+  const [tema, setTema] = useState(() => document.documentElement.dataset.theme ?? "light");
   const [abaSelecionada, setAbaSelecionada] = useState<"elementos" | "componentes">(() => {
     try {
       const abaSalva = recuperar<string>("laboratorio:abaAtiva");
@@ -34,6 +36,17 @@ export default function Laboratorio() {
       voltar: () => navigate("/"),
     });
   }, [navigate, setConfiguracao]);
+
+  useLayoutEffect(() => {
+    const raiz = document.documentElement;
+    const temaAnterior = raiz.dataset.theme;
+    raiz.dataset.theme = tema;
+
+    return () => {
+      if (temaAnterior === undefined) delete raiz.dataset.theme;
+      else raiz.dataset.theme = temaAnterior;
+    };
+  }, [tema]);
 
   useLayoutEffect(() => {
     try {
@@ -84,8 +97,18 @@ export default function Laboratorio() {
         aria-label="Componentes"
         hidden={abaSelecionada !== "componentes"}
       >
+        <details className="bloco-teste">
+          <summary className="bloco-teste-titulo link">Tema</summary>
+          <div className="bloco-teste-conteudo">
+            <select className="controle-com-borda" aria-label="Tema" value={tema} onChange={(evento) => setTema(evento.currentTarget.value)}>
+              <option value="light">Claro</option>
+              <option value="dark">Escuro</option>
+            </select>
+          </div>
+        </details>
         <Cmp001 />
         <Cmp002 />
+        <Cmp003 />
         <Cmp028 />
         <Cmp038 />
         <Cmp039 />

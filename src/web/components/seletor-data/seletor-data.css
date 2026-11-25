@@ -1,0 +1,38 @@
+@layer componente {
+  .cmp003 input {
+    height: var(--altura-controle);
+    padding-inline-start: var(--espacamento-controle);
+    color: var(--cor-texto);
+    background-color: var(--cor-campo-preenchimento);
+    transition: border-color var(--duracao-transicao-elemento) ease,
+      box-shadow var(--duracao-transicao-elemento) ease,
+      background-color var(--duracao-transicao-elemento) ease,
+      color var(--duracao-transicao-elemento) ease;
+  }
+
+  :root[data-theme="dark"] .cmp003 input {
+    color-scheme: dark;
+  }
+
+  .cmp003 input[aria-invalid],
+  .cmp003 input:invalid {
+    --cmp003-cor-data: var(--cor-elemento-inativo);
+    color: var(--cmp003-cor-data);
+  }
+
+  /* Os segmentos nativos têm estilos de foco próprios no Chromium e no WebKit. */
+  .cmp003 input::-webkit-datetime-edit-day-field,
+  .cmp003 input::-webkit-datetime-edit-month-field,
+  .cmp003 input::-webkit-datetime-edit-year-field {
+    -webkit-text-fill-color: var(--cmp003-cor-data, currentColor);
+    transition: -webkit-text-fill-color var(--duracao-transicao-elemento) ease;
+  }
+
+  .cmp003 input::-webkit-calendar-picker-indicator {
+    display: none;
+  }
+
+  .cmp003 .botao-icone-controle {
+    cursor: pointer;
+  }
+}
