@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { IDBFactory } from "fake-indexeddb";
+import { existemCapturasPendentes, FalhaConsultaPendencias } from "@web/services/capturas";
 import {
   existemCapturasLocaisPendentes, listarCapturasLocais, listarCapturasLocaisPendentes,
-  recuperarCapturaLocal, removerCapturaLocal, salvarCapturaLocal, type CapturaLocal,
+  recuperarCapturaLocal, removerCapturaLocal, removerCapturaLocalPendente, salvarCapturaLocal, type CapturaLocal,
 } from "@web/services/capturas-locais";
 import { aguardarRequisicao, operarNoBanco } from "@web/services/indexeddb/banco";
 import { diagnosticarIndexedDB } from "@web/services/indexeddb/diagnostico";
+import { renovarGeracaoSessao, RespostaSessaoObsoleta } from "@web/services/sessao-http";
 
 const descritorOriginal = Object.getOwnPropertyDescriptor(globalThis, "indexedDB");
 
@@ -15,6 +17,7 @@ function definirFabrica(fabrica: IDBFactory | undefined) {
 
 beforeEach(() => definirFabrica(new IDBFactory()));
 afterEach(() => {
+  renovarGeracaoSessao();
   if (descritorOriginal) Object.defineProperty(globalThis, "indexedDB", descritorOriginal);
   else Reflect.deleteProperty(globalThis, "indexedDB");
 });
@@ -72,6 +75,39 @@ describe("capturas locais", () => {
     await expect(existemCapturasLocaisPendentes("conta-a")).rejects.toMatchObject({ name: "VersionError" });
     const versaoPosterior = await aguardarRequisicao(indexedDB.open("rememore"));
     try { expect(versaoPosterior.version).toBe(3); } finally { versaoPosterior.close(); }
+  });
+
+  it("exclui somente a pendência da conta confirmada e com a origem confirmada", async () => {
+    const limpa = { ...captura, data: "2026-11-25", alterada: false };
+    await salvarCapturaLocal("conta-a", captura);
+    await salvarCapturaLocal("conta-a", limpa);
+    await salvarCapturaLocal("conta-b", captura);
+
+    await expect(removerCapturaLocalPendente("conta-a", limpa.data, "presente")).rejects.toThrow();
+    await expect(removerCapturaLocalPendente("conta-a", captura.data, "ausente")).rejects.toThrow();
+    expect(await recuperarCapturaLocal("conta-a", captura.data)).toMatchObject({ alterada: true });
+    await removerCapturaLocalPendente("conta-a", captura.data, "presente");
+
+    expect(await recuperarCapturaLocal("conta-a", captura.data)).toBeUndefined();
+    expect(await recuperarCapturaLocal("conta-a", limpa.data)).toMatchObject({ alterada: false });
+    expect(await recuperarCapturaLocal("conta-b", captura.data)).toMatchObject({ alterada: true });
+  });
+
+  it("faz a Home consultar a conta corrente e rejeita leituras obsoletas ou indisponíveis", async () => {
+    await salvarCapturaLocal("conta-a", captura);
+    await salvarCapturaLocal("conta-b", { ...captura, alterada: false });
+    renovarGeracaoSessao("conta-a");
+    expect(await existemCapturasPendentes()).toBe(true);
+
+    const consultaAnterior = existemCapturasPendentes();
+    renovarGeracaoSessao("conta-b");
+    await expect(consultaAnterior).rejects.toBeInstanceOf(RespostaSessaoObsoleta);
+    expect(await existemCapturasPendentes()).toBe(false);
+
+    definirFabrica(undefined);
+    await expect(existemCapturasPendentes()).rejects.toBeInstanceOf(FalhaConsultaPendencias);
+    renovarGeracaoSessao();
+    await expect(existemCapturasPendentes()).rejects.toBeInstanceOf(FalhaConsultaPendencias);
   });
 });
 

@@ -47,6 +47,21 @@ export async function removerCapturaLocal(idUsuario: string, data: string): Prom
   await operarNoBanco("capturas", "readwrite", (repositorio) => aguardarRequisicao(repositorio.delete(chave)));
 }
 
+export async function removerCapturaLocalPendente(
+  idUsuario: string,
+  data: string,
+  origemConfirmada: CapturaLocal["origemRemota"],
+): Promise<void> {
+  const chave = chaveCaptura(idUsuario, data);
+  await operarNoBanco("capturas", "readwrite", async (repositorio) => {
+    const captura = await aguardarRequisicao<CapturaLocal | undefined>(repositorio.get(chave));
+    if (!captura?.alterada || captura.origemRemota !== origemConfirmada) {
+      throw new Error("A captura pendente mudou desde a confirmação.");
+    }
+    await aguardarRequisicao(repositorio.delete(chave));
+  });
+}
+
 export async function listarCapturasLocais(idUsuario: string): Promise<CapturaLocal[]> {
   validarIdUsuario(idUsuario);
   return operarNoBanco("capturas", "readonly", (repositorio) => aguardarRequisicao<CapturaLocal[]>(repositorio.index("por-conta").getAll(idUsuario)));

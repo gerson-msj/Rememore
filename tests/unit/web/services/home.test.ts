@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it } from "bun:test";
 import type { HomeResponse } from "@shared/home";
 import { consultarHome } from "@web/services/home";
-import { existemCapturasPendentes } from "@web/services/capturas";
 import { requisitar } from "@web/services/http";
 import { consultarSessao, criarConta, entrar, redefinirSenha } from "@web/services/usuario";
 import {
@@ -24,11 +23,10 @@ function adiar<T>() {
 }
 
 describe("serviços da Home e HTTP protegido", () => {
-  it("consulta uma vez com credenciais e sem parâmetros; pendências são locais", async () => {
+  it("consulta uma vez com credenciais e sem parâmetros", async () => {
     const chamadas: Array<[RequestInfo | URL, RequestInit | undefined]> = [];
     simularFetch(async (input, init) => { chamadas.push([input, init]); return Response.json(dadosHome); });
     expect(await consultarHome()).toEqual(dadosHome);
-    expect(await existemCapturasPendentes()).toBe(true);
     expect(chamadas).toHaveLength(1);
     expect(chamadas[0]?.[0]).toBe("/api/home");
     expect(chamadas[0]?.[1]?.credentials).toBe("include");

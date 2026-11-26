@@ -6,17 +6,8 @@
     margin-inline: auto;
   }
 
-  .pagina-capturar .capturar-pendencias,
-  .pagina-capturar .capturar-controles-teste {
+  .pagina-capturar .capturar-pendencias {
     display: grid;
     gap: var(--padding-padrao);
-  }
-
-  .pagina-capturar .capturar-controles-teste {
-    min-inline-size: 0;
-    margin: 0;
-    padding: var(--padding-padrao);
-    border: var(--espessura-borda) solid var(--cor-borda-padrao);
-    border-radius: var(--raio-borda-controle);
   }
 }

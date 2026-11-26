@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { HomeResponse } from "@shared/home";
 import { usePopup } from "@web/components/popup/PopupContext";
 import { useProcessamento } from "@web/components/processing-overlay/ProcessingContext";
-import { existemCapturasPendentes } from "@web/services/capturas";
+import { existemCapturasPendentes, FalhaConsultaPendencias } from "@web/services/capturas";
 import { consultarHome } from "@web/services/home";
 import { FalhaHttp, falhaDesconhecida } from "@web/services/http";
 import { obterGeracaoSessao, RespostaSessaoObsoleta } from "@web/services/sessao-http";
@@ -31,7 +31,8 @@ function aguardarFimDaCobertura(signal: AbortSignal) {
 }
 
 function mensagemSegura(falha: unknown) {
-  const mensagem = falhaDesconhecida(falha).message || "Não foi possível concluir a operação. Tente novamente.";
+  const erro = falha instanceof FalhaConsultaPendencias ? falha : falhaDesconhecida(falha);
+  const mensagem = erro.message || "Não foi possível concluir a operação. Tente novamente.";
   const paragrafo = document.createElement("p");
   paragrafo.textContent = mensagem;
   return paragrafo.outerHTML;

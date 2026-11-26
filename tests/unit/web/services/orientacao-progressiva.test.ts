@@ -19,7 +19,7 @@ describe("serviço CMP-005", () => {
       .mockResolvedValueOnce(Response.json({ nivel: "avancado" }));
 
     expect(await consultarOrientacao("capturar.selecao")).toEqual({
-      conteudo: "Você pode capturar qualquer dia até hoje. Escolha uma data para começar.",
+      conteudo: "Você pode capturar qualquer dia até hoje.\nEscolha uma data para começar.",
       formato: "texto",
     });
     expect(await consultarOrientacao("capturar.selecao")).toEqual({

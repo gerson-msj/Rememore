@@ -2,13 +2,13 @@ import { useLayoutEffect } from "react";
 import { useNavigate } from "react-router";
 import { useHeader } from "@web/components/Header/HeaderContext";
 
-export function PaginaDestino({ titulo }: { titulo: string }) {
+export function PaginaDestino({ titulo, voltarPara = "/home" }: { titulo: string; voltarPara?: string }) {
   const navigate = useNavigate();
   const { setConfiguracao } = useHeader();
 
   useLayoutEffect(() => {
-    setConfiguracao({ titulo, voltar: () => void navigate("/home") });
-  }, [navigate, setConfiguracao, titulo]);
+    setConfiguracao({ titulo, voltar: () => void navigate(voltarPara) });
+  }, [navigate, setConfiguracao, titulo, voltarPara]);
 
   return null;
 }

@@ -12,7 +12,7 @@ type OrientacoesPorNivel = Partial<Record<NivelOrientacao, MensagemCatalogo>>;
 
 export const catalogoOrientacoes = {
   "capturar.selecao": {
-    iniciante: { conteudo: "Você pode capturar qualquer dia até hoje. Escolha uma data para começar." },
+    iniciante: { conteudo: "Você pode capturar qualquer dia até hoje.\nEscolha uma data para começar." },
     intermediario: { conteudo: "Você pode voltar a qualquer data passada quando quiser registrar algo que ainda lembra." },
   },
 } satisfies Record<string, OrientacoesPorNivel>;

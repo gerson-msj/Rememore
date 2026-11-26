@@ -1,5 +1,6 @@
-// A geração identifica o ciclo de sessão, sem conhecer React, rotas ou cookies.
+// A geração e a identidade pública identificam a sessão corrente fora do React.
 let geracao = 0;
+let idUsuario: string | null = null;
 const observadores = new Set<() => void>();
 
 export class RespostaSessaoObsoleta extends Error {
@@ -10,12 +11,16 @@ export class RespostaSessaoObsoleta extends Error {
 }
 
 export function obterGeracaoSessao() { return geracao; }
+export function obterIdUsuarioSessao() { return idUsuario; }
 
 export function verificarGeracaoSessao(origem: number) {
   if (origem !== geracao) throw new RespostaSessaoObsoleta();
 }
 
-export function renovarGeracaoSessao() { geracao += 1; }
+export function renovarGeracaoSessao(identidade: string | null = null) {
+  geracao += 1;
+  idUsuario = identidade;
+}
 
 export function observarSessaoInvalidada(observador: () => void) {
   observadores.add(observador);

@@ -6,6 +6,7 @@ type OpcoesExecucao = {
   aoIniciar?: () => void;
   aoFinalizar?: () => void;
   aoFalhar?: (falha: unknown) => void | Promise<void>;
+  signal?: AbortSignal;
 };
 
 const mensagemFalhaGenerica = "Não foi possível concluir a operação. Tente novamente.";
@@ -19,12 +20,14 @@ export function useExecutorOperacao() {
     aoIniciar,
     aoFinalizar,
     aoFalhar,
+    signal,
   }: OpcoesExecucao) => {
     try {
       aoIniciar?.();
       await operacao();
       return true;
     } catch (falha) {
+      if (signal?.aborted) return false;
       if (aoFalhar) {
         await aoFalhar(falha);
       } else {
@@ -34,7 +37,7 @@ export function useExecutorOperacao() {
             ok: { texto: "Entendi" },
             cancelar: { apresentar: false },
           },
-        });
+        }, signal);
       }
       return false;
     } finally {

@@ -65,7 +65,7 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
     try {
       const resposta = await servicoUsuario.consultarSessao();
       verificarGeracaoSessao(geracao);
-      renovarGeracaoSessao();
+      renovarGeracaoSessao(resposta?.idUsuario);
       setSessao(resposta);
       setEstado(resposta ? "autenticado" : "naoAutenticado");
     } catch (falha) {
@@ -81,7 +81,7 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
     try {
       const resposta = await servicoUsuario.criarConta(dados);
       verificarGeracaoSessao(geracao);
-      renovarGeracaoSessao();
+      renovarGeracaoSessao(resposta.idUsuario);
       const { perfil, idUsuario } = resposta;
       setSessao({ perfil, idUsuario });
       setErro(null);
@@ -100,7 +100,7 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
     try {
       const resposta = await servicoUsuario.entrar(dados);
       verificarGeracaoSessao(geracao);
-      renovarGeracaoSessao();
+      renovarGeracaoSessao(resposta.idUsuario);
       setSessao(resposta);
       setErro(null);
       setTransicaoCadastroPendente(false);
@@ -117,7 +117,7 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
     try {
       const resposta = await servicoUsuario.redefinirSenha(dados);
       verificarGeracaoSessao(geracao);
-      renovarGeracaoSessao();
+      renovarGeracaoSessao(resposta.idUsuario);
       const { perfil, idUsuario } = resposta;
       setSessao({ perfil, idUsuario });
       setErro(null);

@@ -8,12 +8,12 @@ export class FalhaOrientacao extends Error {
   }
 }
 
-export async function consultarOrientacao(contexto: ContextoOrientacao): Promise<Orientacao | null> {
+export async function consultarOrientacao(contexto: ContextoOrientacao, signal?: AbortSignal): Promise<Orientacao | null> {
   if (!Object.hasOwn(catalogoOrientacoes, contexto)) {
     throw new FalhaOrientacao("contextoDesconhecido", "Contexto de orientação desconhecido.");
   }
 
-  const { status, dados } = await requisitar<{ nivel?: unknown }>("/api/orientacao-progressiva", {}, [], { protegida: true });
+  const { status, dados } = await requisitar<{ nivel?: unknown }>("/api/orientacao-progressiva", { signal }, [], { protegida: true });
   if (status !== 200) {
     throw new FalhaHttp("http", status, "Não foi possível concluir a operação. Tente novamente.");
   }
