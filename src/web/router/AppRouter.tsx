@@ -3,6 +3,7 @@ import { AcessoArea, RotaDesconhecida } from "./AcessoArea";
 import { LayoutArea } from "./LayoutArea";
 import Apresentacao from "@web/pages/apresentacao/apresentacao";
 import Home from "@web/pages/home/home";
+import Capturar from "@web/pages/capturar/capturar";
 import Cadastro from "@web/pages/cadastro/cadastro";
 import Entrar from "@web/pages/entrar/entrar";
 import ChaveRedefinicao from "@web/pages/chave-redefinicao/chave-redefinicao";
@@ -32,7 +33,7 @@ export function AppRouter() {
       <Route element={<AcessoArea tipo="protegida" />}>
         <Route element={<LayoutArea area="protegida" />}>
           <Route path="/home" element={<Home />} />
-          <Route path="/capturar" element={<PaginaDestino titulo="Capturar" />} />
+          <Route path="/capturar" element={<Capturar />} />
           <Route path="/encontrar" element={<PaginaDestino titulo="Encontrar Memórias" />} />
           <Route path="/rever" element={<PaginaDestino titulo="Rever um Dia" />} />
           <Route path="/rememorar" element={<PaginaDestino titulo="Rememorar" />} />

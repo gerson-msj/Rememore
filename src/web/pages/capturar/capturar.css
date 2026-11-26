@@ -1,0 +1,26 @@
+@layer pagina {
+  .pagina-capturar {
+    display: grid;
+    gap: var(--padding-padrao);
+    width: min(100%, 30rem);
+    margin-inline: auto;
+  }
+
+  .pagina-capturar > p {
+    margin: 0;
+  }
+
+  .pagina-capturar .capturar-pendencias,
+  .pagina-capturar .capturar-controles-teste {
+    display: grid;
+    gap: var(--padding-padrao);
+  }
+
+  .pagina-capturar .capturar-controles-teste {
+    min-inline-size: 0;
+    margin: 0;
+    padding: var(--padding-padrao);
+    border: var(--espessura-borda) solid var(--cor-borda-padrao);
+    border-radius: var(--raio-borda-controle);
+  }
+}
