@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { AcaoPopup, OpcoesPopup, TemaPopup } from "./PopupContext";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import type { CorSemantica } from "@web/styles/cores";
+import type { AcaoPopup, OpcoesPopup } from "./PopupContext";
 import "./popup.css";
 
 type PopupProps = {
@@ -8,11 +9,13 @@ type PopupProps = {
   aoResponder: (acao: AcaoPopup) => void;
 };
 
-function classeTemaBotao(tema?: TemaPopup) {
-  return tema && tema !== "normal" ? `cor-${tema}` : undefined;
+function classeTemaBotao(tema?: CorSemantica) {
+  return tema && tema !== "padrao" ? `cor-${tema}` : undefined;
 }
 
 export function Popup({ id, opcoes, aoResponder }: PopupProps) {
+  const tema = opcoes.tema ?? "padrao";
+  const temaDestaque = tema !== "padrao";
   const [estado, setEstado] = useState<"inicial" | "aberto" | "fechando">("inicial");
   const camadaRef = useRef<HTMLDivElement>(null);
   const dialogoRef = useRef<HTMLElement>(null);
@@ -152,7 +155,8 @@ export function Popup({ id, opcoes, aoResponder }: PopupProps) {
     >
       <section
         ref={dialogoRef}
-        className={`popup painel-modal${opcoes.tema && opcoes.tema !== "normal" ? ` cor-popup-${opcoes.tema}` : ""}`}
+        className={`popup painel-modal${temaDestaque ? " cor-popup-destaque" : ""}`}
+        style={temaDestaque ? { "--cor-popup-tema": `var(--cor-${tema})` } as CSSProperties : undefined}
         role="dialog"
         tabIndex={-1}
         aria-modal="true"

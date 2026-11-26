@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { coresSemanticas } from "@web/styles/cores";
 import "./elm05.css";
 
 export function Elm05() {
@@ -18,11 +19,9 @@ export function Elm05() {
               value={corSelecionada}
               onChange={(evento) => setCorSelecionada(evento.currentTarget.value)}
             >
-              <option value="">Padrão</option>
-              <option value="cor-link">Link</option>
-              <option value="cor-perigo">Perigo</option>
-              <option value="cor-alerta">Alerta</option>
-              <option value="cor-info">Info</option>
+              {coresSemanticas.map(({ cor, rotulo }) => (
+                <option key={cor} value={cor === "padrao" ? "" : `cor-${cor}`}>{rotulo}</option>
+              ))}
             </select>
             <i className="fa-solid fa-caret-down icone-selecao" aria-hidden="true" />
           </span>

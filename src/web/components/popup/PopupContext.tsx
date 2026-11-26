@@ -8,22 +8,22 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import type { CorSemantica } from "@web/styles/cores";
 import { Popup } from "./Popup";
 
-export type TemaPopup = "normal" | "link" | "perigo" | "alerta" | "info";
 export type AcaoPopup = "OK" | "Cancelar";
 
 export type OpcaoBotaoPopup = {
   apresentar?: boolean;
   texto?: string;
-  tema?: TemaPopup;
+  tema?: CorSemantica;
 };
 
 export type OpcoesPopup = {
   mensagemHtml: string;
   titulo?: string;
   icone?: string;
-  tema?: TemaPopup;
+  tema?: CorSemantica;
   botoes?: {
     ok?: OpcaoBotaoPopup;
     cancelar?: OpcaoBotaoPopup;

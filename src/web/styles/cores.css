@@ -98,28 +98,10 @@
     --cor-botao-borda-ativa: color-mix(in srgb, var(--cor-selecionada) 70%, var(--cor-fundo));
   }
 
-  .cor-popup-link {
-    --cor-popup-cor-destaque: var(--cor-link);
-    --cor-popup-borda: color-mix(in srgb, var(--cor-link) 55%, var(--cor-fundo));
-    --cor-popup-sombra: color-mix(in srgb, var(--cor-link) 24%, transparent);
-  }
-
-  .cor-popup-perigo {
-    --cor-popup-cor-destaque: var(--cor-perigo);
-    --cor-popup-borda: color-mix(in srgb, var(--cor-perigo) 55%, var(--cor-fundo));
-    --cor-popup-sombra: color-mix(in srgb, var(--cor-perigo) 24%, transparent);
-  }
-
-  .cor-popup-alerta {
-    --cor-popup-cor-destaque: var(--cor-alerta);
-    --cor-popup-borda: color-mix(in srgb, var(--cor-alerta) 55%, var(--cor-fundo));
-    --cor-popup-sombra: color-mix(in srgb, var(--cor-alerta) 24%, transparent);
-  }
-
-  .cor-popup-info {
-    --cor-popup-cor-destaque: var(--cor-info);
-    --cor-popup-borda: color-mix(in srgb, var(--cor-info) 55%, var(--cor-fundo));
-    --cor-popup-sombra: color-mix(in srgb, var(--cor-info) 24%, transparent);
+  .cor-popup-destaque {
+    --cor-popup-cor-destaque: var(--cor-popup-tema);
+    --cor-popup-borda: color-mix(in srgb, var(--cor-popup-tema) 55%, var(--cor-fundo));
+    --cor-popup-sombra: color-mix(in srgb, var(--cor-popup-tema) 24%, transparent);
   }
 
   .texto-cor-selecionada {

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { usePopup, type TemaPopup } from "@web/components/popup/PopupContext";
+import { usePopup } from "@web/components/popup/PopupContext";
+import { coresSemanticas, type CorSemantica } from "@web/styles/cores";
 import "./cmp028.css";
 
 export function Cmp028() {
@@ -10,13 +11,13 @@ export function Cmp028() {
   const [mensagemHtml, setMensagemHtml] = useState(
     "<p>Mensagem de exemplo do <strong>popup</strong>.</p><p>Você pode testar quebras de linha e formatação HTML.</p>",
   );
-  const [temaPopup, setTemaPopup] = useState<TemaPopup>("normal");
+  const [temaPopup, setTemaPopup] = useState<CorSemantica>("padrao");
   const [apresentarOk, setApresentarOk] = useState(true);
   const [textoOk, setTextoOk] = useState("OK");
-  const [temaOk, setTemaOk] = useState<TemaPopup>("normal");
+  const [temaOk, setTemaOk] = useState<CorSemantica>("padrao");
   const [apresentarCancelar, setApresentarCancelar] = useState(true);
   const [textoCancelar, setTextoCancelar] = useState("Cancelar");
-  const [temaCancelar, setTemaCancelar] = useState<TemaPopup>("normal");
+  const [temaCancelar, setTemaCancelar] = useState<CorSemantica>("padrao");
   const [ultimaAcao, setUltimaAcao] = useState<string>("Nenhuma ação recebida.");
 
   async function abrir() {
@@ -60,12 +61,8 @@ export function Cmp028() {
             <div className="campo-texto">
               <label htmlFor="cmp028-tema">Tema do popup</label>
               <span className="select-com-icone">
-                <select id="cmp028-tema" className="controle-com-borda" value={temaPopup} onChange={(evento) => setTemaPopup(evento.currentTarget.value as TemaPopup)}>
-                  <option value="normal">Normal</option>
-                  <option value="link">Link</option>
-                  <option value="perigo">Perigo</option>
-                  <option value="alerta">Alerta</option>
-                  <option value="info">Info</option>
+                <select id="cmp028-tema" className="controle-com-borda" value={temaPopup} onChange={(evento) => setTemaPopup(evento.currentTarget.value as CorSemantica)}>
+                  {coresSemanticas.map(({ cor, rotulo }) => <option key={cor} value={cor}>{rotulo}</option>)}
                 </select>
                 <i className="fa-solid fa-caret-down icone-selecao" aria-hidden="true" />
               </span>
@@ -83,12 +80,8 @@ export function Cmp028() {
               <div className="campo-texto">
                 <label htmlFor="cmp028-tema-ok">Tema</label>
                 <span className="select-com-icone">
-                  <select id="cmp028-tema-ok" className="controle-com-borda" value={temaOk} onChange={(evento) => setTemaOk(evento.currentTarget.value as TemaPopup)}>
-                    <option value="normal">Normal</option>
-                    <option value="link">Link</option>
-                    <option value="perigo">Perigo</option>
-                    <option value="alerta">Alerta</option>
-                    <option value="info">Info</option>
+                  <select id="cmp028-tema-ok" className="controle-com-borda" value={temaOk} onChange={(evento) => setTemaOk(evento.currentTarget.value as CorSemantica)}>
+                    {coresSemanticas.map(({ cor, rotulo }) => <option key={cor} value={cor}>{rotulo}</option>)}
                   </select>
                   <i className="fa-solid fa-caret-down icone-selecao" aria-hidden="true" />
                 </span>
@@ -108,12 +101,8 @@ export function Cmp028() {
               <div className="campo-texto">
                 <label htmlFor="cmp028-tema-cancelar">Tema</label>
                 <span className="select-com-icone">
-                  <select id="cmp028-tema-cancelar" className="controle-com-borda" value={temaCancelar} onChange={(evento) => setTemaCancelar(evento.currentTarget.value as TemaPopup)}>
-                    <option value="normal">Normal</option>
-                    <option value="link">Link</option>
-                    <option value="perigo">Perigo</option>
-                    <option value="alerta">Alerta</option>
-                    <option value="info">Info</option>
+                  <select id="cmp028-tema-cancelar" className="controle-com-borda" value={temaCancelar} onChange={(evento) => setTemaCancelar(evento.currentTarget.value as CorSemantica)}>
+                    {coresSemanticas.map(({ cor, rotulo }) => <option key={cor} value={cor}>{rotulo}</option>)}
                   </select>
                   <i className="fa-solid fa-caret-down icone-selecao" aria-hidden="true" />
                 </span>

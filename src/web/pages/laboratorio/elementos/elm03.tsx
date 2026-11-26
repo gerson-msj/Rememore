@@ -1,3 +1,6 @@
+import { Fragment } from "react";
+import { coresSemanticas } from "@web/styles/cores";
+
 export function Elm03() {
   return (
     <details className="bloco-teste">
@@ -8,20 +11,15 @@ export function Elm03() {
         <a className="link" href="/lab">
           Exemplo de link
         </a>
-        <p>Variação: Link perigo</p>
-        {/* ELM-03, link perigo: reproduzir o elemento abaixo com o destino adequado ao uso. */}
-        <a className="link cor-perigo" href="/lab">
-          Exemplo de link perigo
-        </a>
-        <p>Variação: Link alerta</p>
-        {/* ELM-03, link alerta: aplicar a classe de cor semântica e o destino adequado. */}
-        <a className="link cor-alerta" href="/lab">
-          Exemplo de link alerta
-        </a>
-        <p>Variação: Link info</p>
-        <a className="link cor-info" href="/lab">
-          Exemplo de link info
-        </a>
+        {/* ELM-03, link colorido: aplicar a classe de cor semântica e o destino adequado. */}
+        {coresSemanticas.filter(({ cor }) => cor !== "padrao" && cor !== "link").map(({ cor, rotulo }) => (
+          <Fragment key={cor}>
+            <p>Variação: Link {rotulo.toLocaleLowerCase("pt-BR")}</p>
+            <a className={`link cor-${cor}`} href="/lab">
+              Exemplo de link {rotulo.toLocaleLowerCase("pt-BR")}
+            </a>
+          </Fragment>
+        ))}
       </div>
     </details>
   );
