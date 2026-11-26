@@ -45,7 +45,11 @@ export default function Capturar() {
 
   return (
     <section className="pagina-capturar" aria-label="Selecionar data para capturar">
-      {orientacao && <p>{orientacao}</p>}
+      {orientacao && (
+        <div className="orientacao">
+          <p className="orientacao-texto">{orientacao}</p>
+        </div>
+      )}
 
       <SeletorData
         dataInicial={dataDeHoje}

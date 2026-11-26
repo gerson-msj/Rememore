@@ -1,0 +1,16 @@
+@layer pagina {
+  .elm09 .bloco-teste-conteudo {
+    display: grid;
+    gap: var(--padding-padrao);
+  }
+
+  .elm09 .elm09-controles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--padding-padrao);
+  }
+
+  .elm09 .orientacao {
+    width: min(100%, 30rem);
+  }
+}

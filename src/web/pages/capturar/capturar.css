@@ -6,10 +6,6 @@
     margin-inline: auto;
   }
 
-  .pagina-capturar > p {
-    margin: 0;
-  }
-
   .pagina-capturar .capturar-pendencias,
   .pagina-capturar .capturar-controles-teste {
     display: grid;

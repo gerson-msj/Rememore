@@ -10,6 +10,7 @@ import { Elm05 } from "./elementos/elm05";
 import { Elm06 } from "./elementos/elm06";
 import { Elm07 } from "./elementos/elm07";
 import { Elm08 } from "./elementos/elm08";
+import { Elm09 } from "./elementos/elm09";
 import { Cmp001 } from "./componentes/cmp001";
 import { Cmp002 } from "./componentes/cmp002";
 import { Cmp003 } from "./componentes/cmp003";
@@ -103,6 +104,7 @@ export default function Laboratorio() {
         <Elm06 />
         <Elm07 />
         <Elm08 />
+        <Elm09 />
       </section>
       <section
         id="painel-componentes"
