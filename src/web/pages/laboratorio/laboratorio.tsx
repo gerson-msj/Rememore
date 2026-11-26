@@ -9,6 +9,7 @@ import { Elm04 } from "./elementos/elm04";
 import { Elm05 } from "./elementos/elm05";
 import { Elm06 } from "./elementos/elm06";
 import { Elm07 } from "./elementos/elm07";
+import { Elm08 } from "./elementos/elm08";
 import { Cmp001 } from "./componentes/cmp001";
 import { Cmp002 } from "./componentes/cmp002";
 import { Cmp003 } from "./componentes/cmp003";
@@ -79,6 +80,16 @@ export default function Laboratorio() {
         </button>
       </div>
 
+      <details className="bloco-teste">
+        <summary className="bloco-teste-titulo link">Tema</summary>
+        <div className="bloco-teste-conteudo">
+          <select className="controle-com-borda" aria-label="Tema" value={tema} onChange={(evento) => setTema(evento.currentTarget.value)}>
+            <option value="light">Claro</option>
+            <option value="dark">Escuro</option>
+          </select>
+        </div>
+      </details>
+
       <section
         id="painel-elementos"
         aria-label="Elementos"
@@ -91,21 +102,13 @@ export default function Laboratorio() {
         <Elm05 />
         <Elm06 />
         <Elm07 />
+        <Elm08 />
       </section>
       <section
         id="painel-componentes"
         aria-label="Componentes"
         hidden={abaSelecionada !== "componentes"}
       >
-        <details className="bloco-teste">
-          <summary className="bloco-teste-titulo link">Tema</summary>
-          <div className="bloco-teste-conteudo">
-            <select className="controle-com-borda" aria-label="Tema" value={tema} onChange={(evento) => setTema(evento.currentTarget.value)}>
-              <option value="light">Claro</option>
-              <option value="dark">Escuro</option>
-            </select>
-          </div>
-        </details>
         <Cmp001 />
         <Cmp002 />
         <Cmp003 />

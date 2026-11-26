@@ -1,0 +1,12 @@
+@layer pagina {
+  .elm08 .bloco-teste-conteudo {
+    display: grid;
+    gap: var(--padding-padrao);
+  }
+
+  .elm08 .elm08-controles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--padding-padrao);
+  }
+}
