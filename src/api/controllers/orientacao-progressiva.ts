@@ -1,12 +1,12 @@
 import { lerCookieSessao } from "@api/controllers/cookies";
-import { idUsuarioSimulado } from "@api/simulacao";
+import { credencialSessaoSimulada } from "@api/simulacao";
 import type { NivelOrientacao, OrientacaoProgressivaResponse } from "@shared/orientacao-progressiva";
 
 const nivelSimulado: NivelOrientacao = "iniciante";
 
 export function consultarOrientacaoProgressiva(request: Request) {
   try {
-    if (lerCookieSessao(request) !== idUsuarioSimulado) {
+    if (lerCookieSessao(request) !== credencialSessaoSimulada) {
       return new Response(null, { status: 401 });
     }
 

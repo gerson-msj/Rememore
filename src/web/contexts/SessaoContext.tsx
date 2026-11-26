@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { CriarContaRequest, EntrarRequest, Perfil, RedefinirSenhaRequest } from "@shared/usuarios";
+import type { CriarContaRequest, EntrarRequest, Perfil, RedefinirSenhaRequest, SessaoResponse } from "@shared/usuarios";
 import { falhaDesconhecida, type FalhaHttp } from "@web/services/http";
 import * as servicoUsuario from "@web/services/usuario";
 import {
@@ -21,6 +21,8 @@ export type EstadoSessao = "verificando" | "autenticado" | "naoAutenticado" | "f
 type ContextoSessao = {
   estado: EstadoSessao;
   perfil: Perfil | null;
+  /** Identidade estável do usuário autenticado. */
+  idUsuario: string | null;
   erro: FalhaHttp | null;
   transicaoCadastroPendente: boolean;
   transicaoRedefinicaoPendente: boolean;
@@ -39,14 +41,14 @@ type SessaoProviderProps = { children: ReactNode };
 
 export function SessaoProvider({ children }: SessaoProviderProps) {
   const [estado, setEstado] = useState<EstadoSessao>("verificando");
-  const [perfil, setPerfil] = useState<Perfil | null>(null);
+  const [sessao, setSessao] = useState<SessaoResponse | null>(null);
   const [erro, setErro] = useState<FalhaHttp | null>(null);
   const [transicaoCadastroPendente, setTransicaoCadastroPendente] = useState(false);
   const [transicaoRedefinicaoPendente, setTransicaoRedefinicaoPendente] = useState(false);
   const consultaInicialIniciada = useRef(false);
 
   useEffect(() => observarSessaoInvalidada(() => {
-    setPerfil(null);
+    setSessao(null);
     setErro(null);
     setTransicaoCadastroPendente(false);
     setTransicaoRedefinicaoPendente(false);
@@ -56,21 +58,21 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
   const consultarSessao = useCallback(async () => {
     const geracao = obterGeracaoSessao();
     setEstado("verificando");
-    setPerfil(null);
+    setSessao(null);
     setErro(null);
     setTransicaoCadastroPendente(false);
     setTransicaoRedefinicaoPendente(false);
     try {
-      const sessao = await servicoUsuario.consultarSessao();
+      const resposta = await servicoUsuario.consultarSessao();
       verificarGeracaoSessao(geracao);
       renovarGeracaoSessao();
-      setPerfil(sessao?.perfil ?? null);
-      setEstado(sessao ? "autenticado" : "naoAutenticado");
+      setSessao(resposta);
+      setEstado(resposta ? "autenticado" : "naoAutenticado");
     } catch (falha) {
       if (geracao !== obterGeracaoSessao()) return;
       setErro(falhaDesconhecida(falha));
       setEstado("falha");
-      setPerfil(null);
+      setSessao(null);
     }
   }, []);
 
@@ -80,7 +82,8 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
       const resposta = await servicoUsuario.criarConta(dados);
       verificarGeracaoSessao(geracao);
       renovarGeracaoSessao();
-      setPerfil(resposta.perfil);
+      const { perfil, idUsuario } = resposta;
+      setSessao({ perfil, idUsuario });
       setErro(null);
       setTransicaoCadastroPendente(true);
       setTransicaoRedefinicaoPendente(false);
@@ -98,7 +101,7 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
       const resposta = await servicoUsuario.entrar(dados);
       verificarGeracaoSessao(geracao);
       renovarGeracaoSessao();
-      setPerfil(resposta.perfil);
+      setSessao(resposta);
       setErro(null);
       setTransicaoCadastroPendente(false);
       setTransicaoRedefinicaoPendente(false);
@@ -115,7 +118,8 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
       const resposta = await servicoUsuario.redefinirSenha(dados);
       verificarGeracaoSessao(geracao);
       renovarGeracaoSessao();
-      setPerfil(resposta.perfil);
+      const { perfil, idUsuario } = resposta;
+      setSessao({ perfil, idUsuario });
       setErro(null);
       setTransicaoCadastroPendente(false);
       setTransicaoRedefinicaoPendente(true);
@@ -141,7 +145,7 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
       await servicoUsuario.sair();
       verificarGeracaoSessao(geracao);
       renovarGeracaoSessao();
-      setPerfil(null);
+      setSessao(null);
       setErro(null);
       setTransicaoCadastroPendente(false);
       setTransicaoRedefinicaoPendente(false);
@@ -162,7 +166,8 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
   const valor = useMemo<ContextoSessao>(
     () => ({
       estado,
-      perfil,
+      perfil: sessao?.perfil ?? null,
+      idUsuario: sessao?.idUsuario ?? null,
       erro,
       transicaoCadastroPendente,
       transicaoRedefinicaoPendente,
@@ -174,7 +179,7 @@ export function SessaoProvider({ children }: SessaoProviderProps) {
       consultarSessao,
       sair,
     }),
-    [estado, perfil, erro, transicaoCadastroPendente, transicaoRedefinicaoPendente, criarConta, entrar, redefinirSenha, concluirTransicaoCadastro, concluirTransicaoRedefinicao, consultarSessao, sair],
+    [estado, sessao, erro, transicaoCadastroPendente, transicaoRedefinicaoPendente, criarConta, entrar, redefinirSenha, concluirTransicaoCadastro, concluirTransicaoRedefinicao, consultarSessao, sair],
   );
 
   return <SessaoContext.Provider value={valor}>{children}</SessaoContext.Provider>;

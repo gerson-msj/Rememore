@@ -20,7 +20,8 @@
   "devDependencies": {
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "fake-indexeddb": "^6.2.8"
   },
   "peerDependencies": {
     "typescript": "^7"

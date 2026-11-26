@@ -6,13 +6,14 @@ export type CriarContaRequest = {
   senha: string;
 };
 
-export type CriarContaResponse = {
-  perfil: Perfil;
+export type CriarContaResponse = SessaoResponse & {
   chaveRedefinicao: string;
 };
 
 export type SessaoResponse = {
   perfil: Perfil;
+  /** Identidade estável do usuário, independente da credencial de sessão. */
+  idUsuario: string;
 };
 
 export type EntrarRequest = {
@@ -28,8 +29,7 @@ export type RedefinirSenhaRequest = {
   novaSenha: string;
 };
 
-export type RedefinirSenhaResponse = {
-  perfil: Perfil;
+export type RedefinirSenhaResponse = SessaoResponse & {
   chaveRedefinicao: string;
 };
 

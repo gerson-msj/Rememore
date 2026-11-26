@@ -1,7 +1,7 @@
-import type { EntrarRequest, EntrarResponse, ErroAplicacao, SessaoResponse } from "@shared/usuarios";
+import type { EntrarRequest, ErroAplicacao } from "@shared/usuarios";
 import { criarCookieSessao, lerCookieSessao, removerCookieSessao } from "@api/controllers/cookies";
 
-import { idUsuarioSimulado, perfilSimulado } from "@api/simulacao";
+import { credencialSessaoSimulada, sessaoSimulada } from "@api/simulacao";
 const mensagemCredenciaisInvalidas =
   "Não foi possível entrar. Confira seu nome de usuário e senha e tente novamente.";
 
@@ -38,10 +38,9 @@ export async function entrar(request: Request) {
   }
 
   if (nomeUsuario === "usuario" && credenciais.senha === "usuario") {
-    const resposta: EntrarResponse = { perfil: perfilSimulado };
-    return Response.json(resposta, {
+    return Response.json(sessaoSimulada, {
       status: 200,
-      headers: { "Set-Cookie": criarCookieSessao(request, idUsuarioSimulado) },
+      headers: { "Set-Cookie": criarCookieSessao(request, credencialSessaoSimulada) },
     });
   }
 
@@ -53,12 +52,11 @@ export async function entrar(request: Request) {
 }
 
 export function consultarSessao(request: Request) {
-  if (lerCookieSessao(request) !== idUsuarioSimulado) {
+  if (lerCookieSessao(request) !== credencialSessaoSimulada) {
     return new Response(null, { status: 401 });
   }
 
-  const resposta: SessaoResponse = { perfil: perfilSimulado };
-  return Response.json(resposta, { status: 200 });
+  return Response.json(sessaoSimulada, { status: 200 });
 }
 
 export function sair(request: Request) {

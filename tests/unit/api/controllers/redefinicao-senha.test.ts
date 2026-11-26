@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { redefinirSenha } from "@api/controllers/usuarios";
-import { consultarSessao } from "@api/controllers/sessao";
+import { consultarSessao, entrar } from "@api/controllers/sessao";
 
 const chaveTeste = "550e8400-e29b-41d4-a716-446655440000";
 
@@ -21,9 +21,12 @@ describe("POST /api/usuarios/redefinicao-senha simulado", () => {
     })));
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ perfil: "admin", chaveRedefinicao: chaveTeste });
+    const login = await entrar(criarRequest(JSON.stringify({ nomeUsuario: "usuario", senha: "usuario" }), "http://localhost/api/sessao"));
+    const sessao = await login.json();
+    expect(await response.json()).toEqual({ ...sessao, chaveRedefinicao: chaveTeste });
     const cookie = response.headers.get("set-cookie") ?? "";
-    expect(cookie).toContain("rememore_sessao=01ARZ3NDEKTSV4RRFFQ69G5FAV");
+    expect(cookie).toMatch(/^rememore_sessao=[^;]+;/);
+    expect(cookie).not.toContain(sessao.idUsuario);
     expect(cookie).toContain("Path=/api");
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("SameSite=Lax");
@@ -34,7 +37,7 @@ describe("POST /api/usuarios/redefinicao-senha simulado", () => {
       headers: { Cookie: cookie.split(";")[0] ?? "" },
     }));
     expect(consulta.status).toBe(200);
-    expect(await consulta.json()).toEqual({ perfil: "admin" });
+    expect(await consulta.json()).toEqual(sessao);
   });
 
   it("rejeita outra chave com erro geral sem devolver chave ou cookie", async () => {

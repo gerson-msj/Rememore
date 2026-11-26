@@ -134,12 +134,13 @@ describe("serviços da Home e HTTP protegido", () => {
   });
 
   it("preserva contratos de cadastro e redefinição e erros por campo", async () => {
-    simularFetch(async () => Response.json({ perfil: "admin", chaveRedefinicao: "chave" }, { status: 201 }));
+    const dados = { perfil: "admin", idUsuario: "conta-de-teste", chaveRedefinicao: "chave" } as const;
+    simularFetch(async () => Response.json(dados, { status: 201 }));
     expect(await criarConta({ convite: "usuario", nomeUsuario: "usuario", senha: "usuario" }))
-      .toEqual({ perfil: "admin", chaveRedefinicao: "chave" });
-    simularFetch(async () => Response.json({ perfil: "admin", chaveRedefinicao: "chave" }));
+      .toEqual(dados);
+    simularFetch(async () => Response.json(dados));
     expect(await redefinirSenha({ nomeUsuario: "usuario", chaveRedefinicao: "chave", novaSenha: "nova" }))
-      .toEqual({ perfil: "admin", chaveRedefinicao: "chave" });
+      .toEqual(dados);
     simularFetch(async () => Response.json({ tipo: "erroAplicacao", errosCampos: { convite: "Inválido" } }, { status: 422 }));
     await expect(criarConta({ convite: "outro", nomeUsuario: "usuario", senha: "usuario" })).rejects
       .toMatchObject({ tipo: "aplicacao", status: 422, errosCampos: { convite: "Inválido" } });

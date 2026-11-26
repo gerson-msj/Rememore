@@ -1,6 +1,6 @@
 import type { HomeResponse } from "@shared/home";
 import { lerCookieSessao } from "@api/controllers/cookies";
-import { idUsuarioSimulado, perfilSimulado } from "@api/simulacao";
+import { credencialSessaoSimulada, perfilSimulado } from "@api/simulacao";
 
 const disponibilidadesSimuladas = {
   encontrarMemorias: true,
@@ -10,7 +10,7 @@ const disponibilidadesSimuladas = {
 
 export function consultarHome(request: Request) {
   try {
-    if (lerCookieSessao(request) !== idUsuarioSimulado) {
+    if (lerCookieSessao(request) !== credencialSessaoSimulada) {
       return new Response(null, { status: 401 });
     }
     const resposta: HomeResponse = { perfil: perfilSimulado, ...disponibilidadesSimuladas };

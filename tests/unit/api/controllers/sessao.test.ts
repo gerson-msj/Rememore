@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { consultarSessao, entrar, sair } from "@api/controllers/sessao";
+import { consultarHome } from "@api/controllers/home";
+import { consultarOrientacaoProgressiva } from "@api/controllers/orientacao-progressiva";
+import { criarConta } from "@api/controllers/usuarios";
 
 function criarRequest(body: string) {
   return new Request("http://localhost/api/sessao", {
@@ -35,20 +38,41 @@ describe("POST /api/sessao simulado", () => {
     })));
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ perfil: "admin" });
+    const sessao = await response.json();
+    expect(sessao).toEqual({ perfil: "admin", idUsuario: expect.any(String) });
     const cookie = response.headers.get("set-cookie") ?? "";
-    expect(cookie).toContain("rememore_sessao=01ARZ3NDEKTSV4RRFFQ69G5FAV");
+    expect(cookie).toMatch(/^rememore_sessao=[^;]+;/);
     expect(cookie).toContain("Path=/api");
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("SameSite=Lax");
     expect(cookie).toContain("Max-Age=31536000");
     expect(cookie).not.toContain("Secure");
+    expect(cookie).not.toContain(sessao.idUsuario);
 
     const consulta = await consultarSessao(new Request("http://localhost/api/sessao", {
-      headers: { Cookie: cookie.split(";")[0] },
+      headers: { Cookie: cookie.split(";")[0] ?? "" },
     }));
     expect(consulta.status).toBe(200);
-    expect(await consulta.json()).toEqual({ perfil: "admin" });
+    expect(await consulta.json()).toEqual(sessao);
+
+    const novoLogin = await entrar(criarRequest(JSON.stringify({ nomeUsuario: "usuario", senha: "usuario" })));
+    expect(await novoLogin.json()).toEqual(sessao);
+
+    const cadastro = await criarConta(criarRequest(JSON.stringify({ convite: "usuario", nomeUsuario: "usuario", senha: "usuario" })));
+    expect(cadastro.status).toBe(201);
+    expect(await cadastro.json()).toMatchObject(sessao);
+  });
+
+  it("não aceita o identificador público do usuário como credencial nos endpoints protegidos", async () => {
+    const login = await entrar(criarRequest(JSON.stringify({ nomeUsuario: "usuario", senha: "usuario" })));
+    expect(login.status).toBe(200);
+    const { idUsuario } = await login.json();
+    for (const consultar of [consultarSessao, consultarHome, consultarOrientacaoProgressiva]) {
+      const resposta = consultar(new Request("http://localhost/api/sessao", {
+        headers: { Cookie: `rememore_sessao=${idUsuario}` },
+      }));
+      expect(resposta.status).toBe(401);
+    }
   });
 
   it("retorna erro geral invariável para credenciais inválidas sem emitir cookie", async () => {

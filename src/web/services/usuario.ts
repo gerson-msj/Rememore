@@ -3,7 +3,6 @@ import type {
   CriarContaResponse,
   EntrarRequest,
   EntrarResponse,
-  Perfil,
   RedefinirSenhaRequest,
   RedefinirSenhaResponse,
   SessaoResponse,
@@ -14,8 +13,9 @@ function nomeNormalizado(nomeUsuario: string) {
   return nomeUsuario.trim().toLowerCase();
 }
 
-function validarPerfil(perfil: unknown): perfil is Perfil {
-  return perfil === "usuario" || perfil === "admin";
+function validarSessao(sessao?: SessaoResponse): sessao is SessaoResponse {
+  return !!sessao && (sessao.perfil === "usuario" || sessao.perfil === "admin") &&
+    typeof sessao.idUsuario === "string" && sessao.idUsuario.trim().length > 0;
 }
 
 export async function criarConta(dados: CriarContaRequest): Promise<CriarContaResponse> {
@@ -31,7 +31,7 @@ export async function criarConta(dados: CriarContaRequest): Promise<CriarContaRe
     method: "POST",
     body: JSON.stringify(dados),
   });
-  if (resposta.status !== 201 || !resposta.dados || !validarPerfil(resposta.dados.perfil) ||
+  if (resposta.status !== 201 || !validarSessao(resposta.dados) ||
       typeof resposta.dados.chaveRedefinicao !== "string") {
     throw new FalhaHttp("http", resposta.status, "Não foi possível concluir a operação. Tente novamente.");
   }
@@ -51,7 +51,7 @@ export async function entrar(dados: EntrarRequest): Promise<EntrarResponse> {
     method: "POST",
     body: JSON.stringify(dados),
   });
-  if (resposta.status !== 200 || !resposta.dados || !validarPerfil(resposta.dados.perfil)) {
+  if (resposta.status !== 200 || !validarSessao(resposta.dados)) {
     throw new FalhaHttp("http", resposta.status, "Não foi possível concluir a operação. Tente novamente.");
   }
   return resposta.dados;
@@ -62,7 +62,7 @@ export async function redefinirSenha(dados: RedefinirSenhaRequest): Promise<Rede
     method: "POST",
     body: JSON.stringify(dados),
   });
-  if (resposta.status !== 200 || !resposta.dados || !validarPerfil(resposta.dados.perfil) ||
+  if (resposta.status !== 200 || !validarSessao(resposta.dados) ||
       typeof resposta.dados.chaveRedefinicao !== "string") {
     throw new FalhaHttp("http", resposta.status, "Não foi possível concluir a operação. Tente novamente.");
   }
@@ -72,7 +72,7 @@ export async function redefinirSenha(dados: RedefinirSenhaRequest): Promise<Rede
 export async function consultarSessao(): Promise<SessaoResponse | null> {
   const resposta = await requisitar<SessaoResponse>("/api/sessao", {}, [401]);
   if (resposta.status === 401) return null;
-  if (!resposta.dados || !validarPerfil(resposta.dados.perfil)) {
+  if (resposta.status !== 200 || !validarSessao(resposta.dados)) {
     throw new FalhaHttp("http", resposta.status, "Não foi possível concluir a operação. Tente novamente.");
   }
   return resposta.dados;
