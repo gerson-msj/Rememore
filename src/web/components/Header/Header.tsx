@@ -1,20 +1,17 @@
 import { useRef, useState } from "react";
-import { useNavigate } from "react-router";
 import { usePopup } from "@web/components/popup/PopupContext";
 import { useSessao } from "@web/contexts/SessaoContext";
 import { useExecutorOperacao } from "@web/hooks/useExecutorOperacao";
-import { useProcessamento } from "@web/components/processing-overlay/ProcessingContext.tsx";
-import { CHAVE_CONFIRMACAO_CADASTRO, CHAVE_CONFIRMACAO_REDEFINICAO, remover } from "@web/services/storage";
+import { useSaidaSessao } from "@web/hooks/useSaidaSessao";
 import { useHeader } from "./HeaderContext";
 import "./header.css";
 
 export function Header() {
   const { configuracao, area } = useHeader();
   const { abrirPopup } = usePopup();
-  const { estado: estadoSessao, sair } = useSessao();
-  const navigate = useNavigate();
+  const { estado: estadoSessao } = useSessao();
   const executarOperacao = useExecutorOperacao();
-  const { processar } = useProcessamento();
+  const sairDaSessao = useSaidaSessao();
   const acaoEmAndamento = useRef(false);
   const [saindo, setSaindo] = useState(false);
   const apresentarSair = area === "protegida"
@@ -42,20 +39,7 @@ export function Header() {
       if (acao !== "OK") return;
 
       await executarOperacao({
-        operacao: async () => {
-          await processar(async () => {
-            // Uma saída descartada não deve afetar uma sessão posterior.
-            if (!await sair()) return;
-            try {
-              // Temporário: remove apenas a chave da E5; será substituído por uma limpeza completa.
-              remover(CHAVE_CONFIRMACAO_CADASTRO, "sessao");
-              remover(CHAVE_CONFIRMACAO_REDEFINICAO, "sessao");
-            } catch {
-              // A limpeza temporária não bloqueia a navegação após sair.
-            }
-            navigate("/", { replace: true });
-          }, "Saindo...");
-        },
+        operacao: sairDaSessao,
         aoIniciar: () => setSaindo(true),
         aoFinalizar: () => setSaindo(false),
       });

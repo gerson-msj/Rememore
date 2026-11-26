@@ -71,7 +71,7 @@ export function Popup({ id, opcoes, aoResponder }: PopupProps) {
       if (document.documentElement.dataset.processamentoAtivo === "true") return;
       if (evento.key === "Escape") {
         evento.preventDefault();
-        fechar("Cancelar");
+        if (!opcoes.impedirDispensa) fechar("Cancelar");
       } else if (evento.key === "Tab") {
         const dialogo = dialogoRef.current;
         if (!dialogo) return;
@@ -98,7 +98,7 @@ export function Popup({ id, opcoes, aoResponder }: PopupProps) {
 
     document.addEventListener("keydown", tratarTecla);
     return () => document.removeEventListener("keydown", tratarTecla);
-  }, [fechar]);
+  }, [fechar, opcoes.impedirDispensa]);
 
   useEffect(() => {
     if (estado !== "fechando") return;
@@ -150,7 +150,7 @@ export function Popup({ id, opcoes, aoResponder }: PopupProps) {
         }
       }}
       onMouseDown={(evento) => {
-        if (evento.target === evento.currentTarget) fechar("Cancelar");
+        if (!opcoes.impedirDispensa && evento.target === evento.currentTarget) fechar("Cancelar");
       }}
     >
       <section

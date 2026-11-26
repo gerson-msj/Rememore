@@ -24,6 +24,7 @@ export type OpcoesPopup = {
   titulo?: string;
   icone?: string;
   tema?: CorSemantica;
+  impedirDispensa?: boolean;
   botoes?: {
     ok?: OpcaoBotaoPopup;
     cancelar?: OpcaoBotaoPopup;
